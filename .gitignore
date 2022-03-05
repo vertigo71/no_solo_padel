@@ -1,0 +1,18 @@
+
+# Blacklist everything
+/*
+
+# Whitelist directory
+!/lib
+!/assets
+
+# Whitelist files
+!.gitignore
+!pubspec_dev.yaml
+!pubspec_prod.yaml
+
+# secret values
+/lib/firebase_options.dart
+
+
+

@@ -1,0 +1,273 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../../interface/director.dart';
+import '../../models/debug.dart';
+import '../../models/match_model.dart';
+import '../../interface/app_state.dart';
+import '../../utilities/misc.dart';
+
+final String _classString = 'ConfigurationPanel'.toUpperCase();
+
+class ConfigurationPanel extends StatefulWidget {
+  const ConfigurationPanel(this.date, {Key? key}) : super(key: key);
+
+  // arguments
+  final Date date;
+
+  @override
+  ConfigurationPanelState createState() {
+    return ConfigurationPanelState();
+  }
+}
+
+class ConfigurationPanelState extends State<ConfigurationPanel> {
+  // Create a global key that uniquely identifies the Form widget
+  // and allows validation of the form.
+  //
+  // Note: This is a GlobalKey<FormState>,
+  // not a GlobalKey<SettingsPageState>.
+  final _formKey = GlobalKey<FormState>();
+
+  static const int maxNumberOfCourts = 4;
+  List<TextEditingController> courtControllers = [];
+  List<String> initialCourtValues = [];
+
+  static const String commentTextField = 'Comentarios';
+  TextEditingController commentController = TextEditingController();
+  String initialCommentValue = '';
+
+  // checkBox
+  bool isMatchOpen = false;
+
+  @override
+  void initState() {
+    MyMatch match = context.read<AppState>().getMatch(widget.date) ?? MyMatch(date: widget.date);
+    MyLog().log(_classString, 'initState arguments = $match');
+
+    isMatchOpen = match.isOpen;
+    initialCourtValues.addAll(match.courtNames);
+    initialCommentValue = match.comment;
+
+    MyLog().log(_classString, 'initState Initial court values = $initialCourtValues');
+
+    for (var value in initialCourtValues) {
+      courtControllers.add(TextEditingController()..text = value);
+    }
+    while (courtControllers.length < maxNumberOfCourts) {
+      courtControllers.add(TextEditingController());
+    }
+    commentController.text = initialCommentValue;
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in courtControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void refresh(bool isMatchOpen) {
+    setState(() {
+      this.isMatchOpen = isMatchOpen;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Build a Form widget using the _formKey created above.
+    MyLog().log(_classString, 'Building');
+
+    return Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConfigurationFormWidgets(courtControllers, commentController, this),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    child: const Text('Aceptar'),
+                    onPressed: () async {
+                      // Validate returns true if the form is valid, or false otherwise.
+                      if (_formKey.currentState!.validate()) {
+                        if (isMatchOpen) {
+                          String errorString = checkConfigurationForm(courtControllers);
+                          if (errorString.isNotEmpty) {
+                            myAlertDialog(context, errorString);
+                            return;
+                          }
+                        }
+
+                        // all is correct or match is not open
+                        MyMatch newMatch = MyMatch(date: widget.date);
+                        // add courts available
+                        for (var controller in courtControllers) {
+                          if (controller.text.isNotEmpty) {
+                            newMatch.courtNames.add(controller.text);
+                          }
+                        }
+                        newMatch.comment = commentController.text;
+                        newMatch.isOpen = isMatchOpen;
+                        MyLog().log(_classString, 'update match = $newMatch');
+                        // Update to Firebase
+                        String message = 'Los datos han sido actualizados';
+                        try {
+                          await context
+                              .read<Director>().firebaseHelper
+                              .uploadMatch(match: newMatch, updateCore: true, updatePlayers: false);
+                        } catch (e) {
+                          message = 'ERROR en la actualización de los datos. \n\n $e';
+                          MyLog().log(_classString, 'ERROR en la actualización de los datos',
+                              exception: e, debugType: DebugType.error);
+                        }
+
+                        showMessage(context, message);
+                      }
+                    },
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+                  ElevatedButton(
+                    child: const Text('Cancelar'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ConfigurationFormWidgets extends StatelessWidget {
+  const ConfigurationFormWidgets(
+      this.courtControllers, this.commentController, this.configurationPanelState,
+      {Key? key})
+      : super(key: key);
+  final List<TextEditingController> courtControllers;
+  final TextEditingController commentController;
+  final ConfigurationPanelState configurationPanelState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Courts
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Text('Pistas'),
+            const SizedBox(width: 20.0),
+            for (var controller in courtControllers)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: ConfigurationFormSingleWidget(
+                    fieldName: '',
+                    textController: controller,
+                    formatter: UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // Open match
+        const SizedBox(height: 10.0),
+        Row(
+          children: <Widget>[
+            const SizedBox(width: 10), //SizedBox
+            const Text('Abrir convocatoria'), //Text
+            const SizedBox(width: 10), //SizedBox
+            Checkbox(
+              value: configurationPanelState.isMatchOpen,
+              onChanged: (bool? value) {
+                configurationPanelState.refresh(value!);
+              },
+            ), //Checkbox
+          ], //<Widget>[]
+        ), //Row
+        // comments
+        const SizedBox(height: 10.0),
+        ConfigurationFormSingleWidget(
+          fieldName: ConfigurationPanelState.commentTextField,
+          textController: commentController,
+        )
+      ],
+    );
+  }
+}
+
+class ConfigurationFormSingleWidget extends StatelessWidget {
+  const ConfigurationFormSingleWidget(
+      {required this.fieldName,
+      required this.textController,
+      this.mayBeEmpty = true,
+      this.formatter,
+      Key? key})
+      : super(key: key);
+  final String fieldName;
+  final TextEditingController textController;
+  final bool mayBeEmpty;
+  final FilteringTextInputFormatter? formatter;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      inputFormatters: [
+        // only accept letters from a to z
+        if (formatter != null) formatter!,
+      ],
+      keyboardType: TextInputType.text,
+      decoration: InputDecoration(
+        labelText: fieldName,
+        contentPadding: const EdgeInsets.all(8.0),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4.0)),
+        ),
+      ),
+      controller: textController,
+      // The validator receives the text that the user has entered.
+      validator: (value) {
+        if (!mayBeEmpty && (value == null || value.isEmpty)) {
+          return 'No puede estar vacío';
+        }
+        return null;
+      },
+    );
+  }
+}
+
+String checkConfigurationForm(List<TextEditingController> controllers) {
+  // empty courts
+  List<String> courts = [];
+  for (var controller in controllers) {
+    if (controller.text.isNotEmpty) {
+      courts.add(controller.text);
+    }
+  }
+  if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
+
+  // repeated courts
+  if (courts.length != Set.from(courts).length) {
+    return 'Pistas repetidas';
+  }
+
+  return '';
+}
