@@ -16,6 +16,7 @@ void myPrint( var v) => print(v);
 void main() async {
   final fileIn = File(fileProdName);
   try {
+    myPrint('Copying $fileIn to $filePubSpecName');
     fileIn.copy(filePubSpecName);
     myPrint('Done!');
   } catch (e) {
