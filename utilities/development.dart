@@ -1,9 +1,9 @@
 ///
-/// apply after pulling from repository
+/// apply before pushing to repository
 ///
-/// copy pubspec_prod.yaml into pubspec.yaml
+/// copy pubspec.yaml into dev and prod files
 ///
-/// execute like: dart run production.dart
+/// execute like: dart run development.dart
 ///
 import 'dart:io';
 import 'dart:convert';
