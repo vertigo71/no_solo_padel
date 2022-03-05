@@ -17,7 +17,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await initializeDateFormatting('es_ES', null); // Español
+  await initializeDateFormatting('es_ES', null); // Spanish
   runApp(const MyApp());
 }
 
