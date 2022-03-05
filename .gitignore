@@ -8,8 +8,7 @@
 
 # Whitelist files
 !.gitignore
-!pubspec_dev.yaml
-!pubspec_prod.yaml
+!pubspec.yaml
 
 # secret values
 /lib/firebase_options.dart
