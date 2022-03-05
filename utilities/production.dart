@@ -17,6 +17,7 @@ void main() async {
   final fileIn = File(fileProdName);
   try {
     fileIn.copy(filePubSpecName);
+    myPrint('Done!');
   } catch (e) {
     myPrint(e);
   }
