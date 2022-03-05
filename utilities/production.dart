@@ -7,18 +7,29 @@
 ///
 import 'dart:io';
 
-const String filePubSpecName = '../pubspec.yaml';
-const String fileProdName = '../pubspec_prod.yaml';
+const String relativePath = '../';
+ String filePubSpecName = 'pubspec.yaml';
+ String fileProdName = 'pubspec_prod.yaml';
 
 // ignore: avoid_print
-void myPrint( var v) => print(v);
+void myPrint(var v) => print(v);
 
 void main() async {
-  final fileIn = File(fileProdName);
+  File fileIn = File(fileProdName);
+  if (!await fileIn.exists()) {
+    myPrint('$fileIn doesn\'t exist');
+    filePubSpecName = relativePath + filePubSpecName;
+    fileProdName = relativePath + fileProdName;
+    fileIn = File(filePubSpecName);
+  }
   try {
-    myPrint('Copying $fileIn to $filePubSpecName');
-    fileIn.copy(filePubSpecName);
-    myPrint('Done!');
+    if (await fileIn.exists()) {
+      myPrint('Copying $fileIn to $filePubSpecName');
+      fileIn.copy(filePubSpecName);
+      myPrint('Done!');
+    } else {
+      myPrint('$fileIn doesn\'t exist');
+    }
   } catch (e) {
     myPrint(e);
   }
