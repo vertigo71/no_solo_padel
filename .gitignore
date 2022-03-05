@@ -8,7 +8,8 @@
 
 # Whitelist files
 !.gitignore
-!pubspec.yaml
+!pubspec_dev.yaml
+!pubspec_prod.yaml
 !README.md
 !LICENSE.md
 
