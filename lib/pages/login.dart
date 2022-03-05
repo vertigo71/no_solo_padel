@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../routes/routes.dart';
 import '../utilities/misc.dart';
-import '../utilities/variables.dart';
 import '../database/authentication.dart';
 
 final String _classString = 'Login'.toUpperCase();
@@ -21,9 +21,24 @@ class _LoginState extends State<Login> {
   TextEditingController emailController = TextEditingController();
   TextEditingController pwdController = TextEditingController();
 
+  String version = '';
+
+  Future<void> getVersion() async {
+    super.initState();
+
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String appName = packageInfo.appName;
+    if (appName.contains('_dev')){
+      setState(() => version = '$appName ${packageInfo.version}+${packageInfo.buildNumber}');
+    } else {
+      setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    getVersion();
   }
 
   @override
@@ -38,11 +53,14 @@ class _LoginState extends State<Login> {
     MyLog().log(_classString, 'Building');
 
     return Scaffold(
-      bottomNavigationBar: const BottomAppBar(
+      bottomNavigationBar: BottomAppBar(
         color: Colors.transparent,
         child: Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text(version, textAlign: TextAlign.end,),
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            version,
+            textAlign: TextAlign.end,
+          ),
         ),
         elevation: 0,
       ),
