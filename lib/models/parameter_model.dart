@@ -10,6 +10,7 @@ enum ParametersEnum {
   registerDaysKeeping,
   minDebugLevel, // according to DebugType
   weekDaysMatch, // days where matches can be played
+  showLog, // show log for all users (bool)
 }
 
 const List<String> parametersDefault = [
@@ -19,21 +20,22 @@ const List<String> parametersDefault = [
   '15',
   '0', // according to DebugType
   'LMXJ', // days where matches can be played
+  '0',
 ];
 
 class MyParameters {
   MyParameters() {
     MyLog().log(_classString, 'Building');
-    setValue(ParametersEnum.matchDaysToView, null );
+    setValue(ParametersEnum.matchDaysToView, null);
     setValue(ParametersEnum.matchDaysKeeping, null);
     setValue(ParametersEnum.registerDaysAgoToView, null);
     setValue(ParametersEnum.registerDaysKeeping, null);
     setValue(ParametersEnum.minDebugLevel, null);
     setValue(ParametersEnum.weekDaysMatch, null);
+    setValue(ParametersEnum.showLog, null);
   }
 
-  final List<String> _values =
-      List.generate(ParametersEnum.values.length, (index) => '');
+  final List<String> _values = List.generate(ParametersEnum.values.length, (index) => '');
 
   static const String daysOfWeek = 'LMXJVSD';
   static final Map<int, String> _mapOfDaysWeek = {
@@ -46,8 +48,7 @@ class MyParameters {
   }
 
   static int dayOfTheWeekToInt(String dayLabel) {
-    return _mapOfDaysWeek.keys
-        .firstWhere((k) => _mapOfDaysWeek[k] == dayLabel, orElse: () => 0);
+    return _mapOfDaysWeek.keys.firstWhere((k) => _mapOfDaysWeek[k] == dayLabel, orElse: () => 0);
   }
 
   static int boolToInt(bool value) => value ? 1 : 0;
@@ -56,22 +57,31 @@ class MyParameters {
 
   static String boolToStr(bool value) => value ? 'true' : 'false';
 
-  static bool strToBool(String value) => value == 'true' ? true : false;
+  /// true if value > 0 or is 'true'
+  static bool strToBool(String value) {
+    bool isNumeric = int.tryParse(value) != null;
+    if (isNumeric) return int.parse(value) > 0;
+    if (value == 'true') return true;
+    return false;
+  }
 
   static String intToStr(int value) => value.toString();
 
-  static int strToInt(String value) => int.parse(value);
+  static int strToInt(String value) {
+    bool isNumeric = int.tryParse(value) != null;
+    if (isNumeric) return int.parse(value);
+    MyLog().log(_classString, 'ERROR: value $value is not an integer', debugType: DebugType.error);
+    return 0;
+  }
 
   String getStrValue(ParametersEnum parameter) => _values[parameter.index];
 
-  int getIntValue(ParametersEnum parameter) =>
-      strToInt(_values[parameter.index]);
+  int getIntValue(ParametersEnum parameter) => strToInt(_values[parameter.index]);
 
-  bool getBoolValue(ParametersEnum parameter) =>
-      strToBool(_values[parameter.index]);
+  bool getBoolValue(ParametersEnum parameter) => strToBool(_values[parameter.index]);
 
   void setValue(ParametersEnum parameter, String? value) {
-    if ( value == null) {
+    if (value == null) {
       _values[parameter.index] = parametersDefault[parameter.index];
     } else {
       _values[parameter.index] = value;
@@ -79,12 +89,10 @@ class MyParameters {
   }
 
   bool isDayPlayable(Date date) {
-    return getStrValue(ParametersEnum.weekDaysMatch)
-        .contains(dayOfTheWeekToStr(date));
+    return getStrValue(ParametersEnum.weekDaysMatch).contains(dayOfTheWeekToStr(date));
   }
 
-  DebugType get minDebugLevel =>
-      DebugType.values[getIntValue(ParametersEnum.minDebugLevel)];
+  DebugType get minDebugLevel => DebugType.values[getIntValue(ParametersEnum.minDebugLevel)];
 
   @override
   String toString() {

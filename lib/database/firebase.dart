@@ -28,6 +28,7 @@ enum DBFields {
   registerDaysKeeping,
   minDebugLevel,
   weekDaysMatch,
+  showLog,
   register,
   registerMessage
 }
@@ -195,6 +196,7 @@ class FirebaseHelper {
               ParametersEnum.registerDaysKeeping, data[_str(DBFields.registerDaysKeeping)]);
           myParameters.setValue(ParametersEnum.minDebugLevel, data[_str(DBFields.minDebugLevel)]);
           myParameters.setValue(ParametersEnum.weekDaysMatch, data[_str(DBFields.weekDaysMatch)]);
+          myParameters.setValue(ParametersEnum.showLog, data[_str(DBFields.showLog)]);
         } catch (e) {
           MyLog().log(_classString, '_downloadParameters',
               myCustomObject: data, exception: e, debugType: DebugType.error);

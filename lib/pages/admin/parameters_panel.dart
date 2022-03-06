@@ -18,6 +18,7 @@ class _FormFields {
     'Registro: histórico de días a conservar',
     'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})',
     'Días que se pueden jugar (${MyParameters.daysOfWeek})',
+    'Mostrar log a todos los usuarios (0/1)',
   ];
 
   static List<String> listAllowedChars = [
@@ -27,6 +28,7 @@ class _FormFields {
     '[0-9]',
     '[0-${DebugType.values.length - 1}]',
     '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
+    '[0-1]',
   ];
 }
 

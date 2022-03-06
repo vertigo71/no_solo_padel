@@ -33,6 +33,8 @@ class AppState with ChangeNotifier {
 
   int getIntParameterValue(ParametersEnum parameter) => _parameters.getIntValue(parameter);
 
+  bool getBoolParameterValue(ParametersEnum parameter) => _parameters.getBoolValue(parameter);
+
   bool isDayPlayable(Date date) => _parameters.isDayPlayable(date);
 
   void setParameterValue(ParametersEnum parameter, String value, {required bool notify}) {
@@ -97,6 +99,8 @@ class AppState with ChangeNotifier {
   bool get isLoggedUserAdmin => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
 
   bool get isLoggedUserSuper => _loggedUser.userType == UserType.superuser;
+
+  bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
     MyLog().log(_classString, 'setAllUsers', myCustomObject: users, debugType: DebugType.info);

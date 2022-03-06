@@ -63,7 +63,7 @@ class _MainPageState extends State<MainPage> {
             ),
             Consumer<AppState>(
               builder: (context, appState, _) {
-                if (appState.isLoggedUserSuper ) {
+                if (appState.isLoggedUserSuper || appState.showLog ) {
                   return IconButton(
                     onPressed: () {
                       Navigator.pushNamed(context, RouteManager.logging);
