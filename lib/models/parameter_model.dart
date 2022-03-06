@@ -59,8 +59,8 @@ class MyParameters {
 
   /// true if value > 0 or is 'true'
   static bool strToBool(String value) {
-    bool isNumeric = int.tryParse(value) != null;
-    if (isNumeric) return int.parse(value) > 0;
+    int? intValue = int.tryParse(value);
+    if (intValue != null) return intValue > 0;
     if (value == 'true') return true;
     return false;
   }
@@ -68,10 +68,10 @@ class MyParameters {
   static String intToStr(int value) => value.toString();
 
   static int strToInt(String value) {
-    bool isNumeric = int.tryParse(value) != null;
-    if (isNumeric) return int.parse(value);
+    int? intValue = int.tryParse(value);
+    if (intValue != null) return intValue;
     MyLog().log(_classString, 'ERROR: value $value is not an integer', debugType: DebugType.error);
-    return 0;
+    return -1;
   }
 
   String getStrValue(ParametersEnum parameter) => _values[parameter.index];
