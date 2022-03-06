@@ -18,7 +18,7 @@ class _FormFields {
     'Registro: histórico de días a conservar',
     'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})',
     'Días que se pueden jugar (${MyParameters.daysOfWeek})',
-    'Mostrar log a todos los usuarios (0/1)',
+    '¿Mostrar log a todos los usuarios?'
   ];
 
   static List<String> listAllowedChars = [
@@ -28,7 +28,7 @@ class _FormFields {
     '[0-9]',
     '[0-${DebugType.values.length - 1}]',
     '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
-    '[0-1]',
+    '', // not a textFormField
   ];
 }
 
@@ -53,6 +53,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
 
   late AppState appState;
   late FirebaseHelper firebaseHelper;
+  bool showLog = false;
 
   @override
   void initState() {
@@ -61,9 +62,11 @@ class _ParametersPanelState extends State<ParametersPanel> {
     appState = context.read<AppState>();
     firebaseHelper = context.read<Director>().firebaseHelper;
 
+    showLog = appState.showLog;
     for (int i = 0; i < _FormFields.numTextFormFields; i++) {
       listControllers[i].text = appState.getParameterValue(ParametersEnum.values[i]);
     }
+
     super.initState();
   }
 
@@ -90,12 +93,28 @@ class _ParametersPanelState extends State<ParametersPanel> {
             // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var value in ParametersEnum.values)
-                _FormFieldWidget(
-                  _FormFields.text[value.index],
-                  _FormFields.listAllowedChars[value.index],
-                  listControllers[value.index],
-                  _formValidate,
-                ),
+                if (value != ParametersEnum.showLog)
+                  _FormFieldWidget(
+                    _FormFields.text[value.index],
+                    _FormFields.listAllowedChars[value.index],
+                    listControllers[value.index],
+                    _formValidate,
+                  ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: showLog,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        showLog = value!;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('¿Mostrar log a todos los usuarios?'),
+                ],
+              ),
               const Divider(),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -122,7 +141,11 @@ class _ParametersPanelState extends State<ParametersPanel> {
     if (_formKey.currentState!.validate()) {
       List<String> parameters = [];
       for (var value in ParametersEnum.values) {
-        parameters.add(listControllers[value.index].text);
+        if (value == ParametersEnum.showLog){
+          parameters.add(MyParameters.boolToInt(showLog).toString());
+        } else {
+          parameters.add(listControllers[value.index].text);
+        }
       }
       // check no repeated chars in weekDaysMatch
       parameters[ParametersEnum.weekDaysMatch.index] =
