@@ -9,8 +9,6 @@ import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
 
 class _FormFields {
-  static int numTextFormFields = ParametersEnum.values.length;
-
   static List<String> text = [
     'Partidos: ver número de días',
     'Partidos: histórico de días a conservar',
@@ -18,7 +16,7 @@ class _FormFields {
     'Registro: histórico de días a conservar',
     'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})',
     'Días que se pueden jugar (${MyParameters.daysOfWeek})',
-    '¿Mostrar log a todos los usuarios?'
+    '', // not a textFormField
   ];
 
   static List<String> listAllowedChars = [
@@ -30,6 +28,25 @@ class _FormFields {
     '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
     '', // not a textFormField
   ];
+
+  static List<bool> isTextField = [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false, // showLog
+  ];
+
+  List<String> initialValues(AppState appState) {
+    List<String> values = [];
+    assert(ParametersEnum.values.length == text.length);
+    for (ParametersEnum parameter in ParametersEnum.values) {
+      values.add(appState.getParameterValue(parameter));
+    }
+    return values;
+  }
 }
 
 final String _classString = 'ParametersPanel'.toUpperCase();
@@ -48,8 +65,8 @@ class _ParametersPanelState extends State<ParametersPanel> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<ParametersPageState>.
   final _formKey = GlobalKey<FormState>();
-  List<TextEditingController> listControllers =
-      List.generate(_FormFields.numTextFormFields, (index) => TextEditingController());
+  List<TextEditingController?> listControllers = List.generate(_FormFields.isTextField.length,
+      (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
 
   late AppState appState;
   late FirebaseHelper firebaseHelper;
@@ -63,8 +80,9 @@ class _ParametersPanelState extends State<ParametersPanel> {
     firebaseHelper = context.read<Director>().firebaseHelper;
 
     showLog = appState.showLog;
-    for (int i = 0; i < _FormFields.numTextFormFields; i++) {
-      listControllers[i].text = appState.getParameterValue(ParametersEnum.values[i]);
+    List<String> initialValues = _FormFields().initialValues(appState);
+    for (int i = 0; i < listControllers.length; i++) {
+      listControllers[i]?.text = initialValues[i];
     }
 
     super.initState();
@@ -75,7 +93,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
     MyLog().log(_classString, 'dispose');
 
     for (var controller in listControllers) {
-      controller.dispose();
+      controller?.dispose();
     }
     super.dispose();
   }
@@ -90,14 +108,13 @@ class _ParametersPanelState extends State<ParametersPanel> {
         child: Form(
           key: _formKey,
           child: ListView(
-            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var value in ParametersEnum.values)
-                if (value != ParametersEnum.showLog)
+                if (listControllers[value.index] != null)
                   _FormFieldWidget(
                     _FormFields.text[value.index],
                     _FormFields.listAllowedChars[value.index],
-                    listControllers[value.index],
+                    listControllers[value.index]!,
                     _formValidate,
                   ),
               Row(
@@ -141,10 +158,10 @@ class _ParametersPanelState extends State<ParametersPanel> {
     if (_formKey.currentState!.validate()) {
       List<String> parameters = [];
       for (var value in ParametersEnum.values) {
-        if (value == ParametersEnum.showLog){
+        if (value == ParametersEnum.showLog) {
           parameters.add(MyParameters.boolToInt(showLog).toString());
-        } else {
-          parameters.add(listControllers[value.index].text);
+        } else if (listControllers[value.index] != null) {
+          parameters.add(listControllers[value.index]!.text);
         }
       }
       // check no repeated chars in weekDaysMatch
