@@ -92,6 +92,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
                   _FormFields.text[value.index],
                   _FormFields.listAllowedChars[value.index],
                   listControllers[value.index],
+                  _formValidate,
                 ),
               const Divider(),
               Padding(
@@ -102,31 +103,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
                   children: [
                     ElevatedButton(
                       child: const Text('Actualizar'),
-                      onPressed: () async {
-                        // Validate returns true if the form is valid, or false otherwise.
-                        if (_formKey.currentState!.validate()) {
-                          List<String> parameters = [];
-                          for (var value in ParametersEnum.values) {
-                            parameters.add(listControllers[value.index].text);
-                          }
-                          // check no repeated chars in weekDaysMatch
-                          parameters[ParametersEnum.weekDaysMatch.index] =
-                              parameters[ParametersEnum.weekDaysMatch.index]
-                                  .split('')
-                                  .toSet()
-                                  .fold('', (a, b) => '$a$b');
-
-                          try {
-                            await firebaseHelper.uploadParameters(parameters: parameters);
-                            showMessage(
-                                context,
-                                'Los parámetros han sido actualizados. \n'
-                                'Volver a entrar en la app para que se tengan en cuenta');
-                          } catch (e) {
-                            showMessage(context, 'Error actualizando parámetros ');
-                          }
-                        }
-                      },
+                      onPressed: () async => await _formValidate(),
                     ),
                   ],
                 ),
@@ -137,20 +114,49 @@ class _ParametersPanelState extends State<ParametersPanel> {
       ),
     );
   }
+
+  Future<void> _formValidate() async {
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState!.validate()) {
+      List<String> parameters = [];
+      for (var value in ParametersEnum.values) {
+        parameters.add(listControllers[value.index].text);
+      }
+      // check no repeated chars in weekDaysMatch
+      parameters[ParametersEnum.weekDaysMatch.index] =
+          parameters[ParametersEnum.weekDaysMatch.index]
+              .split('')
+              .toSet()
+              .fold('', (a, b) => '$a$b');
+
+      try {
+        await firebaseHelper.uploadParameters(parameters: parameters);
+        showMessage(
+            context,
+            'Los parámetros han sido actualizados. \n'
+            'Volver a entrar en la app para que se tengan en cuenta');
+      } catch (e) {
+        showMessage(context, 'Error actualizando parámetros ');
+      }
+    }
+  }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, {Key? key})
+  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate,
+      {Key? key})
       : super(key: key);
   final TextEditingController textController;
   final String fieldName;
   final String allowedChars;
+  final Future<void> Function() validate;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
+        onFieldSubmitted: (String str) async => await validate(),
         keyboardType: TextInputType.text,
         decoration: InputDecoration(
           labelText: fieldName,

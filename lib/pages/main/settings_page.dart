@@ -94,6 +94,7 @@ class SettingsPageState extends State<SettingsPage> {
                   listControllers[value.index],
                   _FormFields.obscuredText[value.index],
                   _FormFields.mayBeEmpty[value.index],
+                  _formValidate,
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -103,66 +104,7 @@ class SettingsPageState extends State<SettingsPage> {
                   children: [
                     ElevatedButton(
                       child: const Text('Actualizar'),
-                      onPressed: () async {
-                        // Validate returns true if the form is valid, or false otherwise.
-                        if (_formKey.currentState!.validate()) {
-                          String newName = listControllers[_FormFieldsEnum.name.index].text;
-                          String newEmail =
-                              listControllers[_FormFieldsEnum.email.index].text.toLowerCase();
-                          String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
-                          String newPwd = listControllers[_FormFieldsEnum.newPwd.index].text;
-                          String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
-
-                          // check name
-                          bool ok = checkName(newName);
-                          if (!ok) return;
-
-                          // check email
-                          ok = checkEmail(newEmail, actualPwd);
-                          if (!ok) return;
-
-                          // check passwords
-                          ok = checkAllPwd(actualPwd, newPwd, checkPwd);
-                          if (!ok) return;
-
-                          // check if is a sure thing
-                          const String yesOption = 'SI';
-                          const String noOption = 'NO';
-                          String response = await myReturnValueDialog(
-                              context, '¿Seguro que quieres actualizar?', yesOption, noOption);
-                          if (response.isEmpty || response == noOption) return;
-                          MyLog().log(_classString, 'build response = $response');
-
-                          bool anyUpdatedField = false;
-
-                          // update name
-                          if (newName != appState.getLoggedUser().name) {
-                            ok = await updateName(newName);
-                            anyUpdatedField = true;
-                            if (!ok) return;
-                          }
-
-                          // update email
-                          if (newEmail != appState.getLoggedUser().email) {
-                            ok = await updateEmail(newEmail, actualPwd);
-                            anyUpdatedField = true;
-                            if (!ok) return;
-                          }
-
-                          // update pwd
-                          if (newPwd.isNotEmpty) {
-                            ok = await updatePwd(actualPwd, newPwd);
-                            anyUpdatedField = true;
-                            if (!ok) return;
-                          }
-
-                          if (anyUpdatedField) {
-                            showMessage(context, 'Los datos han sido actualizados');
-                          } else {
-                            showMessage(context, 'Ningun dato para actualizar');
-                          }
-                        }
-                      },
+                      onPressed: () async => await _formValidate(),
                     ),
                   ],
                 ),
@@ -283,22 +225,85 @@ class SettingsPageState extends State<SettingsPage> {
     }
     return true;
   }
+
+  Future<void> _formValidate() async {
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState!.validate()) {
+      String newName = listControllers[_FormFieldsEnum.name.index].text;
+      String newEmail = listControllers[_FormFieldsEnum.email.index].text.toLowerCase();
+      String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
+      String newPwd = listControllers[_FormFieldsEnum.newPwd.index].text;
+      String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
+
+      // check name
+      bool ok = checkName(newName);
+      if (!ok) return;
+
+      // check email
+      ok = checkEmail(newEmail, actualPwd);
+      if (!ok) return;
+
+      // check passwords
+      ok = checkAllPwd(actualPwd, newPwd, checkPwd);
+      if (!ok) return;
+
+      // check if is a sure thing
+      const String yesOption = 'SI';
+      const String noOption = 'NO';
+      String response = await myReturnValueDialog(
+          context, '¿Seguro que quieres actualizar?', yesOption, noOption);
+      if (response.isEmpty || response == noOption) return;
+      MyLog().log(_classString, 'build response = $response');
+
+      bool anyUpdatedField = false;
+
+      // update name
+      if (newName != appState.getLoggedUser().name) {
+        ok = await updateName(newName);
+        anyUpdatedField = true;
+        if (!ok) return;
+      }
+
+      // update email
+      if (newEmail != appState.getLoggedUser().email) {
+        ok = await updateEmail(newEmail, actualPwd);
+        anyUpdatedField = true;
+        if (!ok) return;
+      }
+
+      // update pwd
+      if (newPwd.isNotEmpty) {
+        ok = await updatePwd(actualPwd, newPwd);
+        anyUpdatedField = true;
+        if (!ok) return;
+      }
+
+      if (anyUpdatedField) {
+        showMessage(context, 'Los datos han sido actualizados');
+      } else {
+        showMessage(context, 'Ningun dato para actualizar');
+      }
+    }
+  }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.textController, this.protectedField, this.mayBeEmpty,
+  const _FormFieldWidget(
+      this.fieldName, this.textController, this.protectedField, this.mayBeEmpty, this.validate,
       {Key? key})
       : super(key: key);
   final TextEditingController textController;
   final String fieldName;
   final bool protectedField;
   final bool mayBeEmpty;
+  final Future<void> Function() validate;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
+        onFieldSubmitted: (String str) async => await validate(),
         keyboardType: TextInputType.text,
         decoration: InputDecoration(
           labelText: fieldName,

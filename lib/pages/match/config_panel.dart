@@ -98,43 +98,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                 children: [
                   ElevatedButton(
                     child: const Text('Aceptar'),
-                    onPressed: () async {
-                      // Validate returns true if the form is valid, or false otherwise.
-                      if (_formKey.currentState!.validate()) {
-                        if (isMatchOpen) {
-                          String errorString = checkConfigurationForm(courtControllers);
-                          if (errorString.isNotEmpty) {
-                            myAlertDialog(context, errorString);
-                            return;
-                          }
-                        }
-
-                        // all is correct or match is not open
-                        MyMatch newMatch = MyMatch(date: widget.date);
-                        // add courts available
-                        for (var controller in courtControllers) {
-                          if (controller.text.isNotEmpty) {
-                            newMatch.courtNames.add(controller.text);
-                          }
-                        }
-                        newMatch.comment = commentController.text;
-                        newMatch.isOpen = isMatchOpen;
-                        MyLog().log(_classString, 'update match = $newMatch');
-                        // Update to Firebase
-                        String message = 'Los datos han sido actualizados';
-                        try {
-                          await context
-                              .read<Director>().firebaseHelper
-                              .uploadMatch(match: newMatch, updateCore: true, updatePlayers: false);
-                        } catch (e) {
-                          message = 'ERROR en la actualización de los datos. \n\n $e';
-                          MyLog().log(_classString, 'ERROR en la actualización de los datos',
-                              exception: e, debugType: DebugType.error);
-                        }
-
-                        showMessage(context, message);
-                      }
-                    },
+                    onPressed: () async => await _formValidate(),
                   ),
                   const SizedBox(
                     width: 20.0,
@@ -152,6 +116,63 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         ),
       ),
     );
+  }
+
+  String _checkConfigurationForm() {
+    // empty courts
+    List<String> courts = [];
+    for (var controller in courtControllers) {
+      if (controller.text.isNotEmpty) {
+        courts.add(controller.text);
+      }
+    }
+    if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
+
+    // repeated courts
+    if (courts.length != Set.from(courts).length) {
+      return 'Pistas repetidas';
+    }
+
+    return '';
+  }
+
+  Future<void> _formValidate() async {
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState!.validate()) {
+      if (isMatchOpen) {
+        String errorString = _checkConfigurationForm();
+        if (errorString.isNotEmpty) {
+          myAlertDialog(context, errorString);
+          return;
+        }
+      }
+
+      // all is correct or match is not open
+      MyMatch newMatch = MyMatch(date: widget.date);
+      // add courts available
+      for (var controller in courtControllers) {
+        if (controller.text.isNotEmpty) {
+          newMatch.courtNames.add(controller.text);
+        }
+      }
+      newMatch.comment = commentController.text;
+      newMatch.isOpen = isMatchOpen;
+      MyLog().log(_classString, 'update match = $newMatch');
+      // Update to Firebase
+      String message = 'Los datos han sido actualizados';
+      try {
+        await context
+            .read<Director>()
+            .firebaseHelper
+            .uploadMatch(match: newMatch, updateCore: true, updatePlayers: false);
+      } catch (e) {
+        message = 'ERROR en la actualización de los datos. \n\n $e';
+        MyLog().log(_classString, 'ERROR en la actualización de los datos',
+            exception: e, debugType: DebugType.error);
+      }
+
+      showMessage(context, message);
+    }
   }
 }
 
@@ -183,6 +204,7 @@ class ConfigurationFormWidgets extends StatelessWidget {
                     fieldName: '',
                     textController: controller,
                     formatter: UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true),
+                    validate: configurationPanelState._formValidate,
                   ),
                 ),
               ),
@@ -208,6 +230,7 @@ class ConfigurationFormWidgets extends StatelessWidget {
         ConfigurationFormSingleWidget(
           fieldName: ConfigurationPanelState.commentTextField,
           textController: commentController,
+          validate: configurationPanelState._formValidate,
         )
       ],
     );
@@ -218,6 +241,7 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
   const ConfigurationFormSingleWidget(
       {required this.fieldName,
       required this.textController,
+      required this.validate,
       this.mayBeEmpty = true,
       this.formatter,
       Key? key})
@@ -226,6 +250,7 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
   final TextEditingController textController;
   final bool mayBeEmpty;
   final FilteringTextInputFormatter? formatter;
+  final Future<void> Function() validate;
 
   @override
   Widget build(BuildContext context) {
@@ -234,6 +259,7 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
         // only accept letters from a to z
         if (formatter != null) formatter!,
       ],
+      onFieldSubmitted: (String str) async => await validate(),
       keyboardType: TextInputType.text,
       decoration: InputDecoration(
         labelText: fieldName,
@@ -252,22 +278,4 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
       },
     );
   }
-}
-
-String checkConfigurationForm(List<TextEditingController> controllers) {
-  // empty courts
-  List<String> courts = [];
-  for (var controller in controllers) {
-    if (controller.text.isNotEmpty) {
-      courts.add(controller.text);
-    }
-  }
-  if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
-
-  // repeated courts
-  if (courts.length != Set.from(courts).length) {
-    return 'Pistas repetidas';
-  }
-
-  return '';
 }

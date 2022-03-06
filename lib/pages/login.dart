@@ -28,7 +28,7 @@ class _LoginState extends State<Login> {
 
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     String appName = packageInfo.appName;
-    if (appName.contains('_dev')){
+    if (appName.contains('_dev')) {
       setState(() => version = '$appName ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
       setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
@@ -81,6 +81,7 @@ class _LoginState extends State<Login> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                          onFieldSubmitted: (String str) => _formValidate(),
                           keyboardType: TextInputType.text,
                           controller: emailController,
                           decoration: const InputDecoration(labelText: 'Correo'),
@@ -98,6 +99,7 @@ class _LoginState extends State<Login> {
                 Padding(
                   padding: const EdgeInsets.all(6.0),
                   child: TextFormField(
+                      onFieldSubmitted: (String str) => _formValidate(),
                       keyboardType: TextInputType.text,
                       controller: pwdController,
                       obscureText: true,
@@ -111,27 +113,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 10.0),
                 ElevatedButton(
-                  onPressed: () {
-                    // Validate returns true if the form is valid, or false otherwise.
-                    if (_formKey.currentState!.validate()) {
-                      String email = emailController.text;
-                      if (!email.contains('@')) email = email + MyUser.emailSuffix;
-                      AuthenticationHelper()
-                          .signIn(email: email, password: pwdController.text)
-                          .then((result) async {
-                        if (result == null) {
-                          await Navigator.of(context).pushNamed(RouteManager.loadingPage);
-
-                          MyLog().log(_classString, 'back to login');
-                          setState(() {
-                            pwdController.text = '';
-                          });
-                        } else {
-                          showMessage(context, result);
-                        }
-                      });
-                    }
-                  },
+                  onPressed: () => _formValidate(),
                   child: const Text('Entrar'),
                 ),
                 const SizedBox(height: 50.0),
@@ -141,5 +123,28 @@ class _LoginState extends State<Login> {
         ],
       ),
     );
+  }
+
+  void _formValidate() {
+    MyLog().log(_classString, '_formValidate');
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState!.validate()) {
+      String email = emailController.text;
+      if (!email.contains('@')) email = email + MyUser.emailSuffix;
+      AuthenticationHelper()
+          .signIn(email: email, password: pwdController.text)
+          .then((result) async {
+        if (result == null) {
+          await Navigator.of(context).pushNamed(RouteManager.loadingPage);
+
+          MyLog().log(_classString, 'back to login');
+          setState(() {
+            pwdController.text = '';
+          });
+        } else {
+          showMessage(context, result);
+        }
+      });
+    }
   }
 }

@@ -83,6 +83,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
                 _FormFieldWidget(
                   value,
                   listControllers[value.index],
+                  _formValidate,
                 ),
               // const SizedBox(height: 10.0),
               Row(
@@ -120,42 +121,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
                   children: [
                     ElevatedButton(
                       child: const Text('Añadir'),
-                      onPressed: () async {
-                        // Validate returns true if the form is valid, or false otherwise.
-                        if (_formKey.currentState!.validate()) {
-                          String name = listControllers[_FormFieldsEnum.name.index].text;
-                          String email =
-                              listControllers[_FormFieldsEnum.email.index].text.toLowerCase();
-                          String pwd = listControllers[_FormFieldsEnum.pwd.index].text;
-                          String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
-
-                          // check name
-                          bool ok = checkName(name);
-                          if (!ok) return;
-
-                          // check email
-                          ok = checkEmail(email);
-                          if (!ok) return;
-
-                          // check passwords
-                          ok = checkAllPwd(pwd, checkPwd);
-                          if (!ok) return;
-
-                          // check if is a sure thing
-                          const String yesOption = 'SI';
-                          const String noOption = 'NO';
-                          String response = await myReturnValueDialog(context,
-                              '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
-                          if (response.isEmpty || response == noOption) return;
-                          MyLog().log(_classString, 'build response = $response');
-
-                          // create new user
-                          ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);
-                          if (!ok) return;
-
-                          showMessage(context, 'El usuario ha sido creado');
-                        }
-                      },
+                      onPressed: () async => await _formValidate(),
                     ),
                   ],
                 ),
@@ -238,19 +204,56 @@ class _UserAddPanelState extends State<UserAddPanel> {
       firebaseHelper.uploadUser(myUser);
     } catch (e) {
       showMessage(context, 'Error al crear localmente el usuario');
-      MyLog()
-          .log(_classString, 'Error al crear localmente el usuario', debugType: DebugType.error);
+      MyLog().log(_classString, 'Error al crear localmente el usuario', debugType: DebugType.error);
       return false;
     }
     return true;
   }
+
+  Future<void> _formValidate() async {
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState!.validate()) {
+      String name = listControllers[_FormFieldsEnum.name.index].text;
+      String email = listControllers[_FormFieldsEnum.email.index].text.toLowerCase();
+      String pwd = listControllers[_FormFieldsEnum.pwd.index].text;
+      String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
+
+      // check name
+      bool ok = checkName(name);
+      if (!ok) return;
+
+      // check email
+      ok = checkEmail(email);
+      if (!ok) return;
+
+      // check passwords
+      ok = checkAllPwd(pwd, checkPwd);
+      if (!ok) return;
+
+      // check if is a sure thing
+      const String yesOption = 'SI';
+      const String noOption = 'NO';
+      String response = await myReturnValueDialog(
+          context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
+      if (response.isEmpty || response == noOption) return;
+      MyLog().log(_classString, 'build response = $response');
+
+      // create new user
+      ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);
+      if (!ok) return;
+
+      showMessage(context, 'El usuario ha sido creado');
+    }
+  }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldsEnum, this.textController, {Key? key}) : super(key: key);
+  const _FormFieldWidget(this.fieldsEnum, this.textController, this.validate, {Key? key})
+      : super(key: key);
 
   final _FormFieldsEnum fieldsEnum;
   final TextEditingController textController;
+  final Future<void> Function() validate;
 
   @override
   Widget build(BuildContext context) {
@@ -260,6 +263,7 @@ class _FormFieldWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
+        onFieldSubmitted: (String str) async => await validate(),
         keyboardType: TextInputType.text,
         obscureText: obscured,
         decoration: InputDecoration(
