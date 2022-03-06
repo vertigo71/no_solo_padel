@@ -265,15 +265,20 @@ class AppState with ChangeNotifier {
     return null;
   }
 
-  // return null if exists
-  // unique name, email and id
+  /// return null if exists
+  /// unique name, email and id
   MyUser? createNewUserByEmail(String email) {
     MyLog().log(_classString, 'createNewUserByEmail', myCustomObject: email);
 
     MyUser? user = getUserByEmail(email);
     if (user != null) return null; // already exists
 
-    user = MyUser(name: email, email: email, userId: email, userType: UserType.basic);
+    // get name from email
+    List<String> items = email.split('@') ;
+    if ( items.length != 2 ) return null; // incorrect format
+    String name = items[0];
+
+    user = MyUser(name: name, email: email, userId: name, userType: UserType.basic);
     // check name and userId don't already exist
     MyUser? userExists = getUserByName(user.name);
     if (userExists != null) {
