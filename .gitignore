@@ -17,4 +17,5 @@
 # secret values
 /lib/firebase_options.dart
 /lib/generated_plugin_registrant.dart
+/lib/secret.dart
 
