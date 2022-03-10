@@ -45,7 +45,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
         Padding(
           padding: const EdgeInsets.all(18.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Checkbox(
                 value: isLoggedUserInTheMatch,
@@ -57,55 +57,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
               ),
               const SizedBox(width: 10),
               const Text('Me apunto!!!'),
-              const Spacer(flex: 1),
+              const SizedBox(width: 10),
               ElevatedButton(
-                child: const Text('Aceptar'),
-                onPressed: () async {
-                  // Add/delete player from the match
-                  MyMatch? match = context.read<AppState>().getMatch(widget.date);
-                  MyUser loggedUser = context.read<AppState>().getLoggedUser();
-                  String message = 'Los datos han sido actualizados';
-                  if (match == null) {
-                    message = 'ERROR: Partido no encontrado. No se ha podido apuntar al jugador';
-                  } else {
-                    String registerText = '';
-
-                    if (isLoggedUserInTheMatch) {
-                      match.addPlayer(loggedUser);
-                      registerText = 'apuntado';
-                    } else {
-                      registerText = 'desapuntado';
-                      match.removePlayer(loggedUser);
-                    }
-                    // message
-                    registerText = '${loggedUser.name} se ha ' + registerText;
-
-                    // add to FireBase
-                    try {
-                      await context
-                          .read<Director>()
-                          .firebaseHelper
-                          .uploadMatch(match: match, updateCore: false, updatePlayers: true);
-                      context.read<Director>().firebaseHelper.uploadRegister(
-                              register: RegisterModel(
-                            date: match.date,
-                            message: registerText,
-                          ));
-                    } catch (e) {
-                      message = 'ERROR en la actualización de los datos. \n\n $e';
-                      MyLog().log(_classString, 'ERROR en la actualización de los datos',
-                          exception: e, debugType: DebugType.error);
-                    }
-                  }
-                  showMessage(context, message);
-                },
+                child: const Text('Confirmar'),
+                onPressed: () => confirm(),
               ),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancelar')),
             ],
           ),
         ),
@@ -186,8 +142,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ...usersReserve.map((player) =>
-                                  Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                              ...usersReserve.map((player) => Text(
+                                  '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                             ],
                           ),
                         ),
@@ -200,5 +156,62 @@ class _PlayersPanelState extends State<PlayersPanel> {
         ),
       ],
     );
+  }
+
+  void confirm() async {
+    // Add/delete player from the match
+    MyMatch? match = context.read<AppState>().getMatch(widget.date);
+    MyUser loggedUser = context.read<AppState>().getLoggedUser();
+    String message = 'Los datos han sido actualizados';
+    if (match == null) {
+      message = 'ERROR: Partido no encontrado. No se ha podido apuntar al jugador';
+    } else {
+      String registerText = '';
+
+      if (isLoggedUserInTheMatch) {
+        match.addPlayer(loggedUser);
+        registerText = 'apuntado';
+      } else {
+        const String option1 = 'Confirmar';
+        const String option2 = 'Anular';
+        String response = await myReturnValueDialog(
+            context, '¿Seguro que quieres desapuntarte?', option1, option2);
+        MyLog().log(_classString, 'confirm response = $response');
+
+        if (response != option1) {
+          // do not proceed and set user in the match
+          setState(() {
+            isLoggedUserInTheMatch = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Operación anulada', style: const TextStyle(fontSize: 16))));
+          return;
+        }
+
+        registerText = 'desapuntado';
+        match.removePlayer(loggedUser);
+      }
+      // message
+      registerText = '${loggedUser.name} se ha ' + registerText;
+
+      // add to FireBase
+      try {
+        await context
+            .read<Director>()
+            .firebaseHelper
+            .uploadMatch(match: match, updateCore: false, updatePlayers: true);
+        context.read<Director>().firebaseHelper.uploadRegister(
+                register: RegisterModel(
+              date: match.date,
+              message: registerText,
+            ));
+      } catch (e) {
+        message = 'ERROR en la actualización de los datos. \n\n $e';
+        MyLog().log(_classString, 'ERROR en la actualización de los datos',
+            exception: e, debugType: DebugType.error);
+      }
+    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
   }
 }

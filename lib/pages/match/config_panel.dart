@@ -100,15 +100,6 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                     child: const Text('Aceptar'),
                     onPressed: () async => await _formValidate(),
                   ),
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-                  ElevatedButton(
-                    child: const Text('Cancelar'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  )
                 ],
               ),
             ),

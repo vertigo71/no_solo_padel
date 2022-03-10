@@ -24,6 +24,7 @@ class HomePage extends StatelessWidget {
               tiles: appState.getSortedMatchesIfDayPlayable().map(((match) {
                 String playingStateStr = match.getPlayingStateString(appState.getLoggedUser());
                 PlayingState playingState = match.getPlayingState(appState.getLoggedUser());
+                final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
                 return Card(
                   elevation: 6,
@@ -31,13 +32,18 @@ class HomePage extends StatelessWidget {
                   child: ListTile(
                     tileColor: match.isOpen
                         ? getPlayingStateColor(context, playingState)
-                        : lighten(getMatchColor(match), 0.2 ),
+                        : lighten(getMatchColor(match), 0.2),
                     leading: CircleAvatar(
                         child: Text(match.isOpen ? 'A' : 'C'),
                         backgroundColor: getMatchColor(match)),
-                    title: Text('${match.date.toString()}\n$playingStateStr'),
-                    subtitle: Text(match.comment),
-                    // isThreeLine: true,
+                    title: Text('${match.date.toString()}\n$playingStateStr$comment'),
+                    subtitle: match.isOpen
+                        ? Text(
+                            'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
+                            style:
+                                const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                          )
+                        : null,
                     enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                     onTap: () {
                       Navigator.pushNamed(context, RouteManager.matchPage, arguments: match.date);
