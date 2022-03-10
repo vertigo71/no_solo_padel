@@ -26,7 +26,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
   @override
   void initState() {
-    MyMatch match = context.read<AppState>().getMatch(widget.date) ?? MyMatch(date: widget.date);
+    MyMatch match = context.read<AppState>().getMatch(widget.date) ??
+        MyMatch(date: widget.date);
 
     MyUser loggedUser = context.read<AppState>().getLoggedUser();
     PlayingState state = match.getPlayingState(loggedUser);
@@ -81,22 +82,35 @@ class _PlayersPanelState extends State<PlayersPanel> {
   Widget signInOutAdminForm() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Checkbox(
-              value: isLoggedUserInTheMatch,
-              onChanged: (bool? value) {
-                setState(() {
-                  isLoggedUserInTheMatch = value!;
-                });
-              },
+            Flexible(
+              flex: 2,
+              child: Container(
+                color: Colors.amberAccent,
+                height: 150,
+                child: ListWheelScrollView(
+                    itemExtent: 30,
+                    magnification: 1.5,
+                    useMagnifier: true,
+                    diameterRatio: 5,
+                    // squeeze: 0.8,
+                    physics: const FixedExtentScrollPhysics(),
+                    children: [
+                      for (int i = 0; i < 30; i++)
+                        ListTile(
+                          title: Text('Cafe $i'),
+                          subtitle: const Text('Description here'),
+                        ),
+                    ]),
+              ),
             ),
-            const SizedBox(width: 10),
-            const Text('Me apunto!!!'),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              child: const Text('Confirmar'),
-              onPressed: () => confirm(),
+            const Flexible(child: Text('Me apunto!!!')),
+            Flexible(
+              child: ElevatedButton(
+                child: const Text('Confirmar'),
+                onPressed: () => confirm(),
+              ),
             ),
           ],
         ),
@@ -107,12 +121,16 @@ class _PlayersPanelState extends State<PlayersPanel> {
           int playerNumber = 0;
           MyMatch? match = context.read<AppState>().getMatch(widget.date);
           if (match == null) {
-            return Text('ERROR!: partido no encontrado para la fecha ${widget.date} \n'
+            return Text(
+                'ERROR!: partido no encontrado para la fecha ${widget.date} \n'
                 'No se pueden mostrar los jugadores');
           } else {
-            Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
-            Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
-            Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
+            Set<MyUser> usersPlaying =
+                match.getPlayers(state: PlayingState.playing);
+            Set<MyUser> usersSigned =
+                match.getPlayers(state: PlayingState.signedNotPlaying);
+            Set<MyUser> usersReserve =
+                match.getPlayers(state: PlayingState.reserve);
             List<MyUser> usersFillEmptySpaces = [];
             for (int i = usersPlaying.length + usersSigned.length;
                 i < match.getNumberOfCourts() * 4;
@@ -145,13 +163,13 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersPlaying.map((player) =>
-                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ...usersPlaying.map((player) => Text(
+                            '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                         ...usersSigned.map((player) => Text(
                             '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
                             style: const TextStyle(color: Colors.red))),
-                        ...usersFillEmptySpaces
-                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                        ...usersFillEmptySpaces.map((player) => Text(
+                            '${(++playerNumber).toString().padLeft(3)} - ')),
                       ],
                     ),
                   ),
@@ -162,7 +180,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     margin: const EdgeInsets.all(10),
                     child: ListTile(
                       tileColor: Theme.of(context).colorScheme.background,
-                      title: const Text('Reservas', style: TextStyle(color: Colors.black)),
+                      title: const Text('Reservas',
+                          style: TextStyle(color: Colors.black)),
                       enabled: false,
                     ),
                   ),
@@ -176,8 +195,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ...usersReserve.map((player) =>
-                              Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                          ...usersReserve.map((player) => Text(
+                              '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                         ],
                       ),
                     ),
@@ -194,7 +213,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
     MyUser loggedUser = context.read<AppState>().getLoggedUser();
     String message = 'Los datos han sido actualizados';
     if (match == null) {
-      message = 'ERROR: Partido no encontrado. No se ha podido apuntar al jugador';
+      message =
+          'ERROR: Partido no encontrado. No se ha podido apuntar al jugador';
     } else {
       String registerText = '';
 
@@ -213,8 +233,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
           setState(() {
             isLoggedUserInTheMatch = true;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Operación anulada', style: TextStyle(fontSize: 16))));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content:
+                  Text('Operación anulada', style: TextStyle(fontSize: 16))));
           return;
         }
 
@@ -241,7 +262,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             exception: e, debugType: DebugType.error);
       }
     }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
   }
 }

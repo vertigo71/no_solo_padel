@@ -43,8 +43,10 @@ class Environment {
       _appName = _packageInfo!.appName;
       if (_appName.contains('_dev')) {
         _isProduction = false;
+        MyLog().log(_classString, 'Development environment initialized');
       } else {
         _isProduction = true;
+        MyLog().log(_classString, 'Production environment initialized');
       }
       _initialized = true;
     }
