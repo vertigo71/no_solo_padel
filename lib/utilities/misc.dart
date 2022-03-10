@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:math';
 
 import '../models/debug.dart';
@@ -21,6 +22,50 @@ ThemeData myTheme(BuildContext context) {
     ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
   );
+}
+
+class Environment {
+  static final Environment _singleton = Environment._internal();
+
+  Environment._internal();
+
+  factory Environment() => _singleton;
+
+  bool _isProduction = false;
+  bool _initialized = false;
+  PackageInfo? _packageInfo;
+  String _appName ='';
+
+  Future<void> initialize() async {
+    if (!_initialized) {
+      _packageInfo = await PackageInfo.fromPlatform();
+      assert(_packageInfo != null);
+      _appName = _packageInfo!.appName;
+      if (_appName.contains('_dev')) {
+        _isProduction = false;
+      } else {
+        _isProduction = true;
+      }
+      _initialized = true;
+    }
+  }
+
+  PackageInfo get packageInfo {
+    assert(_initialized);
+    return _packageInfo!;
+  }
+
+  bool get isProduction {
+    assert(_initialized);
+    return _isProduction;
+  }
+
+  bool get isDevelopment {
+    assert(_initialized);
+    return !_isProduction;
+  }
+
+  bool get isInitialized => _initialized;
 }
 
 class Date extends DateTime {
@@ -52,11 +97,13 @@ class Date extends DateTime {
   }
 }
 
-String dateTimeToString(DateTime date, {String format = 'yyyy-MM-dd HH:mm:ss'}) {
+String dateTimeToString(DateTime date,
+    {String format = 'yyyy-MM-dd HH:mm:ss'}) {
   return DateFormat(format, 'es_ES').format(date);
 }
 
-DateTime extractDateTime(String string, {int start = 0, String format = 'yyyy-MM-dd HH:mm:ss'}) {
+DateTime extractDateTime(String string,
+    {int start = 0, String format = 'yyyy-MM-dd HH:mm:ss'}) {
   return DateTime.parse(string.substring(start, format.length));
 }
 
@@ -134,10 +181,12 @@ void showMessage(BuildContext context, String text) {
 class UpperCaseTextFormatter extends FilteringTextInputFormatter {
   UpperCaseTextFormatter(Pattern filterPattern,
       {required bool allow, String replacementString = ''})
-      : super(filterPattern, allow: allow, replacementString: replacementString);
+      : super(filterPattern,
+            allow: allow, replacementString: replacementString);
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     TextEditingValue value = super.formatEditUpdate(oldValue, newValue);
     return TextEditingValue(
       text: value.text.toUpperCase(),
@@ -149,10 +198,10 @@ class UpperCaseTextFormatter extends FilteringTextInputFormatter {
 // 'date random' list from 0 to num-1
 List<int> getRandomList(int num, DateTime date) {
   int baseNum = date.millisecondsSinceEpoch;
-  List<int> base =
-      List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num)
-          .toSet()
-          .toList();
+  List<int> base = List<int>.generate(
+          num, (index) => (baseNum * sin(baseNum + index)).floor() % num)
+      .toSet()
+      .toList();
   MyLog().log(_classString, 'getRandomList Base Sinus generated list $base');
   List<int> all = List<int>.generate(num, (int index) => num - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();

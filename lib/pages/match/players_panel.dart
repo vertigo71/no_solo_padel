@@ -214,7 +214,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             isLoggedUserInTheMatch = true;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Operación anulada', style: const TextStyle(fontSize: 16))));
+              const SnackBar(content: Text('Operación anulada', style: TextStyle(fontSize: 16))));
           return;
         }
 

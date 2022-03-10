@@ -24,14 +24,14 @@ class _LoginState extends State<Login> {
   String version = '';
 
   Future<void> getVersion() async {
-    super.initState();
-
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String appName = packageInfo.appName;
-    if (appName.contains('_dev')) {
-      setState(() => version = '$appName ${packageInfo.version}+${packageInfo.buildNumber}');
+    await Environment().initialize();
+    PackageInfo packageInfo = Environment().packageInfo;
+    if (Environment().isDevelopment) {
+      setState(() => version =
+          '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
-      setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(
+          () => version = '${packageInfo.version}+${packageInfo.buildNumber}');
     }
   }
 
@@ -84,7 +84,8 @@ class _LoginState extends State<Login> {
                           onFieldSubmitted: (String str) => _formValidate(),
                           keyboardType: TextInputType.text,
                           controller: emailController,
-                          decoration: const InputDecoration(labelText: 'Correo'),
+                          decoration:
+                              const InputDecoration(labelText: 'Correo'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'No puede estar vacío';
@@ -103,7 +104,8 @@ class _LoginState extends State<Login> {
                       keyboardType: TextInputType.text,
                       controller: pwdController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Contraseña'),
+                      decoration:
+                          const InputDecoration(labelText: 'Contraseña'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'No puede estar vacío';
