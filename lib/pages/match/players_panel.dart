@@ -40,123 +40,153 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Checkbox(
-                value: isLoggedUserInTheMatch,
-                onChanged: (bool? value) {
-                  setState(() {
-                    isLoggedUserInTheMatch = value!;
-                  });
-                },
-              ),
-              const SizedBox(width: 10),
-              const Text('Me apunto!!!'),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                child: const Text('Confirmar'),
-                onPressed: () => confirm(),
-              ),
-            ],
-          ),
-        ),
-        const Divider(
-          thickness: 5,
-        ),
-        Consumer<AppState>(
-          builder: (context, state, _) {
-            int playerNumber = 0;
-            MyMatch? match = context.read<AppState>().getMatch(widget.date);
-            if (match == null) {
-              return Text('ERROR!: partido no encontrado para la fecha ${widget.date} \n'
-                  'No se pueden mostrar los jugadores');
-            } else {
-              Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
-              Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
-              Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
-              List<MyUser> usersFillEmptySpaces = [];
-              for (int i = usersPlaying.length + usersSigned.length;
-                  i < match.getNumberOfCourts() * 4;
-                  i++) {
-                usersFillEmptySpaces.add(MyUser());
-              }
-
-              String numCourtsText = 'disponible ' +
-                  match.getNumberOfCourts().toString() +
-                  (match.getNumberOfCourts() == 1 ? ' pista' : ' pistas');
-              return Expanded(
-                child: ListView(
-                  children: [
-                    Card(
-                      elevation: 6,
-                      margin: const EdgeInsets.all(10),
-                      child: ListTile(
-                        tileColor: Theme.of(context).colorScheme.background,
-                        title: Text('Apuntados ($numCourtsText)',
-                            style: const TextStyle(color: Colors.black)),
-                        enabled: false,
-                      ),
-                    ),
-                    Card(
-                      elevation: 6,
-                      margin: const EdgeInsets.all(10),
-                      color: Theme.of(context).colorScheme.background,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ...usersPlaying.map((player) =>
-                                Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                            ...usersSigned.map((player) => Text(
-                                '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
-                                style: const TextStyle(color: Colors.red))),
-                            ...usersFillEmptySpaces.map(
-                                (player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (usersReserve.isNotEmpty)
-                      Card(
-                        elevation: 6,
-                        margin: const EdgeInsets.all(10),
-                        child: ListTile(
-                          tileColor: Theme.of(context).colorScheme.background,
-                          title: const Text('Reservas', style: TextStyle(color: Colors.black)),
-                          enabled: false,
-                        ),
-                      ),
-                    if (usersReserve.isNotEmpty)
-                      Card(
-                        elevation: 6,
-                        margin: const EdgeInsets.all(10),
-                        color: Theme.of(context).colorScheme.background,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ...usersReserve.map((player) => Text(
-                                  '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            }
-          },
-        ),
-      ],
+    AppState appState = context.read<AppState>();
+    return Expanded(
+      child: ListView(
+        children: [
+          signInOutForm(),
+          const Divider(thickness: 5),
+          if (appState.isLoggedUserAdmin) signInOutAdminForm(),
+          if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
+          listOfPlayers(),
+        ],
+      ),
     );
   }
+
+  Widget signInOutForm() => Padding(
+        padding: const EdgeInsets.all(18.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: isLoggedUserInTheMatch,
+              onChanged: (bool? value) {
+                setState(() {
+                  isLoggedUserInTheMatch = value!;
+                });
+              },
+            ),
+            const SizedBox(width: 10),
+            const Text('Me apunto!!!'),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              child: const Text('Confirmar'),
+              onPressed: () => confirm(),
+            ),
+          ],
+        ),
+      );
+
+  Widget signInOutAdminForm() => Padding(
+        padding: const EdgeInsets.all(18.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: isLoggedUserInTheMatch,
+              onChanged: (bool? value) {
+                setState(() {
+                  isLoggedUserInTheMatch = value!;
+                });
+              },
+            ),
+            const SizedBox(width: 10),
+            const Text('Me apunto!!!'),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              child: const Text('Confirmar'),
+              onPressed: () => confirm(),
+            ),
+          ],
+        ),
+      );
+
+  Widget listOfPlayers() => Consumer<AppState>(
+        builder: (context, state, _) {
+          int playerNumber = 0;
+          MyMatch? match = context.read<AppState>().getMatch(widget.date);
+          if (match == null) {
+            return Text('ERROR!: partido no encontrado para la fecha ${widget.date} \n'
+                'No se pueden mostrar los jugadores');
+          } else {
+            Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
+            Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
+            Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
+            List<MyUser> usersFillEmptySpaces = [];
+            for (int i = usersPlaying.length + usersSigned.length;
+                i < match.getNumberOfCourts() * 4;
+                i++) {
+              usersFillEmptySpaces.add(MyUser());
+            }
+
+            String numCourtsText = 'disponible ' +
+                match.getNumberOfCourts().toString() +
+                (match.getNumberOfCourts() == 1 ? ' pista' : ' pistas');
+
+            return Column(
+              children: [
+                Card(
+                  elevation: 6,
+                  margin: const EdgeInsets.all(10),
+                  child: ListTile(
+                    tileColor: Theme.of(context).colorScheme.background,
+                    title: Text('Apuntados ($numCourtsText)',
+                        style: const TextStyle(color: Colors.black)),
+                    enabled: false,
+                  ),
+                ),
+                Card(
+                  elevation: 6,
+                  margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+                  color: Theme.of(context).colorScheme.background,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ...usersPlaying.map((player) =>
+                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ...usersSigned.map((player) => Text(
+                            '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                            style: const TextStyle(color: Colors.red))),
+                        ...usersFillEmptySpaces
+                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                      ],
+                    ),
+                  ),
+                ),
+                if (usersReserve.isNotEmpty)
+                  Card(
+                    elevation: 6,
+                    margin: const EdgeInsets.all(10),
+                    child: ListTile(
+                      tileColor: Theme.of(context).colorScheme.background,
+                      title: const Text('Reservas', style: TextStyle(color: Colors.black)),
+                      enabled: false,
+                    ),
+                  ),
+                if (usersReserve.isNotEmpty)
+                  Card(
+                    elevation: 6,
+                    margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+                    color: Theme.of(context).colorScheme.background,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...usersReserve.map((player) =>
+                              Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }
+        },
+      );
 
   void confirm() async {
     // Add/delete player from the match
