@@ -1,7 +1,4 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:getwidget/components/border/gf_border.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';
@@ -30,7 +27,8 @@ class _LoginState extends State<Login> {
     await Environment().initialize();
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
-      setState(() => version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(() =>
+          version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
       setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
     }
@@ -40,6 +38,9 @@ class _LoginState extends State<Login> {
   void initState() {
     super.initState();
     getVersion();
+    // for development
+    // emailController.text = '';
+    // pwdController.text = '';
   }
 
   @override
@@ -119,60 +120,6 @@ class _LoginState extends State<Login> {
                   child: const Text('Entrar'),
                 ),
                 const SizedBox(height: 50.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      flex: 3,
-                      child: Card(
-                        color: Theme.of(context).colorScheme.background,
-                        elevation: 6,
-                        margin: const EdgeInsets.all(10),
-                        child: SizedBox(
-                          height: 200,
-                          child: ListWheelScrollView(
-                              itemExtent: 30,
-                              magnification: 1.5,
-                              useMagnifier: true,
-                              diameterRatio: 2,
-                              squeeze: 0.8,
-                              perspective: 0.01,
-                              physics: const FixedExtentScrollPhysics(),
-                              scrollBehavior: const MaterialScrollBehavior().copyWith(
-                                dragDevices: {
-                                  PointerDeviceKind.mouse,
-                                  PointerDeviceKind.touch,
-                                  PointerDeviceKind.stylus,
-                                  PointerDeviceKind.unknown
-                                },
-                              ),
-                              onSelectedItemChanged: (index) {
-                                setState(() {
-                                  print(index);
-                                });
-                              },
-                              children: [
-                                for (int i = 0; i < 30; i++) Text('Cafe $i'),
-                              ]),
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Flexible(
-                        flex: 2,
-                        child: Column(
-                          children: [
-                            const Text('Apuntar a:'),
-                            const SizedBox(height: 10),
-                            const Text(''),
-                            ElevatedButton(
-                              child: const Text('Confirmar'),
-                              onPressed: () {},
-                            )
-                          ],
-                        ))
-                  ],
-                )
               ],
             ),
           )
@@ -187,7 +134,9 @@ class _LoginState extends State<Login> {
     if (_formKey.currentState!.validate()) {
       String email = emailController.text;
       if (!email.contains('@')) email = email + MyUser.emailSuffix;
-      AuthenticationHelper().signIn(email: email, password: pwdController.text).then((result) async {
+      AuthenticationHelper()
+          .signIn(email: email, password: pwdController.text)
+          .then((result) async {
         if (result == null) {
           await Navigator.of(context).pushNamed(RouteManager.loadingPage);
 

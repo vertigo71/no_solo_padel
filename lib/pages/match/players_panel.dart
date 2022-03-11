@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
+import '../../interface/telegram.dart';
 import '../../models/debug.dart';
 import '../../models/register_model.dart';
 import '../../models/match_model.dart';
@@ -295,13 +296,21 @@ class _PlayersPanelState extends State<PlayersPanel> {
       required bool adminManagingUser}) async {
     MyLog().log(_classString, 'validate');
 
+    // check
+    bool userInTheMatch = match.isInTheMatch(user);
+    if (!toAdd ^ userInTheMatch) {
+      // toAdd and user already in the match
+      // !toAdd and user not in the match
+      showMessage(context, 'Nada por hacer');
+      return false;
+    }
+
     // Add/delete player from the match
     String message = 'Los datos han sido actualizados';
     String registerText = '';
 
     int position = -1;
     if (toAdd) {
-      MyLog().log(_classString, 'added to the match');
       if (getPositionFromController) {
         String positionStr = userPositionController.text;
         position = int.tryParse(positionStr) ?? -1;
@@ -309,6 +318,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
       }
       match.insertPlayer(user, position: position);
       registerText = 'apuntado';
+      MyLog().log(_classString, 'addding to the match position $position');
     } else {
       if (!adminManagingUser) {
         // ask for confirmation
@@ -319,12 +329,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
         MyLog().log(_classString, 'confirm response = $response');
 
         if (response != option1) {
-          // do not proceed and set user in the match
-          setState(() {
-            loggedUserInTheMatch = true;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Operación anulada', style: TextStyle(fontSize: 16))));
+          showMessage(context, 'Operación anulada');
           return false;
         }
       }
@@ -351,6 +356,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             date: match.date,
             message: registerText,
           ));
+      TelegramHelper.send('Mensaje automático: $registerText');
     } catch (e) {
       message = 'ERROR en la actualización de los datos. \n\n $e';
       MyLog().log(_classString, 'ERROR en la actualización de los datos',
@@ -358,13 +364,13 @@ class _PlayersPanelState extends State<PlayersPanel> {
       return false;
     }
     if (loggedUser == user || adminManagingUser) {
+      // update state
       setState(() {
         isSelectedUserInTheMatch = toAdd;
         if (loggedUser == user) loggedUserInTheMatch = toAdd;
       });
     }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
+    showMessage(context, message);
 
     return true;
   }
