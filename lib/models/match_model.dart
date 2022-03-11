@@ -1,5 +1,6 @@
 import 'dart:math';
 
+
 import '../utilities/misc.dart';
 import 'user_model.dart';
 
@@ -37,7 +38,7 @@ class MyMatch {
     return list;
   }
 
-  bool isPlaying(MyUser user) {
+  bool isInTheMatch(MyUser user) {
     for (var player in players) {
       if (player == user) return true;
     }
@@ -67,6 +68,18 @@ class MyMatch {
 
   bool addPlayer(MyUser player) {
     return players.add( player);
+  }
+
+  bool insertPlayer(MyUser player, {int position = -1}){
+    if (position < 0) return addPlayer(player);
+    int numPlayers = players.length;
+    if (position > numPlayers) position = numPlayers;
+    List<MyUser> _players = players.toList();
+    _players.insert(position, player);
+    players.clear();
+    players.addAll(_players);
+    if ( numPlayers == players.length) return false;
+    return true;
   }
 
   bool removePlayer(MyUser player) {

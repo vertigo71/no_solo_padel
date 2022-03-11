@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -21,50 +23,63 @@ class PlayersPanel extends StatefulWidget {
 }
 
 class _PlayersPanelState extends State<PlayersPanel> {
-  // checkBox
-  bool isLoggedUserInTheMatch = false;
+  late final MyMatch match;
+
+  late MyUser loggedUser;
+  bool loggedUserInTheMatch = false; // checkBox
+
+  late MyUser selectedUser;
+  bool isSelectedUserInTheMatch = false;
+  TextEditingController userPositionController = TextEditingController();
 
   @override
   void initState() {
-    MyMatch match = context.read<AppState>().getMatch(widget.date) ??
-        MyMatch(date: widget.date);
+    match = context.read<AppState>().getMatch(widget.date) ?? MyMatch(date: widget.date);
 
-    MyUser loggedUser = context.read<AppState>().getLoggedUser();
+    loggedUser = context.read<AppState>().getLoggedUser();
     PlayingState state = match.getPlayingState(loggedUser);
-    isLoggedUserInTheMatch = state != PlayingState.unsigned;
+    loggedUserInTheMatch = state != PlayingState.unsigned;
+    isSelectedUserInTheMatch = loggedUserInTheMatch;
+    selectedUser = loggedUser;
 
     MyLog().log(_classString, 'initState arguments = $match');
-    MyLog().log(_classString, 'loggedUser in match= $isLoggedUserInTheMatch');
+    MyLog().log(_classString, 'loggedUser in match= $loggedUserInTheMatch');
 
     super.initState();
   }
 
   @override
+  void dispose() {
+    userPositionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    MyLog().log(_classString, 'Building');
+
     AppState appState = context.read<AppState>();
-    return Expanded(
-      child: ListView(
-        children: [
-          signInOutForm(),
-          const Divider(thickness: 5),
-          if (appState.isLoggedUserAdmin) signInOutAdminForm(),
-          if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
-          listOfPlayers(),
-        ],
-      ),
+    return ListView(
+      children: [
+        signUpForm(),
+        const Divider(thickness: 5),
+        if (appState.isLoggedUserAdmin) signUpAdminForm(),
+        if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
+        listOfPlayers(),
+      ],
     );
   }
 
-  Widget signInOutForm() => Padding(
+  Widget signUpForm() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Checkbox(
-              value: isLoggedUserInTheMatch,
+              value: loggedUserInTheMatch,
               onChanged: (bool? value) {
                 setState(() {
-                  isLoggedUserInTheMatch = value!;
+                  loggedUserInTheMatch = value!;
                 });
               },
             ),
@@ -73,87 +88,186 @@ class _PlayersPanelState extends State<PlayersPanel> {
             const SizedBox(width: 10),
             ElevatedButton(
               child: const Text('Confirmar'),
-              onPressed: () => confirm(),
+              onPressed: () => validate(
+                user: loggedUser,
+                toAdd: loggedUserInTheMatch,
+                getPositionFromController: false,
+                adminManagingUser: false,
+              ),
             ),
           ],
         ),
       );
 
-  Widget signInOutAdminForm() => Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Flexible(
+  Widget signUpAdminForm() {
+    AppState appState = context.read<AppState>();
+    List<MyUser> users = appState.allSortedUsers;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Flexible(
+            flex: 3,
+            child: SizedBox(
+              height: 260,
+              child: ListWheelScrollView(
+                itemExtent: 40,
+                magnification: 1.5,
+                useMagnifier: true,
+                diameterRatio: 2,
+                squeeze: 0.7,
+                offAxisFraction: -0.3,
+                perspective: 0.01,
+                physics: const FixedExtentScrollPhysics(),
+                scrollBehavior: const MaterialScrollBehavior().copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.stylus,
+                    PointerDeviceKind.unknown
+                  },
+                ),
+                onSelectedItemChanged: (index) {
+                  setState(() {
+                    selectedUser = users[index];
+                    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser);
+                  });
+                },
+                children: users
+                    .map((u) => Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Theme.of(context).colorScheme.background),
+                          child: Center(child: Text(u.name, style: const TextStyle(fontSize: 11))),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+          const Spacer(),
+          Flexible(
               flex: 2,
-              child: Container(
-                color: Colors.amberAccent,
-                height: 150,
-                child: ListWheelScrollView(
-                    itemExtent: 30,
-                    magnification: 1.5,
-                    useMagnifier: true,
-                    diameterRatio: 5,
-                    // squeeze: 0.8,
-                    physics: const FixedExtentScrollPhysics(),
-                    children: [
-                      for (int i = 0; i < 30; i++)
-                        ListTile(
-                          title: Text('Cafe $i'),
-                          subtitle: const Text('Description here'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  Card(
+                      elevation: 6,
+                      color: Theme.of(context).colorScheme.background,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(selectedUser.name),
+                      )),
+                  if (!isSelectedUserInTheMatch) const SizedBox(height: 20),
+                  if (!isSelectedUserInTheMatch)
+                    Form(
+                        child: TextFormField(
+                      onFieldSubmitted: (String str) async => validate(
+                        user: selectedUser,
+                        toAdd: true,
+                        getPositionFromController: true,
+                        adminManagingUser: true,
+                      ),
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: 'Posición',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4.0)),
                         ),
-                    ]),
-              ),
-            ),
-            const Flexible(child: Text('Me apunto!!!')),
-            Flexible(
-              child: ElevatedButton(
-                child: const Text('Confirmar'),
-                onPressed: () => confirm(),
-              ),
-            ),
-          ],
-        ),
-      );
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
+                      ],
+                      controller: userPositionController,
+                      // The validator receives the text that the user has entered.
+                    )),
+                  const SizedBox(height: 40),
+                  ElevatedButton(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        isSelectedUserInTheMatch ? 'Dar de baja' : 'Apuntar',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    onPressed: () => validate(
+                      user: selectedUser,
+                      toAdd: !isSelectedUserInTheMatch,
+                      getPositionFromController: true,
+                      adminManagingUser: true,
+                    ),
+                  ),
+                ],
+              ))
+        ],
+      ),
+    );
+  }
 
   Widget listOfPlayers() => Consumer<AppState>(
         builder: (context, state, _) {
           int playerNumber = 0;
-          MyMatch? match = context.read<AppState>().getMatch(widget.date);
-          if (match == null) {
-            return Text(
-                'ERROR!: partido no encontrado para la fecha ${widget.date} \n'
-                'No se pueden mostrar los jugadores');
-          } else {
-            Set<MyUser> usersPlaying =
-                match.getPlayers(state: PlayingState.playing);
-            Set<MyUser> usersSigned =
-                match.getPlayers(state: PlayingState.signedNotPlaying);
-            Set<MyUser> usersReserve =
-                match.getPlayers(state: PlayingState.reserve);
-            List<MyUser> usersFillEmptySpaces = [];
-            for (int i = usersPlaying.length + usersSigned.length;
-                i < match.getNumberOfCourts() * 4;
-                i++) {
-              usersFillEmptySpaces.add(MyUser());
-            }
 
-            String numCourtsText = 'disponible ' +
-                match.getNumberOfCourts().toString() +
-                (match.getNumberOfCourts() == 1 ? ' pista' : ' pistas');
+          Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
+          Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
+          Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
+          List<MyUser> usersFillEmptySpaces = [];
+          for (int i = usersPlaying.length + usersSigned.length;
+              i < match.getNumberOfCourts() * 4;
+              i++) {
+            usersFillEmptySpaces.add(MyUser());
+          }
 
-            return Column(
-              children: [
+          String numCourtsText = 'disponible ' +
+              match.getNumberOfCourts().toString() +
+              (match.getNumberOfCourts() == 1 ? ' pista' : ' pistas');
+
+          return Column(
+            children: [
+              Card(
+                elevation: 6,
+                margin: const EdgeInsets.all(10),
+                child: ListTile(
+                  tileColor: Theme.of(context).colorScheme.background,
+                  title: Text('Apuntados ($numCourtsText)',
+                      style: const TextStyle(color: Colors.black)),
+                  enabled: false,
+                ),
+              ),
+              Card(
+                elevation: 6,
+                margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+                color: Theme.of(context).colorScheme.background,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ...usersPlaying.map((player) =>
+                          Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                      ...usersSigned.map((player) => Text(
+                          '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                          style: const TextStyle(color: Colors.red))),
+                      ...usersFillEmptySpaces
+                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                    ],
+                  ),
+                ),
+              ),
+              if (usersReserve.isNotEmpty)
                 Card(
                   elevation: 6,
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
                     tileColor: Theme.of(context).colorScheme.background,
-                    title: Text('Apuntados ($numCourtsText)',
-                        style: const TextStyle(color: Colors.black)),
+                    title: const Text('Reservas', style: TextStyle(color: Colors.black)),
                     enabled: false,
                   ),
                 ),
+              if (usersReserve.isNotEmpty)
                 Card(
                   elevation: 6,
                   margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
@@ -163,65 +277,41 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersPlaying.map((player) => Text(
-                            '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                        ...usersSigned.map((player) => Text(
-                            '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
-                            style: const TextStyle(color: Colors.red))),
-                        ...usersFillEmptySpaces.map((player) => Text(
-                            '${(++playerNumber).toString().padLeft(3)} - ')),
+                        ...usersReserve.map((player) =>
+                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                       ],
                     ),
                   ),
                 ),
-                if (usersReserve.isNotEmpty)
-                  Card(
-                    elevation: 6,
-                    margin: const EdgeInsets.all(10),
-                    child: ListTile(
-                      tileColor: Theme.of(context).colorScheme.background,
-                      title: const Text('Reservas',
-                          style: TextStyle(color: Colors.black)),
-                      enabled: false,
-                    ),
-                  ),
-                if (usersReserve.isNotEmpty)
-                  Card(
-                    elevation: 6,
-                    margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                    color: Theme.of(context).colorScheme.background,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ...usersReserve.map((player) => Text(
-                              '${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          }
+            ],
+          );
         },
       );
 
-  void confirm() async {
-    // Add/delete player from the match
-    MyMatch? match = context.read<AppState>().getMatch(widget.date);
-    MyUser loggedUser = context.read<AppState>().getLoggedUser();
-    String message = 'Los datos han sido actualizados';
-    if (match == null) {
-      message =
-          'ERROR: Partido no encontrado. No se ha podido apuntar al jugador';
-    } else {
-      String registerText = '';
+  Future<bool> validate(
+      {required MyUser user,
+      required bool toAdd,
+      bool getPositionFromController = false,
+      required bool adminManagingUser}) async {
+    MyLog().log(_classString, 'validate');
 
-      if (isLoggedUserInTheMatch) {
-        match.addPlayer(loggedUser);
-        registerText = 'apuntado';
-      } else {
+    // Add/delete player from the match
+    String message = 'Los datos han sido actualizados';
+    String registerText = '';
+
+    int position = -1;
+    if (toAdd) {
+      MyLog().log(_classString, 'added to the match');
+      if (getPositionFromController) {
+        String positionStr = userPositionController.text;
+        position = int.tryParse(positionStr) ?? -1;
+        if (position > 0) position--;
+      }
+      match.insertPlayer(user, position: position);
+      registerText = 'apuntado';
+    } else {
+      if (!adminManagingUser) {
+        // ask for confirmation
         const String option1 = 'Confirmar';
         const String option2 = 'Anular';
         String response = await myReturnValueDialog(
@@ -231,38 +321,51 @@ class _PlayersPanelState extends State<PlayersPanel> {
         if (response != option1) {
           // do not proceed and set user in the match
           setState(() {
-            isLoggedUserInTheMatch = true;
+            loggedUserInTheMatch = true;
           });
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content:
-                  Text('Operación anulada', style: TextStyle(fontSize: 16))));
-          return;
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Operación anulada', style: TextStyle(fontSize: 16))));
+          return false;
         }
-
-        registerText = 'desapuntado';
-        match.removePlayer(loggedUser);
       }
-      // message
-      registerText = '${loggedUser.name} se ha ' + registerText;
-
-      // add to FireBase
-      try {
-        await context
-            .read<Director>()
-            .firebaseHelper
-            .uploadMatch(match: match, updateCore: false, updatePlayers: true);
-        context.read<Director>().firebaseHelper.uploadRegister(
-                register: RegisterModel(
-              date: match.date,
-              message: registerText,
-            ));
-      } catch (e) {
-        message = 'ERROR en la actualización de los datos. \n\n $e';
-        MyLog().log(_classString, 'ERROR en la actualización de los datos',
-            exception: e, debugType: DebugType.error);
-      }
+      MyLog().log(_classString, 'removed from the match');
+      registerText = 'desapuntado';
+      match.removePlayer(user);
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
+    // message to the register
+    if (adminManagingUser) {
+      registerText =
+          '${loggedUser.name} ha $registerText a ${user.name}' + (toAdd ? ' ($position)' : '');
+    } else {
+      registerText = '${user.name} se ha $registerText';
+    }
+
+    // add to FireBase
+    try {
+      await context
+          .read<Director>()
+          .firebaseHelper
+          .uploadMatch(match: match, updateCore: false, updatePlayers: true);
+      context.read<Director>().firebaseHelper.uploadRegister(
+              register: RegisterModel(
+            date: match.date,
+            message: registerText,
+          ));
+    } catch (e) {
+      message = 'ERROR en la actualización de los datos. \n\n $e';
+      MyLog().log(_classString, 'ERROR en la actualización de los datos',
+          exception: e, debugType: DebugType.error);
+      return false;
+    }
+    if (loggedUser == user || adminManagingUser) {
+      setState(() {
+        isSelectedUserInTheMatch = toAdd;
+        if (loggedUser == user) loggedUserInTheMatch = toAdd;
+      });
+    }
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message, style: const TextStyle(fontSize: 16))));
+
+    return true;
   }
 }
