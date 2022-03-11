@@ -26,6 +26,7 @@ enum DBFields {
   matchDaysKeeping,
   registerDaysAgoToView,
   registerDaysKeeping,
+  fromDaysAgoToTelegram,
   minDebugLevel,
   weekDaysMatch,
   showLog,
@@ -53,8 +54,7 @@ class FirebaseHelper {
     try {
       return _instance
           .collection(_str(DBFields.register))
-          .where(FieldPath.documentId,
-              isGreaterThan: Date.now().subtract(Duration(days: fromDaysAgo)).toYyyyMMdd())
+          .where(FieldPath.documentId, isGreaterThan: Date.now().subtract(Duration(days: fromDaysAgo)).toYyyyMMdd())
           .snapshots()
           .map((QuerySnapshot querySnapshot) => _getRegisterArray(querySnapshot));
     } catch (e) {
@@ -68,8 +68,7 @@ class FirebaseHelper {
         .map((DocumentSnapshot documentSnapshot) => RegisterModel.list(
               date: Date(DateTime.parse(documentSnapshot.id)),
               registerMsgList:
-                  ((documentSnapshot.data() as dynamic)[_str(DBFields.registerMessage)] ?? [])
-                      .cast<String>(),
+                  ((documentSnapshot.data() as dynamic)[_str(DBFields.registerMessage)] ?? []).cast<String>(),
             ))
         .toList();
   }
@@ -86,34 +85,29 @@ class FirebaseHelper {
   }
 
   // core = comment + isOpen + courtNAmes
-  Future<void> uploadMatch(
-      {required MyMatch match, required bool updateCore, required bool updatePlayers}) async {
+  Future<void> uploadMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async {
     MyLog().log(_classString, 'uploadMatch $match');
 
     Map<String, dynamic> uploadMap = {
       if (updateCore) _str(DBFields.comment): match.comment,
       if (updateCore) _str(DBFields.isOpen): match.isOpen,
       if (updateCore) _str(DBFields.courtNames): match.courtNames.toList(),
-      if (updatePlayers)
-        _str(DBFields.players): match.players.map((player) => player.userId).toList(),
+      if (updatePlayers) _str(DBFields.players): match.players.map((player) => player.userId).toList(),
     };
 
     return _instance
         .collection(_str(DBFields.matches))
         .doc(match.date.toYyyyMMdd())
         .update(uploadMap)
-        .catchError((onError) => _instance
-            .collection(_str(DBFields.matches))
-            .doc(match.date.toYyyyMMdd())
-            .set(uploadMap))
+        .catchError(
+            (onError) => _instance.collection(_str(DBFields.matches)).doc(match.date.toYyyyMMdd()).set(uploadMap))
         .catchError((onError) => MyLog().log(_classString, 'uploadMatch',
             myCustomObject: uploadMap, exception: onError, debugType: DebugType.error));
   }
 
   // return false if existed, true if created
   Future<bool> createMatchIfNotExists({required MyMatch match}) async {
-    bool exists =
-        await doesDocExist(collection: _str(DBFields.matches), doc: match.date.toYyyyMMdd());
+    bool exists = await doesDocExist(collection: _str(DBFields.matches), doc: match.date.toYyyyMMdd());
     MyLog().log(_classString, 'createMatchIfNotExists exists $exists $match');
     if (exists) return false;
 
@@ -133,10 +127,9 @@ class FirebaseHelper {
         .collection(_str(DBFields.register))
         .doc(register.date.toYyyyMMdd())
         .update(data)
-        .catchError((e) =>
-            _instance.collection(_str(DBFields.register)).doc(register.date.toYyyyMMdd()).set(data))
-        .catchError((onError) => MyLog().log(_classString, 'uploadRegister',
-            myCustomObject: data, exception: onError, debugType: DebugType.error));
+        .catchError((e) => _instance.collection(_str(DBFields.register)).doc(register.date.toYyyyMMdd()).set(data))
+        .catchError((onError) => MyLog()
+            .log(_classString, 'uploadRegister', myCustomObject: data, exception: onError, debugType: DebugType.error));
   }
 
   Future<void> uploadParameters({required List<String> parameters}) async {
@@ -148,11 +141,8 @@ class FirebaseHelper {
     }
     MyLog().log(_classString, 'uploadParameters data', myCustomObject: data);
 
-    return _instance
-        .collection(_str(DBFields.parameters))
-        .doc(_str(DBFields.parameters))
-        .set(data)
-        .catchError((onError) => MyLog().log(_classString, 'uploadParameters',
+    return _instance.collection(_str(DBFields.parameters)).doc(_str(DBFields.parameters)).set(data).catchError(
+        (onError) => MyLog().log(_classString, 'uploadParameters',
             myCustomObject: data, exception: onError, debugType: DebugType.error));
   }
 
@@ -186,20 +176,18 @@ class FirebaseHelper {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         MyParameters myParameters = MyParameters();
         try {
+          myParameters.setValue(ParametersEnum.matchDaysToView, data[_str(DBFields.matchDaysToView)]);
           myParameters.setValue(
-              ParametersEnum.matchDaysToView, data[_str(DBFields.matchDaysToView)]);
-          myParameters.setValue(ParametersEnum.registerDaysAgoToView,
-              data[_str(DBFields.registerDaysAgoToView)] ?? '1');
-          myParameters.setValue(
-              ParametersEnum.matchDaysKeeping, data[_str(DBFields.matchDaysKeeping)]);
-          myParameters.setValue(
-              ParametersEnum.registerDaysKeeping, data[_str(DBFields.registerDaysKeeping)]);
+              ParametersEnum.registerDaysAgoToView, data[_str(DBFields.registerDaysAgoToView)] ?? '1');
+          myParameters.setValue(ParametersEnum.matchDaysKeeping, data[_str(DBFields.matchDaysKeeping)]);
+          myParameters.setValue(ParametersEnum.registerDaysKeeping, data[_str(DBFields.registerDaysKeeping)]);
+          myParameters.setValue(ParametersEnum.fromDaysAgoToTelegram, data[_str(DBFields.fromDaysAgoToTelegram)]);
           myParameters.setValue(ParametersEnum.minDebugLevel, data[_str(DBFields.minDebugLevel)]);
           myParameters.setValue(ParametersEnum.weekDaysMatch, data[_str(DBFields.weekDaysMatch)]);
           myParameters.setValue(ParametersEnum.showLog, data[_str(DBFields.showLog)]);
         } catch (e) {
-          MyLog().log(_classString, '_downloadParameters',
-              myCustomObject: data, exception: e, debugType: DebugType.error);
+          MyLog()
+              .log(_classString, '_downloadParameters', myCustomObject: data, exception: e, debugType: DebugType.error);
         }
         return myParameters;
       }
@@ -217,8 +205,8 @@ class FirebaseHelper {
       querySnapshot = await _instance.collection(_str(DBFields.users)).get();
       users = _downloadUsers(snapshot: querySnapshot);
     } catch (e) {
-      MyLog().log(_classString, 'downloadUsers',
-          myCustomObject: querySnapshot, exception: e, debugType: DebugType.error);
+      MyLog()
+          .log(_classString, 'downloadUsers', myCustomObject: querySnapshot, exception: e, debugType: DebugType.error);
     }
     return users;
   }
@@ -246,8 +234,7 @@ class FirebaseHelper {
       if (user.hasNotEmptyFields()) {
         users.add(user);
       } else {
-        MyLog().log(
-            _classString, '_downloadUsers Formato de usuario incorrecto en la Base de Datos',
+        MyLog().log(_classString, '_downloadUsers Formato de usuario incorrecto en la Base de Datos',
             debugType: DebugType.error, myCustomObject: user);
       }
     }
@@ -268,8 +255,7 @@ class FirebaseHelper {
       querySnapshot = await _instance
           .collection(_str(DBFields.matches))
           .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId,
-              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
+          .where(FieldPath.documentId, isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
           .get();
       matches = _downloadMatches(snapshot: querySnapshot, availableUsers: availableUsers);
     } catch (e) {
@@ -301,10 +287,8 @@ class FirebaseHelper {
     required int numDays,
     required List<MyUser> Function() availableUsers,
     required void Function(MyParameters? parameters) parametersFunction,
-    required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed)
-        usersFunction,
-    required void Function(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed)
-        matchesFunction,
+    required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
+    required void Function(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed) matchesFunction,
   }) async {
     await disposeListeners();
 
@@ -313,8 +297,7 @@ class FirebaseHelper {
     // update parameters
     MyParameters? myParameters;
     try {
-      _paramListener =
-          _instance.collection(_str(DBFields.parameters)).snapshots().listen((snapshot) {
+      _paramListener = _instance.collection(_str(DBFields.parameters)).snapshots().listen((snapshot) {
         MyLog().log(_classString, 'LISTENER parameters started');
 
         myParameters = _downloadParameters(snapshot: snapshot);
@@ -352,8 +335,7 @@ class FirebaseHelper {
       _matchesListener = _instance
           .collection(_str(DBFields.matches))
           .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId,
-              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
+          .where(FieldPath.documentId, isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
           .snapshots()
           .listen((snapshot) {
         MyLog().log(_classString, 'LISTENER matches started');
@@ -431,8 +413,7 @@ class FirebaseHelper {
           removedUsers.add(user);
         }
       } else {
-        MyLog().log(
-            _classString, '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
+        MyLog().log(_classString, '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
             debugType: DebugType.error, myCustomObject: user);
       }
     }
@@ -445,8 +426,7 @@ class FirebaseHelper {
     required List<MyMatch> modifiedMatches,
     required List<MyMatch> removedMatches,
   }) {
-    MyLog()
-        .log(_classString, '_downloadChangedMatches Number of matches = ${snapshot.docs.length}');
+    MyLog().log(_classString, '_downloadChangedMatches Number of matches = ${snapshot.docs.length}');
 
     addedMatches.clear();
     modifiedMatches.clear();
@@ -479,8 +459,7 @@ class FirebaseHelper {
 
     return _instance
         .collection(_str(collection))
-        .where(FieldPath.documentId,
-            isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
+        .where(FieldPath.documentId, isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
@@ -488,8 +467,7 @@ class FirebaseHelper {
         ds.reference.delete();
       }
     }).catchError((onError) {
-      MyLog().log(_classString, 'delete ${collection.name}',
-          exception: onError, debugType: DebugType.error);
+      MyLog().log(_classString, 'delete ${collection.name}', exception: onError, debugType: DebugType.error);
     });
   }
 

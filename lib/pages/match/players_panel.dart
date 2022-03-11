@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel_dev/models/parameter_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -26,12 +27,12 @@ class PlayersPanel extends StatefulWidget {
 class _PlayersPanelState extends State<PlayersPanel> {
   late final MyMatch match;
 
-  late MyUser loggedUser;
+  late final MyUser loggedUser;
   bool loggedUserInTheMatch = false; // checkBox
 
   late MyUser selectedUser;
   bool isSelectedUserInTheMatch = false;
-  TextEditingController userPositionController = TextEditingController();
+  final TextEditingController userPositionController = TextEditingController();
 
   @override
   void initState() {
@@ -67,6 +68,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
         if (appState.isLoggedUserAdmin) signUpAdminForm(),
         if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
         listOfPlayers(),
+        const SizedBox(height: 50),
       ],
     );
   }
@@ -140,8 +142,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 children: users
                     .map((u) => Container(
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Theme.of(context).colorScheme.background),
+                              borderRadius: BorderRadius.circular(15), color: Theme.of(context).colorScheme.background),
                           child: Center(child: Text(u.name, style: const TextStyle(fontSize: 11))),
                         ))
                     .toList(),
@@ -216,9 +217,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
           Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
           Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
-          for (int i = usersPlaying.length + usersSigned.length;
-              i < match.getNumberOfCourts() * 4;
-              i++) {
+          for (int i = usersPlaying.length + usersSigned.length; i < match.getNumberOfCourts() * 4; i++) {
             usersFillEmptySpaces.add(MyUser());
           }
 
@@ -233,8 +232,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
                   tileColor: Theme.of(context).colorScheme.background,
-                  title: Text('Apuntados ($numCourtsText)',
-                      style: const TextStyle(color: Colors.black)),
+                  title: Text('Apuntados ($numCourtsText)', style: const TextStyle(color: Colors.black)),
                   enabled: false,
                 ),
               ),
@@ -247,13 +245,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ...usersPlaying.map((player) =>
-                          Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                      ...usersSigned.map((player) => Text(
-                          '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                      ...usersPlaying
+                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                      ...usersSigned.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}',
                           style: const TextStyle(color: Colors.red))),
-                      ...usersFillEmptySpaces
-                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                      ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
                     ],
                   ),
                 ),
@@ -278,8 +274,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersReserve.map((player) =>
-                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ...usersReserve
+                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                       ],
                     ),
                   ),
@@ -309,23 +305,22 @@ class _PlayersPanelState extends State<PlayersPanel> {
     String message = 'Los datos han sido actualizados';
     String registerText = '';
 
-    int position = -1;
+    int listPosition = -1;
     if (toAdd) {
       if (getPositionFromController) {
         String positionStr = userPositionController.text;
-        position = int.tryParse(positionStr) ?? -1;
-        if (position > 0) position--;
+        listPosition = int.tryParse(positionStr) ?? -1;
+        if (listPosition > 0) listPosition--;
       }
-      match.insertPlayer(user, position: position);
+      match.insertPlayer(user, position: listPosition);
       registerText = 'apuntado';
-      MyLog().log(_classString, 'addding to the match position $position');
+      MyLog().log(_classString, 'addding to the match position $listPosition');
     } else {
       if (!adminManagingUser) {
         // ask for confirmation
         const String option1 = 'Confirmar';
         const String option2 = 'Anular';
-        String response = await myReturnValueDialog(
-            context, '¿Seguro que quieres desapuntarte?', option1, option2);
+        String response = await myReturnValueDialog(context, '¿Seguro que quieres desapuntarte?', option1, option2);
         MyLog().log(_classString, 'confirm response = $response');
 
         if (response != option1) {
@@ -337,30 +332,30 @@ class _PlayersPanelState extends State<PlayersPanel> {
       registerText = 'desapuntado';
       match.removePlayer(user);
     }
+
     // message to the register
     if (adminManagingUser) {
-      registerText =
-          '${loggedUser.name} ha $registerText a ${user.name}' + (toAdd ? ' ($position)' : '');
+      if (listPosition >= match.players.length || listPosition == -1) listPosition = match.players.length - 1;
+      registerText = '${loggedUser.name} ha $registerText a ${user.name}' + (toAdd ? ' (${listPosition + 1})' : '');
     } else {
       registerText = '${user.name} se ha $registerText';
     }
 
     // add to FireBase
     try {
-      await context
-          .read<Director>()
-          .firebaseHelper
-          .uploadMatch(match: match, updateCore: false, updatePlayers: true);
+      await context.read<Director>().firebaseHelper.uploadMatch(match: match, updateCore: false, updatePlayers: true);
       context.read<Director>().firebaseHelper.uploadRegister(
               register: RegisterModel(
             date: match.date,
             message: registerText,
           ));
-      TelegramHelper.send('Mensaje automático: $registerText');
+      TelegramHelper.sendIfDateMatches(
+          message: 'Mensaje automático (${match.date}): $registerText',
+          matchDate: match.date,
+          fromDaysAgoToTelegram: context.read<AppState>().getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
     } catch (e) {
       message = 'ERROR en la actualización de los datos. \n\n $e';
-      MyLog().log(_classString, 'ERROR en la actualización de los datos',
-          exception: e, debugType: DebugType.error);
+      MyLog().log(_classString, 'ERROR en la actualización de los datos', exception: e, debugType: DebugType.error);
       return false;
     }
     if (loggedUser == user || adminManagingUser) {

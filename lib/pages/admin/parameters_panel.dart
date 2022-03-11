@@ -10,32 +10,35 @@ import '../../utilities/misc.dart';
 
 class _FormFields {
   static List<String> text = [
-    'Partidos: ver número de días',
-    'Partidos: histórico de días a conservar',
-    'Registro: ver número de días atrás',
-    'Registro: histórico de días a conservar',
-    'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})',
-    'Días que se pueden jugar (${MyParameters.daysOfWeek})',
-    '', // not a textFormField
+    'Partidos: ver número de días', // matchDaysToView
+    'Partidos: histórico de días a conservar', // matchDaysKeeping
+    'Registro: ver número de días atrás', // registerDaysAgoToView
+    'Registro: histórico de días a conservar', // registerDaysKeeping
+    'Enviar telegram si partido es antes de (días)', // fromDaysAgoToTelegram
+    'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})', // minDebugLevel
+    'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
+    '', // not a textFormField // showLog
   ];
 
   static List<String> listAllowedChars = [
-    '[0-9]',
-    '[0-9]',
-    '[0-9]',
-    '[0-9]',
-    '[0-${DebugType.values.length - 1}]',
-    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
-    '', // not a textFormField
+    '[0-9]', // matchDaysToView
+    '[0-9]', // matchDaysKeeping
+    '[0-9]', // registerDaysAgoToView
+    '[0-9]', // registerDaysKeeping
+    '[0-9]', // fromDaysAgoToTelegram
+    '[0-${DebugType.values.length - 1}]', // minDebugLevel
+    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]', // weekDaysMatch
+    '', // not a textFormField // showLog
   ];
 
   static List<bool> isTextField = [
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
+    true, // matchDaysToView
+    true, // matchDaysKeeping
+    true, // registerDaysAgoToView
+    true, // registerDaysKeeping
+    true, // fromDaysAgoToTelegram
+    true, // minDebugLevel
+    true, // weekDaysMatch
     false, // showLog
   ];
 
@@ -65,8 +68,8 @@ class _ParametersPanelState extends State<ParametersPanel> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<ParametersPageState>.
   final _formKey = GlobalKey<FormState>();
-  List<TextEditingController?> listControllers = List.generate(_FormFields.isTextField.length,
-      (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
+  List<TextEditingController?> listControllers = List.generate(
+      _FormFields.isTextField.length, (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
 
   late AppState appState;
   late FirebaseHelper firebaseHelper;
@@ -166,10 +169,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
       }
       // check no repeated chars in weekDaysMatch
       parameters[ParametersEnum.weekDaysMatch.index] =
-          parameters[ParametersEnum.weekDaysMatch.index]
-              .split('')
-              .toSet()
-              .fold('', (a, b) => '$a$b');
+          parameters[ParametersEnum.weekDaysMatch.index].split('').toSet().fold('', (a, b) => '$a$b');
 
       try {
         await firebaseHelper.uploadParameters(parameters: parameters);
@@ -185,8 +185,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate,
-      {Key? key})
+  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate, {Key? key})
       : super(key: key);
   final TextEditingController textController;
   final String fieldName;

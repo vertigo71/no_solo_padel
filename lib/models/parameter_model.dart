@@ -8,6 +8,7 @@ enum ParametersEnum {
   matchDaysKeeping,
   registerDaysAgoToView,
   registerDaysKeeping,
+  fromDaysAgoToTelegram,
   minDebugLevel, // according to DebugType
   weekDaysMatch, // days where matches can be played
   showLog, // show log for all users (bool)
@@ -18,6 +19,7 @@ const List<String> parametersDefault = [
   '15',
   '1',
   '15',
+  '2',
   '0', // according to DebugType
   'LMXJ', // days where matches can be played
   '0',
@@ -30,6 +32,7 @@ class MyParameters {
     setValue(ParametersEnum.matchDaysKeeping, null);
     setValue(ParametersEnum.registerDaysAgoToView, null);
     setValue(ParametersEnum.registerDaysKeeping, null);
+    setValue(ParametersEnum.fromDaysAgoToTelegram, null);
     setValue(ParametersEnum.minDebugLevel, null);
     setValue(ParametersEnum.weekDaysMatch, null);
     setValue(ParametersEnum.showLog, null);

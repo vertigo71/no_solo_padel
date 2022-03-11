@@ -80,7 +80,7 @@ class AppState with ChangeNotifier {
   List<MyUser> getAllUsers() => _allUsers;
 
   List<MyUser> get allSortedUsers {
-    _allUsers.sort((a, b) => a.name.compareTo(b.name));
+    _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return _allUsers;
   }
 
