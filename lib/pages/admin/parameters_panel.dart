@@ -123,7 +123,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  myGFToggle(
+                  myCheckBox(
                     context: context,
                     value: showLog,
                     onChanged: (bool? value) {

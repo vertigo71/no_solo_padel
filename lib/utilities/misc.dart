@@ -13,7 +13,7 @@ final String _classString = 'Miscellaneous'.toUpperCase();
 
 ThemeData myTheme(BuildContext context) {
   // alternative colors
-  final Color _backgroundAlt = Colors.deepOrange[400]!;
+  final Color _backgroundAlt = Colors.deepOrange[300]!;
   const Color _foregroundAlt = Colors.black;
   const Color _unselectedAlt = Colors.black54;
 
@@ -285,12 +285,14 @@ Color lighten(Color color, [double amount = .1]) {
   return hslLight.toColor();
 }
 
-GFToggle myGFToggle(
+Widget myCheckBox(
     {required BuildContext context, required void Function(bool?) onChanged, required bool value}) {
-  return GFToggle(
+  return GFCheckbox(
     onChanged: onChanged,
     value: value,
-    type: GFToggleType.ios,
-    enabledTrackColor: darken(Theme.of(context).backgroundColor, 0.3),
+    size: GFSize.SMALL,
+    type: GFCheckboxType.circle,
+    activeBgColor: darken(Theme.of(context).backgroundColor, 0.3),
+    inactiveBgColor: Theme.of(context).backgroundColor ,
   );
 }

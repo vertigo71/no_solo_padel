@@ -208,7 +208,7 @@ class ConfigurationFormWidgets extends StatelessWidget {
             const SizedBox(width: 10),
             const Text('Abrir convocatoria'),
             const SizedBox(width: 10),
-            myGFToggle(
+            myCheckBox(
               context: context,
               value: configurationPanelState.isMatchOpen,
               onChanged: (bool? value) {

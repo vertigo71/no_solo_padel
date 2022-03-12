@@ -79,26 +79,21 @@ class _PlayersPanelState extends State<PlayersPanel> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            myGFToggle(
+            const Text('¿Te apuntas?'),
+            const SizedBox(width: 20),
+            myCheckBox(
               context: context,
               value: loggedUserInTheMatch,
               onChanged: (bool? value) {
                 setState(() {
                   loggedUserInTheMatch = value!;
                 });
+                validate(
+                  user: loggedUser,
+                  toAdd: loggedUserInTheMatch,
+                  adminManagingUser: false,
+                );
               },
-            ),
-            const SizedBox(width: 10),
-            const Text('Me apunto!!!'),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              child: const Text('Confirmar'),
-              onPressed: () => validate(
-                user: loggedUser,
-                toAdd: loggedUserInTheMatch,
-                getPositionFromController: false,
-                adminManagingUser: false,
-              ),
             ),
           ],
         ),
@@ -175,11 +170,10 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     opacity: isSelectedUserInTheMatch ? 0 : 1,
                     child: Form(
                         child: TextFormField(
-                          enabled: !isSelectedUserInTheMatch,
+                      enabled: !isSelectedUserInTheMatch,
                       onFieldSubmitted: (String str) async => validate(
                         user: selectedUser,
                         toAdd: true,
-                        getPositionFromController: true,
                         adminManagingUser: true,
                       ),
                       keyboardType: TextInputType.text,
@@ -208,7 +202,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     onPressed: () => validate(
                       user: selectedUser,
                       toAdd: !isSelectedUserInTheMatch,
-                      getPositionFromController: true,
                       adminManagingUser: true,
                     ),
                   ),
@@ -297,8 +290,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
   Future<bool> validate(
       {required MyUser user,
-      required bool toAdd,
-      bool getPositionFromController = false,
+      required bool toAdd, // add user to match
       required bool adminManagingUser}) async {
     MyLog().log(_classString, 'validate');
 
@@ -317,7 +309,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
     int listPosition = -1;
     if (toAdd) {
-      if (getPositionFromController) {
+      if (adminManagingUser) {
+        // get position from the controller
         String positionStr = userPositionController.text;
         listPosition = int.tryParse(positionStr) ?? -1;
         if (listPosition > 0) listPosition--;
@@ -327,14 +320,18 @@ class _PlayersPanelState extends State<PlayersPanel> {
       MyLog().log(_classString, 'addding to the match position $listPosition');
     } else {
       if (!adminManagingUser) {
-        // ask for confirmation
+        // ask for confirmation if you are loggedUser trying to abandon the match
         const String option1 = 'Confirmar';
         const String option2 = 'Anular';
         String response = await myReturnValueDialog(
-            context, '¿Seguro que quieres desapuntarte?', option1, option2);
+            context, '¿Seguro que quieres darte de baja?', option1, option2);
         MyLog().log(_classString, 'confirm response = $response');
 
         if (response != option1) {
+          setState(() {
+            // loggedUser is still in the match
+            loggedUserInTheMatch = true;
+          });
           showMessage(context, 'Operación anulada');
           return false;
         }
@@ -378,11 +375,17 @@ class _PlayersPanelState extends State<PlayersPanel> {
           exception: e, debugType: DebugType.error);
       return false;
     }
-    if (loggedUser == user || adminManagingUser) {
+
+    userInTheMatch = match.isInTheMatch(user);
+    if (loggedUser == user ){
+      setState(() {
+        loggedUserInTheMatch = userInTheMatch;
+      });
+    }
+    if (selectedUser == user ) {
       // update state
       setState(() {
-        isSelectedUserInTheMatch = toAdd;
-        if (loggedUser == user) loggedUserInTheMatch = toAdd;
+        isSelectedUserInTheMatch = userInTheMatch;
       });
     }
     showMessage(context, message);

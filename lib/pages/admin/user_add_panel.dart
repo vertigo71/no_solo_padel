@@ -91,7 +91,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
                   const SizedBox(width: 10), //SizedBox
                   const Text('Administrador'), //Text
                   const SizedBox(width: 10), //SizedBox
-                  myGFToggle(
+                  myCheckBox(
                     context: context,
                     value: isAdmin,
                     onChanged: (bool? value) {
@@ -103,7 +103,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
                   const SizedBox(width: 10),
                   const Text('Superusuario'),
                   const SizedBox(width: 10),
-                  myGFToggle(
+                  myCheckBox(
                     context: context,
                     value: isSuperuser,
                     onChanged: (bool? value) {
