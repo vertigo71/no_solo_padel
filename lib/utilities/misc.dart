@@ -11,15 +11,51 @@ import '../models/user_model.dart';
 final String _classString = 'Miscellaneous'.toUpperCase();
 
 ThemeData myTheme(BuildContext context) {
+  // alternative colors
+  final Color _backgroundAlt = Colors.deepOrange[400]!;
+  const Color _foregroundAlt = Colors.black;
+  const Color _unselectedAlt = Colors.black54;
+
+  // main colors
+  const MaterialColor _primaryMaterial = Colors.deepPurple;
+  final Color _background = Colors.deepPurple[200]!;
+
   return ThemeData(
-    scaffoldBackgroundColor: const Color(0xC8CDBDE5),
-    primarySwatch: Colors.deepPurple,
-    buttonTheme: Theme.of(context).buttonTheme.copyWith(
-          highlightColor: Colors.deepPurple,
-        ),
+    scaffoldBackgroundColor: _primaryMaterial[100], // canvasColor
+    backgroundColor: _background,
+
+    primarySwatch: _primaryMaterial,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(primary: _primaryMaterial),
+    ),
     textTheme: GoogleFonts.robotoTextTheme(
       Theme.of(context).textTheme,
     ),
+    listTileTheme: Theme.of(context).listTileTheme.copyWith(
+          tileColor: _background,
+        ),
+    cardTheme: Theme.of(context).cardTheme.copyWith(
+          color: _background,
+        ),
+    // alt colors
+    appBarTheme: Theme.of(context).appBarTheme.copyWith(
+          backgroundColor: _backgroundAlt,
+          foregroundColor: _foregroundAlt,
+        ),
+    bottomNavigationBarTheme: Theme.of(context).bottomNavigationBarTheme.copyWith(
+          unselectedItemColor: _unselectedAlt,
+          selectedItemColor: _foregroundAlt,
+          backgroundColor: _backgroundAlt,
+        ),
+    tabBarTheme: Theme.of(context).tabBarTheme.copyWith(
+          labelColor: _foregroundAlt,
+          unselectedLabelColor: _unselectedAlt,
+          indicator: const UnderlineTabIndicator(
+              // color for indicator (underline)
+              borderSide: BorderSide(width: 3, color: _foregroundAlt),
+              insets: EdgeInsets.all(1)),
+        ),
+    // others
     visualDensity: VisualDensity.adaptivePlatformDensity,
   );
 }
@@ -34,7 +70,7 @@ class Environment {
   bool _isProduction = false;
   bool _initialized = false;
   PackageInfo? _packageInfo;
-  String _appName ='';
+  String _appName = '';
 
   Future<void> initialize() async {
     if (!_initialized) {
@@ -99,13 +135,11 @@ class Date extends DateTime {
   }
 }
 
-String dateTimeToString(DateTime date,
-    {String format = 'yyyy-MM-dd HH:mm:ss'}) {
+String dateTimeToString(DateTime date, {String format = 'yyyy-MM-dd HH:mm:ss'}) {
   return DateFormat(format, 'es_ES').format(date);
 }
 
-DateTime extractDateTime(String string,
-    {int start = 0, String format = 'yyyy-MM-dd HH:mm:ss'}) {
+DateTime extractDateTime(String string, {int start = 0, String format = 'yyyy-MM-dd HH:mm:ss'}) {
   return DateTime.parse(string.substring(start, format.length));
 }
 
@@ -183,12 +217,10 @@ void showMessage(BuildContext context, String text) {
 class UpperCaseTextFormatter extends FilteringTextInputFormatter {
   UpperCaseTextFormatter(Pattern filterPattern,
       {required bool allow, String replacementString = ''})
-      : super(filterPattern,
-            allow: allow, replacementString: replacementString);
+      : super(filterPattern, allow: allow, replacementString: replacementString);
 
   @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     TextEditingValue value = super.formatEditUpdate(oldValue, newValue);
     return TextEditingValue(
       text: value.text.toUpperCase(),
@@ -200,10 +232,10 @@ class UpperCaseTextFormatter extends FilteringTextInputFormatter {
 // 'date random' list from 0 to num-1
 List<int> getRandomList(int num, DateTime date) {
   int baseNum = date.millisecondsSinceEpoch;
-  List<int> base = List<int>.generate(
-          num, (index) => (baseNum * sin(baseNum + index)).floor() % num)
-      .toSet()
-      .toList();
+  List<int> base =
+      List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num)
+          .toSet()
+          .toList();
   MyLog().log(_classString, 'getRandomList Base Sinus generated list $base');
   List<int> all = List<int>.generate(num, (int index) => num - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();

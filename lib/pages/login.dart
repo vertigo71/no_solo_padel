@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';
@@ -85,6 +86,9 @@ class _LoginState extends State<Login> {
                     Expanded(
                       child: TextFormField(
                           onFieldSubmitted: (String str) => _formValidate(),
+                          inputFormatters: [
+                            FilteringTextInputFormatter(RegExp(r'[^ ]'), allow: true)
+                          ],
                           keyboardType: TextInputType.text,
                           controller: emailController,
                           decoration: const InputDecoration(labelText: 'Correo'),

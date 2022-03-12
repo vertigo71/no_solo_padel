@@ -42,7 +42,6 @@ class RegisterPage extends StatelessWidget {
                         elevation: 6,
                         margin: const EdgeInsets.all(10),
                         child: ListTile(
-                          tileColor: Theme.of(context).colorScheme.background,
                           title: Text(
                             logs.elementAt(index).date.toString(),
                             style: const TextStyle(fontWeight: FontWeight.bold),

@@ -26,6 +26,7 @@ class PlayersPanel extends StatefulWidget {
 
 class _PlayersPanelState extends State<PlayersPanel> {
   late final MyMatch match;
+  late final AppState appState;
 
   late final MyUser loggedUser;
   bool loggedUserInTheMatch = false; // checkBox
@@ -36,13 +37,14 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
   @override
   void initState() {
-    match = context.read<AppState>().getMatch(widget.date) ?? MyMatch(date: widget.date);
+    appState = context.read<AppState>();
+    match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
-    loggedUser = context.read<AppState>().getLoggedUser();
+    loggedUser = appState.getLoggedUser();
     PlayingState state = match.getPlayingState(loggedUser);
     loggedUserInTheMatch = state != PlayingState.unsigned;
-    isSelectedUserInTheMatch = loggedUserInTheMatch;
-    selectedUser = loggedUser;
+    selectedUser = appState.allSortedUsers[0];
+    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser);
 
     MyLog().log(_classString, 'initState arguments = $match');
     MyLog().log(_classString, 'loggedUser in match= $loggedUserInTheMatch');
@@ -60,7 +62,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
   Widget build(BuildContext context) {
     MyLog().log(_classString, 'Building');
 
-    AppState appState = context.read<AppState>();
     return ListView(
       children: [
         signUpForm(),
@@ -103,7 +104,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
       );
 
   Widget signUpAdminForm() {
-    AppState appState = context.read<AppState>();
     List<MyUser> users = appState.allSortedUsers;
 
     return Padding(
@@ -118,7 +118,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
               height: 260,
               child: ListWheelScrollView(
                 itemExtent: 40,
-                magnification: 1.5,
+                magnification: 1.3,
                 useMagnifier: true,
                 diameterRatio: 2,
                 squeeze: 0.7,
@@ -141,9 +141,16 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 },
                 children: users
                     .map((u) => Container(
+                          margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15), color: Theme.of(context).colorScheme.background),
-                          child: Center(child: Text(u.name, style: const TextStyle(fontSize: 11))),
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.background),
+                          child: Center(
+                              child: Text(u.name,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ))),
                         ))
                     .toList(),
               ),
@@ -158,7 +165,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   const SizedBox(height: 20),
                   Card(
                       elevation: 6,
-                      color: Theme.of(context).colorScheme.background,
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Text(selectedUser.name),
@@ -217,7 +223,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
           Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
           Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
-          for (int i = usersPlaying.length + usersSigned.length; i < match.getNumberOfCourts() * 4; i++) {
+          for (int i = usersPlaying.length + usersSigned.length;
+              i < match.getNumberOfCourts() * 4;
+              i++) {
             usersFillEmptySpaces.add(MyUser());
           }
 
@@ -231,25 +239,25 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 elevation: 6,
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  tileColor: Theme.of(context).colorScheme.background,
-                  title: Text('Apuntados ($numCourtsText)', style: const TextStyle(color: Colors.black)),
-                  enabled: false,
+                  tileColor: Theme.of(context).appBarTheme.backgroundColor,
+                  title: Text('Apuntados ($numCourtsText)'),
                 ),
               ),
               Card(
                 elevation: 6,
                 margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                color: Theme.of(context).colorScheme.background,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ...usersPlaying
-                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                      ...usersSigned.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                      ...usersPlaying.map((player) =>
+                          Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                      ...usersSigned.map((player) => Text(
+                          '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
                           style: const TextStyle(color: Colors.red))),
-                      ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                      ...usersFillEmptySpaces
+                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
                     ],
                   ),
                 ),
@@ -259,23 +267,21 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   elevation: 6,
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
-                    tileColor: Theme.of(context).colorScheme.background,
-                    title: const Text('Reservas', style: TextStyle(color: Colors.black)),
-                    enabled: false,
+                    tileColor: Theme.of(context).appBarTheme.backgroundColor,
+                    title: const Text('Reservas' ),
                   ),
                 ),
               if (usersReserve.isNotEmpty)
                 Card(
                   elevation: 6,
                   margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                  color: Theme.of(context).colorScheme.background,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersReserve
-                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ...usersReserve.map((player) =>
+                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                       ],
                     ),
                   ),
@@ -320,7 +326,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
         // ask for confirmation
         const String option1 = 'Confirmar';
         const String option2 = 'Anular';
-        String response = await myReturnValueDialog(context, '¿Seguro que quieres desapuntarte?', option1, option2);
+        String response = await myReturnValueDialog(
+            context, '¿Seguro que quieres desapuntarte?', option1, option2);
         MyLog().log(_classString, 'confirm response = $response');
 
         if (response != option1) {
@@ -335,27 +342,36 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
     // message to the register
     if (adminManagingUser) {
-      if (listPosition >= match.players.length || listPosition == -1) listPosition = match.players.length - 1;
-      registerText = '${loggedUser.name} ha $registerText a ${user.name}' + (toAdd ? ' (${listPosition + 1})' : '');
+      if (listPosition >= match.players.length || listPosition == -1) {
+        listPosition = match.players.length - 1;
+      }
+      registerText = '${loggedUser.name} ha $registerText a ${user.name}' +
+          (toAdd ? ' (${listPosition + 1})' : '');
     } else {
       registerText = '${user.name} se ha $registerText';
     }
 
     // add to FireBase
     try {
-      await context.read<Director>().firebaseHelper.uploadMatch(match: match, updateCore: false, updatePlayers: true);
+      await context
+          .read<Director>()
+          .firebaseHelper
+          .uploadMatch(match: match, updateCore: false, updatePlayers: true);
       context.read<Director>().firebaseHelper.uploadRegister(
               register: RegisterModel(
             date: match.date,
             message: registerText,
           ));
       TelegramHelper.sendIfDateMatches(
-          message: 'Mensaje automático (${match.date}): $registerText',
+          message: '${match.date}\n$registerText\n'
+              'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
           matchDate: match.date,
-          fromDaysAgoToTelegram: context.read<AppState>().getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+          fromDaysAgoToTelegram:
+              appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
     } catch (e) {
       message = 'ERROR en la actualización de los datos. \n\n $e';
-      MyLog().log(_classString, 'ERROR en la actualización de los datos', exception: e, debugType: DebugType.error);
+      MyLog().log(_classString, 'ERROR en la actualización de los datos',
+          exception: e, debugType: DebugType.error);
       return false;
     }
     if (loggedUser == user || adminManagingUser) {

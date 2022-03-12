@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
@@ -9,7 +8,6 @@ import '../../interface/app_state.dart';
 import '../../utilities/misc.dart';
 
 final String _classString = 'SortingPanel'.toUpperCase();
-
 
 class SortingPanel extends StatelessWidget {
   const SortingPanel(this.date, {Key? key}) : super(key: key);
@@ -38,7 +36,7 @@ class SortingPanel extends StatelessWidget {
                 elevation: 6,
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  tileColor: Colors.redAccent,
+                  tileColor: Theme.of(context).appBarTheme.backgroundColor,
                   title: Text(match.comment),
                 ),
               ),
@@ -47,10 +45,12 @@ class SortingPanel extends StatelessWidget {
                 elevation: 6,
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  tileColor: Theme.of(context).colorScheme.background,
                   leading: CircleAvatar(
-                      child: Text(match.courtNames.elementAt(index)),
-                      backgroundColor: Colors.amber),
+                      child: Text(
+                        match.courtNames.elementAt(index),
+                        style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+                      ),
+                      backgroundColor: Theme.of(context).appBarTheme.backgroundColor),
                   title: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(

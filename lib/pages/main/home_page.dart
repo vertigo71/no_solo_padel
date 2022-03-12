@@ -20,7 +20,7 @@ class HomePage extends StatelessWidget {
       builder: (context, appState, _) => ListView(
         children: [
           ...ListTile.divideTiles(
-              color: Colors.deepPurple,
+            context: context,
               tiles: appState.getSortedMatchesIfDayPlayable().map(((match) {
                 String playingStateStr = match.getPlayingStateString(appState.getLoggedUser());
                 PlayingState playingState = match.getPlayingState(appState.getLoggedUser());
@@ -74,6 +74,6 @@ Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
     default:
-      return Theme.of(context).colorScheme.background;
+      return Theme.of(context).listTileTheme.tileColor?? Theme.of(context).backgroundColor;
   }
 }

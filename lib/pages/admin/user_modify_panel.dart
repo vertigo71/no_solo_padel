@@ -21,9 +21,8 @@ class UserModifyPanel extends StatelessWidget {
         builder: (context, appState, _) => ListView(
           children: [
             ...ListTile.divideTiles(
-                color: Colors.deepPurple,
+                context: context,
                 tiles: appState.allSortedUsers.map(((user) => ListTile(
-                      tileColor: Theme.of(context).colorScheme.background,
                       leading: CircleAvatar(
                           child: Text(user.userType.name[0].toUpperCase()),
                           backgroundColor: getUserColor(user)),
