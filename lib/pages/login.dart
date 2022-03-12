@@ -41,8 +41,8 @@ class _LoginState extends State<Login> {
     super.initState();
     getVersion();
     // for development
-    emailController.text = initialUserNameDevelopment;
-    pwdController.text = initialPwdDevelopment;
+    emailController.text = initialUserName;
+    pwdController.text = initialPwd;
   }
 
   @override
