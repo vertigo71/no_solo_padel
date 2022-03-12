@@ -19,9 +19,10 @@ ThemeData myTheme(BuildContext context) {
   // main colors
   const MaterialColor _primaryMaterial = Colors.deepPurple;
   final Color _background = Colors.deepPurple[200]!;
+  final Color _backgroundLight = Colors.deepPurple[100]!;
 
   return ThemeData(
-    scaffoldBackgroundColor: _primaryMaterial[100], // canvasColor
+    scaffoldBackgroundColor: _backgroundLight, // canvasColor
     backgroundColor: _background,
 
     primarySwatch: _primaryMaterial,

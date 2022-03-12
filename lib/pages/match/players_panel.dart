@@ -1,13 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:no_solo_padel_dev/models/parameter_model.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../interface/telegram.dart';
 import '../../models/debug.dart';
+import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
@@ -79,8 +80,10 @@ class _PlayersPanelState extends State<PlayersPanel> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Checkbox(
+            GFToggle(
               value: loggedUserInTheMatch,
+              type: GFToggleType.ios,
+              enabledTrackColor: darken(Theme.of(context).backgroundColor, 0.3),
               onChanged: (bool? value) {
                 setState(() {
                   loggedUserInTheMatch = value!;
@@ -144,7 +147,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
-                              color: Theme.of(context).colorScheme.background),
+                              color: Theme.of(context).backgroundColor),
                           child: Center(
                               child: Text(u.name,
                                   style: const TextStyle(
@@ -169,10 +172,12 @@ class _PlayersPanelState extends State<PlayersPanel> {
                         padding: const EdgeInsets.all(12.0),
                         child: Text(selectedUser.name),
                       )),
-                  if (!isSelectedUserInTheMatch) const SizedBox(height: 20),
-                  if (!isSelectedUserInTheMatch)
-                    Form(
+                  const SizedBox(height: 20),
+                  Opacity(
+                    opacity: isSelectedUserInTheMatch ? 0 : 1,
+                    child: Form(
                         child: TextFormField(
+                          enabled: !isSelectedUserInTheMatch,
                       onFieldSubmitted: (String str) async => validate(
                         user: selectedUser,
                         toAdd: true,
@@ -192,6 +197,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                       controller: userPositionController,
                       // The validator receives the text that the user has entered.
                     )),
+                  ),
                   const SizedBox(height: 40),
                   ElevatedButton(
                     child: Padding(
@@ -268,7 +274,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
                     tileColor: Theme.of(context).appBarTheme.backgroundColor,
-                    title: const Text('Reservas' ),
+                    title: const Text('Reservas'),
                   ),
                 ),
               if (usersReserve.isNotEmpty)
