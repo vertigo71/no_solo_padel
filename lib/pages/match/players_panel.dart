@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -80,10 +79,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            GFToggle(
+            myGFToggle(
+              context: context,
               value: loggedUserInTheMatch,
-              type: GFToggleType.ios,
-              enabledTrackColor: darken(Theme.of(context).backgroundColor, 0.3),
               onChanged: (bool? value) {
                 setState(() {
                   loggedUserInTheMatch = value!;

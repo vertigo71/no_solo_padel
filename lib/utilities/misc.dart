@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -22,7 +23,8 @@ ThemeData myTheme(BuildContext context) {
   final Color _backgroundLight = Colors.deepPurple[100]!;
 
   return ThemeData(
-    scaffoldBackgroundColor: _backgroundLight, // canvasColor
+    scaffoldBackgroundColor: _backgroundLight,
+    // canvasColor
     backgroundColor: _background,
 
     primarySwatch: _primaryMaterial,
@@ -281,4 +283,14 @@ Color lighten(Color color, [double amount = .1]) {
   final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
 
   return hslLight.toColor();
+}
+
+GFToggle myGFToggle(
+    {required BuildContext context, required void Function(bool?) onChanged, required bool value}) {
+  return GFToggle(
+    onChanged: onChanged,
+    value: value,
+    type: GFToggleType.ios,
+    enabledTrackColor: darken(Theme.of(context).backgroundColor, 0.3),
+  );
 }

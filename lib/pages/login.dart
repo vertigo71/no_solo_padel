@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../routes/routes.dart';
+import '../secret.dart';
 import '../utilities/misc.dart';
 import '../database/authentication.dart';
 
@@ -40,8 +41,8 @@ class _LoginState extends State<Login> {
     super.initState();
     getVersion();
     // for development
-    // emailController.text = '';
-    // pwdController.text = '';
+    emailController.text = initialUserNameDevelopment;
+    pwdController.text = initialPwdDevelopment;
   }
 
   @override
