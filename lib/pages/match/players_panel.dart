@@ -213,7 +213,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
   }
 
   Widget listOfPlayers() => Consumer<AppState>(
-        builder: (context, state, _) {
+        builder: (context, appState, _) {
           int playerNumber = 0;
 
           Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
@@ -363,8 +363,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
             date: match.date,
             message: registerText,
           ));
-      TelegramHelper.sendIfDateMatches(
-          message: '${match.date}\n$registerText\n'
+      TelegramHelper.sendFormattedMessage(
+          message: '$registerText\n'
               'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
           matchDate: match.date,
           fromDaysAgoToTelegram:

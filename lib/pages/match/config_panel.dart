@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel_dev/database/firebase.dart';
+import 'package:no_solo_padel_dev/models/user_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/director.dart';
+import '../../interface/telegram.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../interface/app_state.dart';
+import '../../models/parameter_model.dart';
+import '../../models/register_model.dart';
 import '../../utilities/misc.dart';
 
 final String _classString = 'ConfigurationPanel'.toUpperCase();
@@ -131,6 +136,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       if (isMatchOpen) {
+        // if opening a match, check all fields
         String errorString = _checkConfigurationForm();
         if (errorString.isNotEmpty) {
           myAlertDialog(context, errorString);
@@ -152,10 +158,49 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // Update to Firebase
       String message = 'Los datos han sido actualizados';
       try {
+        MyMatch? oldMatch = context.read<AppState>().getMatch(widget.date);
+        FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+        AppState appState = context.read<AppState>();
+
+        /// upload firebase
         await context
             .read<Director>()
             .firebaseHelper
             .uploadMatch(match: newMatch, updateCore: true, updatePlayers: false);
+
+        if (oldMatch != null) {
+          String registerText = '';
+          MyUser loggedUser = appState.getLoggedUser();
+          int newNumCourts = newMatch.getNumberOfCourts();
+
+          /// detect if the match has been opened or closed
+          /// otherwise detect if there is a change in the number of courts
+          if (newMatch.isOpen != oldMatch.isOpen) {
+            if (newMatch.isOpen) {
+              String courtsText =
+                  newNumCourts.toString() + (newNumCourts == 1 ? ' pista' : ' pistas');
+              registerText = 'Nueva convocatoria\n'
+                  '${loggedUser.name} ha abierto $courtsText';
+            } else {
+              registerText = '${loggedUser.name} ha cerrado la convocatoria';
+            }
+          } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
+            String courtsText = newNumCourts.toString() +
+                (newNumCourts == 1 ? ' pista disponible' : ' pistas disponibles');
+            registerText = '${loggedUser.name}  ha modificado el número de pistas\n'
+                'Ahora hay $courtsText';
+          }
+
+          if (registerText.isNotEmpty) {
+            firebaseHelper.uploadRegister(
+                register: RegisterModel(date: newMatch.date, message: registerText));
+            TelegramHelper.sendFormattedMessage(
+                message: registerText,
+                matchDate: newMatch.date,
+                fromDaysAgoToTelegram:
+                    appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+          }
+        }
       } catch (e) {
         message = 'ERROR en la actualización de los datos. \n\n $e';
         MyLog().log(_classString, 'ERROR en la actualización de los datos',

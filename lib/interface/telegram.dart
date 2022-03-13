@@ -7,13 +7,20 @@ import '../utilities/misc.dart';
 final String _classString = 'TelegramHelper'.toUpperCase();
 
 class TelegramHelper {
-  static Future<void> sendIfDateMatches(
-      {required String message, required Date matchDate, required int fromDaysAgoToTelegram}) async {
-    if (fromDaysAgoToTelegram < 0) throw Exception('Periodo para mandar un telegram tiene que ser positivo');
+  static Future<void> sendFormattedMessage(
+      {required String message,
+      required Date matchDate,
+      required int fromDaysAgoToTelegram}) async {
+    if (fromDaysAgoToTelegram < 0) {
+      throw Exception('Periodo para mandar un telegram tiene que ser positivo');
+    }
     Date minDate = matchDate.subtract(Duration(days: fromDaysAgoToTelegram));
     MyLog().log(_classString, 'days ago = $fromDaysAgoToTelegram, minDate = $minDate');
 
     if (Date.now().isBefore(minDate)) return;
+
+    // add date to the message
+    message = '$matchDate\n$message';
 
     String _botToken = await getTelegramBotToken();
     String _chatId = await getTelegramChatId();

@@ -13,6 +13,8 @@
 !pubspec_prod.yaml
 !README.md
 !LICENSE.md
+!script_dev.bat
+!script_prod.bat
 
 # secret values
 /lib/firebase_options.dart
