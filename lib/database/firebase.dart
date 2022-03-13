@@ -27,6 +27,7 @@ enum DBFields {
   registerDaysAgoToView,
   registerDaysKeeping,
   fromDaysAgoToTelegram,
+  defaultCommentText,
   minDebugLevel,
   weekDaysMatch,
   showLog,
@@ -182,6 +183,7 @@ class FirebaseHelper {
           myParameters.setValue(ParametersEnum.matchDaysKeeping, data[_str(DBFields.matchDaysKeeping)]);
           myParameters.setValue(ParametersEnum.registerDaysKeeping, data[_str(DBFields.registerDaysKeeping)]);
           myParameters.setValue(ParametersEnum.fromDaysAgoToTelegram, data[_str(DBFields.fromDaysAgoToTelegram)]);
+          myParameters.setValue(ParametersEnum.defaultCommentText, data[_str(DBFields.defaultCommentText)]);
           myParameters.setValue(ParametersEnum.minDebugLevel, data[_str(DBFields.minDebugLevel)]);
           myParameters.setValue(ParametersEnum.weekDaysMatch, data[_str(DBFields.weekDaysMatch)]);
           myParameters.setValue(ParametersEnum.showLog, data[_str(DBFields.showLog)]);

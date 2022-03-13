@@ -15,20 +15,31 @@ class _FormFields {
     'Registro: ver número de días atrás', // registerDaysAgoToView
     'Registro: histórico de días a conservar', // registerDaysKeeping
     'Enviar telegram si partido es antes de (días)', // fromDaysAgoToTelegram
+    'Texto por defecto del comentario', // defaultCommentText
     'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})', // minDebugLevel
     'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
     '', // not a textFormField // showLog
   ];
 
   static List<String> listAllowedChars = [
-    '[0-9]', // matchDaysToView
-    '[0-9]', // matchDaysKeeping
-    '[0-9]', // registerDaysAgoToView
-    '[0-9]', // registerDaysKeeping
-    '[0-9]', // fromDaysAgoToTelegram
-    '[0-${DebugType.values.length - 1}]', // minDebugLevel
-    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]', // weekDaysMatch
-    '', // not a textFormField // showLog
+    // matchDaysToView
+    '[0-9]',
+    // matchDaysKeeping
+    '[0-9]',
+    // registerDaysAgoToView
+    '[0-9]',
+    // registerDaysKeeping
+    '[0-9]',
+    // fromDaysAgoToTelegram
+    '[0-9]',
+    // defaultCommentText free text
+    '',
+    // minDebugLevel
+    '[0-${DebugType.values.length - 1}]',
+    // weekDaysMatch
+    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
+    // not a textFormField // showLog
+    ''
   ];
 
   static List<bool> isTextField = [
@@ -37,6 +48,7 @@ class _FormFields {
     true, // registerDaysAgoToView
     true, // registerDaysKeeping
     true, // fromDaysAgoToTelegram
+    true, // defaultCommentText
     true, // minDebugLevel
     true, // weekDaysMatch
     false, // showLog
@@ -68,8 +80,8 @@ class _ParametersPanelState extends State<ParametersPanel> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<ParametersPageState>.
   final _formKey = GlobalKey<FormState>();
-  List<TextEditingController?> listControllers = List.generate(
-      _FormFields.isTextField.length, (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
+  List<TextEditingController?> listControllers = List.generate(_FormFields.isTextField.length,
+      (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
 
   late AppState appState;
   late FirebaseHelper firebaseHelper;
@@ -170,7 +182,10 @@ class _ParametersPanelState extends State<ParametersPanel> {
       }
       // check no repeated chars in weekDaysMatch
       parameters[ParametersEnum.weekDaysMatch.index] =
-          parameters[ParametersEnum.weekDaysMatch.index].split('').toSet().fold('', (a, b) => '$a$b');
+          parameters[ParametersEnum.weekDaysMatch.index]
+              .split('')
+              .toSet()
+              .fold('', (a, b) => '$a$b');
 
       try {
         await firebaseHelper.uploadParameters(parameters: parameters);
@@ -186,7 +201,8 @@ class _ParametersPanelState extends State<ParametersPanel> {
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate, {Key? key})
+  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate,
+      {Key? key})
       : super(key: key);
   final TextEditingController textController;
   final String fieldName;
@@ -207,7 +223,8 @@ class _FormFieldWidget extends StatelessWidget {
           ),
         ),
         inputFormatters: [
-          UpperCaseTextFormatter(RegExp(r'' + allowedChars), allow: true),
+          if (allowedChars.isNotEmpty)
+            UpperCaseTextFormatter(RegExp(r'' + allowedChars), allow: true),
         ],
         controller: textController,
         // The validator receives the text that the user has entered.

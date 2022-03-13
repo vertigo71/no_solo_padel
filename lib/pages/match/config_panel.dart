@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel_dev/models/parameter_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase.dart';
@@ -53,6 +54,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     isMatchOpen = match.isOpen;
     initialCourtValues.addAll(match.courtNames);
     initialCommentValue = match.comment;
+    if (initialCommentValue.isEmpty) {
+      initialCommentValue =
+          context.read<AppState>().getParameterValue(ParametersEnum.defaultCommentText);
+    }
 
     MyLog().log(_classString, 'initState Initial court values = $initialCourtValues');
 
