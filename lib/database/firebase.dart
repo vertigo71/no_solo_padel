@@ -85,7 +85,7 @@ class FirebaseHelper {
     });
   }
 
-  // core = comment + isOpen + courtNAmes
+  // core = comment + isOpen + courtNAmes (all except players)
   Future<void> uploadMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async {
     MyLog().log(_classString, 'uploadMatch $match');
 
