@@ -6,11 +6,9 @@ import '../utilities/misc.dart';
 
 final String _classString = 'TelegramHelper'.toUpperCase();
 
-class TelegramHelper {
-  static Future<void> sendFormattedMessage(
-      {required String message,
-      required Date matchDate,
-      required int fromDaysAgoToTelegram}) async {
+Future<void> sendMessageToTelegram(
+    {required String message, required Date matchDate, required int? fromDaysAgoToTelegram}) async {
+  if (fromDaysAgoToTelegram != null) {
     if (fromDaysAgoToTelegram < 0) {
       throw Exception('Periodo para mandar un telegram tiene que ser positivo');
     }
@@ -18,21 +16,21 @@ class TelegramHelper {
     MyLog().log(_classString, 'days ago = $fromDaysAgoToTelegram, minDate = $minDate');
 
     if (Date.now().isBefore(minDate)) return;
+  }
 
-    // add date to the message
-    message = '$matchDate\n$message';
+  // add date to the message
+  message = '$matchDate\n$message';
 
-    String _botToken = await getTelegramBotToken();
-    String _chatId = await getTelegramChatId();
+  String _botToken = await getTelegramBotToken();
+  String _chatId = await getTelegramChatId();
 
-    var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
-        'sendMessage?chat_id=$_chatId&text=$message');
-    http.Response response = await http.post(url);
+  var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
+      'sendMessage?chat_id=$_chatId&text=$message');
+  http.Response response = await http.post(url);
 
-    if (response.statusCode != 200) {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Error al enviar el mensaje a Telegram (código=${response.statusCode})');
-    }
+  if (response.statusCode != 200) {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Error al enviar el mensaje a Telegram (código=${response.statusCode})');
   }
 }

@@ -363,7 +363,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             date: match.date,
             message: registerText,
           ));
-      TelegramHelper.sendFormattedMessage(
+      sendMessageToTelegram(
           message: '$registerText\n'
               'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
           matchDate: match.date,
@@ -377,12 +377,12 @@ class _PlayersPanelState extends State<PlayersPanel> {
     }
 
     userInTheMatch = match.isInTheMatch(user);
-    if (loggedUser == user ){
+    if (loggedUser == user) {
       setState(() {
         loggedUserInTheMatch = userInTheMatch;
       });
     }
-    if (selectedUser == user ) {
+    if (selectedUser == user) {
       // update state
       setState(() {
         isSelectedUserInTheMatch = userInTheMatch;
