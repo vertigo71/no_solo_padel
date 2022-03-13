@@ -7,7 +7,7 @@ import '../utilities/misc.dart';
 final String _classString = 'TelegramHelper'.toUpperCase();
 
 Future<void> sendMessageToTelegram(
-    {required String message, required Date matchDate, required int? fromDaysAgoToTelegram}) async {
+    {required String message, required Date matchDate, int? fromDaysAgoToTelegram}) async {
   if (fromDaysAgoToTelegram != null) {
     if (fromDaysAgoToTelegram < 0) {
       throw Exception('Periodo para mandar un telegram tiene que ser positivo');

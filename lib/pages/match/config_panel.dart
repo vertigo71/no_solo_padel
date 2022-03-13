@@ -8,7 +8,6 @@ import '../../interface/telegram.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../interface/app_state.dart';
-import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
@@ -195,10 +194,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             firebaseHelper.uploadRegister(
                 register: RegisterModel(date: newMatch.date, message: registerText));
             sendMessageToTelegram(
-                message: registerText,
-                matchDate: newMatch.date,
-                fromDaysAgoToTelegram:
-                    appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+              message: registerText,
+              matchDate: newMatch.date,
+            );
           }
         }
       } catch (e) {
