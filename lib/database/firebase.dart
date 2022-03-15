@@ -16,6 +16,7 @@ enum DBFields {
   name,
   email,
   userType,
+  lastLogin,
   matches,
   comment,
   isOpen,
@@ -80,6 +81,7 @@ class FirebaseHelper {
       _str(DBFields.name): myUser.name,
       _str(DBFields.email): myUser.email,
       _str(DBFields.userType): myUser.userType.index,
+      if ( myUser.lastLogin!= null) _str(DBFields.lastLogin): myUser.lastLogin!.toYyyyMMdd(),
     }).catchError((onError) {
       MyLog().log(_classString, 'uploadUser ', exception: onError, debugType: DebugType.error);
     });
@@ -222,10 +224,16 @@ class FirebaseHelper {
 
       MyUser user = MyUser();
       try {
+        Date? lastLogin;
+        if (data[_str(DBFields.lastLogin)] != null) {
+          lastLogin = Date(DateTime.parse(data[_str(DBFields.lastLogin)]));
+        }
+
         user = MyUser(
           name: data[_str(DBFields.name)],
           email: data[_str(DBFields.email)],
           userType: UserType.values[data[_str(DBFields.userType)]],
+          lastLogin: lastLogin,
           userId: doc.id,
         );
       } catch (e) {
@@ -396,10 +404,16 @@ class FirebaseHelper {
 
       MyUser user = MyUser();
       try {
+        Date? lastLogin;
+        if (data[_str(DBFields.lastLogin)] != null) {
+          lastLogin = Date(DateTime.parse(data[_str(DBFields.lastLogin)]));
+        }
+
         user = MyUser(
           name: data[_str(DBFields.name)],
           email: data[_str(DBFields.email)],
           userType: UserType.values[data[_str(DBFields.userType)]],
+          lastLogin: lastLogin,
           userId: docChanged.doc.id,
         );
       } catch (e) {

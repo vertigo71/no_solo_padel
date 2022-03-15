@@ -1,3 +1,5 @@
+import '../utilities/misc.dart';
+
 enum UserType { basic, admin, superuser }
 
 class MyUser {
@@ -5,8 +7,16 @@ class MyUser {
   String name;
   String _email;
   UserType userType;
+  Date? lastLogin;
+  int loginCount;
 
-  MyUser({this.name = '', String email = '', this.userType = UserType.basic, this.userId = ''})
+  MyUser(
+      {this.name = '',
+      String email = '',
+      this.userType = UserType.basic,
+      this.lastLogin,
+      this.loginCount = 0,
+      this.userId = ''})
       : _email = email.toLowerCase();
 
   static const String emailSuffix = '@nsp.com';

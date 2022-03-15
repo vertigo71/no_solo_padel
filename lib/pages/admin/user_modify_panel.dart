@@ -27,7 +27,8 @@ class UserModifyPanel extends StatelessWidget {
                           child: Text(user.userType.name[0].toUpperCase()),
                           backgroundColor: getUserColor(user)),
                       title: Text(user.name),
-                      subtitle: Text(user.email),
+                      subtitle: Text('${user.email}\nÚltima conexión: '
+                          '${user.lastLogin ?? 'Nunca'}'),
                       onTap: () async {
                         const String option1 = 'Básico';
                         const String option2 = 'Admin';

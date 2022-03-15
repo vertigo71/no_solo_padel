@@ -61,6 +61,9 @@ class Loading extends StatelessWidget {
       });
     } else {
       appState.setLoggedUser(loggedUser, notify: false);
+      // update lastLogin
+      loggedUser.lastLogin = Date.now();
+      await firebaseHelper.uploadUser(loggedUser);
 
       // create matches if missing
       // from now to now+matchDaysToView
