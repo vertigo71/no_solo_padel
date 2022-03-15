@@ -66,9 +66,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
       children: [
         signUpForm(),
         const Divider(thickness: 5),
-        if (appState.isLoggedUserAdmin) signUpAdminForm(),
-        if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
         listOfPlayers(),
+        const SizedBox(height: 20),
+        if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
+        const SizedBox(height: 20),
+        if (appState.isLoggedUserAdmin) signUpAdminForm(),
         const SizedBox(height: 50),
       ],
     );
@@ -158,44 +160,12 @@ class _PlayersPanelState extends State<PlayersPanel> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 20),
-                  Card(
-                      elevation: 6,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(selectedUser.name),
-                      )),
-                  const SizedBox(height: 20),
-                  Opacity(
-                    opacity: isSelectedUserInTheMatch ? 0 : 1,
-                    child: Form(
-                        child: TextFormField(
-                      enabled: !isSelectedUserInTheMatch,
-                      onFieldSubmitted: (String str) async => validate(
-                        user: selectedUser,
-                        toAdd: true,
-                        adminManagingUser: true,
-                      ),
-                      keyboardType: TextInputType.text,
-                      decoration: const InputDecoration(
-                        labelText: 'Posición',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                        ),
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
-                      ],
-                      controller: userPositionController,
-                      // The validator receives the text that the user has entered.
-                    )),
-                  ),
-                  const SizedBox(height: 40),
                   ElevatedButton(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
-                        isSelectedUserInTheMatch ? 'Dar de baja' : 'Apuntar',
+                        (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
+                            selectedUser.name,
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -204,6 +174,31 @@ class _PlayersPanelState extends State<PlayersPanel> {
                       toAdd: !isSelectedUserInTheMatch,
                       adminManagingUser: true,
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Opacity(
+                    opacity: isSelectedUserInTheMatch ? 0 : 1,
+                    child: Form(
+                        child: TextFormField(
+                      enabled: !isSelectedUserInTheMatch,
+                      decoration: const InputDecoration(
+                        labelText: 'Posición',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                        ),
+                      ),
+                      onFieldSubmitted: (String str) async => validate(
+                        user: selectedUser,
+                        toAdd: true,
+                        adminManagingUser: true,
+                      ),
+                      keyboardType: TextInputType.text,
+                      inputFormatters: [
+                        FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
+                      ],
+                      controller: userPositionController,
+                      // The validator receives the text that the user has entered.
+                    )),
                   ),
                 ],
               ))

@@ -7,7 +7,7 @@ import 'user_model.dart';
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
 
 const Map playingStateMap = {
-  PlayingState.playing: 'Convocado',
+  PlayingState.playing: '¡¡¡Juegas!!!',
   PlayingState.signedNotPlaying: 'Apuntado',
   PlayingState.reserve: 'Reserva',
   PlayingState.unsigned: 'No apuntado',
