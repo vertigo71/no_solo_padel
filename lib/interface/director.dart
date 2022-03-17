@@ -1,5 +1,6 @@
 import '../database/authentication.dart';
 import '../database/firebase.dart';
+import '../secret.dart';
 import '../utilities/misc.dart';
 import 'app_state.dart';
 import '../models/debug.dart';
@@ -92,7 +93,7 @@ class Director {
           myUser = MyUser(name: user, email: '$user${MyUser.emailSuffix}', userId: user);
         }
         await AuthenticationHelper()
-            .createUserWithEmailAndPwd(email: myUser.email, pwd: 'nosolo');
+            .createUserWithEmailAndPwd(email: myUser.email, pwd: initialPwd );
         await firebaseHelper.uploadUser(myUser);
       }
       MyLog().log(_classString, 'Users');
