@@ -41,6 +41,7 @@ class MyParameters {
     setValue(ParametersEnum.showLog, null);
   }
 
+  // list of parameters
   final List<String> _values = List.generate(ParametersEnum.values.length, (index) => '');
 
   static const String daysOfWeek = 'LMXJVSD';
