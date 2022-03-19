@@ -32,8 +32,8 @@ class Loading extends StatelessWidget {
       throw Exception('Error: No se ha registrado correctamente el usuario. \n'
           'Póngase en contacto con el administrador');
     }
-    MyLog().log(_classString, 'setupDB authenticated user = ${user.email}',
-        debugType: DebugType.info);
+    MyLog()
+        .log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.info);
 
     // initialize => create local model
     AppState appState = context.read<AppState>();
@@ -48,12 +48,6 @@ class Loading extends StatelessWidget {
     /// do only once for populating
     ///
     /// await director.createTestData(users: true, matches: false);
-
-    ///
-    /// upload to new database data format
-    /// do only once
-    ///
-    /// await director.updateDataToNewFormat();
 
     // loggedUser
     MyUser? loggedUser = appState.getUserByEmail(user.email!);
@@ -72,6 +66,11 @@ class Loading extends StatelessWidget {
       loggedUser.lastLogin = Date.now();
       loggedUser.loginCount++;
       await firebaseHelper.uploadUser(loggedUser);
+
+      ///
+      /// upload to new database data format
+      ///
+      if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
 
       // create matches if missing
       // from now to now+matchDaysToView
