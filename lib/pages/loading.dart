@@ -49,6 +49,12 @@ class Loading extends StatelessWidget {
     ///
     /// await director.createTestData(users: true, matches: false);
 
+    ///
+    /// upload to new database data format
+    /// do only once
+    ///
+    /// await director.updateDataToNewFormat();
+
     // loggedUser
     MyUser? loggedUser = appState.getUserByEmail(user.email!);
     MyLog().log(_classString, 'setupDB loggedUser = $loggedUser');
