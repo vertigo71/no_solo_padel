@@ -9,7 +9,7 @@ import '../models/register_model.dart';
 import '../models/match_model.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
-import '../utilities/misc.dart';
+import '../utilities/date.dart';
 
 enum DBFields {
   users,

@@ -7,8 +7,8 @@ import 'firebase_options.dart';
 import 'interface/director.dart';
 import 'models/debug.dart';
 import 'routes/routes.dart';
-import 'utilities/misc.dart';
 import 'interface/app_state.dart';
+import 'utilities/theme.dart';
 
 final String _classString = 'main'.toUpperCase();
 

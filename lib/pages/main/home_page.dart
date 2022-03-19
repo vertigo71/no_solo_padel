@@ -5,7 +5,7 @@ import '../../interface/app_state.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../routes/routes.dart';
-import '../../utilities/misc.dart';
+import '../../utilities/theme.dart';
 
 final String _classString = 'HomePage'.toUpperCase();
 

@@ -2,7 +2,7 @@ import '../models/debug.dart';
 import '../secret.dart';
 import 'package:http/http.dart' as http;
 
-import '../utilities/misc.dart';
+import '../utilities/date.dart';
 
 final String _classString = 'TelegramHelper'.toUpperCase();
 

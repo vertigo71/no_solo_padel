@@ -1,4 +1,4 @@
-import '../utilities/misc.dart';
+import '../utilities/date.dart';
 
 // add messages with timeStamp
 class RegisterModel {

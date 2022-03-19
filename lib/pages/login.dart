@@ -6,6 +6,7 @@ import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../routes/routes.dart';
 import '../secret.dart';
+import '../utilities/environment.dart';
 import '../utilities/misc.dart';
 import '../database/authentication.dart';
 

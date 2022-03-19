@@ -6,6 +6,7 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
+import '../../utilities/theme.dart';
 
 final String _classString = 'ModifyUserPage'.toUpperCase();
 

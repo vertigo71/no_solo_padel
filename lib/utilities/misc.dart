@@ -1,150 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:math';
 
 import '../models/debug.dart';
-import '../models/user_model.dart';
+import 'theme.dart';
 
 final String _classString = 'Miscellaneous'.toUpperCase();
 
-ThemeData myTheme(BuildContext context) {
-  // alternative colors
-  final Color _backgroundAlt = Colors.deepOrange[300]!;
-  const Color _foregroundAlt = Colors.black;
-  const Color _unselectedAlt = Colors.black54;
-
-  // main colors
-  const MaterialColor _primaryMaterial = Colors.deepPurple;
-  final Color _background = Colors.deepPurple[200]!;
-  final Color _backgroundLight = Colors.deepPurple[100]!;
-
-  return ThemeData(
-    scaffoldBackgroundColor: _backgroundLight,
-    // canvasColor
-    backgroundColor: _background,
-
-    primarySwatch: _primaryMaterial,
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(primary: _primaryMaterial),
-    ),
-    textTheme: GoogleFonts.robotoTextTheme(
-      Theme.of(context).textTheme,
-    ),
-    listTileTheme: Theme.of(context).listTileTheme.copyWith(
-          tileColor: _background,
-        ),
-    cardTheme: Theme.of(context).cardTheme.copyWith(
-          color: _background,
-        ),
-    // alt colors
-    appBarTheme: Theme.of(context).appBarTheme.copyWith(
-          backgroundColor: _backgroundAlt,
-          foregroundColor: _foregroundAlt,
-        ),
-    bottomNavigationBarTheme: Theme.of(context).bottomNavigationBarTheme.copyWith(
-          unselectedItemColor: _unselectedAlt,
-          selectedItemColor: _foregroundAlt,
-          backgroundColor: _backgroundAlt,
-        ),
-    tabBarTheme: Theme.of(context).tabBarTheme.copyWith(
-          labelColor: _foregroundAlt,
-          unselectedLabelColor: _unselectedAlt,
-          indicator: const UnderlineTabIndicator(
-              // color for indicator (underline)
-              borderSide: BorderSide(width: 3, color: _foregroundAlt),
-              insets: EdgeInsets.all(1)),
-        ),
-    // others
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-  );
-}
-
-class Environment {
-  static final Environment _singleton = Environment._internal();
-
-  Environment._internal();
-
-  factory Environment() => _singleton;
-
-  bool _isProduction = false;
-  bool _initialized = false;
-  PackageInfo? _packageInfo;
-  String _appName = '';
-
-  Future<void> initialize() async {
-    if (!_initialized) {
-      _packageInfo = await PackageInfo.fromPlatform();
-      assert(_packageInfo != null);
-      _appName = _packageInfo!.appName;
-      if (_appName.contains('_dev')) {
-        _isProduction = false;
-        MyLog().log(_classString, 'Development environment initialized');
-      } else {
-        _isProduction = true;
-        MyLog().log(_classString, 'Production environment initialized');
-      }
-      _initialized = true;
-    }
-  }
-
-  PackageInfo get packageInfo {
-    assert(_initialized);
-    return _packageInfo!;
-  }
-
-  bool get isProduction {
-    assert(_initialized);
-    return _isProduction;
-  }
-
-  bool get isDevelopment {
-    assert(_initialized);
-    return !_isProduction;
-  }
-
-  bool get isInitialized => _initialized;
-}
-
-class Date extends DateTime {
-  Date(DateTime dateTime) : super(dateTime.year, dateTime.month, dateTime.day);
-
-  Date.ymd(int year, [int month = 1, int day = 1]) : super(year, month, day);
-
-  static Date dateTimeToDate(DateTime dateTime) => Date(dateTime);
-
-  static Date now() => dateTimeToDate(DateTime.now());
-
-  @override
-  Date add(Duration duration) => Date(super.add(duration));
-
-  @override
-  Date subtract(Duration duration) => Date(super.subtract(duration));
-
-  @override
-  String toString() {
-    return DateFormat('EEEE, d-MMMM', 'es_ES').format(this);
-  }
-
-  String toYyyyMMdd() {
-    return DateFormat('yyyyMMdd', 'es_ES').format(this);
-  }
-
-  String toMask({String mask = 'yyyyMMdd'}) {
-    return DateFormat(mask, 'es_ES').format(this);
-  }
-}
-
-String dateTimeToString(DateTime date, {String format = 'yyyy-MM-dd HH:mm:ss'}) {
-  return DateFormat(format, 'es_ES').format(date);
-}
-
-DateTime extractDateTime(String string, {int start = 0, String format = 'yyyy-MM-dd HH:mm:ss'}) {
-  return DateTime.parse(string.substring(start, format.length));
-}
 
 void myAlertDialog(BuildContext context, String text) {
   showDialog(
@@ -254,35 +117,6 @@ List<int> getRandomList(int num, DateTime date) {
   MyLog().log(_classString, 'getRandomList Final order $base');
 
   return base;
-}
-
-Color getUserColor(MyUser user) {
-  switch (user.userType) {
-    case UserType.admin:
-      return Colors.green;
-    case UserType.superuser:
-      return Colors.blue;
-    default:
-      return Colors.red;
-  }
-}
-
-Color darken(Color color, [double amount = .1]) {
-  assert(amount >= 0 && amount <= 1);
-
-  final hsl = HSLColor.fromColor(color);
-  final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-
-  return hslDark.toColor();
-}
-
-Color lighten(Color color, [double amount = .1]) {
-  assert(amount >= 0 && amount <= 1);
-
-  final hsl = HSLColor.fromColor(color);
-  final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
-
-  return hslLight.toColor();
 }
 
 Widget myCheckBox(

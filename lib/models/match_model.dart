@@ -1,7 +1,7 @@
 import 'dart:math';
 
 
-import '../utilities/misc.dart';
+import '../utilities/date.dart';
 import 'user_model.dart';
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }

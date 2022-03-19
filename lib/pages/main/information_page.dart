@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
 import '../../models/debug.dart';
-import '../../utilities/misc.dart';
+import '../../utilities/theme.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
 
