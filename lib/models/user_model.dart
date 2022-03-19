@@ -1,5 +1,5 @@
-import 'package:no_solo_padel_dev/database/fields.dart';
 
+import '../database/fields.dart';
 import '../utilities/date.dart';
 
 enum UserType { basic, admin, superuser }
