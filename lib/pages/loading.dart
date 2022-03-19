@@ -70,7 +70,7 @@ class Loading extends StatelessWidget {
       ///
       /// upload to new database data format
       ///
-      if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
+      /// if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
 
       // create matches if missing
       // from now to now+matchDaysToView
