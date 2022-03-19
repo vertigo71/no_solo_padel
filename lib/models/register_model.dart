@@ -22,8 +22,6 @@ class RegisterModel {
     _msgList.addAll(timedMsgList);
   }
 
-  String get lastMessage => _msgList.last;
-
   String get foldedString => _msgList.fold('', (a, b) => '$a\n$b');
 
   List<String> get msgList => _msgList;
