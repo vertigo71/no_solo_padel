@@ -15,6 +15,14 @@ class Date extends DateTime {
 
   static Date now() => dateTimeToDate(DateTime.now());
 
+  static Date? parse(String? formattedString ) {
+    try {
+      return Date(DateTime.parse(formattedString!));
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Date add(Duration duration) => Date(super.add(duration));
 

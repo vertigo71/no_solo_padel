@@ -1,4 +1,5 @@
 import '../database/authentication.dart';
+import '../database/fields.dart';
 import '../database/firebase.dart';
 import '../secret.dart';
 import '../utilities/date.dart';
@@ -18,9 +19,10 @@ class Director {
   Director({required AppState appState}) : _appState = appState {
     MyLog().log(_classString, 'Building');
 
-    // check parameters in AppState are in FirebaseHelper
+    // check Enums parameters in AppState are in FirebaseHelper
+    String fieldsValues = DBFields.values.join(';');
     for (var value in ParametersEnum.values) {
-      assert(DBFields.values.toString().contains(value.name));
+      assert(fieldsValues.contains(value.name));
     }
   }
 

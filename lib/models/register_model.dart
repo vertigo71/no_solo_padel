@@ -1,11 +1,12 @@
+import 'package:no_solo_padel_dev/database/fields.dart';
+
 import '../utilities/date.dart';
 
 // add messages with timeStamp
 class RegisterModel {
   // date = match date
-  final Date _date;
-  String _registerMessage = '';
-  List<String> _registerMsgList = [];
+  Date date;
+  final List<String> _msgList = [];
 
   static const String _timeStampFormat = 'yyyy-MM-dd HH:mm:ss';
   static const String _divider = '>> ';
@@ -13,30 +14,22 @@ class RegisterModel {
   static String _getTimedMessage(String message) =>
       dateTimeToString(DateTime.now(), format: _timeStampFormat) + _divider + message;
 
-  RegisterModel({
-    required Date date,
-    required String message,
-  })  : _date = date,
-        _registerMessage = _getTimedMessage(message);
+  RegisterModel({required this.date, String? message}) {
+    if (message != null) _msgList.add(_getTimedMessage(message));
+  }
 
-  RegisterModel.date({
-    required Date date,
-  }) : _date = date;
+  RegisterModel.list({required this.date, required List<String> timedMsgList}) {
+    _msgList.addAll(timedMsgList);
+  }
 
-  RegisterModel.list({required Date date, required List<String> registerMsgList})
-      : _date = date,
-        _registerMsgList = registerMsgList;
+  String get lastMessage => _msgList.last;
 
-  Date get date => _date;
+  String get foldedString => _msgList.fold('', (a, b) => '$a\n$b');
 
-  String get registerMessage => _registerMessage;
+  List<String> get msgList => _msgList;
 
-  String get foldedString => _registerMsgList.fold('', (a, b) => '$a\n$b');
-
-  List<String> get registerMsgList => _registerMsgList;
-
-  void addMsgToList(String message) {
-    _registerMsgList.add(_getTimedMessage(message));
+  void addMsg(String message) {
+    _msgList.add(_getTimedMessage(message));
   }
 
   static DateTime getRegisterTimeStamp(String text) {
@@ -49,6 +42,16 @@ class RegisterModel {
 
   @override
   String toString() {
-    return ('${date.toYyyyMMdd()}: $_registerMessage>');
+    return ('${date.toYyyyMMdd()}: ${_msgList.last}>');
   }
+
+  static RegisterModel fromJson(Map<String, dynamic> json) => RegisterModel.list(
+        date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
+        timedMsgList: json[DBFields.registerMessage.name] ?? [],
+      );
+
+  Map<String, dynamic> toJson() => {
+        DBFields.date.name: date,
+        DBFields.registerMessage.name: _msgList,
+      };
 }

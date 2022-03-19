@@ -2,8 +2,6 @@ import 'dart:developer' as developer;
 
 enum DebugType { basic, info, summary, error }
 
-// TODO: analyze debug type for every print
-
 // singleton
 class MyLog {
   static final MyLog _singleton = MyLog._internal();

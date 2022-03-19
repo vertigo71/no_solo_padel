@@ -10,34 +10,7 @@ import '../models/match_model.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/date.dart';
-
-enum DBFields {
-  users,
-  name,
-  email,
-  userType,
-  lastLogin,
-  loginCount,
-  matches,
-  comment,
-  isOpen,
-  courtNames,
-  players,
-  parameters,
-  matchDaysToView,
-  matchDaysKeeping,
-  registerDaysAgoToView,
-  registerDaysKeeping,
-  fromDaysAgoToTelegram,
-  defaultCommentText,
-  minDebugLevel,
-  weekDaysMatch,
-  showLog,
-  register,
-  registerMessage
-}
-
-String _str(DBFields field) => field.name;
+import 'fields.dart';
 
 final String _classString = 'FirebaseHelper'.toUpperCase();
 
@@ -56,7 +29,7 @@ class FirebaseHelper {
     MyLog().log(_classString, 'getRegisterStream');
     try {
       return _instance
-          .collection(_str(DBFields.register))
+          .collection(strDB(DBFields.register))
           .where(FieldPath.documentId,
               isGreaterThan: Date.now().subtract(Duration(days: fromDaysAgo)).toYyyyMMdd())
           .snapshots()
@@ -71,8 +44,8 @@ class FirebaseHelper {
     return querySnapshot.docs
         .map((DocumentSnapshot documentSnapshot) => RegisterModel.list(
               date: Date(DateTime.parse(documentSnapshot.id)),
-              registerMsgList:
-                  ((documentSnapshot.data() as dynamic)[_str(DBFields.registerMessage)] ?? [])
+              timedMsgList:
+                  ((documentSnapshot.data() as dynamic)[strDB(DBFields.registerMessage)] ?? [])
                       .cast<String>(),
             ))
         .toList();
@@ -80,12 +53,12 @@ class FirebaseHelper {
 
   Future<void> uploadUser(MyUser myUser) async {
     MyLog().log(_classString, 'uploadUser $myUser');
-    return _instance.collection(_str(DBFields.users)).doc(myUser.userId).set({
-      _str(DBFields.name): myUser.name,
-      _str(DBFields.email): myUser.email,
-      _str(DBFields.userType): myUser.userType.index,
-      if (myUser.lastLogin != null) _str(DBFields.lastLogin): myUser.lastLogin!.toYyyyMMdd(),
-      _str(DBFields.loginCount): myUser.loginCount,
+    return _instance.collection(strDB(DBFields.users)).doc(myUser.userId).set({
+      strDB(DBFields.name): myUser.name,
+      strDB(DBFields.email): myUser.email,
+      strDB(DBFields.userType): myUser.userType.index,
+      if (myUser.lastLogin != null) strDB(DBFields.lastLogin): myUser.lastLogin!.toYyyyMMdd(),
+      strDB(DBFields.loginCount): myUser.loginCount,
     }).catchError((onError) {
       MyLog().log(_classString, 'uploadUser ', exception: onError, debugType: DebugType.error);
     });
@@ -97,19 +70,19 @@ class FirebaseHelper {
     MyLog().log(_classString, 'uploadMatch $match');
 
     Map<String, dynamic> uploadMap = {
-      if (updateCore) _str(DBFields.comment): match.comment,
-      if (updateCore) _str(DBFields.isOpen): match.isOpen,
-      if (updateCore) _str(DBFields.courtNames): match.courtNames.toList(),
+      if (updateCore) strDB(DBFields.comment): match.comment,
+      if (updateCore) strDB(DBFields.isOpen): match.isOpen,
+      if (updateCore) strDB(DBFields.courtNames): match.courtNames.toList(),
       if (updatePlayers)
-        _str(DBFields.players): match.players.map((player) => player.userId).toList(),
+        strDB(DBFields.players): match.players.map((player) => player.userId).toList(),
     };
 
     return _instance
-        .collection(_str(DBFields.matches))
+        .collection(strDB(DBFields.matches))
         .doc(match.date.toYyyyMMdd())
         .update(uploadMap)
         .catchError((onError) => _instance
-            .collection(_str(DBFields.matches))
+            .collection(strDB(DBFields.matches))
             .doc(match.date.toYyyyMMdd())
             .set(uploadMap))
         .catchError((onError) => MyLog().log(_classString, 'uploadMatch',
@@ -119,7 +92,7 @@ class FirebaseHelper {
   // return false if existed, true if created
   Future<bool> createMatchIfNotExists({required MyMatch match}) async {
     bool exists =
-        await doesDocExist(collection: _str(DBFields.matches), doc: match.date.toYyyyMMdd());
+        await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
     MyLog().log(_classString, 'createMatchIfNotExists exists $exists $match');
     if (exists) return false;
 
@@ -132,15 +105,17 @@ class FirebaseHelper {
     MyLog().log(_classString, 'uploadRegister $register');
 
     var data = {
-      _str(DBFields.registerMessage): FieldValue.arrayUnion([register.registerMessage]),
+      strDB(DBFields.registerMessage): FieldValue.arrayUnion(register.msgList),
     };
 
     return _instance
-        .collection(_str(DBFields.register))
+        .collection(strDB(DBFields.register))
         .doc(register.date.toYyyyMMdd())
         .update(data)
-        .catchError((e) =>
-            _instance.collection(_str(DBFields.register)).doc(register.date.toYyyyMMdd()).set(data))
+        .catchError((e) => _instance
+            .collection(strDB(DBFields.register))
+            .doc(register.date.toYyyyMMdd())
+            .set(data))
         .catchError((onError) => MyLog().log(_classString, 'uploadRegister',
             myCustomObject: data, exception: onError, debugType: DebugType.error));
   }
@@ -155,8 +130,8 @@ class FirebaseHelper {
     MyLog().log(_classString, 'uploadParameters data', myCustomObject: data);
 
     return _instance
-        .collection(_str(DBFields.parameters))
-        .doc(_str(DBFields.parameters))
+        .collection(strDB(DBFields.parameters))
+        .doc(strDB(DBFields.parameters))
         .set(data)
         .catchError((onError) => MyLog().log(_classString, 'uploadParameters',
             myCustomObject: data, exception: onError, debugType: DebugType.error));
@@ -172,7 +147,7 @@ class FirebaseHelper {
     // download parameters
     QuerySnapshot<Map<String, dynamic>>? querySnapShot;
     try {
-      querySnapShot = await _instance.collection(_str(DBFields.parameters)).get();
+      querySnapShot = await _instance.collection(strDB(DBFields.parameters)).get();
       return _downloadParameters(snapshot: querySnapShot);
     } catch (e) {
       MyLog().log(_classString, 'downloadParameters',
@@ -193,20 +168,20 @@ class FirebaseHelper {
         MyParameters myParameters = MyParameters();
         try {
           myParameters.setValue(
-              ParametersEnum.matchDaysToView, data[_str(DBFields.matchDaysToView)]);
+              ParametersEnum.matchDaysToView, data[strDB(DBFields.matchDaysToView)]);
           myParameters.setValue(ParametersEnum.registerDaysAgoToView,
-              data[_str(DBFields.registerDaysAgoToView)] ?? '1');
+              data[strDB(DBFields.registerDaysAgoToView)] ?? '1');
           myParameters.setValue(
-              ParametersEnum.matchDaysKeeping, data[_str(DBFields.matchDaysKeeping)]);
+              ParametersEnum.matchDaysKeeping, data[strDB(DBFields.matchDaysKeeping)]);
           myParameters.setValue(
-              ParametersEnum.registerDaysKeeping, data[_str(DBFields.registerDaysKeeping)]);
+              ParametersEnum.registerDaysKeeping, data[strDB(DBFields.registerDaysKeeping)]);
           myParameters.setValue(
-              ParametersEnum.fromDaysAgoToTelegram, data[_str(DBFields.fromDaysAgoToTelegram)]);
+              ParametersEnum.fromDaysAgoToTelegram, data[strDB(DBFields.fromDaysAgoToTelegram)]);
           myParameters.setValue(
-              ParametersEnum.defaultCommentText, data[_str(DBFields.defaultCommentText)]);
-          myParameters.setValue(ParametersEnum.minDebugLevel, data[_str(DBFields.minDebugLevel)]);
-          myParameters.setValue(ParametersEnum.weekDaysMatch, data[_str(DBFields.weekDaysMatch)]);
-          myParameters.setValue(ParametersEnum.showLog, data[_str(DBFields.showLog)]);
+              ParametersEnum.defaultCommentText, data[strDB(DBFields.defaultCommentText)]);
+          myParameters.setValue(ParametersEnum.minDebugLevel, data[strDB(DBFields.minDebugLevel)]);
+          myParameters.setValue(ParametersEnum.weekDaysMatch, data[strDB(DBFields.weekDaysMatch)]);
+          myParameters.setValue(ParametersEnum.showLog, data[strDB(DBFields.showLog)]);
         } catch (e) {
           MyLog().log(_classString, '_downloadParameters',
               myCustomObject: data, exception: e, debugType: DebugType.error);
@@ -224,7 +199,7 @@ class FirebaseHelper {
     QuerySnapshot? querySnapshot;
     List<MyUser> users = [];
     try {
-      querySnapshot = await _instance.collection(_str(DBFields.users)).get();
+      querySnapshot = await _instance.collection(strDB(DBFields.users)).get();
       users = _downloadUsers(snapshot: querySnapshot);
     } catch (e) {
       MyLog().log(_classString, 'downloadUsers',
@@ -243,16 +218,16 @@ class FirebaseHelper {
       MyUser user = MyUser();
       try {
         Date? lastLogin;
-        if (data[_str(DBFields.lastLogin)] != null) {
-          lastLogin = Date(DateTime.parse(data[_str(DBFields.lastLogin)]));
+        if (data[strDB(DBFields.lastLogin)] != null) {
+          lastLogin = Date(DateTime.parse(data[strDB(DBFields.lastLogin)]));
         }
 
         user = MyUser(
-          name: data[_str(DBFields.name)],
-          email: data[_str(DBFields.email)],
-          userType: UserType.values[data[_str(DBFields.userType)]],
+          name: data[strDB(DBFields.name)],
+          email: data[strDB(DBFields.email)],
+          userType: UserType.values[data[strDB(DBFields.userType)]],
           lastLogin: lastLogin,
-          loginCount: data[_str(DBFields.loginCount)]  ?? 0,
+          loginCount: data[strDB(DBFields.loginCount)] ?? 0,
           userId: doc.id,
         );
       } catch (e) {
@@ -283,7 +258,7 @@ class FirebaseHelper {
     QuerySnapshot? querySnapshot;
     try {
       querySnapshot = await _instance
-          .collection(_str(DBFields.matches))
+          .collection(strDB(DBFields.matches))
           .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
           .where(FieldPath.documentId,
               isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
@@ -331,7 +306,7 @@ class FirebaseHelper {
     MyParameters? myParameters;
     try {
       _paramListener =
-          _instance.collection(_str(DBFields.parameters)).snapshots().listen((snapshot) {
+          _instance.collection(strDB(DBFields.parameters)).snapshots().listen((snapshot) {
         MyLog().log(_classString, 'LISTENER parameters started');
 
         myParameters = _downloadParameters(snapshot: snapshot);
@@ -345,7 +320,7 @@ class FirebaseHelper {
 
     // update users
     try {
-      _usersListener = _instance.collection(_str(DBFields.users)).snapshots().listen((snapshot) {
+      _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen((snapshot) {
         MyLog().log(_classString, 'LISTENER users started');
 
         List<MyUser> addedUsers = [];
@@ -367,7 +342,7 @@ class FirebaseHelper {
     // update matches
     try {
       _matchesListener = _instance
-          .collection(_str(DBFields.matches))
+          .collection(strDB(DBFields.matches))
           .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
           .where(FieldPath.documentId,
               isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
@@ -430,15 +405,15 @@ class FirebaseHelper {
       MyUser user = MyUser();
       try {
         Date? lastLogin;
-        if (data[_str(DBFields.lastLogin)] != null) {
-          lastLogin = Date(DateTime.parse(data[_str(DBFields.lastLogin)]));
+        if (data[strDB(DBFields.lastLogin)] != null) {
+          lastLogin = Date(DateTime.parse(data[strDB(DBFields.lastLogin)]));
         }
         user = MyUser(
-          name: data[_str(DBFields.name)],
-          email: data[_str(DBFields.email)],
-          userType: UserType.values[data[_str(DBFields.userType)]],
+          name: data[strDB(DBFields.name)],
+          email: data[strDB(DBFields.email)],
+          userType: UserType.values[data[strDB(DBFields.userType)]],
           lastLogin: lastLogin,
-          loginCount: data[_str(DBFields.loginCount)]  ?? 0,
+          loginCount: data[strDB(DBFields.loginCount)] ?? 0,
           userId: docChanged.doc.id,
         );
       } catch (e) {
@@ -501,7 +476,7 @@ class FirebaseHelper {
     if (daysAgo <= 0) return;
 
     return _instance
-        .collection(_str(collection))
+        .collection(strDB(collection))
         .where(FieldPath.documentId,
             isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
         .get()
@@ -525,13 +500,13 @@ class FirebaseHelper {
 
     MyMatch match = MyMatch(
       date: date,
-      comment: data[_str(DBFields.comment)] ?? '',
-      isOpen: data[_str(DBFields.isOpen)] ?? false,
+      comment: data[strDB(DBFields.comment)] ?? '',
+      isOpen: data[strDB(DBFields.isOpen)] ?? false,
     );
 
-    match.courtNames.addAll((data[_str(DBFields.courtNames)] ?? []).cast<String>());
+    match.courtNames.addAll((data[strDB(DBFields.courtNames)] ?? []).cast<String>());
 
-    List<String> dbPlayersId = (data[_str(DBFields.players)] ?? []).cast<String>();
+    List<String> dbPlayersId = (data[strDB(DBFields.players)] ?? []).cast<String>();
     List<MyUser> matchPlayers = dbPlayersId
         .map((id) => availableUsers().firstWhereOrNull((user) => user.userId == id))
         .whereType<MyUser>()

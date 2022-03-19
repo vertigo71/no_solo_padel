@@ -1,7 +1,9 @@
 import 'dart:math';
 
 
+import '../database/fields.dart';
 import '../utilities/date.dart';
+import '../utilities/type_conversion.dart';
 import 'user_model.dart';
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
@@ -20,12 +22,19 @@ class MyMatch {
   String comment;
   bool isOpen;
 
-  MyMatch({required this.date, this.comment = '', this.isOpen = false});
+  MyMatch(
+      {required this.date,
+      this.comment = '',
+      this.isOpen = false,
+      Set<MyUser>? players,
+      Set<String>? courtNames}) {
+    this.players.addAll(players ?? {});
+    this.courtNames.addAll(courtNames ?? {});
+  }
 
   bool isCourtInMatch(String court) => courtNames.contains(court);
 
-  int getNumberOfFilledCourts() =>
-      min((players.length / 4).floor(), courtNames.length);
+  int getNumberOfFilledCourts() => min((players.length / 4).floor(), courtNames.length);
 
   int getNumberOfCourts() => courtNames.length;
 
@@ -67,10 +76,10 @@ class MyMatch {
   }
 
   bool addPlayer(MyUser player) {
-    return players.add( player);
+    return players.add(player);
   }
 
-  bool insertPlayer(MyUser player, {int position = -1}){
+  bool insertPlayer(MyUser player, {int position = -1}) {
     if (position < 0) return addPlayer(player);
     int numPlayers = players.length;
     if (position > numPlayers) position = numPlayers;
@@ -78,12 +87,12 @@ class MyMatch {
     _players.insert(position, player);
     players.clear();
     players.addAll(_players);
-    if ( numPlayers == players.length) return false;
+    if (numPlayers == players.length) return false;
     return true;
   }
 
   bool removePlayer(MyUser player) {
-    return players.remove( player);
+    return players.remove(player);
   }
 
   void addPlayerIfNameNotExists(MyUser user) {
@@ -93,7 +102,7 @@ class MyMatch {
     }
   }
 
-  void addPlayerToMatch( MyUser user) {
+  void addPlayerToMatch(MyUser user) {
     MyUser? _alreadyPlaying = getPlayerById(user.userId);
     if (_alreadyPlaying == null) {
       players.add(user);
@@ -108,7 +117,7 @@ class MyMatch {
   }
 
   PlayingState getPlayingState(MyUser user) {
-    Map<MyUser, PlayingState> map=getAllPlayingStates();
+    Map<MyUser, PlayingState> map = getAllPlayingStates();
     PlayingState? playingState = map[user];
     if (playingState == null) {
       return PlayingState.unsigned;
@@ -118,7 +127,7 @@ class MyMatch {
   }
 
   String getPlayingStateString(MyUser user) {
-    return playingStateMap[ getPlayingState(user)];
+    return playingStateMap[getPlayingState(user)];
   }
 
   Map<MyUser, PlayingState> getAllPlayingStates() {
@@ -144,4 +153,20 @@ class MyMatch {
   String toString() {
     return ('<$date,$isOpen,$courtNames,$players>');
   }
+
+  static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
+        date: json[DBFields.date.name] ?? '',
+        players: {}, //TODO: to do
+        courtNames: ((json[DBFields.courtNames.name] ?? []) as List<String>).toSet(),
+        comment: json[DBFields.comment.name] ?? '',
+        isOpen: strToBool(json[DBFields.isOpen.name]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        DBFields.date.name: date,
+        DBFields.players.name: players.map((p) => p.userId).toList(),
+        DBFields.courtNames.name: courtNames.toList(),
+        DBFields.comment.name: comment, // int
+        DBFields.isOpen.name: boolToStr(isOpen), // String
+      };
 }
