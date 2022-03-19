@@ -54,6 +54,7 @@ class FirebaseHelper {
   Future<void> uploadUser(MyUser myUser) async {
     MyLog().log(_classString, 'uploadUser $myUser');
     return _instance.collection(strDB(DBFields.users)).doc(myUser.userId).set({
+      strDB(DBFields.userId): myUser.userId,
       strDB(DBFields.name): myUser.name,
       strDB(DBFields.email): myUser.email,
       strDB(DBFields.userType): myUser.userType.index,
@@ -70,6 +71,7 @@ class FirebaseHelper {
     MyLog().log(_classString, 'uploadMatch $match');
 
     Map<String, dynamic> uploadMap = {
+      strDB(DBFields.date): match.date.toYyyyMMdd(),
       if (updateCore) strDB(DBFields.comment): match.comment,
       if (updateCore) strDB(DBFields.isOpen): match.isOpen,
       if (updateCore) strDB(DBFields.courtNames): match.courtNames.toList(),
@@ -105,6 +107,7 @@ class FirebaseHelper {
     MyLog().log(_classString, 'uploadRegister $register');
 
     var data = {
+      strDB(DBFields.date): register.date.toYyyyMMdd(),
       strDB(DBFields.registerMessage): FieldValue.arrayUnion(register.msgList),
     };
 

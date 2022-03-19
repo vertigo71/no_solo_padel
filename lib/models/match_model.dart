@@ -1,9 +1,8 @@
 import 'dart:math';
 
-
 import '../database/fields.dart';
 import '../utilities/date.dart';
-import '../utilities/type_conversion.dart';
+import '../utilities/transformation.dart';
 import 'user_model.dart';
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
@@ -155,7 +154,7 @@ class MyMatch {
   }
 
   static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
-        date: json[DBFields.date.name] ?? '',
+        date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
         players: {}, //TODO: to do
         courtNames: ((json[DBFields.courtNames.name] ?? []) as List<String>).toSet(),
         comment: json[DBFields.comment.name] ?? '',
@@ -163,7 +162,7 @@ class MyMatch {
       );
 
   Map<String, dynamic> toJson() => {
-        DBFields.date.name: date,
+        DBFields.date.name: date.toYyyyMMdd(),
         DBFields.players.name: players.map((p) => p.userId).toList(),
         DBFields.courtNames.name: courtNames.toList(),
         DBFields.comment.name: comment, // int
