@@ -28,35 +28,12 @@ const List<String> parametersDefault = [
 ];
 
 class MyParameters {
-  MyParameters() {
-    MyLog().log(_classString, 'Building');
-    setValue(ParametersEnum.matchDaysToView, null);
-    setValue(ParametersEnum.matchDaysKeeping, null);
-    setValue(ParametersEnum.registerDaysAgoToView, null);
-    setValue(ParametersEnum.registerDaysKeeping, null);
-    setValue(ParametersEnum.fromDaysAgoToTelegram, null);
-    setValue(ParametersEnum.defaultCommentText, null);
-    setValue(ParametersEnum.minDebugLevel, null);
-    setValue(ParametersEnum.weekDaysMatch, null);
-    setValue(ParametersEnum.showLog, null);
-  }
-
-  // list of parameters
-  final List<String> _values = List.generate(ParametersEnum.values.length, (index) => '');
+  final List<String> _values =
+      List.generate(ParametersEnum.values.length, (index) => parametersDefault[index]);
 
   static const String daysOfWeek = 'LMXJVSD';
-  static final Map<int, String> _mapOfDaysWeek = {
-    for (int day = DateTime.monday; day <= DateTime.sunday; day++)
-      day: daysOfWeek[day - DateTime.monday],
-  };
 
-  static String dayOfTheWeekToStr(Date date) {
-    return _mapOfDaysWeek[date.weekday] ?? '';
-  }
-
-  static int dayOfTheWeekToInt(String dayLabel) {
-    return _mapOfDaysWeek.keys.firstWhere((k) => _mapOfDaysWeek[k] == dayLabel, orElse: () => 0);
-  }
+  static String dayOfTheWeekToStr(Date date) => daysOfWeek[date.weekday - DateTime.monday];
 
   static int boolToInt(bool value) => value ? 1 : 0;
 
@@ -74,16 +51,15 @@ class MyParameters {
 
   static String intToStr(int value) => value.toString();
 
-  static int strToInt(String value) {
-    int? intValue = int.tryParse(value);
-    if (intValue != null) return intValue;
-    MyLog().log(_classString, 'ERROR: value $value is not an integer', debugType: DebugType.error);
-    return -1;
-  }
-
   String getStrValue(ParametersEnum parameter) => _values[parameter.index];
 
-  int getIntValue(ParametersEnum parameter) => strToInt(_values[parameter.index]);
+  int getIntValue(ParametersEnum parameter) {
+    int? intValue = int.tryParse(_values[parameter.index]);
+    if (intValue != null) return intValue;
+    MyLog()
+        .log(_classString, 'ERROR: value $parameter is not an integer', debugType: DebugType.error);
+    return -1;
+  }
 
   bool getBoolValue(ParametersEnum parameter) => strToBool(_values[parameter.index]);
 
@@ -105,4 +81,16 @@ class MyParameters {
   String toString() {
     return _values.toString();
   }
+
+  static MyParameters fromJson(Map<String, dynamic> json) {
+    MyParameters myParameters = MyParameters();
+    for (ParametersEnum value in ParametersEnum.values) {
+      myParameters.setValue(value, json[value.name]);
+    }
+    return myParameters;
+  }
+
+  Map<String, dynamic> toJson() => {
+        for (ParametersEnum value in ParametersEnum.values) value.name: getStrValue(value),
+      };
 }

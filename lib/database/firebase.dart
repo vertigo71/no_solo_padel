@@ -498,7 +498,7 @@ class FirebaseHelper {
   Future<void> deleteOldData(DBFields collection, int daysAgo) async {
     MyLog().log(_classString, '_deleteOldData ${collection.name} $daysAgo');
 
-    if (daysAgo == 0) return;
+    if (daysAgo <= 0) return;
 
     return _instance
         .collection(_str(collection))
