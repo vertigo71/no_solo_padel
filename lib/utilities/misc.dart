@@ -8,7 +8,6 @@ import 'theme.dart';
 
 final String _classString = 'Miscellaneous'.toUpperCase();
 
-
 void myAlertDialog(BuildContext context, String text) {
   showDialog(
       context: context,

@@ -7,6 +7,7 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
+import '../../utilities/type_conversion.dart';
 
 class _FormFields {
   static List<String> text = [
@@ -175,7 +176,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
       List<String> parameters = [];
       for (var value in ParametersEnum.values) {
         if (value == ParametersEnum.showLog) {
-          parameters.add(MyParameters.boolToInt(showLog).toString());
+          parameters.add(boolToInt(showLog).toString());
         } else if (listControllers[value.index] != null) {
           parameters.add(listControllers[value.index]!.text);
         }

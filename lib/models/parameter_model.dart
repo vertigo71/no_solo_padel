@@ -1,4 +1,5 @@
 import '../utilities/date.dart';
+import '../utilities/type_conversion.dart';
 import 'debug.dart';
 
 final String _classString = 'Parameters'.toUpperCase();
@@ -34,22 +35,6 @@ class MyParameters {
   static const String daysOfWeek = 'LMXJVSD';
 
   static String dayOfTheWeekToStr(Date date) => daysOfWeek[date.weekday - DateTime.monday];
-
-  static int boolToInt(bool value) => value ? 1 : 0;
-
-  static bool intToBool(int value) => value == 0 ? false : true;
-
-  static String boolToStr(bool value) => value ? 'true' : 'false';
-
-  /// true if value > 0 or is 'true'
-  static bool strToBool(String value) {
-    int? intValue = int.tryParse(value);
-    if (intValue != null) return intValue > 0;
-    if (value == 'true') return true;
-    return false;
-  }
-
-  static String intToStr(int value) => value.toString();
 
   String getStrValue(ParametersEnum parameter) => _values[parameter.index];
 
