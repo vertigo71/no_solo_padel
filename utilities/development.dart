@@ -19,7 +19,7 @@ const String prodString = 'name: no_solo_padel';
 // ignore: avoid_print
 void myPrint(var v) => print(v);
 
-void main() async {
+Future<void> copyPubspecToDevAndProd() async {
   File fileIn = File(filePubSpecName);
   if (!await fileIn.exists()) {
     myPrint('$fileIn doesn\'t exist');
@@ -57,5 +57,44 @@ void main() async {
     }
   } catch (e) {
     myPrint('Error: $e');
+  }
+}
+
+Future<void> main() async {
+  String curFullDir = Directory.current.path;
+  const String curDir = '\\no_solo_padel_dev';
+  if (curDir != curFullDir.substring(curFullDir.length - curDir.length)) {
+    print('Wrong environment!!!');
+    return;
+  }
+
+  String answer = '';
+
+  // copyPubspecToDevAndProd
+  stdout.write('Copy pubspec to pubspec dev & prod (s/N)?: ');
+  answer = stdin.readLineSync() ?? '';
+  if (answer.toLowerCase() == 's') {
+    await copyPubspecToDevAndProd();
+  }
+
+  // commit
+  stdout.write('Commit changes as new version (s/N)?: ');
+  answer = stdin.readLineSync() ?? '';
+  if (answer.toLowerCase() == 's') {
+    ProcessResult result = await Process.run('git', ['add', '*']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
+    result = await Process.run('git', ['commit', '-m', '"new version"']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
+  }
+
+  // push
+  stdout.write('git push to repository (s/N)?: ');
+  answer = stdin.readLineSync() ?? '';
+  if (answer.toLowerCase() == 's') {
+    ProcessResult result = await Process.run('git', ['push', 'origin', 'master']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
   }
 }
