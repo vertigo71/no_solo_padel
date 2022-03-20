@@ -171,7 +171,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         await context
             .read<Director>()
             .firebaseHelper
-            .uploadMatch(match: newMatch, updateCore: true, updatePlayers: false);
+            .updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
 
         if (oldMatch != null) {
           String registerText = '';

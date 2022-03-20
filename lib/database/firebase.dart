@@ -25,41 +25,13 @@ class FirebaseHelper {
     MyLog().log(_classString, 'Building');
   }
 
-  // core = comment + isOpen + courtNAmes (all except players)
-  Future<void> uploadMatch(
-      {required MyMatch match, required bool updateCore, required bool updatePlayers}) async {
-    MyLog().log(_classString, 'uploadMatch $match');
-
-    Map<String, dynamic> uploadMap = {
-      strDB(DBFields.date): match.date.toYyyyMMdd(),
-      if (updateCore) strDB(DBFields.comment): match.comment,
-      if (updateCore) strDB(DBFields.isOpen): match.isOpen,
-      if (updateCore) strDB(DBFields.courtNames): match.courtNames.toList(),
-      if (updatePlayers)
-        strDB(DBFields.players): match.players.map((player) => player.userId).toList(),
-    };
-
-    return _instance
-        .collection(strDB(DBFields.matches))
-        .doc(match.date.toYyyyMMdd())
-        .update(uploadMap)
-        .catchError((onError) => _instance
-            .collection(strDB(DBFields.matches))
-            .doc(match.date.toYyyyMMdd())
-            .set(uploadMap))
-        .catchError((onError) => MyLog().log(_classString, 'uploadMatch',
-            myCustomObject: uploadMap, exception: onError, debugType: DebugType.error));
-  }
-
   // return false if existed, true if created
   Future<bool> createMatchIfNotExists({required MyMatch match}) async {
     bool exists =
         await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
     MyLog().log(_classString, 'createMatchIfNotExists exists $exists $match');
     if (exists) return false;
-
-    await uploadMatch(match: match, updateCore: true, updatePlayers: true);
-
+    await updateMatch(match: match, updateCore: true, updatePlayers: true);
     return true;
   }
 
@@ -67,90 +39,8 @@ class FirebaseHelper {
     return _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
   }
 
-  Future<List<MyUser>> downloadUsers() async {
-    MyLog().log(_classString, 'downloadUsers');
 
-    // download users
-    QuerySnapshot? querySnapshot;
-    List<MyUser> users = [];
-    try {
-      querySnapshot = await _instance.collection(strDB(DBFields.users)).get();
-      users = _downloadUsers(snapshot: querySnapshot);
-    } catch (e) {
-      MyLog().log(_classString, 'downloadUsers',
-          myCustomObject: querySnapshot, exception: e, debugType: DebugType.error);
-    }
-    return users;
-  }
-
-  List<MyUser> _downloadUsers({required QuerySnapshot snapshot}) {
-    List<MyUser> users = [];
-    MyLog().log(_classString, '_downloadUsers Number of users = ${snapshot.docs.length}');
-    for (var doc in snapshot.docs) {
-      if (doc.data() == null) throw 'Error en la base de datos de usuarios';
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-      try {
-        MyUser user = MyUser.fromJson(data);
-
-        if (user.hasNotEmptyFields()) {
-          users.add(user);
-        } else {
-          MyLog().log(
-              _classString, '_downloadUsers Formato de usuario incorrecto en la Base de Datos',
-              debugType: DebugType.error, myCustomObject: user);
-        }
-
-      } catch (e) {
-        MyLog().log(_classString, '_downloadUsers formato incorrecto',
-            myCustomObject: data, exception: e, debugType: DebugType.error);
-      }
-    }
-
-    return users;
-  }
-
-  Future<List<MyMatch>> downloadMatches({
-    required Date fromDate,
-    required int numDays,
-    required List<MyUser> Function() availableUsers,
-  }) async {
-    MyLog().log(_classString, 'downloadMatches');
-    // download matches
-    List<MyMatch> matches = [];
-    QuerySnapshot? querySnapshot;
-    try {
-      querySnapshot = await _instance
-          .collection(strDB(DBFields.matches))
-          .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId,
-              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
-          .get();
-      matches = _downloadMatches(snapshot: querySnapshot, availableUsers: availableUsers);
-    } catch (e) {
-      MyLog().log(_classString, 'downloadMatches',
-          myCustomObject: querySnapshot, exception: e, debugType: DebugType.error);
-    }
-
-    return matches;
-  }
-
-  List<MyMatch> _downloadMatches({
-    required QuerySnapshot snapshot,
-    required List<MyUser> Function() availableUsers,
-  }) {
-    List<MyMatch> matches = [];
-    MyLog().log(_classString, '_downloadMatches Number of matches = ${snapshot.docs.length}');
-    for (var doc in snapshot.docs) {
-      if (doc.data() == null) throw 'Error en la base de datos de partidos';
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      Date date = Date(DateTime.parse(doc.id));
-      MyMatch match = _createMatchFromMap(date: date, data: data, availableUsers: availableUsers);
-      matches.add(match);
-    }
-    return matches;
-  }
-
+  // TODO: follow from here
   Future<void> createListeners({
     required Date fromDate,
     required int numDays,
@@ -280,8 +170,8 @@ class FirebaseHelper {
             removedUsers.add(user);
           }
         } else {
-          MyLog().log(
-              _classString, '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
+          MyLog().log(_classString,
+              '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
               debugType: DebugType.error, myCustomObject: user);
         }
       } catch (e) {
@@ -382,52 +272,49 @@ class FirebaseHelper {
 
   /// ----------------------------------------------------------------------------
 
-  // stream of messages registered
-  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) {
-    MyLog().log(_classString, 'getRegisterStream');
+  Stream<List<T>>? getStream<T>({
+    required String collection,
+    required T Function(Map<String, dynamic> json) fromJson,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+  }) {
+    MyLog().log(_classString, 'getStream $collection');
+    Query query = _instance.collection(collection);
+    if (fromDate != null) {
+      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+    }
+    if (maxDate != null) {
+      query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+    }
     try {
-      return _instance
-          .collection(strDB(DBFields.register))
-          .where(FieldPath.documentId,
-              isGreaterThan: Date.now().subtract(Duration(days: fromDaysAgo)).toYyyyMMdd())
-          .snapshots()
-          .transform(transformer(RegisterModel.fromJson));
+      return query.snapshots().transform(transformer(fromJson));
     } catch (e) {
-      MyLog().log(_classString, 'getRegisterStream', exception: e, debugType: DebugType.error);
+      MyLog().log(_classString, 'getStream $collection', exception: e, debugType: DebugType.error);
       return null;
     }
   }
+
+  // stream of messages registered
+  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
+        collection: strDB(DBFields.register),
+        fromJson: RegisterModel.fromJson,
+        fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
+      );
 
   // stream of users
-  Stream<List<MyUser>>? getUsersStream() {
-    MyLog().log(_classString, 'getUsersStream');
-    try {
-      return _instance
-          .collection(strDB(DBFields.users))
-          .snapshots()
-          .transform(transformer(MyUser.fromJson));
-    } catch (e) {
-      MyLog().log(_classString, 'getUsersStream', exception: e, debugType: DebugType.error);
-      return null;
-    }
-  }
+  Stream<List<MyUser>>? getUsersStream() => getStream(
+        collection: strDB(DBFields.users),
+        fromJson: MyUser.fromJson,
+      );
 
   // stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({required Date fromDate, required int numDays}) {
-    MyLog().log(_classString, 'getMatchesStream');
-    try {
-      return _instance
-          .collection(strDB(DBFields.matches))
-          .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId,
-              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
-          .snapshots()
-          .transform(transformer(MyMatch.fromJson));
-    } catch (e) {
-      MyLog().log(_classString, 'getMatchesStream', exception: e, debugType: DebugType.error);
-      return null;
-    }
-  }
+  Stream<List<MyMatch>>? getMatchesStream({required Date fromDate, required int numDays}) =>
+      getStream(
+        collection: strDB(DBFields.matches),
+        fromJson: MyMatch.fromJson,
+        fromDate: fromDate,
+        maxDate: Date.now().add(Duration(days: numDays)),
+      );
 
   Future<T?> getObject<T>({
     required String collection,
@@ -465,6 +352,54 @@ class FirebaseHelper {
           fromJson: MyParameters.fromJson) ??
       MyParameters();
 
+  Future<List<T>> getAllObjects<T>({
+    required String collection,
+    required T Function(Map<String, dynamic> json) fromJson,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+  }) async {
+    MyLog().log(_classString, 'gelAllObjects');
+    List<T> items = [];
+    Query query = _instance.collection(collection);
+    if (fromDate != null) {
+      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+    }
+    if (maxDate != null) {
+      query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+    }
+
+    try {
+      QuerySnapshot querySnapshot = await query.get();
+      for (var doc in querySnapshot.docs) {
+        if (doc.data() == null) throw 'Error en la base de datos $collection';
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        T item = fromJson(data);
+        MyLog().log(_classString, 'gelAllObjects $collection = ', myCustomObject: item);
+        items.add(item);
+      }
+    } catch (e) {
+      MyLog().log(_classString, 'gelAllObjects', exception: e, debugType: DebugType.error);
+    }
+
+    return items;
+  }
+
+  Future<List<MyUser>> getAllUsers() async => getAllObjects(
+        collection: strDB(DBFields.users),
+        fromJson: MyUser.fromJson,
+      );
+
+  Future<List<MyMatch>> getAllMatches({
+    required Date fromDate,
+    required int numDays,
+  }) async =>
+      getAllObjects(
+        collection: strDB(DBFields.matches),
+        fromJson: MyMatch.fromJson,
+        fromDate: fromDate,
+        maxDate: Date.now().add(Duration(days: numDays)),
+      );
+
   Future<void> updateObject({
     required Map<String, dynamic> map,
     required String collection,
@@ -490,6 +425,16 @@ class FirebaseHelper {
         collection: strDB(DBFields.users),
         doc: myUser.userId,
         forceSet: true,
+      );
+
+  // core = comment + isOpen + courtNAmes (all except players)
+  Future<void> updateMatch(
+          {required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
+      updateObject(
+        map: match.toJson(core: updateCore, matchPlayers: updatePlayers),
+        collection: strDB(DBFields.matches),
+        doc: match.date.toYyyyMMdd(),
+        forceSet: false,
       );
 
   Future<void> updateRegister(RegisterModel registerModel) async => updateObject(

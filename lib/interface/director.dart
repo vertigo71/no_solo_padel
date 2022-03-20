@@ -160,7 +160,7 @@ class Director {
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1));
         match.players.addAll(randomInts.map((e) => users[e % users.length]).toSet());
         MyLog().log(_classString, 'createTestData $match');
-        await firebaseHelper.uploadMatch(match: match, updateCore: true, updatePlayers: true);
+        await firebaseHelper.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }
   }

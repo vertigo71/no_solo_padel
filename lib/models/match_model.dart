@@ -3,7 +3,6 @@ import 'dart:math';
 import '../database/fields.dart';
 import '../utilities/date.dart';
 import '../utilities/transformation.dart';
-import 'user_model.dart';
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
 
@@ -16,7 +15,7 @@ const Map playingStateMap = {
 
 class MyMatch {
   Date date;
-  final Set<MyUser> players = {};
+  final Set<String> players = {};
   final Set<String> courtNames = {};
   String comment;
   bool isOpen;
@@ -25,7 +24,7 @@ class MyMatch {
       {required this.date,
       this.comment = '',
       this.isOpen = false,
-      Set<MyUser>? players,
+      Set<String>? players,
       Set<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
@@ -33,91 +32,73 @@ class MyMatch {
 
   bool isCourtInMatch(String court) => courtNames.contains(court);
 
+  // TODO: do all players exist??
   int getNumberOfFilledCourts() => min((players.length / 4).floor(), courtNames.length);
 
   int getNumberOfCourts() => courtNames.length;
 
-  Set<MyUser> getPlayers({PlayingState? state}) {
+  // null for all
+  Set<String> getPlayers({PlayingState? state}) {
     if (state == null) return players;
-    Map<MyUser, PlayingState> map = getAllPlayingStates();
-    Set<MyUser> list = {};
-
+    Map<String, PlayingState> map = getAllPlayingStates();
+    Set<String> list = {};
     map.forEach((_user, _state) => _state == state ? list.add(_user) : null);
     return list;
   }
 
-  bool isInTheMatch(MyUser user) {
-    for (var player in players) {
-      if (player == user) return true;
-    }
-    return false;
-  }
+  bool isInTheMatch(String userId) => players.contains(userId);
 
-  MyUser? getPlayerByName(String name) {
-    for (var player in players) {
-      if (player.name == name) return player;
-    }
-    return null;
-  }
+  // TODO: must be done differently
+  // MyUser? getPlayerByName(String name) {
+  //   for (var player in players) {
+  //     if (player.name == name) return player;
+  //   }
+  //   return null;
+  // }
 
-  MyUser? getPlayerById(String id) {
-    for (var player in players) {
-      if (player.userId == id) return player;
-    }
-    return null;
-  }
+  // TODO: must be done differently
+  // MyUser? getPlayerById(String id) {
+  //   for (var player in players) {
+  //     if (player.userId == id) return player;
+  //   }
+  //   return null;
+  // }
+  // TODO: must be done differently
+  // MyUser? getPlayerByEmail(String email) {
+  //   for (var player in players) {
+  //     if (player.email == email) return player;
+  //   }
+  //   return null;
+  // }
 
-  MyUser? getPlayerByEmail(String email) {
-    for (var player in players) {
-      if (player.email == email) return player;
-    }
-    return null;
-  }
+  bool addPlayer(String player) => players.add(player);
 
-  bool addPlayer(MyUser player) {
-    return players.add(player);
-  }
-
-  bool insertPlayer(MyUser player, {int position = -1}) {
+  /// true if it was inserted, false if already existed
+  bool insertPlayer(String player, {int position = -1}) {
+    if (players.contains(player)) return false;
     if (position < 0) return addPlayer(player);
     int numPlayers = players.length;
     if (position > numPlayers) position = numPlayers;
-    List<MyUser> _players = players.toList();
+    List<String> _players = players.toList();
     _players.insert(position, player);
     players.clear();
     players.addAll(_players);
-    if (numPlayers == players.length) return false;
     return true;
   }
 
-  bool removePlayer(MyUser player) {
-    return players.remove(player);
-  }
+  bool removePlayer(String player) => players.remove(player);
 
-  void addPlayerIfNameNotExists(MyUser user) {
-    MyUser? _user = getPlayerByName(user.name);
-    if (_user == null) {
-      players.add(user);
-    }
-  }
+  // TODO: must be done differently
+  // void addPlayerIfNameNotExists(MyUser user) {
+  //   MyUser? _user = getPlayerByName(user.name);
+  //   if (_user == null) {
+  //     players.add(user);
+  //   }
+  // }
 
-  void addPlayerToMatch(MyUser user) {
-    MyUser? _alreadyPlaying = getPlayerById(user.userId);
-    if (_alreadyPlaying == null) {
-      players.add(user);
-    }
-  }
-
-  void deletePlayerIfNameExists(String name) {
-    MyUser? _user = getPlayerByName(name);
-    if (_user != null) {
-      players.remove(_user);
-    }
-  }
-
-  PlayingState getPlayingState(MyUser user) {
-    Map<MyUser, PlayingState> map = getAllPlayingStates();
-    PlayingState? playingState = map[user];
+  PlayingState getPlayingState(String player) {
+    Map<String, PlayingState> map = getAllPlayingStates();
+    PlayingState? playingState = map[player];
     if (playingState == null) {
       return PlayingState.unsigned;
     } else {
@@ -125,13 +106,10 @@ class MyMatch {
     }
   }
 
-  String getPlayingStateString(MyUser user) {
-    return playingStateMap[getPlayingState(user)];
-  }
+  String getPlayingStateString(String player) => playingStateMap[getPlayingState(player)];
 
-  Map<MyUser, PlayingState> getAllPlayingStates() {
-    Map<MyUser, PlayingState> map = {};
-
+  Map<String, PlayingState> getAllPlayingStates() {
+    Map<String, PlayingState> map = {};
     int numberOfFilledCourts = getNumberOfFilledCourts();
     for (int i = 0; i < players.length; i++) {
       if (i < numberOfFilledCourts * 4) {
@@ -155,17 +133,17 @@ class MyMatch {
 
   static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
         date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
-        players: {}, //TODO: to do
+        players: ((json[DBFields.players.name] ?? []).cast<String>()).toSet(),
         courtNames: ((json[DBFields.courtNames.name] ?? []).cast<String>()).toSet(),
         comment: json[DBFields.comment.name] ?? '',
         isOpen: strToBool(json[DBFields.isOpen.name]),
       );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         DBFields.date.name: date.toYyyyMMdd(),
-        DBFields.players.name: players.map((p) => p.userId).toList(),
-        DBFields.courtNames.name: courtNames.toList(),
-        DBFields.comment.name: comment, // int
-        DBFields.isOpen.name: boolToStr(isOpen), // String
+        if (matchPlayers) DBFields.players.name: players.toList(),
+        if (core) DBFields.courtNames.name: courtNames.toList(),
+        if (core) DBFields.comment.name: comment, // int
+        if (core) DBFields.isOpen.name: boolToStr(isOpen), // String
       };
 }
