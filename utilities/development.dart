@@ -84,6 +84,9 @@ Future<void> main() async {
     ProcessResult result = await Process.run('git', ['add', '*']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
+    result = await Process.run('git', ['status']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
     result = await Process.run('git', ['commit', '-m', '"new version"']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
