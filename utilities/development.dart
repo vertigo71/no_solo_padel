@@ -81,13 +81,19 @@ Future<void> main() async {
   stdout.write('Commit changes as new version (s/N)?: ');
   answer = stdin.readLineSync() ?? '';
   if (answer.toLowerCase() == 's') {
-    ProcessResult result = await Process.run('git', ['add', '*']);
+    ProcessResult result = await Process.run('git', ['status']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
+     result = await Process.run('git', ['add', '--all', '.']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
     result = await Process.run('git', ['status']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
     result = await Process.run('git', ['commit', '-m', '"new version"']);
+    stdout.write(result.stdout);
+    stderr.write(result.stderr);
+    result = await Process.run('git', ['status']);
     stdout.write(result.stdout);
     stderr.write(result.stderr);
   }
