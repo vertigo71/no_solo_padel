@@ -39,7 +39,7 @@ class Director {
 
     // download parameters from DB into local
     MyLog().log(_classString, 'Parameters');
-    MyParameters? myParameters = await firebaseHelper.downloadParameters();
+    MyParameters myParameters = await firebaseHelper.getParameters();
     _appState.setAllParameters(myParameters, notify: false);
 
     // download users from DB into local
@@ -139,7 +139,7 @@ class Director {
         }
         await AuthenticationHelper()
             .createUserWithEmailAndPwd(email: myUser.email, pwd: initialPwd);
-        await firebaseHelper.uploadUser(myUser);
+        await firebaseHelper.updateUser(myUser);
       }
       MyLog().log(_classString, 'Users');
       List<MyUser> allUsers = await firebaseHelper.downloadUsers();

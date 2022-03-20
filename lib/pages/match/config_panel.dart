@@ -197,8 +197,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           }
 
           if (registerText.isNotEmpty) {
-            firebaseHelper.uploadRegister(
-                register: RegisterModel(date: newMatch.date, message: registerText));
+            firebaseHelper.updateRegister(
+                RegisterModel(date: newMatch.date, message: registerText));
             sendMessageToTelegram(
               message: registerText,
               matchDate: newMatch.date,

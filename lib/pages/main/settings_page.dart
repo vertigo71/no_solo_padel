@@ -145,7 +145,7 @@ class SettingsPageState extends State<SettingsPage> {
     user.name = newName;
 
     try {
-      await firebaseHelper.uploadUser(user);
+      await firebaseHelper.updateUser(user);
     } catch (e) {
       showMessage(context, 'Error al actualizar el nombre del usuario');
       MyLog().log(_classString, 'Error al actualizar el nombre del usuario',
@@ -189,7 +189,7 @@ class SettingsPageState extends State<SettingsPage> {
     loggedUser.email = newEmail;
 
     try {
-      await firebaseHelper.uploadUser(loggedUser);
+      await firebaseHelper.updateUser(loggedUser);
     } catch (e) {
       showMessage(context, 'Error al actualizar localmente el correo del usuario');
       MyLog().log(_classString, 'Error al actualizar localmente el correo del usuario',

@@ -354,8 +354,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
           .read<Director>()
           .firebaseHelper
           .uploadMatch(match: match, updateCore: false, updatePlayers: true);
-      context.read<Director>().firebaseHelper.uploadRegister(
-              register: RegisterModel(
+      context.read<Director>().firebaseHelper.updateRegister(RegisterModel(
             date: match.date,
             message: registerText,
           ));

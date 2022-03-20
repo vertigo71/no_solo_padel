@@ -65,7 +65,7 @@ class Loading extends StatelessWidget {
       // update lastLogin & loginCount
       loggedUser.lastLogin = Date.now();
       loggedUser.loginCount++;
-      await firebaseHelper.uploadUser(loggedUser);
+      await firebaseHelper.updateUser(loggedUser);
 
       ///
       /// upload to new database data format. DONE!

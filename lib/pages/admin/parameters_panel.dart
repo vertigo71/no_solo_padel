@@ -187,7 +187,7 @@ class _ParametersPanelState extends State<ParametersPanel> {
       }
 
       try {
-        await firebaseHelper.uploadParameters(myParameters: myParameters);
+        await firebaseHelper.updateParameters(myParameters);
         showMessage(
             context,
             'Los parámetros han sido actualizados. \n'

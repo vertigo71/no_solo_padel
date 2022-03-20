@@ -203,7 +203,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
     }
 
     try {
-      firebaseHelper.uploadUser(myUser);
+      firebaseHelper.updateUser(myUser);
     } catch (e) {
       showMessage(context, 'Error al crear localmente el usuario');
       MyLog().log(_classString, 'Error al crear localmente el usuario', debugType: DebugType.error);

@@ -50,7 +50,7 @@ class UserModifyPanel extends StatelessWidget {
                           user.userType = UserType.superuser;
                         }
                         try {
-                          context.read<Director>().firebaseHelper.uploadUser(user);
+                          context.read<Director>().firebaseHelper.updateUser(user);
                           MyLog().log(_classString, 'usuario modificado con $response');
                         } catch (e) {
                           showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
