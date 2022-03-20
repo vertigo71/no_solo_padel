@@ -68,7 +68,7 @@ class Loading extends StatelessWidget {
       await firebaseHelper.uploadUser(loggedUser);
 
       ///
-      /// upload to new database data format
+      /// upload to new database data format. DONE!
       ///
       /// if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
 
