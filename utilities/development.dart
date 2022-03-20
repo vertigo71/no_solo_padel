@@ -19,6 +19,13 @@ const String prodString = 'name: no_solo_padel';
 // ignore: avoid_print
 void myPrint(var v) => print(v);
 
+void errorPrint( dynamic error ){
+  if ( error.toString().isNotEmpty) {
+    stderr.write('ERROR!!!');
+    stderr.write(error);
+  }
+}
+
 Future<void> copyPubspecToDevAndProd() async {
   File fileIn = File(filePubSpecName);
   if (!await fileIn.exists()) {
@@ -60,11 +67,12 @@ Future<void> copyPubspecToDevAndProd() async {
   }
 }
 
+
 Future<void> main() async {
   String curFullDir = Directory.current.path;
   const String curDir = '\\no_solo_padel_dev';
   if (curDir != curFullDir.substring(curFullDir.length - curDir.length)) {
-    print('Wrong environment!!!');
+    myPrint('Wrong environment!!!');
     return;
   }
 
@@ -83,18 +91,18 @@ Future<void> main() async {
   if (answer.toLowerCase() == 's') {
     ProcessResult result = await Process.run('git', ['status']);
     stdout.write(result.stdout);
-    stderr.write(result.stderr);
-    print('>>  adding all...');
+    errorPrint(result.stderr);
+    myPrint('>>  adding all...');
     result = await Process.run('git', ['add', '--all', '.']);
     stdout.write(result.stdout);
-    stderr.write(result.stderr);
-    print('>>  committing...');
+    errorPrint(result.stderr);
+    myPrint('>>  committing...');
     result = await Process.run('git', ['commit', '-m', '"new version"']);
     stdout.write(result.stdout);
-    stderr.write(result.stderr);
+    errorPrint(result.stderr);
     result = await Process.run('git', ['status']);
     stdout.write(result.stdout);
-    stderr.write(result.stderr);
+    errorPrint(result.stderr);
   }
 
   // push
@@ -103,6 +111,6 @@ Future<void> main() async {
   if (answer.toLowerCase() == 's') {
     ProcessResult result = await Process.run('git', ['push', 'origin', 'master']);
     stdout.write(result.stdout);
-    stderr.write(result.stderr);
+    errorPrint(result.stderr);
   }
 }
