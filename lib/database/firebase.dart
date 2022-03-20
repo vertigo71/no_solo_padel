@@ -41,16 +41,44 @@ class FirebaseHelper {
     }
   }
 
+  // stream of users
+  Stream<List<MyUser>>? getUsersStream() {
+    MyLog().log(_classString, 'getUsersStream');
+    try {
+      return _instance
+          .collection(strDB(DBFields.users))
+          .snapshots()
+          .transform(transformer(MyUser.fromJson));
+    } catch (e) {
+      MyLog().log(_classString, 'getUsersStream', exception: e, debugType: DebugType.error);
+      return null;
+    }
+  }
+
+  // stream of matches
+  Stream<List<MyMatch>>? getMatchesStream({required Date fromDate, required int numDays}) {
+    MyLog().log(_classString, 'getMatchesStream');
+    try {
+      return _instance
+          .collection(strDB(DBFields.matches))
+          .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
+          .where(FieldPath.documentId,
+              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
+          .snapshots()
+          .transform(transformer(MyMatch.fromJson));
+    } catch (e) {
+      MyLog().log(_classString, 'getMatchesStream', exception: e, debugType: DebugType.error);
+      return null;
+    }
+  }
+
   Future<void> uploadUser(MyUser myUser) async {
     MyLog().log(_classString, 'uploadUser $myUser');
-    return _instance.collection(strDB(DBFields.users)).doc(myUser.userId).set({
-      strDB(DBFields.userId): myUser.userId,
-      strDB(DBFields.name): myUser.name,
-      strDB(DBFields.email): myUser.email,
-      strDB(DBFields.userType): myUser.userType.index,
-      if (myUser.lastLogin != null) strDB(DBFields.lastLogin): myUser.lastLogin!.toYyyyMMdd(),
-      strDB(DBFields.loginCount): myUser.loginCount,
-    }).catchError((onError) {
+    return _instance
+        .collection(strDB(DBFields.users))
+        .doc(myUser.userId)
+        .set(myUser.toJson())
+        .catchError((onError) {
       MyLog().log(_classString, 'uploadUser ', exception: onError, debugType: DebugType.error);
     });
   }
@@ -96,10 +124,7 @@ class FirebaseHelper {
   Future<void> uploadRegister({required RegisterModel register}) async {
     MyLog().log(_classString, 'uploadRegister $register');
 
-    var data = {
-      strDB(DBFields.date): register.date.toYyyyMMdd(),
-      strDB(DBFields.registerMessage): FieldValue.arrayUnion(register.msgList),
-    };
+    var data = register.toJson();
 
     return _instance
         .collection(strDB(DBFields.register))
@@ -113,21 +138,15 @@ class FirebaseHelper {
             myCustomObject: data, exception: onError, debugType: DebugType.error));
   }
 
-  Future<void> uploadParameters({required List<String> parameters}) async {
-    MyLog().log(_classString, 'uploadParameters $parameters');
-
-    Map<String, String> data = {};
-    for (int index = 0; index < parameters.length; index++) {
-      data[ParametersEnum.values[index].name] = parameters[index];
-    }
-    MyLog().log(_classString, 'uploadParameters data', myCustomObject: data);
+  Future<void> uploadParameters({required MyParameters myParameters}) async {
+    MyLog().log(_classString, 'uploadParameters $myParameters');
 
     return _instance
         .collection(strDB(DBFields.parameters))
         .doc(strDB(DBFields.parameters))
-        .set(data)
+        .set(myParameters.toJson())
         .catchError((onError) => MyLog().log(_classString, 'uploadParameters',
-            myCustomObject: data, exception: onError, debugType: DebugType.error));
+            myCustomObject: myParameters.toJson(), exception: onError, debugType: DebugType.error));
   }
 
   Future<bool> doesDocExist({required String collection, required String doc}) async {

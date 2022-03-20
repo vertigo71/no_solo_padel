@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../database/fields.dart';
 import '../utilities/date.dart';
 
@@ -48,7 +50,7 @@ class RegisterModel {
       );
 
   Map<String, dynamic> toJson() => {
-        DBFields.date.name: date,
-        DBFields.registerMessage.name: _msgList,
+        DBFields.date.name: date.toYyyyMMdd(),
+        DBFields.registerMessage.name: FieldValue.arrayUnion(_msgList),
       };
 }

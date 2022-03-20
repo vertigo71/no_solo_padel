@@ -173,23 +173,21 @@ class _ParametersPanelState extends State<ParametersPanel> {
   Future<void> _formValidate() async {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
-      List<String> parameters = [];
+      MyParameters myParameters = MyParameters();
       for (var value in ParametersEnum.values) {
         if (value == ParametersEnum.showLog) {
-          parameters.add(boolToInt(showLog).toString());
+          myParameters.setValue(value, boolToStr(showLog));
+        } else if (value == ParametersEnum.weekDaysMatch) {
+          // delete repeated chars in weekDaysMatch
+          myParameters.setValue(value,
+              listControllers[value.index]!.text.split('').toSet().fold('', (a, b) => '$a$b'));
         } else if (listControllers[value.index] != null) {
-          parameters.add(listControllers[value.index]!.text);
+          myParameters.setValue(value, listControllers[value.index]!.text);
         }
       }
-      // check no repeated chars in weekDaysMatch
-      parameters[ParametersEnum.weekDaysMatch.index] =
-          parameters[ParametersEnum.weekDaysMatch.index]
-              .split('')
-              .toSet()
-              .fold('', (a, b) => '$a$b');
 
       try {
-        await firebaseHelper.uploadParameters(parameters: parameters);
+        await firebaseHelper.uploadParameters(myParameters: myParameters);
         showMessage(
             context,
             'Los parámetros han sido actualizados. \n'
