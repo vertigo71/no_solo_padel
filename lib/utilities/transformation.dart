@@ -1,6 +1,7 @@
 // ignore: unused_element
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:diacritic/diacritic.dart';
 
 // ignore: unused_element
 final String _classString = 'TypeConversion'.toUpperCase();
@@ -29,3 +30,5 @@ bool strToBool(String value) {
   if (value == 'true') return true;
   return false;
 }
+
+String lowCaseNoDiacritics( String str) => removeDiacritics( str.toLowerCase() );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:no_solo_padel_dev/utilities/transformation.dart';
 
 import '../utilities/date.dart';
 import '../models/debug.dart';
@@ -80,7 +81,8 @@ class AppState with ChangeNotifier {
   List<MyUser> getAllUsers() => _allUsers;
 
   List<MyUser> get allSortedUsers {
-    _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    // _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _allUsers.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
     return _allUsers;
   }
 
