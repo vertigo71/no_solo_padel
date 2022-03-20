@@ -156,7 +156,7 @@ class MyMatch {
   static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
         date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
         players: {}, //TODO: to do
-        courtNames: ((json[DBFields.courtNames.name] ?? []) as List<String>).toSet(),
+        courtNames: ((json[DBFields.courtNames.name] ?? []).cast<String>()).toSet(),
         comment: json[DBFields.comment.name] ?? '',
         isOpen: strToBool(json[DBFields.isOpen.name]),
       );

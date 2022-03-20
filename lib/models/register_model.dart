@@ -1,4 +1,3 @@
-
 import '../database/fields.dart';
 import '../utilities/date.dart';
 
@@ -45,7 +44,7 @@ class RegisterModel {
 
   static RegisterModel fromJson(Map<String, dynamic> json) => RegisterModel.list(
         date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
-        timedMsgList: json[DBFields.registerMessage.name] ?? [],
+        timedMsgList: (json[DBFields.registerMessage.name] ?? []).cast<String>(),
       );
 
   Map<String, dynamic> toJson() => {

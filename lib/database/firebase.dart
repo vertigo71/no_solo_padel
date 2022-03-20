@@ -10,6 +10,7 @@ import '../models/match_model.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/date.dart';
+import '../utilities/transformation.dart';
 import 'fields.dart';
 
 final String _classString = 'FirebaseHelper'.toUpperCase();
@@ -33,22 +34,11 @@ class FirebaseHelper {
           .where(FieldPath.documentId,
               isGreaterThan: Date.now().subtract(Duration(days: fromDaysAgo)).toYyyyMMdd())
           .snapshots()
-          .map((QuerySnapshot querySnapshot) => _getRegisterArray(querySnapshot));
+          .transform(transformer(RegisterModel.fromJson));
     } catch (e) {
       MyLog().log(_classString, 'getRegisterStream', exception: e, debugType: DebugType.error);
       return null;
     }
-  }
-
-  List<RegisterModel> _getRegisterArray(QuerySnapshot querySnapshot) {
-    return querySnapshot.docs
-        .map((DocumentSnapshot documentSnapshot) => RegisterModel.list(
-              date: Date(DateTime.parse(documentSnapshot.id)),
-              timedMsgList:
-                  ((documentSnapshot.data() as dynamic)[strDB(DBFields.registerMessage)] ?? [])
-                      .cast<String>(),
-            ))
-        .toList();
   }
 
   Future<void> uploadUser(MyUser myUser) async {
