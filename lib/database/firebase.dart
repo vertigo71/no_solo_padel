@@ -90,32 +90,20 @@ class FirebaseHelper {
       if (doc.data() == null) throw 'Error en la base de datos de usuarios';
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-      MyUser user = MyUser();
       try {
-        Date? lastLogin;
-        if (data[strDB(DBFields.lastLogin)] != null) {
-          lastLogin = Date(DateTime.parse(data[strDB(DBFields.lastLogin)]));
+        MyUser user = MyUser.fromJson(data);
+
+        if (user.hasNotEmptyFields()) {
+          users.add(user);
+        } else {
+          MyLog().log(
+              _classString, '_downloadUsers Formato de usuario incorrecto en la Base de Datos',
+              debugType: DebugType.error, myCustomObject: user);
         }
 
-        user = MyUser(
-          name: data[strDB(DBFields.name)],
-          email: data[strDB(DBFields.email)],
-          userType: UserType.values[data[strDB(DBFields.userType)]],
-          lastLogin: lastLogin,
-          loginCount: data[strDB(DBFields.loginCount)] ?? 0,
-          userId: doc.id,
-        );
       } catch (e) {
         MyLog().log(_classString, '_downloadUsers formato incorrecto',
-            myCustomObject: user, exception: e, debugType: DebugType.error);
-      }
-
-      if (user.hasNotEmptyFields()) {
-        users.add(user);
-      } else {
-        MyLog().log(
-            _classString, '_downloadUsers Formato de usuario incorrecto en la Base de Datos',
-            debugType: DebugType.error, myCustomObject: user);
+            myCustomObject: data, exception: e, debugType: DebugType.error);
       }
     }
 
@@ -280,37 +268,25 @@ class FirebaseHelper {
       }
 
       Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
-
-      MyUser user = MyUser();
       try {
-        Date? lastLogin;
-        if (data[strDB(DBFields.lastLogin)] != null) {
-          lastLogin = Date(DateTime.parse(data[strDB(DBFields.lastLogin)]));
+        MyUser user = MyUser.fromJson(data);
+
+        if (user.hasNotEmptyFields()) {
+          if (docChanged.type == DocumentChangeType.added) {
+            addedUsers.add(user);
+          } else if (docChanged.type == DocumentChangeType.modified) {
+            modifiedUsers.add(user);
+          } else if (docChanged.type == DocumentChangeType.removed) {
+            removedUsers.add(user);
+          }
+        } else {
+          MyLog().log(
+              _classString, '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
+              debugType: DebugType.error, myCustomObject: user);
         }
-        user = MyUser(
-          name: data[strDB(DBFields.name)],
-          email: data[strDB(DBFields.email)],
-          userType: UserType.values[data[strDB(DBFields.userType)]],
-          lastLogin: lastLogin,
-          loginCount: data[strDB(DBFields.loginCount)] ?? 0,
-          userId: docChanged.doc.id,
-        );
       } catch (e) {
-        MyLog().log(_classString, '_downloadChangedUsers formato incorrecto',
-            myCustomObject: user, exception: e, debugType: DebugType.error);
-      }
-      if (user.hasNotEmptyFields()) {
-        if (docChanged.type == DocumentChangeType.added) {
-          addedUsers.add(user);
-        } else if (docChanged.type == DocumentChangeType.modified) {
-          modifiedUsers.add(user);
-        } else if (docChanged.type == DocumentChangeType.removed) {
-          removedUsers.add(user);
-        }
-      } else {
-        MyLog().log(
-            _classString, '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
-            debugType: DebugType.error, myCustomObject: user);
+        MyLog().log(_classString, '_downloadUsers formato incorrecto',
+            myCustomObject: data, exception: e, debugType: DebugType.error);
       }
     }
   }
