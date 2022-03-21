@@ -26,8 +26,7 @@ class _LoginState extends State<Login> {
 
   String version = '';
 
-  Future<void> getVersion() async {
-    await Environment().initialize();
+  void getVersion()  {
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
       setState(() =>
@@ -42,8 +41,8 @@ class _LoginState extends State<Login> {
     super.initState();
     getVersion();
     // for development
-    emailController.text = initialUserName;
-    pwdController.text = initialPwd;
+    emailController.text = getInitialUserName();
+    pwdController.text = getInitialPwd();
   }
 
   @override

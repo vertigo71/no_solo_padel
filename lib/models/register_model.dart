@@ -41,7 +41,7 @@ class RegisterModel {
 
   @override
   String toString() {
-    return ('${date.toYyyyMMdd()}: ${_msgList.last}>');
+    return ('${date.toYyyyMMdd()}:${_msgList.last}>');
   }
 
   static RegisterModel fromJson(Map<String, dynamic> json) => RegisterModel.list(

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../database/firebase.dart';
 import '../../interface/director.dart';
-import '../../interface/telegram.dart';
+import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../interface/app_state.dart';

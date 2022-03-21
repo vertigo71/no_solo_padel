@@ -23,7 +23,7 @@ const List<String> parametersDefault = [
   '15', // registerDaysKeeping
   '2', // fromDaysAgoToTelegram
   'Introducir comentario por defecto', //defaultCommentText
-  '0', // according to DebugType, minDebugLevel
+  '1', // according to DebugType, minDebugLevel
   'LMXJ', // weekDaysMatch
   '0', //showLog
 ];

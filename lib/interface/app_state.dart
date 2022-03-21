@@ -23,8 +23,8 @@ class AppState with ChangeNotifier {
 
   void deleteAll() {
     MyLog().log(_classString, 'deleteAll ');
-    _loggedUser = MyUser();
-    _parameters = MyParameters();
+    setLoggedUser(MyUser(), notify: false);
+    setAllParameters( null, notify: false);
     _allMatches.clear();
     _allUsers.clear();
   }
@@ -59,6 +59,10 @@ class AppState with ChangeNotifier {
     MyLog()
         .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.info);
     _loggedUser = loggedUser;
+    // update MyLog name and email
+    MyLog.loggedUserName = _loggedUser.name;
+    MyLog.loggedUserEmail = _loggedUser.email;
+
     if (notify) notifyListeners();
   }
 

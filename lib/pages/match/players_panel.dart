@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
-import '../../interface/telegram.dart';
+import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';

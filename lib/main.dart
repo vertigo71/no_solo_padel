@@ -8,6 +8,7 @@ import 'interface/director.dart';
 import 'models/debug.dart';
 import 'routes/routes.dart';
 import 'interface/app_state.dart';
+import 'utilities/environment.dart';
 import 'utilities/theme.dart';
 
 final String _classString = 'main'.toUpperCase();
@@ -18,6 +19,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initializeDateFormatting('es_ES', null); // Spanish
+  await Environment().initialize();
   runApp(const MyApp());
 }
 

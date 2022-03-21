@@ -58,7 +58,7 @@ class MyUser {
 
   @override
   String toString() {
-    return ('<$userId, $name>');
+    return ('$userId:$name');
   }
 
   static MyUser fromJson(Map<String, dynamic> json) => MyUser(

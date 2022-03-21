@@ -1,7 +1,8 @@
 import 'dart:developer' as developer;
 
 import '../utilities/date.dart';
-
+import '../utilities/environment.dart';
+import '../utilities/http_helper.dart';
 
 enum DebugType { basic, info, summary, error }
 
@@ -16,6 +17,9 @@ class MyLog {
   final List<String> _logMsgList = [];
 
   static DebugType minDebugType = DebugType.basic; // minimum log to register
+
+  static String loggedUserName = '';
+  static String loggedUserEmail = '';
 
   void _addLog(String heading, String value,
       {String myCustomObject = '', String exception = '', DebugType debugType = DebugType.basic}) {
@@ -61,6 +65,7 @@ class MyLog {
           '\n******************',
           name: heading,
         );
+        if (Environment().isProduction) sendErrorEmail(heading, message);
       }
 
       _log(message, name: heading);
@@ -86,5 +91,16 @@ class MyLog {
           exception: exception?.toString() ?? '',
           debugType: debugType);
     }
+  }
+
+  void sendErrorEmail(String heading, dynamic message,
+      {dynamic myCustomObject, dynamic exception}) {
+    String errorMsg = message.toString();
+    if (exception != null) errorMsg += '\n${exception.toString()}';
+    if (myCustomObject != null) errorMsg += '\n${myCustomObject.toString()}';
+    String emailMessage = errorMsg.replaceAll('\n', '<br>');
+    String stack = StackTrace.current.toString().split('\n').take(10).join('<br>');
+    emailMessage += '<br>STACK<br>$stack';
+    sendEmail(name: loggedUserName, email: loggedUserEmail, message: emailMessage);
   }
 }

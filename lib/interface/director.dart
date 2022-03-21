@@ -70,7 +70,7 @@ class Director {
     for (MyMatch match in matches) {
       Set<String> existingPlayers = match.players.intersection(usersId);
       if (existingPlayers.length != match.players.length) {
-        MyLog().log(_classString, 'ERROR: nonExisting users in match $match}',
+        MyLog().log(_classString, 'ERROR: nonExisting users in match $match',
             debugType: DebugType.error);
         if (delete) {
           match.players.clear();
@@ -152,7 +152,7 @@ class Director {
           myUser = MyUser(name: user, email: '$user${MyUser.emailSuffix}', userId: user);
         }
         await AuthenticationHelper()
-            .createUserWithEmailAndPwd(email: myUser.email, pwd: initialPwd);
+            .createUserWithEmailAndPwd(email: myUser.email, pwd: getInitialPwd());
         await firebaseHelper.updateUser(myUser);
       }
       MyLog().log(_classString, 'Users');

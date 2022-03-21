@@ -96,7 +96,7 @@ class MyMatch {
 
   @override
   String toString() {
-    return ('<$date,$isOpen,$courtNames,$players>');
+    return ('($date,$isOpen,$courtNames,$players)');
   }
 
   static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
