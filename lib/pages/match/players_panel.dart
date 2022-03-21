@@ -361,7 +361,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             date: match.date,
             message: registerText,
           ));
-      sendMessageToTelegram(
+      sendDatedMessageToTelegram(
           message: '$registerText\n'
               'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
           matchDate: match.date,

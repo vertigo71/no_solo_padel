@@ -1,5 +1,4 @@
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '../models/debug.dart';
 import '../secret.dart';
@@ -7,26 +6,8 @@ import 'date.dart';
 
 final String _classString = 'HttpHelper'.toUpperCase();
 
-Future<int> sendEmail(
-    {required String name, required String email, required String message}) async {
-  final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
-  const serviceId = emailJSServiceId;
-  const templateId = emailJSTemplateId;
-  const userId = emailJSUserId;
-  final response = await http.post(url,
-      headers: {'Content-Type': 'application/json'},
-      //This line makes sure it works for all platforms.
-      body: json.encode({
-        'service_id': serviceId,
-        'template_id': templateId,
-        'user_id': userId,
-        'template_params': {'from_name': name, 'from_email': email, 'message': message}
-      }));
-  return response.statusCode;
-}
-
-Future<void> sendMessageToTelegram(
-    {required String message, required Date matchDate, int? fromDaysAgoToTelegram}) async {
+void sendDatedMessageToTelegram(
+    {required String message, required Date matchDate, int? fromDaysAgoToTelegram}) {
   if (fromDaysAgoToTelegram != null) {
     if (fromDaysAgoToTelegram < 0) {
       throw Exception('Periodo para mandar un telegram tiene que ser positivo');
@@ -39,9 +20,21 @@ Future<void> sendMessageToTelegram(
 
   // add date to the message
   message = '$matchDate\n$message';
+  sendMessageToTelegram(message, errorBot: false );
+}
 
-  String _botToken =  getTelegramBotToken();
-  String _chatId =  getTelegramChatId();
+Future<void> sendMessageToTelegram(String message , { bool errorBot = false }) async {
+  late String _botToken;
+  late String _chatId;
+
+  if ( errorBot ) {
+    _botToken = getTelegramErrorBotToken();
+    _chatId = getTelegramErrorChatId();
+  }
+  else{
+    _botToken = getTelegramBotToken();
+    _chatId = getTelegramChatId();
+  }
 
   var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
       'sendMessage?chat_id=$_chatId&text=$message');

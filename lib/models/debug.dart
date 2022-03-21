@@ -1,7 +1,6 @@
 import 'dart:developer' as developer;
 
 import '../utilities/date.dart';
-import '../utilities/environment.dart';
 import '../utilities/http_helper.dart';
 
 enum DebugType { basic, info, summary, error }
@@ -18,30 +17,8 @@ class MyLog {
 
   static DebugType minDebugType = DebugType.basic; // minimum log to register
 
-  static String loggedUserName = '';
-  static String loggedUserEmail = '';
+  static String loggedUserId = '';
 
-  void _addLog(String heading, String value,
-      {String myCustomObject = '', String exception = '', DebugType debugType = DebugType.basic}) {
-    List<String> list = [];
-
-    if (debugType.index >= MyLog.minDebugType.index) {
-      if (debugType == DebugType.error) {
-        list.add('[$heading] *************** ERROR *************************************');
-      }
-
-      list.add('[$heading] $value');
-
-      if (myCustomObject.isNotEmpty) {
-        list.add('>>'.padRight(heading.length) + myCustomObject);
-      }
-      if (exception.isNotEmpty) {
-        list.add('>>'.padRight(heading.length) + 'Exception: $exception');
-      }
-
-      _logMsgList.addAll(list);
-    }
-  }
 
   List<String> get logMsgList => _logMsgList;
 
@@ -65,11 +42,8 @@ class MyLog {
           '\n******************',
           name: heading,
         );
-        if (Environment().isProduction) {
-          sendErrorEmail(heading, message);
-        } else {
-          log(heading, 'Email sent in Production', debugType: DebugType.info);
-        }
+        _log( 'Sending telegram...', name: heading);
+        _sendErrorToTelegram(heading, message, myCustomObject: myCustomObject, exception: exception);
       }
 
       _log(message, name: heading);
@@ -90,21 +64,42 @@ class MyLog {
         }
       }
 
-      _addLog(heading, message,
+      _addToMsgList(heading, message,
           myCustomObject: myCustomObject?.toString() ?? '',
           exception: exception?.toString() ?? '',
           debugType: debugType);
     }
   }
 
-  void sendErrorEmail(String heading, dynamic message,
+  void _addToMsgList(String heading, String value,
+      {String myCustomObject = '', String exception = '', DebugType debugType = DebugType.basic}) {
+    List<String> list = [];
+
+    if (debugType.index >= MyLog.minDebugType.index) {
+      if (debugType == DebugType.error) {
+        list.add('[$heading] *************** ERROR *************************************');
+      }
+
+      list.add('[$heading] $value');
+
+      if (myCustomObject.isNotEmpty) {
+        list.add('>>'.padRight(heading.length) + myCustomObject);
+      }
+      if (exception.isNotEmpty) {
+        list.add('>>'.padRight(heading.length) + 'Exception: $exception');
+      }
+
+      _logMsgList.addAll(list);
+    }
+  }
+
+  void _sendErrorToTelegram(String heading, dynamic message,
       {dynamic myCustomObject, dynamic exception}) {
     String errorMsg = message.toString();
-    if (exception != null) errorMsg += '\n${exception.toString()}';
-    if (myCustomObject != null) errorMsg += '\n${myCustomObject.toString()}';
-    String emailMessage = errorMsg.replaceAll('\n', '<br>');
-    String stack = StackTrace.current.toString().split('\n').take(10).join('<br>');
-    emailMessage += '<br>STACK<br>$stack';
-    sendEmail(name: loggedUserName, email: loggedUserEmail, message: emailMessage);
+    if (exception != null) errorMsg += '\nException\n${exception.toString()}';
+    if (myCustomObject != null) errorMsg += '\nObject\n${myCustomObject.toString()}';
+    String stack = StackTrace.current.toString().split('\n').take(10).join('\n');
+    errorMsg += '\nSTACK\n$stack';
+    sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', errorBot: true );
   }
 }

@@ -60,8 +60,7 @@ class AppState with ChangeNotifier {
         .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.info);
     _loggedUser = loggedUser;
     // update MyLog name and email
-    MyLog.loggedUserName = _loggedUser.name;
-    MyLog.loggedUserEmail = _loggedUser.email;
+    MyLog.loggedUserId = _loggedUser.userId;
 
     if (notify) notifyListeners();
   }
