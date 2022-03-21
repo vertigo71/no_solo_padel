@@ -2,7 +2,6 @@ import 'dart:math';
 
 import '../database/fields.dart';
 import '../utilities/date.dart';
-import '../utilities/transformation.dart';
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
 
@@ -32,7 +31,6 @@ class MyMatch {
 
   bool isCourtInMatch(String court) => courtNames.contains(court);
 
-  // TODO: do all players exist??
   int getNumberOfFilledCourts() => min((players.length / 4).floor(), courtNames.length);
 
   int getNumberOfCourts() => courtNames.length;
@@ -48,29 +46,7 @@ class MyMatch {
 
   bool isInTheMatch(String userId) => players.contains(userId);
 
-  // TODO: must be done differently
-  // MyUser? getPlayerByName(String name) {
-  //   for (var player in players) {
-  //     if (player.name == name) return player;
-  //   }
-  //   return null;
-  // }
-
-  // TODO: must be done differently
-  // MyUser? getPlayerById(String id) {
-  //   for (var player in players) {
-  //     if (player.userId == id) return player;
-  //   }
-  //   return null;
-  // }
-  // TODO: must be done differently
-  // MyUser? getPlayerByEmail(String email) {
-  //   for (var player in players) {
-  //     if (player.email == email) return player;
-  //   }
-  //   return null;
-  // }
-
+  /// true if it was inserted, false if already existed
   bool addPlayer(String player) => players.add(player);
 
   /// true if it was inserted, false if already existed
@@ -87,14 +63,6 @@ class MyMatch {
   }
 
   bool removePlayer(String player) => players.remove(player);
-
-  // TODO: must be done differently
-  // void addPlayerIfNameNotExists(MyUser user) {
-  //   MyUser? _user = getPlayerByName(user.name);
-  //   if (_user == null) {
-  //     players.add(user);
-  //   }
-  // }
 
   PlayingState getPlayingState(String player) {
     Map<String, PlayingState> map = getAllPlayingStates();
@@ -136,14 +104,14 @@ class MyMatch {
         players: ((json[DBFields.players.name] ?? []).cast<String>()).toSet(),
         courtNames: ((json[DBFields.courtNames.name] ?? []).cast<String>()).toSet(),
         comment: json[DBFields.comment.name] ?? '',
-        isOpen: strToBool(json[DBFields.isOpen.name]),
+        isOpen: json[DBFields.isOpen.name], // bool
       );
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         DBFields.date.name: date.toYyyyMMdd(),
         if (matchPlayers) DBFields.players.name: players.toList(),
         if (core) DBFields.courtNames.name: courtNames.toList(),
-        if (core) DBFields.comment.name: comment, // int
-        if (core) DBFields.isOpen.name: boolToStr(isOpen), // String
+        if (core) DBFields.comment.name: comment,
+        if (core) DBFields.isOpen.name: isOpen, // bool
       };
 }

@@ -42,10 +42,10 @@ class _PlayersPanelState extends State<PlayersPanel> {
     match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
     loggedUser = appState.getLoggedUser();
-    PlayingState state = match.getPlayingState(loggedUser);
+    PlayingState state = match.getPlayingState(loggedUser.userId);
     loggedUserInTheMatch = state != PlayingState.unsigned;
     selectedUser = appState.allSortedUsers[0];
-    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser);
+    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
 
     MyLog().log(_classString, 'initState arguments = $match');
     MyLog().log(_classString, 'loggedUser in match= $loggedUserInTheMatch');
@@ -135,7 +135,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 onSelectedItemChanged: (index) {
                   setState(() {
                     selectedUser = users[index];
-                    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser);
+                    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
                   });
                 },
                 children: users
@@ -212,9 +212,12 @@ class _PlayersPanelState extends State<PlayersPanel> {
         builder: (context, appState, _) {
           int playerNumber = 0;
 
-          Set<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
-          Set<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
-          Set<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
+          List<MyUser> usersPlaying =
+              appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
+          List<MyUser> usersSigned =
+              appState.userIdsToUsers(match.getPlayers(state: PlayingState.signedNotPlaying));
+          List<MyUser> usersReserve =
+              appState.userIdsToUsers(match.getPlayers(state: PlayingState.reserve));
           List<MyUser> usersFillEmptySpaces = [];
           for (int i = usersPlaying.length + usersSigned.length;
               i < match.getNumberOfCourts() * 4;
@@ -291,7 +294,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
     MyLog().log(_classString, 'validate');
 
     // check
-    bool userInTheMatch = match.isInTheMatch(user);
+    bool userInTheMatch = match.isInTheMatch(user.userId);
     if (!toAdd ^ userInTheMatch) {
       // toAdd and user already in the match
       // !toAdd and user not in the match
@@ -311,7 +314,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
         listPosition = int.tryParse(positionStr) ?? -1;
         if (listPosition > 0) listPosition--;
       }
-      match.insertPlayer(user, position: listPosition);
+      match.insertPlayer(user.userId, position: listPosition);
       registerText = 'apuntado';
       MyLog().log(_classString, 'addding to the match position $listPosition');
     } else {
@@ -334,7 +337,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
       }
       MyLog().log(_classString, 'removed from the match');
       registerText = 'desapuntado';
-      match.removePlayer(user);
+      match.removePlayer(user.userId);
     }
 
     // message to the register
@@ -371,7 +374,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
       return false;
     }
 
-    userInTheMatch = match.isInTheMatch(user);
+    userInTheMatch = match.isInTheMatch(user.userId);
     if (loggedUser == user) {
       setState(() {
         loggedUserInTheMatch = userInTheMatch;

@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../database/authentication.dart';
@@ -30,8 +29,9 @@ class Director {
   }
 
   /// delete local model
-  /// download parameters & users
+  /// download parameters
   /// delete old logs
+  /// users & matches will be downloaded by createListeners
   Future<void> initialize() async {
     MyLog().log(_classString, 'Initializing');
 
@@ -41,13 +41,6 @@ class Director {
     MyLog().log(_classString, 'Parameters');
     MyParameters myParameters = await firebaseHelper.getParameters();
     _appState.setAllParameters(myParameters, notify: false);
-
-    // download users from DB into local
-    MyLog().log(_classString, 'Users');
-    List<MyUser> users = await firebaseHelper.downloadUsers();
-    _appState.setAllUsers(users, notify: false);
-
-    // matches will be downloaded by createListeners
 
     // delete old logs & matches
     MyLog().log(_classString, 'Deleting old logs and matches');
@@ -62,13 +55,32 @@ class Director {
     firebaseHelper.createListeners(
       fromDate: Date.now(),
       numDays: _appState.getIntParameterValue(ParametersEnum.matchDaysToView),
-      availableUsers: _appState.getAllUsers,
       parametersFunction: _appState.setAllParametersAndNotify,
       usersFunction: _appState.setChangedUsersAndNotify,
       matchesFunction: _appState.setChangedMatchesAndNotify,
     );
   }
 
+  /// parameters must be already loaded
+  Future<void> checkUsersInMatches({bool delete = false}) async {
+    MyLog().log(_classString, 'deleteNonUsersInMatches');
+    List<MyUser> users = await firebaseHelper.getAllUsers();
+    Set<String> usersId = users.map((user) => user.userId).toSet();
+    List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), numDays: 100);
+    for (MyMatch match in matches) {
+      Set<String> existingPlayers = match.players.intersection(usersId);
+      if (existingPlayers.length != match.players.length) {
+        MyLog().log(_classString, 'ERROR: nonExisting users in match $match}');
+        if ( delete){
+          match.players.clear();
+          match.players.addAll(existingPlayers);
+          await firebaseHelper.updateMatch(match: match, updateCore: false, updatePlayers: true);
+        }
+      }
+    }
+  }
+
+  /// not used
   Future<void> updateDataToNewFormat() async {
     // register
     {
@@ -110,6 +122,7 @@ class Director {
     }
   }
 
+  /// not used
   Future<void> createTestData({bool users = false, bool matches = false}) async {
     MyLog().log(_classString, 'createTestData');
 
@@ -142,7 +155,7 @@ class Director {
         await firebaseHelper.updateUser(myUser);
       }
       MyLog().log(_classString, 'Users');
-      List<MyUser> allUsers = await firebaseHelper.downloadUsers();
+      List<MyUser> allUsers = await firebaseHelper.getAllUsers();
       _appState.setAllUsers(allUsers, notify: false);
     }
 
@@ -158,7 +171,7 @@ class Director {
         match.comment = 'Las Tablas a las 10h30';
         match.isOpen = randomInts.first.isEven;
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1));
-        match.players.addAll(randomInts.map((e) => users[e % users.length]).toSet());
+        match.players.addAll(randomInts.map((e) => (e % users.length).toString()).toSet());
         MyLog().log(_classString, 'createTestData $match');
         await firebaseHelper.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }

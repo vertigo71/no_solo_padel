@@ -27,7 +27,7 @@ class SortingPanel extends StatelessWidget {
         } else {
           int filledCourts = match.getNumberOfFilledCourts();
           List<int> sortedList = getRandomList(filledCourts * 4, match.date);
-          Set<MyUser> players = match.players;
+          List<MyUser> players = appState.userIdsToUsers(match.players);
           MyLog().log(_classString, 'players = $players');
           MyLog().log(_classString, 'courts = $filledCourts');
 

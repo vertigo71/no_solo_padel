@@ -23,10 +23,9 @@ class Loading extends StatelessWidget {
   void setupDB(BuildContext context) async {
     MyLog().log(_classString, 'Setting DB');
 
-    // restart error logs
+    /// restart error logs
     MyLog().delete;
 
-    // logged User. Create if it doesn't exist
     User? user = AuthenticationHelper().user;
     if (user == null || user.email == null) {
       throw Exception('Error: No se ha registrado correctamente el usuario. \n'
@@ -35,12 +34,11 @@ class Loading extends StatelessWidget {
     MyLog()
         .log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.info);
 
-    // initialize => create local model
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
     FirebaseHelper firebaseHelper = director.firebaseHelper;
 
-    // delete local model, download parameters & users and delete old logs
+    /// delete local model, download parameters and delete old logs
     await director.initialize();
 
     ///
@@ -50,7 +48,7 @@ class Loading extends StatelessWidget {
     /// await director.createTestData(users: true, matches: false);
 
     // loggedUser
-    MyUser? loggedUser = appState.getUserByEmail(user.email!);
+    MyUser? loggedUser = await firebaseHelper.getUserByEmail(user.email!);
     MyLog().log(_classString, 'setupDB loggedUser = $loggedUser');
     if (loggedUser == null) {
       // user is not in the DB
@@ -62,7 +60,6 @@ class Loading extends StatelessWidget {
       });
     } else {
       appState.setLoggedUser(loggedUser, notify: false);
-      // update lastLogin & loginCount
       loggedUser.lastLogin = Date.now();
       loggedUser.loginCount++;
       await firebaseHelper.updateUser(loggedUser);
@@ -72,8 +69,13 @@ class Loading extends StatelessWidget {
       ///
       /// if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
 
-      // create matches if missing
-      // from now to now+matchDaysToView
+      /// if superuser, check matches
+      if ( loggedUser.userType == UserType.superuser) {
+        await director.checkUsersInMatches();
+      }
+
+      /// create matches if missing
+      /// from now to now+matchDaysToView
       for (int days = 0;
           days < appState.getIntParameterValue(ParametersEnum.matchDaysToView);
           days++) {

@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/debug.dart';
@@ -29,8 +27,8 @@ class FirebaseHelper {
   Future<bool> createMatchIfNotExists({required MyMatch match}) async {
     bool exists =
         await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
-    MyLog().log(_classString, 'createMatchIfNotExists exists $exists $match');
     if (exists) return false;
+    MyLog().log(_classString, 'createMatchIfNotExists exists $exists $match');
     await updateMatch(match: match, updateCore: true, updatePlayers: true);
     return true;
   }
@@ -39,12 +37,9 @@ class FirebaseHelper {
     return _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
   }
 
-
-  // TODO: follow from here
   Future<void> createListeners({
     required Date fromDate,
     required int numDays,
-    required List<MyUser> Function() availableUsers,
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed)
         usersFunction,
@@ -112,7 +107,6 @@ class FirebaseHelper {
         List<MyMatch> removedMatches = [];
         _downloadChangedMatches(
           snapshot: snapshot,
-          availableUsers: availableUsers,
           addedMatches: addedMatches,
           modifiedMatches: modifiedMatches,
           removedMatches: removedMatches,
@@ -171,11 +165,11 @@ class FirebaseHelper {
           }
         } else {
           MyLog().log(_classString,
-              '_downloadChangedUsers Formato de usuario incorrecto en la Base de Datos',
+              '_downloadChangedUsers Empty user!!!',
               debugType: DebugType.error, myCustomObject: user);
         }
       } catch (e) {
-        MyLog().log(_classString, '_downloadUsers formato incorrecto',
+        MyLog().log(_classString, '_downloadUsers Wrong Format',
             myCustomObject: data, exception: e, debugType: DebugType.error);
       }
     }
@@ -183,7 +177,6 @@ class FirebaseHelper {
 
   void _downloadChangedMatches({
     required QuerySnapshot snapshot,
-    required List<MyUser> Function() availableUsers,
     required List<MyMatch> addedMatches,
     required List<MyMatch> modifiedMatches,
     required List<MyMatch> removedMatches,
@@ -200,17 +193,18 @@ class FirebaseHelper {
         throw 'Error en la base de datos de partidos';
       }
       Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
-
-      Date date = Date(DateTime.parse(docChanged.doc.id));
-      MyMatch match = _createMatchFromMap(date: date, data: data, availableUsers: availableUsers);
-      MyLog().log(_classString, '_downloadChangedMatches match = ', myCustomObject: match);
-
-      if (docChanged.type == DocumentChangeType.added) {
-        addedMatches.add(match);
-      } else if (docChanged.type == DocumentChangeType.modified) {
-        modifiedMatches.add(match);
-      } else if (docChanged.type == DocumentChangeType.removed) {
-        removedMatches.add(match);
+      try {
+        MyMatch match = MyMatch.fromJson(data);
+        if (docChanged.type == DocumentChangeType.added) {
+          addedMatches.add(match);
+        } else if (docChanged.type == DocumentChangeType.modified) {
+          modifiedMatches.add(match);
+        } else if (docChanged.type == DocumentChangeType.removed) {
+          removedMatches.add(match);
+        }
+      } catch (e) {
+        MyLog().log(_classString, '_downloadChangedMatches wrong format',
+            myCustomObject: data, exception: e, debugType: DebugType.error);
       }
     }
   }
@@ -235,42 +229,6 @@ class FirebaseHelper {
           exception: onError, debugType: DebugType.error);
     });
   }
-
-  MyMatch _createMatchFromMap({
-    required Date date,
-    required Map<String, dynamic> data,
-    required List<MyUser> Function() availableUsers,
-  }) {
-    MyLog().log(_classString, '_createMatchFromMap $date ${data.length}', myCustomObject: data);
-
-    MyMatch match = MyMatch(
-      date: date,
-      comment: data[strDB(DBFields.comment)] ?? '',
-      isOpen: data[strDB(DBFields.isOpen)] ?? false,
-    );
-
-    match.courtNames.addAll((data[strDB(DBFields.courtNames)] ?? []).cast<String>());
-
-    List<String> dbPlayersId = (data[strDB(DBFields.players)] ?? []).cast<String>();
-    List<MyUser> matchPlayers = dbPlayersId
-        .map((id) => availableUsers().firstWhereOrNull((user) => user.userId == id))
-        .whereType<MyUser>()
-        .toList();
-
-    match.players.addAll(matchPlayers);
-
-    if (matchPlayers.length != dbPlayersId.length) {
-      MyLog().log(
-          _classString,
-          '_createMatchFromMap Match date ${match.date} \n players in DB=<<$dbPlayersId>>} '
-          '\n users found = <<$matchPlayers>>}',
-          debugType: DebugType.error);
-    }
-
-    return match;
-  }
-
-  /// ----------------------------------------------------------------------------
 
   Stream<List<T>>? getStream<T>({
     required String collection,
@@ -351,6 +309,33 @@ class FirebaseHelper {
           doc: strDB(DBFields.parameters),
           fromJson: MyParameters.fromJson) ??
       MyParameters();
+
+  Future<MyUser?> getUserByEmail(String email) async {
+    MyLog().log(_classString, 'getUserByEmail $email');
+
+    try {
+      QuerySnapshot querySnapshot =
+          await _instance.collection(strDB(DBFields.users)).where('email', isEqualTo: email).get();
+
+      if (querySnapshot.size != 1) {
+        MyLog().log(_classString, 'ERROR!! getUserByEmail number of users = ${querySnapshot.size}',
+            debugType: DebugType.error);
+        return null;
+      }
+
+      Map<String, dynamic>? data = querySnapshot.docs.first.data() as Map<String, dynamic>?;
+      if (data != null && data.isNotEmpty) {
+        return MyUser.fromJson(data);
+      } else {
+        MyLog().log(_classString, 'getUserByEmail $email not found or empty',
+            debugType: DebugType.error);
+      }
+    } catch (e) {
+      MyLog().log(_classString, 'getObject ', exception: e, debugType: DebugType.error);
+      return null;
+    }
+    return null;
+  }
 
   Future<List<T>> getAllObjects<T>({
     required String collection,

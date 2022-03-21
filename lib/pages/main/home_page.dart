@@ -22,8 +22,8 @@ class HomePage extends StatelessWidget {
           ...ListTile.divideTiles(
             context: context,
               tiles: appState.getSortedMatchesIfDayPlayable().map(((match) {
-                String playingStateStr = match.getPlayingStateString(appState.getLoggedUser());
-                PlayingState playingState = match.getPlayingState(appState.getLoggedUser());
+                String playingStateStr = match.getPlayingStateString(appState.getLoggedUser().userId);
+                PlayingState playingState = match.getPlayingState(appState.getLoggedUser().userId);
                 final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
                 return Card(

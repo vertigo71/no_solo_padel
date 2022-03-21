@@ -40,15 +40,17 @@ class MyLog {
 
   void get delete => _logMsgList.clear();
 
-  void _log(String message, { required String name, Object? error}) {
-    developer.log( message, name: name, error: error );
+  void _log(String message, {required String name, Object? error}) {
+    developer.log(message, name: name, error: error);
     // print( "[$name] $message $error");
   }
 
-  void log(String heading, dynamic value,
+  void log(String heading, dynamic message,
       {dynamic myCustomObject, dynamic exception, DebugType debugType = DebugType.basic}) {
     if (debugType.index >= MyLog.minDebugType.index) {
-      _log(value, name: heading, error: exception);
+      _log(message, name: heading);
+
+      if (exception != null) _log(exception.toString(), name: heading, error: exception);
 
       if (myCustomObject != null) {
         if (myCustomObject is List) {
@@ -64,7 +66,7 @@ class MyLog {
         }
       }
 
-      _addLog(heading, value,
+      _addLog(heading, message,
           myCustomObject: myCustomObject?.toString() ?? '',
           exception: exception?.toString() ?? '',
           debugType: debugType);

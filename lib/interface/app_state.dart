@@ -78,8 +78,6 @@ class AppState with ChangeNotifier {
 
   List<MyUser> get allUsers => _allUsers;
 
-  List<MyUser> getAllUsers() => _allUsers;
-
   List<MyUser> get allSortedUsers {
     // _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     _allUsers.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
@@ -110,34 +108,10 @@ class AppState with ChangeNotifier {
     _allUsers.clear();
     _allUsers.addAll(users);
 
-    // convert old users in matches to new users
-    _convertUsersInMatches();
-
     // convert loggedUser
     setLoggedUserById(_loggedUser.userId, notify: false);
 
     if (notify) notifyListeners();
-  }
-
-  // convert old users in matches to new users
-  void _convertUsersInMatches() {
-    MyLog().log(_classString, '_convertUsersInMatches');
-    for (var match in _allMatches) {
-      List<String> matchUserIds = match.players.map((player) => player.userId).toList();
-      List<MyUser> usersInMatch = matchUserIds
-          .map((id) => _allUsers.firstWhereOrNull((user) => user.userId == id))
-          .whereType<MyUser>()
-          .toList();
-
-      if (matchUserIds.length != usersInMatch.length) {
-        MyLog().log(
-            _classString,
-            '_convertUsersInMatches Match date=${match.date}; original players=${matchUserIds.length}; '
-            ' final players=${usersInMatch.length}');
-      }
-      match.players.clear();
-      match.players.addAll(usersInMatch);
-    }
   }
 
   void setChangedUsersAndNotify(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) =>
@@ -159,17 +133,15 @@ class AppState with ChangeNotifier {
     }
 
     added.addAll(modified);
-    for (var newUser in added) {
+    for (MyUser newUser in added) {
+      MyLog().log(_classString, 'setChangedUsers update user: ', myCustomObject: newUser);
       removeUserByIdBold(newUser.userId);
-      MyLog().log(_classString, 'setChangedUsers adding', myCustomObject: newUser);
-      _allUsers.add(newUser);
     }
+    _allUsers.addAll(added);
     for (var newUser in removed) {
+      MyLog().log(_classString, 'setChangedUsers REMOVED!!!: ', myCustomObject: newUser);
       removeUserByIdBold(newUser.userId);
     }
-
-    // convert old users in matches to new users
-    _convertUsersInMatches();
 
     // convert loggedUser
     setLoggedUserById(_loggedUser.userId, notify: false);
@@ -177,23 +149,12 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void setAllMatches(List<MyMatch> matches, {bool verifyUsers = false, required bool notify}) {
-    MyLog().log(_classString, 'setAllMatches In number = ${matches.length}');
-
-    _allMatches.clear();
-    _allMatches.addAll(matches.where((element) => isDayPlayable(element.date)));
-    MyLog()
-        .log(_classString, 'setAllMatches', myCustomObject: _allMatches, debugType: DebugType.info);
-    if (verifyUsers) _convertUsersInMatches();
-    if (notify) notifyListeners();
-  }
-
   void setChangedMatchesAndNotify(
           List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed) =>
-      setChangedMatches(added, modified, removed, verifyUsers: false, notify: true);
+      setChangedMatches(added, modified, removed, notify: true);
 
   void setChangedMatches(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed,
-      {required bool verifyUsers, required bool notify}) {
+      {required bool notify}) {
     MyLog().log(
         _classString, 'setChangedMatches ${added.length} ${modified.length} ${removed.length} ');
 
@@ -209,65 +170,30 @@ class AppState with ChangeNotifier {
 
     added.addAll(modified);
     for (var newMatch in added) {
+      MyLog().log(_classString, 'setChangedMatches update match: ', myCustomObject: newMatch);
       removeMatchByDateBold(newMatch.date);
-      if (isDayPlayable(newMatch.date)) {
-        MyLog().log(_classString, 'setChangedMatches adding',
-            myCustomObject: newMatch, debugType: DebugType.info);
-        _allMatches.add(newMatch);
-      }
     }
+    _allMatches.addAll(added);
     for (var newMatch in removed) {
+      MyLog().log(_classString, 'setChangedMatches remove match: ', myCustomObject: newMatch);
       removeMatchByDateBold(newMatch.date);
     }
-
-    if (verifyUsers) _convertUsersInMatches();
     if (notify) notifyListeners();
   }
 
-  MyUser? getUserByName(String name) {
-    for (var element in allUsers) {
-      if (element.name == name) {
-        return element;
-      }
-    }
-    return null;
-  }
+  MyUser? getUserByName(String name) => _allUsers.firstWhereOrNull((user) => user.name == name);
 
-  MyUser? getUserById(String id) {
-    List<MyUser> _users = _allUsers.where((user) => user.userId == id).toList();
-    if (_users.isEmpty) {
-      return null;
-    } else {
-      return _users.first;
-    }
-  }
+  MyUser? getUserById(String id) => _allUsers.firstWhereOrNull((user) => user.userId == id);
 
-  bool removeUserByIdBold(String id) {
-    MyLog().log(_classString, 'removeUserByIdBold', myCustomObject: id);
+  MyUser? getUserByEmail(String email) => _allUsers.firstWhereOrNull((user) => user.email == email);
 
-    MyUser? user = getUserById(id);
-    if (user == null) return false;
-    return _allUsers.remove(user);
-  }
+  void removeUserByIdBold(String id) => _allUsers.removeWhere((user) => user.userId == id);
 
-  bool removeMatchByDateBold(Date date) {
-    MyLog().log(_classString, 'removeMatchByDateBold', myCustomObject: date);
+  MyMatch? getMatch(Date date) => _allMatches.firstWhereOrNull((match) => match.date == date);
 
-    MyMatch? match = getMatch(date);
-    if (match == null) return false;
-    return _allMatches.remove(match);
-  }
+  void removeMatchByDateBold(Date date) => _allMatches.removeWhere((match) => match.date == date);
 
-  MyUser? getUserByEmail(String email) {
-    for (var element in allUsers) {
-      if (element.email == email) {
-        return element;
-      }
-    }
-    return null;
-  }
-
-  /// return null if exists
+  /// return null if exists or incorrect format
   /// unique name, email and id
   MyUser? createNewUserByEmail(String email) {
     MyLog().log(_classString, 'createNewUserByEmail', myCustomObject: email);
@@ -276,8 +202,8 @@ class AppState with ChangeNotifier {
     if (user != null) return null; // already exists
 
     // get name from email
-    List<String> items = email.split('@') ;
-    if ( items.length != 2 ) return null; // incorrect format
+    List<String> items = email.split('@');
+    if (items.length != 2) return null; // incorrect format
     String name = items[0];
 
     user = MyUser(name: name, email: email, userId: name, userType: UserType.basic);
@@ -286,31 +212,31 @@ class AppState with ChangeNotifier {
     if (userExists != null) {
       int i = 0;
       final String baseName = user.name;
-      while (userExists != null) {
+      do {
         user.name = '$baseName${i++}'; // create new name
         userExists = getUserByName(user.name);
-      }
+      } while (userExists != null);
     }
     userExists = getUserById(user.userId);
     if (userExists != null) {
       int i = 0;
       final String baseName = user.userId;
-      while (userExists != null) {
+      do {
         user.userId = '$baseName${i++}'; // create new id
         userExists = getUserById(user.userId);
-      }
+      } while (userExists != null);
     }
     MyLog().log(_classString, 'createNewUserByEmail new User = $user');
     return user;
   }
 
-  MyMatch? getMatch(Date date) {
-    for (var match in allMatches) {
-      if (match.date == date) {
-        return match;
-      }
+  List<MyUser> userIdsToUsers(Iterable<String> usersId) {
+    List<MyUser> users = usersId.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
+    if (usersId.length != users.length) {
+      MyLog().log(_classString, 'stringToUsers ERROR',
+          myCustomObject: users, debugType: DebugType.error);
     }
-    return null;
+    return users;
   }
 
   @override
