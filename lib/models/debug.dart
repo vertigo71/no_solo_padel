@@ -48,6 +48,17 @@ class MyLog {
   void log(String heading, dynamic message,
       {dynamic myCustomObject, dynamic exception, DebugType debugType = DebugType.basic}) {
     if (debugType.index >= MyLog.minDebugType.index) {
+      if (debugType == DebugType.error) {
+        _log(
+          '\n******************'
+          '\n****         *****'
+          '\n****  ERROR  *****'
+          '\n****         *****'
+          '\n******************',
+          name: heading,
+        );
+      }
+
       _log(message, name: heading);
 
       if (exception != null) _log(exception.toString(), name: heading, error: exception);

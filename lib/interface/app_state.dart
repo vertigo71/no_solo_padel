@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 
@@ -172,6 +173,7 @@ class AppState with ChangeNotifier {
     for (var newMatch in added) {
       MyLog().log(_classString, 'setChangedMatches update match: ', myCustomObject: newMatch);
       removeMatchByDateBold(newMatch.date);
+      deleteNonUsersInMatch(newMatch);
     }
     _allMatches.addAll(added);
     for (var newMatch in removed) {
@@ -233,10 +235,24 @@ class AppState with ChangeNotifier {
   List<MyUser> userIdsToUsers(Iterable<String> usersId) {
     List<MyUser> users = usersId.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
     if (usersId.length != users.length) {
-      MyLog().log(_classString, 'stringToUsers ERROR',
+      MyLog().log(_classString, 'stringToUsers ERROR $usersId',
           myCustomObject: users, debugType: DebugType.error);
     }
     return users;
+  }
+
+  // true if nothing deleted
+  bool deleteNonUsersInMatch(MyMatch match) {
+    List<MyUser> players =
+        match.players.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
+    if (match.players.length != players.length) {
+      MyLog().log(_classString, 'deleteNonUsersInMatch ERROR $match',
+          myCustomObject: players, debugType: DebugType.error);
+      match.players.clear();
+      match.players.addAll(players.map((player) => player.userId));
+      return false;
+    }
+    return true;
   }
 
   @override

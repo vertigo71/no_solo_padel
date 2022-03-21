@@ -70,8 +70,9 @@ class Director {
     for (MyMatch match in matches) {
       Set<String> existingPlayers = match.players.intersection(usersId);
       if (existingPlayers.length != match.players.length) {
-        MyLog().log(_classString, 'ERROR: nonExisting users in match $match}');
-        if ( delete){
+        MyLog().log(_classString, 'ERROR: nonExisting users in match $match}',
+            debugType: DebugType.error);
+        if (delete) {
           match.players.clear();
           match.players.addAll(existingPlayers);
           await firebaseHelper.updateMatch(match: match, updateCore: false, updatePlayers: true);

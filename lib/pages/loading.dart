@@ -69,10 +69,6 @@ class Loading extends StatelessWidget {
       ///
       /// if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
 
-      /// if superuser, check matches
-      if ( loggedUser.userType == UserType.superuser) {
-        await director.checkUsersInMatches();
-      }
 
       /// create matches if missing
       /// from now to now+matchDaysToView
