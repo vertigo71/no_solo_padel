@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
-import 'package:no_solo_padel_dev/utilities/date.dart';
+import '../utilities/date.dart';
+
 
 enum DebugType { basic, info, summary, error }
 
