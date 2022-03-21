@@ -21,7 +21,7 @@ class Loading extends StatelessWidget {
   const Loading({Key? key}) : super(key: key);
 
   void setupDB(BuildContext context) async {
-    MyLog().log(_classString, 'Setting DB');
+    MyLog().log(_classString, 'Setting DB', debugType: DebugType.info);
 
     /// restart error logs
     MyLog().delete;
@@ -49,10 +49,10 @@ class Loading extends StatelessWidget {
 
     // loggedUser
     MyUser? loggedUser = await firebaseHelper.getUserByEmail(user.email!);
-    MyLog().log(_classString, 'setupDB loggedUser = $loggedUser');
     if (loggedUser == null) {
       // user is not in the DB
-      MyLog().log(_classString, 'setupDB user not registered = ${user.email}');
+      MyLog().log(_classString, 'setupDB user not registered = ${user.email}',
+          debugType: DebugType.info);
       await AuthenticationHelper().signOut(signedOutFunction: firebaseHelper.disposeListeners);
       _addPostFrame(function: () {
         showMessage(context, 'Usuario no registrado. Hable con el administrador.');
@@ -64,11 +64,8 @@ class Loading extends StatelessWidget {
       loggedUser.loginCount++;
       await firebaseHelper.updateUser(loggedUser);
 
-      ///
-      /// upload to new database data format. DONE!
-      ///
-      /// if (loggedUser.name.toLowerCase() == 'marc') await director.updateDataToNewFormat();
-
+      /// (async) check the integrity of the database
+      director.checkUsersInMatches(delete: true);
 
       /// create matches if missing
       /// from now to now+matchDaysToView

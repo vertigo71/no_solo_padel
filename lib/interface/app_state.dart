@@ -21,8 +21,6 @@ class AppState with ChangeNotifier {
   final List<MyUser> _allUsers = [];
   final List<MyMatch> _allMatches = [];
 
-  //------------------------------------------------
-
   void deleteAll() {
     MyLog().log(_classString, 'deleteAll ');
     _loggedUser = MyUser();
@@ -49,17 +47,17 @@ class AppState with ChangeNotifier {
       setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {
-    MyLog().log(_classString, 'setAllParameters $myParameters');
+    MyLog().log(_classString, 'setAllParameters $myParameters', debugType: DebugType.info);
     _parameters = myParameters ?? MyParameters();
     MyLog.minDebugType = _parameters.minDebugLevel;
-    MyLog().log(_classString, 'setAllParameters debugType = ${MyLog.minDebugType}');
     if (notify) notifyListeners();
   }
 
   MyUser getLoggedUser() => _loggedUser;
 
   void setLoggedUser(MyUser loggedUser, {required bool notify}) {
-    MyLog().log(_classString, 'setLoggedUser', myCustomObject: loggedUser);
+    MyLog()
+        .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.info);
     _loggedUser = loggedUser;
     if (notify) notifyListeners();
   }
@@ -67,13 +65,10 @@ class AppState with ChangeNotifier {
   void setLoggedUserById(String userId, {required bool notify}) {
     MyLog().log(_classString, 'setLoggedUserById In', myCustomObject: userId);
 
-    MyUser? myUser = getUserById(userId);
-    if (myUser == null) {
-      _loggedUser = MyUser();
-    } else {
-      _loggedUser = myUser;
-    }
-    MyLog().log(_classString, 'setLoggedUserById Out', myCustomObject: myUser);
+    MyUser loggedUser = getUserById(userId) ?? MyUser();
+    setLoggedUser(loggedUser, notify: notify);
+
+    MyLog().log(_classString, 'setLoggedUserById Out', myCustomObject: loggedUser);
     if (notify) notifyListeners();
   }
 
@@ -104,7 +99,8 @@ class AppState with ChangeNotifier {
   bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
-    MyLog().log(_classString, 'setAllUsers', myCustomObject: users, debugType: DebugType.info);
+    MyLog().log(_classString, 'setAllUsers #=${users.length}', debugType: DebugType.info);
+    MyLog().log(_classString, 'setAllUsers', myCustomObject: users);
 
     _allUsers.clear();
     _allUsers.addAll(users);
@@ -120,8 +116,9 @@ class AppState with ChangeNotifier {
 
   void setChangedUsers(List<MyUser> added, List<MyUser> modified, List<MyUser> removed,
       {required bool notify}) {
-    MyLog()
-        .log(_classString, 'setChangedUsers ${added.length} ${modified.length} ${removed.length} ');
+    MyLog().log(
+        _classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ',
+        debugType: DebugType.info);
 
     if (added.isNotEmpty) {
       MyLog().log(_classString, 'setChangedUsers added $added ');
@@ -135,7 +132,7 @@ class AppState with ChangeNotifier {
 
     added.addAll(modified);
     for (MyUser newUser in added) {
-      MyLog().log(_classString, 'setChangedUsers update user: ', myCustomObject: newUser);
+      MyLog().log(_classString, 'setChangedUsers remove old user: ', myCustomObject: newUser);
       removeUserByIdBold(newUser.userId);
     }
     _allUsers.addAll(added);
@@ -156,8 +153,9 @@ class AppState with ChangeNotifier {
 
   void setChangedMatches(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed,
       {required bool notify}) {
-    MyLog().log(
-        _classString, 'setChangedMatches ${added.length} ${modified.length} ${removed.length} ');
+    MyLog().log(_classString,
+        'setChangedMatches a=${added.length} m=${modified.length} r=${removed.length} ',
+        debugType: DebugType.info);
 
     if (added.isNotEmpty) {
       MyLog().log(_classString, 'setChangedMatches added $added ');
@@ -173,7 +171,6 @@ class AppState with ChangeNotifier {
     for (var newMatch in added) {
       MyLog().log(_classString, 'setChangedMatches update match: ', myCustomObject: newMatch);
       removeMatchByDateBold(newMatch.date);
-      deleteNonUsersInMatch(newMatch);
     }
     _allMatches.addAll(added);
     for (var newMatch in removed) {
@@ -228,7 +225,7 @@ class AppState with ChangeNotifier {
         userExists = getUserById(user.userId);
       } while (userExists != null);
     }
-    MyLog().log(_classString, 'createNewUserByEmail new User = $user');
+    MyLog().log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.info);
     return user;
   }
 
@@ -246,7 +243,7 @@ class AppState with ChangeNotifier {
     List<MyUser> players =
         match.players.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
     if (match.players.length != players.length) {
-      MyLog().log(_classString, 'deleteNonUsersInMatch ERROR $match',
+      MyLog().log(_classString, 'deleteNonUsersInMatch Non existing users $match',
           myCustomObject: players, debugType: DebugType.error);
       match.players.clear();
       match.players.addAll(players.map((player) => player.userId));
@@ -256,11 +253,7 @@ class AppState with ChangeNotifier {
   }
 
   @override
-  String toString() {
-    String str = '';
-    for (var element in allUsers) {
-      str = str + element.toString() + '\n';
-    }
-    return str;
-  }
+  String toString() => 'Parameters = $_parameters\n'
+      '#users=${_allUsers.length} #matches=${_allMatches.length}\n'
+      'loggedUser=$_loggedUser';
 }

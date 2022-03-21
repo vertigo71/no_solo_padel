@@ -38,7 +38,7 @@ class Director {
     _appState.deleteAll();
 
     // download parameters from DB into local
-    MyLog().log(_classString, 'Parameters');
+    MyLog().log(_classString, 'Download Parameters');
     MyParameters myParameters = await firebaseHelper.getParameters();
     _appState.setAllParameters(myParameters, notify: false);
 
@@ -75,7 +75,7 @@ class Director {
         if (delete) {
           match.players.clear();
           match.players.addAll(existingPlayers);
-          await firebaseHelper.updateMatch(match: match, updateCore: false, updatePlayers: true);
+          firebaseHelper.updateMatch(match: match, updateCore: false, updatePlayers: true);
         }
       }
     }

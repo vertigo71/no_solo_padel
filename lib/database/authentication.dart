@@ -11,6 +11,7 @@ class AuthenticationHelper {
 
   //SIGN UP METHOD
   Future signUp({required String email, required String password}) async {
+    MyLog().log(_classString, 'signUp $email', debugType: DebugType.info);
     try {
       await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -24,6 +25,7 @@ class AuthenticationHelper {
 
   //SIGN IN METHOD
   Future signIn({required String email, required String password}) async {
+    MyLog().log(_classString, 'signIn $email', debugType: DebugType.info);
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       return null;
@@ -34,15 +36,15 @@ class AuthenticationHelper {
 
   //SIGN OUT METHOD
   Future signOut({required Function() signedOutFunction}) async {
-    MyLog().log(_classString, 'SignOut begin');
+    MyLog().log(_classString, 'SignOut begin', debugType: DebugType.info);
     await signedOutFunction();
     MyLog().log(_classString, 'SignOut listeners deleted');
     await _auth.signOut();
-    MyLog().log(_classString, 'SignOut signed Out');
+    MyLog().log(_classString, 'SignOut ended', debugType: DebugType.info);
   }
 
   Future<String> createUserWithEmailAndPwd({required String email, required String pwd}) async {
-    MyLog().log(_classString, 'createUserWithEmailAndPwd $email');
+    MyLog().log(_classString, 'createUserWithEmailAndPwd $email', debugType: DebugType.info);
 
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: pwd);
@@ -71,7 +73,7 @@ class AuthenticationHelper {
 
   Future<String> _updateEmailOrPwd(
       {required String actualPwd, String newEmail = '', String newPwd = ''}) async {
-    MyLog().log(_classString, '_updateEmailOrPwd $newEmail');
+    MyLog().log(_classString, '_updateEmailOrPwd $newEmail', debugType: DebugType.info);
 
     final String errorField = newPwd.isEmpty ? 'el correo' : 'la contraseña';
 
@@ -103,7 +105,7 @@ class AuthenticationHelper {
   }
 
   Future<UserCredential> _getUserCredential({required User user, required String actualPwd}) async {
-    MyLog().log(_classString, '_getUserCredential ${user.email}' );
+    MyLog().log(_classString, '_getUserCredential $user', debugType: DebugType.info );
 
     AuthCredential authCredential = EmailAuthProvider.credential(
       email: user.email ?? '',

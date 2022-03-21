@@ -1,5 +1,7 @@
 import 'dart:developer' as developer;
 
+import 'package:no_solo_padel_dev/utilities/date.dart';
+
 enum DebugType { basic, info, summary, error }
 
 // singleton
@@ -41,7 +43,8 @@ class MyLog {
   void get delete => _logMsgList.clear();
 
   void _log(String message, {required String name, Object? error}) {
-    developer.log(message, name: name, error: error);
+    developer.log(message,
+        name: dateTimeToString(DateTime.now(), format: 'mm:ss ') + name, error: error);
     // print( "[$name] $message $error");
   }
 
