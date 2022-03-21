@@ -65,7 +65,11 @@ class MyLog {
           '\n******************',
           name: heading,
         );
-        if (Environment().isProduction) sendErrorEmail(heading, message);
+        if (Environment().isProduction) {
+          sendErrorEmail(heading, message);
+        } else {
+          log(heading, 'Email sent in Production', debugType: DebugType.info);
+        }
       }
 
       _log(message, name: heading);
