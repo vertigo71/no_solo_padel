@@ -98,8 +98,6 @@ class MyLog {
     String errorMsg = message.toString();
     if (exception != null) errorMsg += '\nException\n${exception.toString()}';
     if (myCustomObject != null) errorMsg += '\nObject\n${myCustomObject.toString()}';
-    String stack = StackTrace.current.toString().split('\n').take(10).join('\n');
-    errorMsg += '\nSTACK\n$stack';
     sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', errorBot: true );
   }
 }
