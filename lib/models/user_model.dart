@@ -16,14 +16,14 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
 
-  MyUser(
-      {this.name = '',
-      String email = '',
-      this.userType = UserType.basic,
-      this.lastLogin,
-      this.loginCount = 0,
-      this.userId = ''})
-      : _email = email.toLowerCase();
+  MyUser({
+    this.userId = 'none',
+    this.name = '',
+    String email = '',
+    this.userType = UserType.basic,
+    this.lastLogin,
+    this.loginCount = 0,
+  }) : _email = email.toLowerCase();
 
   MyUser copyWith({
     String? userId,
@@ -69,7 +69,7 @@ class MyUser {
           .log(_classString, 'fromJson id null ', myCustomObject: json, debugType: DebugType.error);
     }
     return MyUser(
-      userId: json[DBFields.userId.name] ?? '',
+      userId: json[DBFields.userId.name] ?? 'jsonNone',
       name: json[DBFields.name.name] ?? '',
       email: json[DBFields.email.name] ?? '',
       userType: intToUserType(json[DBFields.userType.name]),
