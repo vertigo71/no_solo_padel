@@ -68,7 +68,8 @@ class Director {
     Set<String> usersId = users.map((user) => user.userId).toSet();
     if (usersId.contains('')) {
       for (MyUser user in users) {
-        if (user.userId == '') {
+        // TODO: delete
+        if (user.userId == '' || user.userId[0] == ' ') {
           MyLog().log(_classString, 'checkUsersInMatches User without ID',
               myCustomObject: user, debugType: DebugType.error);
         }

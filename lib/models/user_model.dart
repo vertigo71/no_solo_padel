@@ -17,7 +17,7 @@ class MyUser {
   int loginCount;
 
   MyUser({
-    this.userId = 'none',
+    this.userId = ' none',
     this.name = '',
     String email = '',
     this.userType = UserType.basic,
@@ -69,7 +69,7 @@ class MyUser {
           .log(_classString, 'fromJson id null ', myCustomObject: json, debugType: DebugType.error);
     }
     return MyUser(
-      userId: json[DBFields.userId.name] ?? 'jsonNone',
+      userId: json[DBFields.userId.name] ?? ' jsonNone',
       name: json[DBFields.name.name] ?? '',
       email: json[DBFields.email.name] ?? '',
       userType: intToUserType(json[DBFields.userType.name]),
@@ -79,7 +79,7 @@ class MyUser {
   }
 
   Map<String, dynamic> toJson() {
-    if (userId == '') {
+    if (userId == '' || userId[0] == ' ') {
       MyLog()
           .log(_classString, 'toJson id null ', myCustomObject: this, debugType: DebugType.error);
     }
