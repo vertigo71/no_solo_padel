@@ -36,6 +36,9 @@ Future<void> sendMessageToTelegram(String message , { bool errorBot = false }) a
     _chatId = getTelegramChatId();
   }
 
+  MyLog().log(_classString, 'Sending telegram = $_botToken $_chatId', debugType: DebugType.info);
+
+
   var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
       'sendMessage?chat_id=$_chatId&text=$message');
   http.Response response = await http.post(url);
