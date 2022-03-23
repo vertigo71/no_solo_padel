@@ -76,6 +76,10 @@ class Director {
     }
     List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), numDays: 100);
     for (MyMatch match in matches) {
+      if (match.date.isBefore(DateTime(1980))) {
+        MyLog().log(_classString, 'checkUsersInMatches MAtch without date',
+            myCustomObject: match, debugType: DebugType.error);
+      }
       Set<String> existingPlayers = match.players.intersection(usersId);
       if (existingPlayers.length != match.players.length) {
         MyLog().log(_classString, 'ERROR: nonExisting users in match $match',
