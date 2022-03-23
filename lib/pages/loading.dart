@@ -65,7 +65,7 @@ class Loading extends StatelessWidget {
       await firebaseHelper.updateUser(loggedUser);
 
       /// (async) check the integrity of the database
-      director.checkUsersInMatches(delete: true);
+      director.checkUsersInMatches(delete: false);
 
       /// create matches if missing
       /// from now to now+matchDaysToView

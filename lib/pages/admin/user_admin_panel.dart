@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/debug.dart';
 import 'user_add_panel.dart';
+import 'user_delete.dart';
 import 'user_modify_panel.dart';
 
 final String _classString = 'UserAdminPanel'.toUpperCase();
@@ -18,6 +19,7 @@ class _UserAdminPanelState extends State<UserAdminPanel> {
   static const List<Widget> _widgetOptions = <Widget>[
     UserAddPanel(),
     UserModifyPanel(),
+    UserDeletePanel(),
   ];
 
   void _onItemTapped(int index) {
@@ -43,6 +45,10 @@ class _UserAdminPanelState extends State<UserAdminPanel> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Modificar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_remove_sharp),
+            label: 'Eliminar',
           ),
         ],
         currentIndex: _selectedIndex,

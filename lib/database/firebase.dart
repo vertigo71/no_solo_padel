@@ -417,12 +417,17 @@ class FirebaseHelper {
     }
   }
 
-  Future<void> updateUser(MyUser myUser) async => updateObject(
+  Future<void> updateUser(MyUser myUser) async {
+    if ( myUser.userId == ''){
+      MyLog().log(_classString, 'updateUser ', myCustomObject: myUser, debugType: DebugType.error);
+    }
+    return updateObject(
         map: myUser.toJson(),
         collection: strDB(DBFields.users),
         doc: myUser.userId,
-        forceSet: true,
+        forceSet: false,
       );
+  }
 
   // core = comment + isOpen + courtNAmes (all except players)
   Future<void> updateMatch(

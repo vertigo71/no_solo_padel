@@ -66,6 +66,14 @@ class Director {
     MyLog().log(_classString, 'deleteNonUsersInMatches');
     List<MyUser> users = await firebaseHelper.getAllUsers();
     Set<String> usersId = users.map((user) => user.userId).toSet();
+    if (usersId.contains('')) {
+      for (MyUser user in users) {
+        if (user.userId == '') {
+          MyLog().log(_classString, 'checkUsersInMatches User without ID',
+              myCustomObject: user, debugType: DebugType.error);
+        }
+      }
+    }
     List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), numDays: 100);
     for (MyMatch match in matches) {
       Set<String> existingPlayers = match.players.intersection(usersId);
@@ -80,6 +88,12 @@ class Director {
       }
     }
   }
+
+  //
+  // /// get autheticated users != local modal users
+  // Future<MyUser> getXorUserAndAuthUser(){
+  //
+  // }
 
   /// not used
   Future<void> updateDataToNewFormat() async {
