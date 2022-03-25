@@ -39,7 +39,7 @@ class MyLog {
             '\n****  ERROR  *****'
             '\n****         *****\n******************';
         _log(errorMsg, heading: heading);
-        errorMsg = '$message';
+        errorMsg += '\n$message';
         if (myCustomObject != null) errorMsg += '\nOBJECT\n' + myCustomObject.toString();
         if (exception != null) errorMsg += '\nEXCEPTION\n' + exception.toString();
         sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', botType: BotType.error);
