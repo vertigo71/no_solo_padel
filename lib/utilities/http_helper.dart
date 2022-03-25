@@ -5,6 +5,7 @@ import '../secret.dart';
 import 'date.dart';
 
 final String _classString = 'HttpHelper'.toUpperCase();
+enum BotType { register, log, error}
 
 void sendDatedMessageToTelegram(
     {required String message, required Date matchDate, int? fromDaysAgoToTelegram}) {
@@ -20,28 +21,25 @@ void sendDatedMessageToTelegram(
 
   // add date to the message
   message = '$matchDate\n$message';
-  sendMessageToTelegram(message, errorBot: false );
+  sendMessageToTelegram(message, botType: BotType.register );
 }
 
-Future<void> sendMessageToTelegram(String message , { bool errorBot = false }) async {
+Future<void> sendMessageToTelegram(String message , { BotType botType = BotType.register }) async {
   late String _botToken;
   late String _chatId;
 
-  if ( errorBot ) {
+  if ( botType == BotType.error) {
     _botToken = getTelegramErrorBotToken();
     _chatId = getTelegramErrorChatId();
   }
-  else{
+  else if ( botType == BotType.register ){
     _botToken = getTelegramBotToken();
     _chatId = getTelegramChatId();
   }
 
-  MyLog().log(_classString, 'Sending telegram = $_botToken $_chatId', debugType: DebugType.info);
-
-
   var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
       'sendMessage?chat_id=$_chatId&text=$message');
-  http.Response response = await http.post(url);
+  http.Response response =  await http.post(url);
 
   if (response.statusCode != 200) {
     // If the server did not return a 200 OK response,

@@ -77,6 +77,7 @@ class Director {
     }
     List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), numDays: 100);
     for (MyMatch match in matches) {
+      // TODO: delete
       if (match.date.isBefore(DateTime(1980))) {
         MyLog().log(_classString, 'checkUsersInMatches MAtch without date',
             myCustomObject: match, debugType: DebugType.error);

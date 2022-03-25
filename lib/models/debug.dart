@@ -19,85 +19,62 @@ class MyLog {
 
   static String loggedUserId = '';
 
-
   List<String> get logMsgList => _logMsgList;
 
   void get delete => _logMsgList.clear();
 
-  void _log(String message, {required String name, Object? error}) {
-    developer.log(message,
-        name: dateTimeToString(DateTime.now(), format: 'mm:ss ') + name, error: error);
-    // print( "[$name] $message $error");
+  void _log(String message, {required String heading, Object? error}) {
+    String dateHeading = dateTimeToString(DateTime.now(), format: 'mm:ss ') + heading;
+    String errorStr = error == null ? '' : '\nERROR: ${error.toString()}';
+
+    developer.log(message, name: dateHeading, error: error);
+    _logMsgList.add('[$dateHeading] $message $errorStr');
   }
 
   void log(String heading, dynamic message,
       {dynamic myCustomObject, dynamic exception, DebugType debugType = DebugType.basic}) {
     if (debugType.index >= MyLog.minDebugType.index) {
       if (debugType == DebugType.error) {
-        _log(
-          '\n******************'
-          '\n****         *****'
-          '\n****  ERROR  *****'
-          '\n****         *****'
-          '\n******************',
-          name: heading,
-        );
-        _log( 'Sending telegram...', name: heading);
-        _sendErrorToTelegram(heading, message, myCustomObject: myCustomObject, exception: exception);
+        String errorMsg = '\n******************\n****         *****'
+            '\n****  ERROR  *****'
+            '\n****         *****\n******************';
+        _log(errorMsg, heading: heading);
+        errorMsg = '$message';
+        if (myCustomObject != null) errorMsg += '\nOBJECT\n' + myCustomObject.toString();
+        if (exception != null) errorMsg += '\nEXCEPTION\n' + exception.toString();
+        sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', botType: BotType.error);
       }
 
-      _log(message, name: heading);
+      _log(message, heading: heading);
 
-      if (exception != null) _log(exception.toString(), name: heading, error: exception);
+      if (exception != null) _log(exception.toString(), heading: heading, error: exception);
 
       if (myCustomObject != null) {
         if (myCustomObject is List) {
           for (var item in myCustomObject) {
-            _log(''.padLeft(heading.length + 2) + item.toString(), name: '>');
+            _log(''.padLeft(heading.length + 2) + item.toString(), heading: '>');
           }
         } else if (myCustomObject is Map) {
           myCustomObject.forEach((k, v) => _log(
               ''.padLeft(heading.length + 2) + '[${k.toString()}]: ${v.toString()}',
-              name: '>'));
+              heading: '>'));
         } else {
-          _log(''.padLeft(heading.length + 2) + myCustomObject.toString(), name: '>');
+          _log(''.padLeft(heading.length + 2) + myCustomObject.toString(), heading: '>');
         }
       }
-
-      _addToMsgList(heading, message,
-          myCustomObject: myCustomObject?.toString() ?? '',
-          exception: exception?.toString() ?? '',
-          debugType: debugType);
     }
-  }
-
-  void _addToMsgList(String heading, String value,
-      {String myCustomObject = '', String exception = '', DebugType debugType = DebugType.basic}) {
-    List<String> list = [];
-
-    if (debugType.index >= MyLog.minDebugType.index) {
-      if (debugType == DebugType.error) {
-        list.add('[$heading] *************** ERROR *************************************');
-      }
-
-      list.add('[$heading] $value');
-
-      if (myCustomObject.isNotEmpty) {
-        list.add('>>'.padRight(heading.length) + myCustomObject);
-      }
-      if (exception.isNotEmpty) {
-        list.add('>>'.padRight(heading.length) + 'Exception: $exception');
-      }
-
-      _logMsgList.addAll(list);
-    }
-  }
-
-  void _sendErrorToTelegram(String heading, dynamic message,
-      {dynamic myCustomObject, dynamic exception}) {
-    String errorMsg = message.toString();
-    if (exception != null) errorMsg += '\nException\n${exception.toString()}';
-    if (myCustomObject != null) errorMsg += '\nObject\n${myCustomObject.toString()}';
-    sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', errorBot: true );
   }
 }
+
+// for sending a log message to telegram
+//   final List<String> _telegramMsgList = [];
+//  {
+//     Timer.periodic(const Duration(seconds: 2), (timer) {
+//       if (_telegramMsgList.isNotEmpty) {
+//         String first = _telegramMsgList.removeAt(0);
+//         sendMessageToTelegram(first, botType: BotType.log);
+//       }
+//     });
+//   }
+//  _telegramMsgList
+//         .add('[$loggedUserId:$dateHeading (${_logMsgList.length})]\n$message $errorStr');

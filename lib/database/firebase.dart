@@ -342,7 +342,7 @@ class FirebaseHelper {
             debugType: DebugType.error);
       }
     } catch (e) {
-      MyLog().log(_classString, 'getObject ', exception: e, debugType: DebugType.error);
+      MyLog().log(_classString, 'getUserByEmail ', exception: e, debugType: DebugType.error);
       return null;
     }
     return null;
