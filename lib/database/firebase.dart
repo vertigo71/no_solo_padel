@@ -387,14 +387,14 @@ class FirebaseHelper {
       );
 
   Future<List<MyMatch>> getAllMatches({
-    required Date fromDate,
-    required int numDays,
+    Date? fromDate,
+    Date? maxDate,
   }) async =>
       getAllObjects(
         collection: strDB(DBFields.matches),
         fromJson: MyMatch.fromJson,
         fromDate: fromDate,
-        maxDate: Date.now().add(Duration(days: numDays)),
+        maxDate: maxDate,
       );
 
   Future<void> updateObject({
@@ -419,15 +419,15 @@ class FirebaseHelper {
 
   Future<void> updateUser(MyUser myUser) async {
     // TODO: delete
-    if ( myUser.userId == '' || myUser.userId[0] == ' '){
+    if (myUser.userId == '' || myUser.userId[0] == MyUser.errorId) {
       MyLog().log(_classString, 'updateUser ', myCustomObject: myUser, debugType: DebugType.error);
     }
     return updateObject(
-        map: myUser.toJson(),
-        collection: strDB(DBFields.users),
-        doc: myUser.userId,
-        forceSet: false,
-      );
+      map: myUser.toJson(),
+      collection: strDB(DBFields.users),
+      doc: myUser.userId,
+      forceSet: false,
+    );
   }
 
   // core = comment + isOpen + courtNAmes (all except players)
@@ -453,4 +453,22 @@ class FirebaseHelper {
         doc: strDB(DBFields.parameters),
         forceSet: true,
       );
+
+  Future<void> deleteUser(MyUser myUser) async {
+    MyLog().log(_classString, 'deleteUser deleting user $myUser');
+    // TODO: delete
+    if (myUser.userId == '' || myUser.userId[0] == MyUser.errorId) {
+      MyLog().log(_classString, 'deleteUser wrong id',
+          myCustomObject: myUser, debugType: DebugType.error);
+    }
+
+    // delete user
+    try {
+      MyLog().log(_classString, 'deleteUser user $myUser deleted');
+      await _instance.collection(strDB(DBFields.users)).doc(myUser.userId).delete();
+    } catch (e) {
+      MyLog().log(_classString, 'deleteUser error when deleting',
+          myCustomObject: myUser, debugType: DebugType.error);
+    }
+  }
 }

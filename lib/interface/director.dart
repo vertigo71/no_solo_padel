@@ -69,13 +69,13 @@ class Director {
     if (usersId.contains('')) {
       for (MyUser user in users) {
         // TODO: delete
-        if (user.userId == '' || user.userId[0] == ' ') {
+        if (user.userId == '' || user.userId[0] == MyUser.errorId) {
           MyLog().log(_classString, 'checkUsersInMatches User without ID',
               myCustomObject: user, debugType: DebugType.error);
         }
       }
     }
-    List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), numDays: 100);
+    List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now());
     for (MyMatch match in matches) {
       // TODO: delete
       if (match.date.isBefore(DateTime(1980))) {
@@ -94,12 +94,6 @@ class Director {
       }
     }
   }
-
-  //
-  // /// get autheticated users != local modal users
-  // Future<MyUser> getXorUserAndAuthUser(){
-  //
-  // }
 
   /// not used
   Future<void> updateDataToNewFormat() async {

@@ -54,7 +54,7 @@ class UserModifyPanel extends StatelessWidget {
                           MyLog().log(_classString, 'usuario modificado con $response');
                         } catch (e) {
                           showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
-                          MyLog().log(_classString, 'modificar usurio',
+                          MyLog().log(_classString, 'modificar usuario',
                               exception: e, debugType: DebugType.error);
                         }
                       },

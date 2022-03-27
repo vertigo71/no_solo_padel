@@ -62,6 +62,7 @@ class MyMatch {
     return true;
   }
 
+  /// Returns `true` if [player] was in the set, and `false` if not.
   bool removePlayer(String player) => players.remove(player);
 
   PlayingState getPlayingState(String player) {
