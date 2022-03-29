@@ -418,8 +418,7 @@ class FirebaseHelper {
   }
 
   Future<void> updateUser(MyUser myUser) async {
-    // TODO: delete
-    if (myUser.userId == '' || myUser.userId[0] == MyUser.errorId) {
+    if (myUser.userId == '') {
       MyLog().log(_classString, 'updateUser ', myCustomObject: myUser, debugType: DebugType.error);
     }
     return updateObject(
@@ -456,8 +455,7 @@ class FirebaseHelper {
 
   Future<void> deleteUser(MyUser myUser) async {
     MyLog().log(_classString, 'deleteUser deleting user $myUser');
-    // TODO: delete
-    if (myUser.userId == '' || myUser.userId[0] == MyUser.errorId) {
+    if (myUser.userId == '' ) {
       MyLog().log(_classString, 'deleteUser wrong id',
           myCustomObject: myUser, debugType: DebugType.error);
     }

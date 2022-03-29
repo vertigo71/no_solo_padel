@@ -68,8 +68,7 @@ class Director {
     Set<String> usersId = users.map((user) => user.userId).toSet();
     if (usersId.contains('')) {
       for (MyUser user in users) {
-        // TODO: delete
-        if (user.userId == '' || user.userId[0] == MyUser.errorId) {
+        if (user.userId == '') {
           MyLog().log(_classString, 'checkUsersInMatches User without ID',
               myCustomObject: user, debugType: DebugType.error);
         }
@@ -77,7 +76,6 @@ class Director {
     }
     List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now());
     for (MyMatch match in matches) {
-      // TODO: delete
       if (match.date.isBefore(DateTime(1980))) {
         MyLog().log(_classString, 'checkUsersInMatches MAtch without date',
             myCustomObject: match, debugType: DebugType.error);

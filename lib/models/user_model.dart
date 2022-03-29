@@ -8,7 +8,6 @@ enum UserType { basic, admin, superuser }
 
 class MyUser {
   static const String emailSuffix = '@nsp.com';
-  static const String errorId = '@';
 
   String userId;
   String name;
@@ -18,7 +17,7 @@ class MyUser {
   int loginCount;
 
   MyUser({
-    this.userId = '${errorId}const',
+    this.userId = '',
     this.name = '',
     String email = '',
     this.userType = UserType.basic,
@@ -70,7 +69,7 @@ class MyUser {
           .log(_classString, 'fromJson id null ', myCustomObject: json, debugType: DebugType.error);
     }
     return MyUser(
-      userId: json[DBFields.userId.name] ?? '${errorId}json',
+      userId: json[DBFields.userId.name] ?? '',
       name: json[DBFields.name.name] ?? '',
       email: json[DBFields.email.name] ?? '',
       userType: intToUserType(json[DBFields.userType.name]),
@@ -80,7 +79,7 @@ class MyUser {
   }
 
   Map<String, dynamic> toJson() {
-    if (userId == '' || userId[0] == errorId) {
+    if (userId == '') {
       MyLog()
           .log(_classString, 'toJson id null ', myCustomObject: this, debugType: DebugType.error);
     }
