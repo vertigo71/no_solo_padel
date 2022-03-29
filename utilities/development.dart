@@ -9,34 +9,27 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String relativePath = '../';
-String filePubSpecName = 'pubspec.yaml';
-String fileProdName = 'pubspec_prod.yaml';
-String fileDevName = 'pubspec_dev.yaml';
+const String fileIndexWeb = 'web/index.html';
+const String filePubSpecName = 'pubspec.yaml';
+const String fileProdName = 'pubspec_prod.yaml';
+const String fileDevName = 'pubspec_dev.yaml';
 const String devString = 'name: no_solo_padel_dev';
 const String prodString = 'name: no_solo_padel';
 
 // ignore: avoid_print
 void myPrint(var v) => print(v);
 
-void errorPrint( dynamic error ){
-  if ( error.toString().isNotEmpty) {
-    stderr.write('ERROR!!!');
+void errorPrint(dynamic error) {
+  if (error.toString().isNotEmpty) {
+    stderr.write('ERROR!!! ');
     stderr.write(error);
   }
 }
 
 Future<void> copyPubspecToDevAndProd() async {
-  File fileIn = File(filePubSpecName);
-  if (!await fileIn.exists()) {
-    myPrint('$fileIn doesn\'t exist');
-    filePubSpecName = relativePath + filePubSpecName;
-    fileProdName = relativePath + fileProdName;
-    fileDevName = relativePath + fileDevName;
-    fileIn = File(filePubSpecName);
-  }
-  final fileProd = File(fileProdName);
-  final fileDev = File(fileDevName);
+  final File fileIn = File(filePubSpecName);
+  final File fileProd = File(fileProdName);
+  final File fileDev = File(fileDevName);
   RegExp exp = RegExp(r"^name:");
   try {
     if (await fileIn.exists()) {
@@ -67,6 +60,28 @@ Future<void> copyPubspecToDevAndProd() async {
   }
 }
 
+Future<bool> checkBugFender() async {
+  final File fileIn = File(fileIndexWeb);
+  RegExp exp = RegExp(r"bugfender");
+  try {
+    if (await fileIn.exists()) {
+      Stream<String> linesIn = fileIn
+          .openRead()
+          .transform(utf8.decoder) // Decode bytes to UTF-8
+          .transform(const LineSplitter()); // Convert stream to individual lines
+      await for (var line in linesIn) {
+        if (exp.stringMatch(line) != null) {
+          return true;
+        }
+      }
+    } else {
+      myPrint('$fileIn doesn\'t exist');
+    }
+  } catch (e) {
+    myPrint('Error: $e');
+  }
+  return false;
+}
 
 Future<void> main() async {
   String curFullDir = Directory.current.path;
@@ -76,8 +91,17 @@ Future<void> main() async {
     return;
   }
 
-  String answer = '';
+  // check bugfender
+  myPrint('Checking BugFender');
+  bool exists = await checkBugFender();
+  if (exists) {
+    myPrint('BugFender line in index.html exists');
+  } else {
+    errorPrint('Add BugFender line in index.html');
+    return;
+  }
 
+  String answer = '';
   // copyPubspecToDevAndProd
   stdout.write('Copy pubspec to pubspec dev & prod (s/N)?: ');
   answer = stdin.readLineSync() ?? '';

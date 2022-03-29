@@ -6,10 +6,11 @@
 /// execute like: dart run production.dart
 ///
 import 'dart:io';
+import 'dart:convert';
 
-const String relativePath = '../';
-String filePubSpecName = 'pubspec.yaml';
-String fileProdName = 'pubspec_prod.yaml';
+const String fileIndexWeb = 'web/index.html';
+const String filePubSpecName = 'pubspec.yaml';
+const String fileProdName = 'pubspec_prod.yaml';
 
 // ignore: avoid_print
 void myPrint(var v) => print(v);
@@ -23,12 +24,6 @@ void errorPrint( dynamic error ){
 
 Future<void> copyPubspecProdToPubspec() async {
   File fileIn = File(fileProdName);
-  if (!await fileIn.exists()) {
-    myPrint('$fileIn doesn\'t exist');
-    filePubSpecName = relativePath + filePubSpecName;
-    fileProdName = relativePath + fileProdName;
-    fileIn = File(filePubSpecName);
-  }
   try {
     if (await fileIn.exists()) {
       myPrint('Copying $fileIn to $filePubSpecName');
@@ -40,6 +35,29 @@ Future<void> copyPubspecProdToPubspec() async {
   } catch (e) {
     myPrint(e);
   }
+}
+
+Future<bool> checkBugFender() async {
+  final File fileIn = File(fileIndexWeb);
+  RegExp exp = RegExp(r"bugfender");
+  try {
+    if (await fileIn.exists()) {
+      Stream<String> linesIn = fileIn
+          .openRead()
+          .transform(utf8.decoder) // Decode bytes to UTF-8
+          .transform(const LineSplitter()); // Convert stream to individual lines
+      await for (var line in linesIn) {
+        if (exp.stringMatch(line) != null) {
+          return true;
+        }
+      }
+    } else {
+      myPrint('$fileIn doesn\'t exist');
+    }
+  } catch (e) {
+    myPrint('Error: $e');
+  }
+  return false;
 }
 
 void main() async {
@@ -59,6 +77,17 @@ void main() async {
     ProcessResult result = await Process.run('git', ['pull', 'origin', 'master']);
     stdout.write(result.stdout);
     errorPrint(result.stderr);
+  }
+
+
+  // check bugfender
+  myPrint('Checking BugFender');
+  bool exists = await checkBugFender();
+  if ( exists) {
+    myPrint('BugFender line in index.html exists');
+  } else {
+    errorPrint('Add BugFender line in index.html');
+    return;
   }
 
   // copyPubspecProdToPubspec
