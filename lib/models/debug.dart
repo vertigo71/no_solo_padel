@@ -1,8 +1,8 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter_bugfender/flutter_bugfender.dart';
-import 'package:no_solo_padel_dev/utilities/environment.dart';
 import '../utilities/date.dart';
+import '../utilities/environment.dart';
 import '../utilities/http_helper.dart';
 
 enum DebugType { info, warning, error }

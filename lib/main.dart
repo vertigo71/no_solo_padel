@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
-import 'package:no_solo_padel_dev/secret.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -10,6 +9,7 @@ import 'interface/director.dart';
 import 'models/debug.dart';
 import 'routes/routes.dart';
 import 'interface/app_state.dart';
+import 'secret.dart';
 import 'utilities/environment.dart';
 import 'utilities/theme.dart';
 
