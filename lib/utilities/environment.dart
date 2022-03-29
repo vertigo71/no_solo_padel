@@ -19,16 +19,16 @@ class Environment {
   Future<void> initialize() async {
     if (!_initialized) {
       _packageInfo = await PackageInfo.fromPlatform();
+      _initialized = true;
       assert(_packageInfo != null);
       _appName = _packageInfo!.appName;
       if (_appName.contains('_dev')) {
         _isProduction = false;
-        MyLog().log(_classString, 'Development environment initialized', debugType: DebugType.info);
+        MyLog().log(_classString, 'Development environment initialized', debugType: DebugType.warning);
       } else {
         _isProduction = true;
-        MyLog().log(_classString, 'Production environment initialized', debugType: DebugType.info);
+        MyLog().log(_classString, 'Production environment initialized', debugType: DebugType.warning);
       }
-      _initialized = true;
     }
   }
 

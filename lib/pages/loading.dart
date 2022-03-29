@@ -21,7 +21,7 @@ class Loading extends StatelessWidget {
   const Loading({Key? key}) : super(key: key);
 
   void setupDB(BuildContext context) async {
-    MyLog().log(_classString, 'Setting DB', debugType: DebugType.info);
+    MyLog().log(_classString, 'Setting DB', debugType: DebugType.warning);
 
     /// restart error logs
     MyLog().delete;
@@ -32,7 +32,7 @@ class Loading extends StatelessWidget {
           'Póngase en contacto con el administrador');
     }
     MyLog()
-        .log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.info);
+        .log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.warning);
 
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
@@ -52,7 +52,7 @@ class Loading extends StatelessWidget {
     if (loggedUser == null) {
       // user is not in the DB
       MyLog().log(_classString, 'setupDB user not registered = ${user.email}',
-          debugType: DebugType.info);
+          debugType: DebugType.warning);
       await AuthenticationHelper().signOut(signedOutFunction: firebaseHelper.disposeListeners);
       _addPostFrame(function: () {
         showMessage(context, 'Usuario no registrado. Hable con el administrador.');

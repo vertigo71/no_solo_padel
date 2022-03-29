@@ -72,7 +72,7 @@ class _UserDeletePanelState extends State<UserDeletePanel> {
                           bool playerExisted = match.removePlayer(user.userId);
                           if (playerExisted) {
                             MyLog().log(_classString, 'deleting $user from ${match.date}',
-                                debugType: DebugType.info);
+                                debugType: DebugType.warning);
                             try {
                               await firebaseHelper.updateMatch(
                                   match: match, updateCore: false, updatePlayers: true);
@@ -86,7 +86,7 @@ class _UserDeletePanelState extends State<UserDeletePanel> {
                         // Delete user
                         try {
                           MyLog().log(_classString, 'Elminando usuario  $user',
-                              debugType: DebugType.info);
+                              debugType: DebugType.warning);
                           await firebaseHelper.deleteUser(user);
                         } catch (e) {
                           showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');

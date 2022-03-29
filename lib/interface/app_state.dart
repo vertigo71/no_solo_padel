@@ -46,7 +46,7 @@ class AppState with ChangeNotifier {
       setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {
-    MyLog().log(_classString, 'setAllParameters $myParameters', debugType: DebugType.info);
+    MyLog().log(_classString, 'setAllParameters $myParameters', debugType: DebugType.warning);
     _parameters = myParameters ?? MyParameters();
     MyLog.minDebugType = _parameters.minDebugLevel;
     if (notify) notifyListeners();
@@ -56,7 +56,7 @@ class AppState with ChangeNotifier {
 
   void setLoggedUser(MyUser loggedUser, {required bool notify}) {
     MyLog()
-        .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.info);
+        .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.warning);
     _loggedUser = loggedUser;
     // update MyLog name and email
     MyLog.loggedUserId = _loggedUser.userId;
@@ -101,7 +101,7 @@ class AppState with ChangeNotifier {
   bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
-    MyLog().log(_classString, 'setAllUsers #=${users.length}', debugType: DebugType.info);
+    MyLog().log(_classString, 'setAllUsers #=${users.length}', debugType: DebugType.warning);
     MyLog().log(_classString, 'setAllUsers', myCustomObject: users);
 
     _allUsers.clear();
@@ -120,7 +120,7 @@ class AppState with ChangeNotifier {
       {required bool notify}) {
     MyLog().log(
         _classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ',
-        debugType: DebugType.info);
+        debugType: DebugType.warning);
 
     if (added.isNotEmpty) {
       MyLog().log(_classString, 'setChangedUsers added $added ');
@@ -157,7 +157,7 @@ class AppState with ChangeNotifier {
       {required bool notify}) {
     MyLog().log(_classString,
         'setChangedMatches a=${added.length} m=${modified.length} r=${removed.length} ',
-        debugType: DebugType.info);
+        debugType: DebugType.warning);
 
     if (added.isNotEmpty) {
       MyLog().log(_classString, 'setChangedMatches added $added ');
@@ -227,7 +227,7 @@ class AppState with ChangeNotifier {
         userExists = getUserById(user.userId);
       } while (userExists != null);
     }
-    MyLog().log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.info);
+    MyLog().log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.warning);
     return user;
   }
 
