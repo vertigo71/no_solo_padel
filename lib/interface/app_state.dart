@@ -134,12 +134,12 @@ class AppState with ChangeNotifier {
 
     added.addAll(modified);
     for (MyUser newUser in added) {
-      MyLog().log(_classString, 'setChangedUsers remove old user: ', myCustomObject: newUser);
+      MyLog().log(_classString, 'setChangedUsers remove old user: $newUser');
       removeUserByIdBold(newUser.userId);
     }
     _allUsers.addAll(added);
     for (var newUser in removed) {
-      MyLog().log(_classString, 'setChangedUsers REMOVED!!!: ', myCustomObject: newUser);
+      MyLog().log(_classString, 'setChangedUsers REMOVED!!!: $newUser');
       removeUserByIdBold(newUser.userId);
     }
 
@@ -171,12 +171,12 @@ class AppState with ChangeNotifier {
 
     added.addAll(modified);
     for (var newMatch in added) {
-      MyLog().log(_classString, 'setChangedMatches update match: ', myCustomObject: newMatch);
+      MyLog().log(_classString, 'setChangedMatches update match: $newMatch');
       removeMatchByDateBold(newMatch.date);
     }
     _allMatches.addAll(added);
     for (var newMatch in removed) {
-      MyLog().log(_classString, 'setChangedMatches remove match: ', myCustomObject: newMatch);
+      MyLog().log(_classString, 'setChangedMatches remove match: $newMatch ');
       removeMatchByDateBold(newMatch.date);
     }
     if (notify) notifyListeners();

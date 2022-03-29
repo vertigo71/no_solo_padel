@@ -64,7 +64,8 @@ class FirebaseHelper {
         if (snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
-        MyLog().log(_classString, 'LISTENER parameters = $myParameters', debugType: DebugType.warning);
+        MyLog()
+            .log(_classString, 'LISTENER parameters = $myParameters', debugType: DebugType.warning);
         parametersFunction(myParameters ?? MyParameters());
       });
     } catch (e) {
@@ -228,7 +229,8 @@ class FirebaseHelper {
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog().log(_classString, 'Delete ${collection.name} ${ds.id}', debugType: DebugType.warning);
+        MyLog()
+            .log(_classString, 'Delete ${collection.name} ${ds.id}', debugType: DebugType.warning);
         ds.reference.delete();
       }
     }).catchError((onError) {
@@ -330,7 +332,8 @@ class FirebaseHelper {
         return null;
       }
       if (querySnapshot.size == 0) {
-        MyLog().log(_classString, 'getUserByEmail $email doesnt exist', debugType: DebugType.warning);
+        MyLog()
+            .log(_classString, 'getUserByEmail $email doesnt exist', debugType: DebugType.warning);
         return null;
       }
 
@@ -370,7 +373,7 @@ class FirebaseHelper {
         if (doc.data() == null) throw 'Error en la base de datos $collection';
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         T item = fromJson(data);
-        MyLog().log(_classString, 'gelAllObjects $collection = ', myCustomObject: item);
+        MyLog().log(_classString, 'gelAllObjects $collection = $item');
         items.add(item);
       }
     } catch (e) {
@@ -455,7 +458,7 @@ class FirebaseHelper {
 
   Future<void> deleteUser(MyUser myUser) async {
     MyLog().log(_classString, 'deleteUser deleting user $myUser');
-    if (myUser.userId == '' ) {
+    if (myUser.userId == '') {
       MyLog().log(_classString, 'deleteUser wrong id',
           myCustomObject: myUser, debugType: DebugType.error);
     }
