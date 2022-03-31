@@ -406,7 +406,8 @@ class FirebaseHelper {
     required String doc,
     bool forceSet = false,
   }) async {
-    MyLog().log(_classString, 'updateObject  $collection $doc $map', debugType: DebugType.warning);
+    MyLog().log(_classString, 'updateObject  $collection $doc',
+        myCustomObject: map, debugType: DebugType.warning);
     if (forceSet) {
       return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
         MyLog().log(_classString, 'updateObject ', exception: onError, debugType: DebugType.error);

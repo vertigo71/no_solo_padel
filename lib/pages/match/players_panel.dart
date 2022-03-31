@@ -317,6 +317,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
       // toAdd and user already in the match
       // !toAdd and user not in the match
       showMessage(context, 'Nada por hacer');
+      MyLog().log(_classString, 'validate $user Nothing to do', debugType: DebugType.warning);
       return false;
     }
 
@@ -334,7 +335,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
       }
       match.insertPlayer(user.userId, position: listPosition);
       registerText = 'apuntado';
-      MyLog().log(_classString, 'addding to the match position $listPosition');
+      MyLog().log(_classString, 'validate $user addding to the match position $listPosition',
+          debugType: DebugType.warning);
     } else {
       if (!adminManagingUser) {
         // ask for confirmation if you are loggedUser trying to abandon the match
@@ -353,7 +355,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
           return false;
         }
       }
-      MyLog().log(_classString, 'removed from the match');
+      MyLog()
+          .log(_classString, 'validate $user removed from the match', debugType: DebugType.warning);
       registerText = 'desapuntado';
       match.removePlayer(user.userId);
     }
@@ -371,14 +374,17 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
     // add to FireBase
     try {
+      MyLog().log(_classString, 'validate $user update match', debugType: DebugType.warning);
       await context
           .read<Director>()
           .firebaseHelper
           .updateMatch(match: match, updateCore: false, updatePlayers: true);
-      context.read<Director>().firebaseHelper.updateRegister(RegisterModel(
+      MyLog().log(_classString, 'validate $user update register', debugType: DebugType.warning);
+      await context.read<Director>().firebaseHelper.updateRegister(RegisterModel(
             date: match.date,
             message: registerText,
           ));
+      MyLog().log(_classString, 'validate $user send telegram', debugType: DebugType.warning);
       sendDatedMessageToTelegram(
           message: '$registerText\n'
               'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
