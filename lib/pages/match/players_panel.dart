@@ -374,6 +374,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
       return false;
     }
 
+    myAlertDialog(context, 'Con fecha\n${DateTime.now()} \n\n $registerText');
+
     userInTheMatch = match.isInTheMatch(user.userId);
     if (loggedUser == user) {
       setState(() {
