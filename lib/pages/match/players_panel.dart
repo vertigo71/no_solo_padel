@@ -26,7 +26,6 @@ class PlayersPanel extends StatefulWidget {
 }
 
 class _PlayersPanelState extends State<PlayersPanel> {
-  late final MyMatch match;
   late final AppState appState;
 
   late final MyUser loggedUser;
@@ -39,11 +38,10 @@ class _PlayersPanelState extends State<PlayersPanel> {
   @override
   void initState() {
     appState = context.read<AppState>();
-    match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
     loggedUser = appState.getLoggedUser();
-    PlayingState state = match.getPlayingState(loggedUser.userId);
-    loggedUserInTheMatch = state != PlayingState.unsigned;
+    loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
     selectedUser = appState.allSortedUsers[0];
     isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
 
@@ -61,7 +59,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog().log(_classString, 'Building for $loggedUser');
 
     return ListView(
       children: [
@@ -84,18 +82,26 @@ class _PlayersPanelState extends State<PlayersPanel> {
           children: [
             const Text('¿Te apuntas?'),
             const SizedBox(width: 20),
-            myCheckBox(
-              context: context,
-              value: loggedUserInTheMatch,
-              onChanged: (bool? value) {
-                setState(() {
-                  loggedUserInTheMatch = value!;
-                });
-                validate(
-                  user: loggedUser,
-                  toAdd: loggedUserInTheMatch,
-                  adminManagingUser: false,
-                );
+            Consumer<AppState>(
+              builder: (context, appState, _) {
+
+                MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+                loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
+
+                return myCheckBox(
+                context: context,
+                value: loggedUserInTheMatch,
+                onChanged: (bool? value) {
+                  setState(() {
+                    loggedUserInTheMatch = value!;
+                  });
+                  validate(
+                    user: loggedUser,
+                    toAdd: loggedUserInTheMatch,
+                    adminManagingUser: false,
+                  );
+                },
+              );
               },
             ),
           ],
@@ -135,6 +141,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 onSelectedItemChanged: (index) {
                   setState(() {
                     selectedUser = users[index];
+                    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
                     isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
                   });
                 },
@@ -164,10 +171,16 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   ElevatedButton(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
-                            selectedUser.name,
-                        textAlign: TextAlign.center,
+                      child: Consumer<AppState>(
+                        builder: (context, appState, _) {
+                          MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+                          isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
+                          return Text(
+                          (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
+                              selectedUser.name,
+                          textAlign: TextAlign.center,
+                        );
+                        },
                       ),
                     ),
                     onPressed: () => validate(
@@ -211,6 +224,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
   Widget listOfPlayers() => Consumer<AppState>(
         builder: (context, appState, _) {
           int playerNumber = 0;
+          MyLog().log(_classString, 'Building listOfPlayers', debugType: DebugType.info);
+          MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
           List<MyUser> usersPlaying =
               appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
@@ -292,6 +307,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
       required bool toAdd, // add user to match
       required bool adminManagingUser}) async {
     MyLog().log(_classString, 'validate');
+
+    // update match in case it has changed
+    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
     // check
     bool userInTheMatch = match.isInTheMatch(user.userId);

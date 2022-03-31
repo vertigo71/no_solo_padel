@@ -23,7 +23,7 @@ class AppState with ChangeNotifier {
   void deleteAll() {
     MyLog().log(_classString, 'deleteAll ');
     setLoggedUser(MyUser(), notify: false);
-    setAllParameters( null, notify: false);
+    setAllParameters(null, notify: false);
     _allMatches.clear();
     _allUsers.clear();
   }
@@ -55,8 +55,8 @@ class AppState with ChangeNotifier {
   MyUser getLoggedUser() => _loggedUser;
 
   void setLoggedUser(MyUser loggedUser, {required bool notify}) {
-    MyLog()
-        .log(_classString, 'setLoggedUser', myCustomObject: loggedUser, debugType: DebugType.warning);
+    MyLog().log(_classString, 'setLoggedUser',
+        myCustomObject: loggedUser, debugType: DebugType.warning);
     _loggedUser = loggedUser;
     // update MyLog name and email
     MyLog.loggedUserId = _loggedUser.userId;
@@ -227,7 +227,8 @@ class AppState with ChangeNotifier {
         userExists = getUserById(user.userId);
       } while (userExists != null);
     }
-    MyLog().log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.warning);
+    MyLog()
+        .log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.warning);
     return user;
   }
 
