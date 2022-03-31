@@ -84,24 +84,23 @@ class _PlayersPanelState extends State<PlayersPanel> {
             const SizedBox(width: 20),
             Consumer<AppState>(
               builder: (context, appState, _) {
-
                 MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
                 loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
 
                 return myCheckBox(
-                context: context,
-                value: loggedUserInTheMatch,
-                onChanged: (bool? value) {
-                  setState(() {
-                    loggedUserInTheMatch = value!;
-                  });
-                  validate(
-                    user: loggedUser,
-                    toAdd: loggedUserInTheMatch,
-                    adminManagingUser: false,
-                  );
-                },
-              );
+                  context: context,
+                  value: loggedUserInTheMatch,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      loggedUserInTheMatch = value!;
+                    });
+                    validate(
+                      user: loggedUser,
+                      toAdd: loggedUserInTheMatch,
+                      adminManagingUser: false,
+                    );
+                  },
+                );
               },
             ),
           ],
@@ -173,13 +172,14 @@ class _PlayersPanelState extends State<PlayersPanel> {
                       padding: const EdgeInsets.all(8.0),
                       child: Consumer<AppState>(
                         builder: (context, appState, _) {
-                          MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+                          MyMatch match =
+                              appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
                           isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
                           return Text(
-                          (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
-                              selectedUser.name,
-                          textAlign: TextAlign.center,
-                        );
+                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
+                                selectedUser.name,
+                            textAlign: TextAlign.center,
+                          );
                         },
                       ),
                     ),
@@ -389,6 +389,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
       message = 'ERROR en la actualización de los datos. \n\n $e';
       MyLog().log(_classString, 'ERROR en la actualización de los datos',
           exception: e, debugType: DebugType.error);
+      myAlertDialog(
+          context,
+          'Ha habido un error\nAsegúrate que estás apuntado/desapuntado correctamente\n'
+          'Error = $e');
+
       return false;
     }
 
