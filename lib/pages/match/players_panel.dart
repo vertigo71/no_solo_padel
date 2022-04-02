@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:no_solo_padel_dev/database/firebase.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/firebase.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../utilities/http_helper.dart';
