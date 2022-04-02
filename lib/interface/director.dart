@@ -63,7 +63,7 @@ class Director {
 
   /// parameters must be already loaded
   Future<void> checkUsersInMatches({bool delete = false}) async {
-    MyLog().log(_classString, 'deleteNonUsersInMatches');
+    MyLog().log(_classString, 'checkUsersInMatches');
     List<MyUser> users = await firebaseHelper.getAllUsers();
     Set<String> usersId = users.map((user) => user.userId).toSet();
     if (usersId.contains('')) {

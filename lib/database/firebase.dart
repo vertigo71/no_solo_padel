@@ -473,4 +473,71 @@ class FirebaseHelper {
           myCustomObject: myUser, debugType: DebugType.error);
     }
   }
+
+  /// return position it has been inserted. -1 if it already was in the match
+  Future<int> addPlayerToMatch(
+      {required Date date, required String userId, int position = -1}) async {
+    MyLog().log(_classString, 'addPlayer adding user $userId to $date position $position');
+    DocumentReference documentReference =
+        _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+
+    return _instance.runTransaction((transaction) async {
+      // get match
+      DocumentSnapshot snapshot = await transaction.get(documentReference);
+      if (!snapshot.exists) {
+        throw Exception('No existe el partido asociado a la fecha $date');
+      }
+
+      // get match
+      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>);
+      MyLog().log(_classString, 'addPlayer match = ', myCustomObject: myMatch);
+
+      // add player in match
+      int posInserted = myMatch.insertPlayer(userId, position: position);
+      if (posInserted == -1) return -1;
+      MyLog().log(_classString, 'addPlayer inserted match = ', myCustomObject: myMatch);
+
+      // add match to firebase
+      transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
+      return posInserted;
+    }).catchError((onError) {
+      MyLog().log(_classString, 'addPlayer error adding $userId to match $date',
+          debugType: DebugType.error);
+      throw Exception('Error al añadir jugador $userId al partido $date\n'
+          'Error = $onError');
+    });
+  }
+
+  /// false if userId was not in the match
+  Future<bool> deletePlayerFromMatch({required Date date, required String userId}) async {
+    MyLog().log(_classString, 'deletePlayerFromMatch deleting user $userId from $date');
+    DocumentReference documentReference =
+        _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+
+    return _instance.runTransaction((transaction) async {
+      // get match
+      DocumentSnapshot snapshot = await transaction.get(documentReference);
+      if (!snapshot.exists) {
+        throw Exception('No existe el partido asociado a la fecha $date');
+      }
+
+      // get match
+      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>);
+      MyLog().log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch);
+
+      // delete player in match
+      bool removed = myMatch.removePlayer(userId);
+      if (!removed) return false;
+      MyLog().log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch);
+
+      // add match to firebase
+      transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
+      return true;
+    }).catchError((onError) {
+      MyLog().log(_classString, 'deletePlayerFromMatch error deleting $userId from match $date',
+          debugType: DebugType.error);
+      throw Exception('Error al eliminar el jugador $userId del partido $date\n'
+          'Error = $onError');
+    });
+  }
 }

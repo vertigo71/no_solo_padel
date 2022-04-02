@@ -46,20 +46,17 @@ class MyMatch {
 
   bool isInTheMatch(String userId) => players.contains(userId);
 
-  /// true if it was inserted, false if already existed
-  bool addPlayer(String player) => players.add(player);
-
-  /// true if it was inserted, false if already existed
-  bool insertPlayer(String player, {int position = -1}) {
-    if (players.contains(player)) return false;
-    if (position < 0) return addPlayer(player);
-    int numPlayers = players.length;
-    if (position > numPlayers) position = numPlayers;
-    List<String> _players = players.toList();
-    _players.insert(position, player);
+  /// return position it was inserted [0 .. length-1]. -1 if already existed
+  int  insertPlayer(String player, {int position = -1}) {
+    if (players.contains(player)) return -1;
+    if (position < 0 || position >= players.length) {
+      players.add(player);
+      return players.length - 1;
+    }
+    List<String> _players = players.toList()..insert(position, player);
     players.clear();
     players.addAll(_players);
-    return true;
+    return position;
   }
 
   /// Returns `true` if [player] was in the set, and `false` if not.

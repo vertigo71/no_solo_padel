@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel_dev/database/firebase.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -164,57 +166,56 @@ class _PlayersPanelState extends State<PlayersPanel> {
           const Spacer(),
           Flexible(
               flex: 2,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Consumer<AppState>(
-                        builder: (context, appState, _) {
-                          MyMatch match =
-                              appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                          isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
-                          return Text(
+              child: Consumer<AppState>(
+                builder: (context, appState, _) {
+                  MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+                  isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
                             (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
                                 selectedUser.name,
                             textAlign: TextAlign.center,
-                          );
-                        },
-                      ),
-                    ),
-                    onPressed: () => validate(
-                      user: selectedUser,
-                      toAdd: !isSelectedUserInTheMatch,
-                      adminManagingUser: true,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Opacity(
-                    opacity: isSelectedUserInTheMatch ? 0 : 1,
-                    child: Form(
-                        child: TextFormField(
-                      enabled: !isSelectedUserInTheMatch,
-                      decoration: const InputDecoration(
-                        labelText: 'Posición',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                          ),
+                        ),
+                        onPressed: () => validate(
+                          user: selectedUser,
+                          toAdd: !isSelectedUserInTheMatch,
+                          adminManagingUser: true,
                         ),
                       ),
-                      onFieldSubmitted: (String str) async => validate(
-                        user: selectedUser,
-                        toAdd: true,
-                        adminManagingUser: true,
+                      const SizedBox(height: 20),
+                      Opacity(
+                        opacity: isSelectedUserInTheMatch ? 0 : 1,
+                        child: Form(
+                            child: TextFormField(
+                          enabled: !isSelectedUserInTheMatch,
+                          decoration: const InputDecoration(
+                            labelText: 'Posición',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                            ),
+                          ),
+                          onFieldSubmitted: (String str) async => validate(
+                            user: selectedUser,
+                            toAdd: true,
+                            adminManagingUser: true,
+                          ),
+                          keyboardType: TextInputType.text,
+                          inputFormatters: [
+                            FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
+                          ],
+                          controller: userPositionController,
+                          // The validator receives the text that the user has entered.
+                        )),
                       ),
-                      keyboardType: TextInputType.text,
-                      inputFormatters: [
-                        FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
-                      ],
-                      controller: userPositionController,
-                      // The validator receives the text that the user has entered.
-                    )),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ))
         ],
       ),
@@ -302,123 +303,120 @@ class _PlayersPanelState extends State<PlayersPanel> {
         },
       );
 
-  Future<bool> validate(
-      {required MyUser user,
-      required bool toAdd, // add user to match
-      required bool adminManagingUser}) async {
+  Future<bool> validate({
+    required MyUser user,
+    required bool toAdd, // add user to match
+    required bool adminManagingUser,
+  }) async {
     MyLog().log(_classString, 'validate');
+    FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
 
-    // update match in case it has changed
-    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+    String registerText = ''; // text to be added to the register
+    bool added = false; // true if the player has been successfully added to the match
+    bool deleted = false; // true if the player has been successfully deleted from the match
+    // add/remove from Firebase
+    try {
+      if (toAdd) {
+        int listPosition = -1;
+        if (adminManagingUser) {
+          // get position from the controller (position = controllerText -1)
+          listPosition = int.tryParse(userPositionController.text) ?? -1;
+          if (listPosition > 0) listPosition--;
+        }
+        listPosition = await firebaseHelper.addPlayerToMatch(
+            date: widget.date, userId: user.userId, position: listPosition);
+        added = listPosition != -1;
+        if (adminManagingUser) {
+          registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
+        } else {
+          registerText = '${user.name} se ha apuntado';
+        }
+      } else {
+        if (adminManagingUser) {
+          registerText = '${loggedUser.name} ha desapuntado a ${user.name}';
+        } else {
+          // if not admin mode, certify loggedUser wants to signOff from the match
+          bool delete = await _confirmLoggedUserOutOfMatch();
+          if (!delete) {
+            // abort deletion
+            setState(() {
+              // loggedUser is still in the match
+              loggedUserInTheMatch = true;
+            });
+            showMessage(context, 'Operación anulada');
+            return false;
+          }
+          registerText = '${user.name} se ha desapuntado';
+        }
+        deleted =
+            await firebaseHelper.deletePlayerFromMatch(date: widget.date, userId: user.userId);
+      }
+    } on FirebaseException catch (e) {
+      myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
+      return false;
+    } catch (e) {
+      showMessage(
+          context,
+          'Ha habido una incidencia! \n'
+          'Comprobar que la operación se ha realizado correctamente\n $e');
+    }
 
-    // check
-    bool userInTheMatch = match.isInTheMatch(user.userId);
-    if (!toAdd ^ userInTheMatch) {
-      // toAdd and user already in the match
-      // !toAdd and user not in the match
-      showMessage(context, 'Nada por hacer');
-      MyLog().log(_classString, 'validate $user Nothing to do', debugType: DebugType.warning);
+    MyLog().log(
+        _classString, 'validate firebase done: Add=$added Del=$deleted Register=$registerText',
+        debugType: DebugType.warning);
+
+    if (!added && !deleted) {
+      // no action has been taken
+      if (toAdd) {
+        showMessage(context, 'El jugador ya estaba en el partido');
+      } else {
+        showMessage(context, 'El jugador no estaba en el partido');
+      }
       return false;
     }
 
-    // Add/delete player from the match
-    String message = 'Los datos han sido actualizados';
-    String registerText = '';
+    //  state updated via consumers
 
-    int listPosition = -1;
-    if (toAdd) {
-      if (adminManagingUser) {
-        // get position from the controller
-        String positionStr = userPositionController.text;
-        listPosition = int.tryParse(positionStr) ?? -1;
-        if (listPosition > 0) listPosition--;
-      }
-      match.insertPlayer(user.userId, position: listPosition);
-      registerText = 'apuntado';
-      MyLog().log(_classString, 'validate $user addding to the match position $listPosition',
-          debugType: DebugType.warning);
-    } else {
-      if (!adminManagingUser) {
-        // ask for confirmation if you are loggedUser trying to abandon the match
-        const String option1 = 'Confirmar';
-        const String option2 = 'Anular';
-        String response = await myReturnValueDialog(
-            context, '¿Seguro que quieres darte de baja?', option1, option2);
-        MyLog().log(_classString, 'confirm response = $response');
-
-        if (response != option1) {
-          setState(() {
-            // loggedUser is still in the match
-            loggedUserInTheMatch = true;
-          });
-          showMessage(context, 'Operación anulada');
-          return false;
-        }
-      }
-      MyLog()
-          .log(_classString, 'validate $user removed from the match', debugType: DebugType.warning);
-      registerText = 'desapuntado';
-      match.removePlayer(user.userId);
-    }
-
-    // message to the register
-    if (adminManagingUser) {
-      if (listPosition >= match.players.length || listPosition == -1) {
-        listPosition = match.players.length - 1;
-      }
-      registerText = '${loggedUser.name} ha $registerText a ${user.name}' +
-          (toAdd ? ' (${listPosition + 1})' : '');
-    } else {
-      registerText = '${user.name} se ha $registerText';
-    }
-
-    // add to FireBase
+    // telegram and register
     try {
-      MyLog().log(_classString, 'validate $user update match', debugType: DebugType.warning);
-      await context
-          .read<Director>()
-          .firebaseHelper
-          .updateMatch(match: match, updateCore: false, updatePlayers: true);
       MyLog().log(_classString, 'validate $user update register', debugType: DebugType.warning);
-      await context.read<Director>().firebaseHelper.updateRegister(RegisterModel(
-            date: match.date,
-            message: registerText,
-          ));
+      await firebaseHelper.updateRegister(RegisterModel(
+        date: widget.date,
+        message: registerText,
+      ));
       MyLog().log(_classString, 'validate $user send telegram', debugType: DebugType.warning);
+      MyMatch? match = await firebaseHelper.getMatch(widget.date.toYyyyMMdd());
+      if (match == null) {
+        throw Exception(
+            'Error en la base de datos. No existe la convocatoria asociada a ${widget.date}');
+      }
       sendDatedMessageToTelegram(
           message: '$registerText\n'
               'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
-          matchDate: match.date,
+          matchDate: widget.date,
           fromDaysAgoToTelegram:
               appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
     } catch (e) {
-      message = 'ERROR en la actualización de los datos. \n\n $e';
-      MyLog().log(_classString, 'ERROR en la actualización de los datos',
+      MyLog().log(_classString, 'ERROR sending message to telegram or register',
           exception: e, debugType: DebugType.error);
       myAlertDialog(
           context,
-          'Ha habido un error\nAsegúrate que estás apuntado/desapuntado correctamente\n'
+          'Ha habido una incidencia al enviar mensajes de confirmación\n'
+          'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
           'Error = $e');
 
       return false;
     }
 
-    myAlertDialog(context, 'Con fecha\n${DateTime.now()} \n\n $registerText');
-
-    userInTheMatch = match.isInTheMatch(user.userId);
-    if (loggedUser == user) {
-      setState(() {
-        loggedUserInTheMatch = userInTheMatch;
-      });
-    }
-    if (selectedUser == user) {
-      // update state
-      setState(() {
-        isSelectedUserInTheMatch = userInTheMatch;
-      });
-    }
-    showMessage(context, message);
-
     return true;
+  }
+
+  Future<bool> _confirmLoggedUserOutOfMatch() async {
+    const String option1 = 'Confirmar';
+    const String option2 = 'Anular';
+    String response =
+        await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+    MyLog().log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
+    return response == option1;
   }
 }

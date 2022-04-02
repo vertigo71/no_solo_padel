@@ -55,8 +55,7 @@ class AppState with ChangeNotifier {
   MyUser getLoggedUser() => _loggedUser;
 
   void setLoggedUser(MyUser loggedUser, {required bool notify}) {
-    MyLog().log(_classString, 'setLoggedUser',
-        myCustomObject: loggedUser, debugType: DebugType.warning);
+    MyLog().log(_classString, 'setLoggedUser $loggedUser', debugType: DebugType.warning);
     _loggedUser = loggedUser;
     // update MyLog name and email
     MyLog.loggedUserId = _loggedUser.userId;
@@ -133,8 +132,8 @@ class AppState with ChangeNotifier {
     }
 
     added.addAll(modified);
+    MyLog().log(_classString, 'setChangedUsers updating users: $added');
     for (MyUser newUser in added) {
-      MyLog().log(_classString, 'setChangedUsers remove old user: $newUser');
       removeUserByIdBold(newUser.userId);
     }
     _allUsers.addAll(added);
@@ -170,8 +169,8 @@ class AppState with ChangeNotifier {
     }
 
     added.addAll(modified);
+    MyLog().log(_classString, 'setChangedMatches updating matches: $added');
     for (var newMatch in added) {
-      MyLog().log(_classString, 'setChangedMatches update match: $newMatch');
       removeMatchByDateBold(newMatch.date);
     }
     _allMatches.addAll(added);
