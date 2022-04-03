@@ -311,9 +311,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
     MyLog().log(_classString, 'validate');
     FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
 
+    MyMatch? myMatch; // match != null if added or deleted
     String registerText = ''; // text to be added to the register
-    bool added = false; // true if the player has been successfully added to the match
-    bool deleted = false; // true if the player has been successfully deleted from the match
     // add/remove from Firebase
     try {
       if (toAdd) {
@@ -323,13 +322,19 @@ class _PlayersPanelState extends State<PlayersPanel> {
           listPosition = int.tryParse(userPositionController.text) ?? -1;
           if (listPosition > 0) listPosition--;
         }
-        listPosition = await firebaseHelper.addPlayerToMatch(
+        myMatch = await firebaseHelper.addPlayerToMatch(
             date: widget.date, userId: user.userId, position: listPosition);
-        added = listPosition != -1;
-        if (adminManagingUser) {
-          registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
-        } else {
-          registerText = '${user.name} se ha apuntado';
+        if (myMatch != null) {
+          listPosition = myMatch.getPlayerPosition(user.userId);
+          if (listPosition == -1) {
+            MyLog().log(_classString, 'validate player $user not in match $myMatch',
+                debugType: DebugType.error);
+          }
+          if (adminManagingUser) {
+            registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
+          } else {
+            registerText = '${user.name} se ha apuntado';
+          }
         }
       } else {
         if (adminManagingUser) {
@@ -348,24 +353,24 @@ class _PlayersPanelState extends State<PlayersPanel> {
           }
           registerText = '${user.name} se ha desapuntado';
         }
-        deleted =
+        myMatch =
             await firebaseHelper.deletePlayerFromMatch(date: widget.date, userId: user.userId);
       }
     } on FirebaseException catch (e) {
       myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
       return false;
     } catch (e) {
-      showMessage(
+      myAlertDialog(
           context,
           'Ha habido una incidencia! \n'
           'Comprobar que la operación se ha realizado correctamente\n $e');
     }
 
     MyLog().log(
-        _classString, 'validate firebase done: Add=$added Del=$deleted Register=$registerText',
+        _classString, 'validate firebase done: Match=$myMatch Register=$registerText',
         debugType: DebugType.warning);
 
-    if (!added && !deleted) {
+    if (myMatch == null ) {
       // no action has been taken
       if (toAdd) {
         showMessage(context, 'El jugador ya estaba en el partido');
@@ -376,7 +381,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
     }
 
     //  state updated via consumers
-
     // telegram and register
     try {
       MyLog().log(_classString, 'validate $user update register', debugType: DebugType.warning);
@@ -385,14 +389,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
         message: registerText,
       ));
       MyLog().log(_classString, 'validate $user send telegram', debugType: DebugType.warning);
-      MyMatch? match = await firebaseHelper.getMatch(widget.date.toYyyyMMdd());
-      if (match == null) {
-        throw Exception(
-            'Error en la base de datos. No existe la convocatoria asociada a ${widget.date}');
-      }
       sendDatedMessageToTelegram(
           message: '$registerText\n'
-              'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
+              'APUNTADOS: ${myMatch.players.length} de ${myMatch.getNumberOfCourts() * 4}',
           matchDate: widget.date,
           fromDaysAgoToTelegram:
               appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
@@ -401,7 +400,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
           exception: e, debugType: DebugType.error);
       myAlertDialog(
           context,
-          'Ha habido una incidencia al enviar mensajes de confirmación\n'
+          'Ha habido una incidencia al enviar el mensaje de confirmación\n'
           'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
           'Error = $e');
 

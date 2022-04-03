@@ -474,8 +474,8 @@ class FirebaseHelper {
     }
   }
 
-  /// return position it has been inserted. -1 if it already was in the match
-  Future<int> addPlayerToMatch(
+  /// return match if it was inserted. null otherwise
+  Future<MyMatch?> addPlayerToMatch(
       {required Date date, required String userId, int position = -1}) async {
     MyLog().log(_classString, 'addPlayer adding user $userId to $date position $position');
     DocumentReference documentReference =
@@ -494,12 +494,12 @@ class FirebaseHelper {
 
       // add player in match
       int posInserted = myMatch.insertPlayer(userId, position: position);
-      if (posInserted == -1) return -1;
+      if (posInserted == -1) return null;
       MyLog().log(_classString, 'addPlayer inserted match = ', myCustomObject: myMatch);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
-      return posInserted;
+      return myMatch;
     }).catchError((onError) {
       MyLog().log(_classString, 'addPlayer error adding $userId to match $date',
           debugType: DebugType.error);
@@ -508,8 +508,8 @@ class FirebaseHelper {
     });
   }
 
-  /// false if userId was not in the match
-  Future<bool> deletePlayerFromMatch({required Date date, required String userId}) async {
+  /// return match if it was deleted. null otherwise
+  Future<MyMatch?> deletePlayerFromMatch({required Date date, required String userId}) async {
     MyLog().log(_classString, 'deletePlayerFromMatch deleting user $userId from $date');
     DocumentReference documentReference =
         _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
@@ -527,12 +527,12 @@ class FirebaseHelper {
 
       // delete player in match
       bool removed = myMatch.removePlayer(userId);
-      if (!removed) return false;
+      if (!removed) return null;
       MyLog().log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
-      return true;
+      return myMatch;
     }).catchError((onError) {
       MyLog().log(_classString, 'deletePlayerFromMatch error deleting $userId from match $date',
           debugType: DebugType.error);

@@ -44,6 +44,8 @@ class MyMatch {
     return list;
   }
 
+  int getPlayerPosition(String userId) => players.toList().indexOf(userId);
+
   bool isInTheMatch(String userId) => players.contains(userId);
 
   /// return position it was inserted [0 .. length-1]. -1 if already existed

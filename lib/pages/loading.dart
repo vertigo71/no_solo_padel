@@ -51,7 +51,7 @@ class Loading extends StatelessWidget {
     MyUser? loggedUser = await firebaseHelper.getUserByEmail(user.email!);
     if (loggedUser == null) {
       // user is not in the DB
-      MyLog().log(_classString, 'setupDB user not registered = ${user.email}',
+      MyLog().log(_classString, 'setupDB user: ${user.email}  not registered. Abort!',
           debugType: DebugType.warning);
       await AuthenticationHelper().signOut(signedOutFunction: firebaseHelper.disposeListeners);
       _addPostFrame(function: () {
