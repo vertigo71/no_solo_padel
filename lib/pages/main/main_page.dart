@@ -61,21 +61,6 @@ class _MainPageState extends State<MainPage> {
                 }
               },
             ),
-            Consumer<AppState>(
-              builder: (context, appState, _) {
-                if (appState.isLoggedUserSuper || appState.showLog ) {
-                  return IconButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, RouteManager.logging);
-                    },
-                    icon: const Icon(Icons.list_alt),
-                    tooltip: 'Log',
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
             IconButton(
               onPressed: () async {
                 MyLog().log(_classString, 'Icon SignOut begin');

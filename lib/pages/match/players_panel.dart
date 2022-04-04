@@ -333,7 +333,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
           if (adminManagingUser) {
             registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
           } else {
-            registerText = '${user.name} se ha apuntado';
+            registerText = '${user.name} se ha apuntado  (${listPosition + 1})';
           }
         }
       } else {

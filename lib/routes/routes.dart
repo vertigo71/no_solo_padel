@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../pages/admin/admin_page.dart';
-import '../pages/logging_page.dart';
 import '../pages/main/main_page.dart';
 import '../pages/loading.dart';
 import '../pages/login.dart';
@@ -12,7 +11,6 @@ class RouteManager {
   static const String loadingPage = '/loadingPage';
   static const String mainPage = '/mainPage';
   static const String matchPage = '/matchPage';
-  static const String logging = '/logging';
   static const String adminPage = '/adminPage';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -28,9 +26,6 @@ class RouteManager {
 
       case matchPage:
         return MaterialPageRoute(builder: (context) => const MatchPage(), settings: settings);
-
-      case logging:
-        return MaterialPageRoute(builder: (context) => const LoggingPage(), settings: settings);
 
       case adminPage:
         return MaterialPageRoute(builder: (context) => const AdminPage(), settings: settings);
