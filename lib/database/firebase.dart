@@ -275,12 +275,12 @@ class FirebaseHelper {
       );
 
   // stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({required Date fromDate, required int numDays}) =>
+  Stream<List<MyMatch>>? getMatchesStream({ Date? fromDate,  Date? maxDate}) =>
       getStream(
         collection: strDB(DBFields.matches),
         fromJson: MyMatch.fromJson,
         fromDate: fromDate,
-        maxDate: Date.now().add(Duration(days: numDays)),
+        maxDate: maxDate,
       );
 
   Future<T?> getObject<T>({

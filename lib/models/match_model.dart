@@ -44,6 +44,7 @@ class MyMatch {
     return list;
   }
 
+  /// return -1 if not found
   int getPlayerPosition(String userId) => players.toList().indexOf(userId);
 
   bool isInTheMatch(String userId) => players.contains(userId);
