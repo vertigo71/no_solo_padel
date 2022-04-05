@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
@@ -11,7 +12,7 @@ import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
 
 // fields of the form
-enum _FormFieldsEnum { name, email, actualPwd, newPwd, checkPwd }
+enum _FormFieldsEnum { name, user, actualPwd, newPwd, checkPwd }
 
 class _FormFields {
   _FormFields() {
@@ -20,8 +21,8 @@ class _FormFields {
   }
 
   static const List<String> text = [
-    'Nombre',
-    'Correo',
+    'Nombre (por este te conocerán los demás)',
+    'Usuario (para conectarte a la aplicación)',
     'Contraseña Actual',
     'Nueva Contraseña',
     'Repetir contraseña'
@@ -63,7 +64,8 @@ class SettingsPageState extends State<SettingsPage> {
       listControllers.add(TextEditingController());
     }
     listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
-    listControllers[_FormFieldsEnum.email.index].text = appState.getLoggedUser().email;
+    // user = first part of email
+    listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
     super.initState();
   }
 
@@ -90,10 +92,8 @@ class SettingsPageState extends State<SettingsPage> {
             children: [
               for (var value in _FormFieldsEnum.values)
                 _FormFieldWidget(
-                  _FormFields.text[value.index],
+                  value,
                   listControllers[value.index],
-                  _FormFields.obscuredText[value.index],
-                  _FormFields.mayBeEmpty[value.index],
                   _formValidate,
                 ),
               Padding(
@@ -230,7 +230,8 @@ class SettingsPageState extends State<SettingsPage> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       String newName = listControllers[_FormFieldsEnum.name.index].text;
-      String newEmail = listControllers[_FormFieldsEnum.email.index].text.toLowerCase();
+      String newEmail =
+          listControllers[_FormFieldsEnum.user.index].text.toLowerCase() + MyUser.emailSuffix;
       String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
       String newPwd = listControllers[_FormFieldsEnum.newPwd.index].text;
       String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
@@ -288,23 +289,27 @@ class SettingsPageState extends State<SettingsPage> {
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(
-      this.fieldName, this.textController, this.protectedField, this.mayBeEmpty, this.validate,
-      {Key? key})
+  const _FormFieldWidget(this.formFieldsEnum, this.textController, this.validate, {Key? key})
       : super(key: key);
+  final _FormFieldsEnum formFieldsEnum;
   final TextEditingController textController;
-  final String fieldName;
-  final bool protectedField;
-  final bool mayBeEmpty;
   final Future<void> Function() validate;
 
   @override
   Widget build(BuildContext context) {
+    final String fieldName = _FormFields.text[formFieldsEnum.index];
+    final bool protectedField = _FormFields.obscuredText[formFieldsEnum.index];
+    final bool mayBeEmpty = _FormFields.mayBeEmpty[formFieldsEnum.index];
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
         onFieldSubmitted: (String str) async => await validate(),
         keyboardType: TextInputType.text,
+        inputFormatters: [
+          if (formFieldsEnum == _FormFieldsEnum.user)
+            FilteringTextInputFormatter(RegExp(r'[^ @]'), allow: true),
+        ],
         decoration: InputDecoration(
           labelText: fieldName,
           border: const OutlineInputBorder(

@@ -26,7 +26,7 @@ class _LoginState extends State<Login> {
 
   String version = '';
 
-  void getVersion()  {
+  void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
       setState(() =>
@@ -81,29 +81,20 @@ class _LoginState extends State<Login> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                          onFieldSubmitted: (String str) => _formValidate(),
-                          inputFormatters: [
-                            FilteringTextInputFormatter(RegExp(r'[^ ]'), allow: true)
-                          ],
-                          keyboardType: TextInputType.text,
-                          controller: emailController,
-                          decoration: const InputDecoration(labelText: 'Correo'),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'No puede estar vacío';
-                            }
-                            return null;
-                          }),
-                    ),
-                    const SizedBox(width: 20.0),
-                    const Text(MyUser.emailSuffix),
-                  ],
-                ),
+                TextFormField(
+                    onFieldSubmitted: (String str) => _formValidate(),
+                    inputFormatters: [
+                      FilteringTextInputFormatter(RegExp(r'[^ @]'), allow: true),
+                    ],
+                    keyboardType: TextInputType.text,
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Usuario'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'No puede estar vacío';
+                      }
+                      return null;
+                    }),
                 Padding(
                   padding: const EdgeInsets.all(6.0),
                   child: TextFormField(
@@ -137,8 +128,7 @@ class _LoginState extends State<Login> {
     MyLog().log(_classString, '_formValidate');
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
-      String email = emailController.text;
-      if (!email.contains('@')) email = email + MyUser.emailSuffix;
+      String email = emailController.text + MyUser.emailSuffix;
       AuthenticationHelper()
           .signIn(email: email, password: pwdController.text)
           .then((result) async {
