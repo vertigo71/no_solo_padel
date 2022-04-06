@@ -114,7 +114,7 @@ class MyMatch {
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
-          MyLog().log(_classString, '$userId1 played with $userId2 sorting=$sortedList',
+          MyLog().log(_classString, '$date $userId1 played with $userId2 sorting=$sortedList',
               myCustomObject: players);
           return true;
         }
