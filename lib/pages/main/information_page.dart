@@ -53,7 +53,7 @@ class _InformationPageState extends State<InformationPage> {
                   tiles: appState.allSortedUsers.map(((user) {
                     int numberOfMatchesTogether = 0;
                     for (MyMatch match in _allMatches ?? []) {
-                      if ( match.arePlayingTogether(user.userId, _loggedUser.userId)){
+                      if (match.arePlayingTogether(user.userId, _loggedUser.userId)) {
                         numberOfMatchesTogether++;
                       }
                     }
@@ -65,7 +65,7 @@ class _InformationPageState extends State<InformationPage> {
                       title: Text('${user.name}\n'
                               'Habéis empezado juntos: $numberOfMatchesTogether ' +
                           (numberOfMatchesTogether == 1 ? 'vez' : 'veces')),
-                      subtitle: Text(user.email),
+                      subtitle: Text(user.email.split('@')[0]),
                     );
                   }))),
             ],
