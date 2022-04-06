@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel_dev/utilities/misc.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase.dart';
@@ -8,6 +7,7 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
+import '../../utilities/misc.dart';
 import '../../utilities/theme.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
