@@ -7,7 +7,6 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
-import '../../utilities/misc.dart';
 import '../../utilities/theme.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
@@ -53,27 +52,9 @@ class _InformationPageState extends State<InformationPage> {
                   context: context,
                   tiles: appState.allSortedUsers.map(((user) {
                     int numberOfMatchesTogether = 0;
-                    // get all matches that user and loggedUser have played together
                     for (MyMatch match in _allMatches ?? []) {
-                      int positionUser = match.getPlayerPosition(user.userId);
-                      int positionLoggedUser = match.getPlayerPosition(_loggedUser.userId);
-
-                      if (positionUser != -1 &&
-                          positionLoggedUser != -1 &&
-                          match.getPlayingState(user.userId) == PlayingState.playing &&
-                          match.getPlayingState(_loggedUser.userId) == PlayingState.playing) {
-                        List<int> sortedList =
-                            getRandomList(match.getNumberOfFilledCourts() * 4, match.date);
-                        for (int pos = 0; pos < sortedList.length; pos += 2) {
-                          if (sortedList[pos] == positionUser &&
-                                  sortedList[pos + 1] == positionLoggedUser ||
-                              sortedList[pos] == positionLoggedUser &&
-                                  sortedList[pos + 1] == positionUser) {
-                            MyLog().log(_classString, 'played with $user sorting=$sortedList',
-                                myCustomObject: match.players);
-                            numberOfMatchesTogether++;
-                          }
-                        }
+                      if ( match.arePlayingTogether(user.userId, _loggedUser.userId)){
+                        numberOfMatchesTogether++;
                       }
                     }
 

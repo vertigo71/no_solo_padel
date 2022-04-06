@@ -6,7 +6,6 @@ import '../../models/match_model.dart';
 import '../../models/user_model.dart';
 import '../../interface/app_state.dart';
 import '../../utilities/date.dart';
-import '../../utilities/misc.dart';
 
 final String _classString = 'SortingPanel'.toUpperCase();
 
@@ -26,7 +25,7 @@ class SortingPanel extends StatelessWidget {
           return const Text('ERROR! Partido no encontrado sorteando los equipos.');
         } else {
           int filledCourts = match.getNumberOfFilledCourts();
-          List<int> sortedList = getRandomList(filledCourts * 4, match.date);
+          List<int> sortedList = match.getCouplesPlainList();
           List<MyUser> players = appState.userIdsToUsers(match.players);
           MyLog().log(_classString, 'players = $players');
           MyLog().log(_classString, 'courts = $filledCourts');

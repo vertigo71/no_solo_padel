@@ -2,6 +2,10 @@ import 'dart:math';
 
 import '../database/fields.dart';
 import '../utilities/date.dart';
+import '../utilities/misc.dart';
+import 'debug.dart';
+
+final String _classString = 'MyMatch'.toUpperCase();
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
 
@@ -50,7 +54,7 @@ class MyMatch {
   bool isInTheMatch(String userId) => players.contains(userId);
 
   /// return position it was inserted [0 .. length-1]. -1 if already existed
-  int  insertPlayer(String player, {int position = -1}) {
+  int insertPlayer(String player, {int position = -1}) {
     if (players.contains(player)) return -1;
     if (position < 0 || position >= players.length) {
       players.add(player);
@@ -93,6 +97,30 @@ class MyMatch {
       }
     }
     return map;
+  }
+
+  /// list of who plays with who in this match
+  List<int> getCouplesPlainList() => getRandomList(getNumberOfFilledCourts() * 4, date);
+
+  /// true if they play together
+  bool arePlayingTogether(String userId1, String userId2) {
+    int posUser1 = getPlayerPosition(userId1);
+    int posUser2 = getPlayerPosition(userId2);
+    if (posUser1 != -1 &&
+        posUser2 != -1 &&
+        getPlayingState(userId1) == PlayingState.playing &&
+        getPlayingState(userId2) == PlayingState.playing) {
+      List<int> sortedList = getCouplesPlainList();
+      for (int pos = 0; pos < sortedList.length; pos += 2) {
+        if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
+            sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
+          MyLog().log(_classString, '$userId1 played with $userId2 sorting=$sortedList',
+              myCustomObject: players);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @override
