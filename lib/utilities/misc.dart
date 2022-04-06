@@ -81,14 +81,15 @@ void showMessage(BuildContext context, String text) {
 class UpperCaseTextFormatter extends CaseTextFormatter {
   UpperCaseTextFormatter(Pattern filterPattern,
       {required bool allow, String replacementString = ''})
-      : super(filterPattern, toUppercase:true, allow: allow, replacementString: replacementString);
+      : super(filterPattern, toUppercase: true, allow: allow, replacementString: replacementString);
 }
 
 /// TextFormField lowercase formatter: allow = false => deny list
 class LowerCaseTextFormatter extends CaseTextFormatter {
   LowerCaseTextFormatter(Pattern filterPattern,
       {required bool allow, String replacementString = ''})
-      : super(filterPattern, toUppercase: false, allow: allow, replacementString: replacementString);
+      : super(filterPattern,
+            toUppercase: false, allow: allow, replacementString: replacementString);
 }
 
 /// TextFormField uppercase/lowercase formatter: allow = false => deny list
@@ -141,6 +142,14 @@ Widget myCheckBox(
     size: GFSize.SMALL,
     type: GFCheckboxType.circle,
     activeBgColor: darken(Theme.of(context).backgroundColor, 0.3),
-    inactiveBgColor: Theme.of(context).backgroundColor ,
+    inactiveBgColor: Theme.of(context).backgroundColor,
   );
+}
+
+/// return a String formed with the number and the according adverb
+/// number = 1, singular = match, plural = matches => 1 match
+/// number = 2, singular = car, plural = null => 2 cars
+String singularOrPlural(int number, String singular, [String? plural]) {
+  if (number == 1) return '1 $singular';
+  return '$number ' + (plural ?? singular + (singular.toUpperCase() == singular ? 'S' : 's'));
 }

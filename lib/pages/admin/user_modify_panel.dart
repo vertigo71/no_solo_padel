@@ -29,7 +29,8 @@ class UserModifyPanel extends StatelessWidget {
                           backgroundColor: getUserColor(user)),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
-                          '${user.lastLogin ?? 'Nunca'}; ${user.loginCount} veces'),
+                          '${user.lastLogin ?? 'Nunca'}; '
+                          '${singularOrPlural(user.loginCount, 'vez', 'veces')}'),
                       onTap: () async {
                         const String option1 = 'Básico';
                         const String option2 = 'Admin';

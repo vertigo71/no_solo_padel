@@ -52,9 +52,10 @@ class _UserDeletePanelState extends State<UserDeletePanel> {
                           backgroundColor: getUserColor(user)),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
-                          '${user.lastLogin ?? 'Nunca'}; ${user.loginCount} veces'),
+                          '${user.lastLogin ?? 'Nunca'}; '
+                          '${singularOrPlural(user.loginCount, 'vez', 'veces')}'),
                       onTap: () async {
-                        if (user.userId == appState.getLoggedUser().userId){
+                        if (user.userId == appState.getLoggedUser().userId) {
                           showMessage(context, 'No se puede eliminar el usuario actual');
                           return;
                         }

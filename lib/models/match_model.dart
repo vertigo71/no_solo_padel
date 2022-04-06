@@ -53,6 +53,8 @@ class MyMatch {
 
   bool isInTheMatch(String userId) => players.contains(userId);
 
+  bool isPlaying(String userId) => getPlayingState(userId) == PlayingState.playing;
+
   /// return position it was inserted [0 .. length-1]. -1 if already existed
   int insertPlayer(String player, {int position = -1}) {
     if (players.contains(player)) return -1;

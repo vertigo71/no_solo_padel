@@ -182,23 +182,21 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           /// otherwise detect if there is a change in the number of courts
           if (newMatch.isOpen != oldMatch.isOpen) {
             if (newMatch.isOpen) {
-              String courtsText =
-                  newNumCourts.toString() + (newNumCourts == 1 ? ' pista' : ' pistas');
               registerText = 'Nueva convocatoria\n'
-                  '${loggedUser.name} ha abierto $courtsText';
+                      '${loggedUser.name} ha abierto ' +
+                  singularOrPlural(newNumCourts, 'pista');
             } else {
               registerText = '${loggedUser.name} ha cerrado la convocatoria';
             }
           } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
-            String courtsText = newNumCourts.toString() +
-                (newNumCourts == 1 ? ' pista disponible' : ' pistas disponibles');
             registerText = '${loggedUser.name}  ha modificado el número de pistas\n'
-                'Ahora hay $courtsText';
+                    'Ahora hay ' +
+                singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles');
           }
 
           if (registerText.isNotEmpty) {
-            firebaseHelper.updateRegister(
-                RegisterModel(date: newMatch.date, message: registerText));
+            firebaseHelper
+                .updateRegister(RegisterModel(date: newMatch.date, message: registerText));
             sendDatedMessageToTelegram(
               message: registerText,
               matchDate: newMatch.date,

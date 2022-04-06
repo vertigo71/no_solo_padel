@@ -241,9 +241,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
             usersFillEmptySpaces.add(MyUser());
           }
 
-          String numCourtsText = 'disponible ' +
-              match.getNumberOfCourts().toString() +
-              (match.getNumberOfCourts() == 1 ? ' pista' : ' pistas');
+          String numCourtsText =
+              'disponible ' + singularOrPlural(match.getNumberOfCourts(), 'pista');
 
           return Column(
             children: [
@@ -366,11 +365,10 @@ class _PlayersPanelState extends State<PlayersPanel> {
           'Comprobar que la operación se ha realizado correctamente\n $e');
     }
 
-    MyLog().log(
-        _classString, 'validate firebase done: Match=$myMatch Register=$registerText',
+    MyLog().log(_classString, 'validate firebase done: Match=$myMatch Register=$registerText',
         debugType: DebugType.warning);
 
-    if (myMatch == null ) {
+    if (myMatch == null) {
       // no action has been taken
       if (toAdd) {
         showMessage(context, 'El jugador ya estaba en el partido');
