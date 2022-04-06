@@ -308,7 +308,7 @@ class _FormFieldWidget extends StatelessWidget {
         keyboardType: TextInputType.text,
         inputFormatters: [
           if (formFieldsEnum == _FormFieldsEnum.user)
-            FilteringTextInputFormatter(RegExp(r'[^ @]'), allow: true),
+            LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
         ],
         decoration: InputDecoration(
           labelText: fieldName,

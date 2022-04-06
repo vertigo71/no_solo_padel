@@ -84,7 +84,7 @@ class _LoginState extends State<Login> {
                 TextFormField(
                     onFieldSubmitted: (String str) => _formValidate(),
                     inputFormatters: [
-                      FilteringTextInputFormatter(RegExp(r'[^ @]'), allow: true),
+                      LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
                     ],
                     keyboardType: TextInputType.text,
                     controller: emailController,

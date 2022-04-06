@@ -77,24 +77,39 @@ void showMessage(BuildContext context, String text) {
   )));
 }
 
-// TextFormField uppercase formatter
-// allow = false => deny list
-class UpperCaseTextFormatter extends FilteringTextInputFormatter {
+/// TextFormField uppercase formatter: allow = false => deny list
+class UpperCaseTextFormatter extends CaseTextFormatter {
   UpperCaseTextFormatter(Pattern filterPattern,
       {required bool allow, String replacementString = ''})
+      : super(filterPattern, toUppercase:true, allow: allow, replacementString: replacementString);
+}
+
+/// TextFormField lowercase formatter: allow = false => deny list
+class LowerCaseTextFormatter extends CaseTextFormatter {
+  LowerCaseTextFormatter(Pattern filterPattern,
+      {required bool allow, String replacementString = ''})
+      : super(filterPattern, toUppercase: false, allow: allow, replacementString: replacementString);
+}
+
+/// TextFormField uppercase/lowercase formatter: allow = false => deny list
+class CaseTextFormatter extends FilteringTextInputFormatter {
+  CaseTextFormatter(Pattern filterPattern,
+      {required this.toUppercase, required bool allow, String replacementString = ''})
       : super(filterPattern, allow: allow, replacementString: replacementString);
+
+  final bool toUppercase;
 
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     TextEditingValue value = super.formatEditUpdate(oldValue, newValue);
     return TextEditingValue(
-      text: value.text.toUpperCase(),
+      text: toUppercase ? value.text.toUpperCase() : value.text.toLowerCase(),
       selection: value.selection,
     );
   }
 }
 
-// 'date random' list from 0 to num-1
+/// 'date random' list from 0 to num-1
 List<int> getRandomList(int num, DateTime date) {
   int baseNum = date.millisecondsSinceEpoch;
   List<int> base =
