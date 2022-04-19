@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,10 +32,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
   late final AppState appState;
 
   late final MyUser loggedUser;
-  bool loggedUserInTheMatch = false; // checkBox
 
   late MyUser selectedUser;
-  bool isSelectedUserInTheMatch = false;
   final TextEditingController userPositionController = TextEditingController();
 
   @override
@@ -43,12 +42,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
     MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
     loggedUser = appState.getLoggedUser();
-    loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
     selectedUser = appState.allSortedUsers[0];
-    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
 
     MyLog().log(_classString, 'initState arguments = $match');
-    MyLog().log(_classString, 'loggedUser in match= $loggedUserInTheMatch');
 
     super.initState();
   }
@@ -65,6 +61,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
 
     return ListView(
       children: [
+        actualState(),
+        const Divider(thickness: 5),
         signUpForm(),
         const Divider(thickness: 5),
         listOfPlayers(),
@@ -77,6 +75,30 @@ class _PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
+  Widget actualState() => Padding(
+        padding: const EdgeInsets.all(18.0),
+        child: Consumer<AppState>(
+          builder: (context, appState, _) {
+            MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+            String returnText = '';
+            if (match.isInTheMatch(loggedUser.userId)) {
+              if (match.isPlaying(loggedUser.userId)) {
+                returnText = 'Juegas!!!';
+              } else {
+                returnText = 'Apuntado\n(pendiente de completar pista)';
+              }
+            } else {
+              returnText = 'No apuntado';
+            }
+            return Text(
+              returnText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+            );
+          },
+        ),
+      );
+
   Widget signUpForm() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
@@ -87,7 +109,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             Consumer<AppState>(
               builder: (context, appState, _) {
                 MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
+                bool loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
 
                 return myCheckBox(
                   context: context,
@@ -142,8 +164,6 @@ class _PlayersPanelState extends State<PlayersPanel> {
                 onSelectedItemChanged: (index) {
                   setState(() {
                     selectedUser = users[index];
-                    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                    isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
                   });
                 },
                 children: users
@@ -169,7 +189,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
               child: Consumer<AppState>(
                 builder: (context, appState, _) {
                   MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                  isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
+                  bool isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -345,7 +365,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
             // abort deletion
             setState(() {
               // loggedUser is still in the match
-              loggedUserInTheMatch = true;
+              // refresh
             });
             showMessage(context, 'Operación anulada');
             return false;
