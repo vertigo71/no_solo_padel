@@ -5,7 +5,6 @@ import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../routes/routes.dart';
 import '../secret.dart';
-import '../utilities/date.dart';
 import '../utilities/environment.dart';
 import '../utilities/misc.dart';
 import '../database/authentication.dart';
@@ -56,17 +55,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     MyLog().log(_classString, 'Building');
 
-    // get the image to show
-    Date birthday = Date.ymd(2022, 4, 25);
-    int daysToBirthday = birthday.difference(Date.now()).inDays;
-    MyLog().log(_classString, 'daysToBirthday =  $daysToBirthday', debugType: DebugType.warning);
-
-    String image = '';
-    if ( daysToBirthday >= 0 && daysToBirthday < 12 ) {
-      image = 'assets/images/birthday days - Copy ($daysToBirthday).jpg';
-    }else{
-      image = 'assets/images/no_solo_padel.jpg';
-    }
+    const String image = 'assets/images/no_solo_padel.jpg';
 
     return Scaffold(
       bottomNavigationBar: BottomAppBar(
