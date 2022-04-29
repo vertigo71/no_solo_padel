@@ -20,9 +20,10 @@ class HomePage extends StatelessWidget {
       builder: (context, appState, _) => ListView(
         children: [
           ...ListTile.divideTiles(
-            context: context,
+              context: context,
               tiles: appState.getSortedMatchesIfDayPlayable().map(((match) {
-                String playingStateStr = match.getPlayingStateString(appState.getLoggedUser().userId);
+                String playingStateStr =
+                    match.getPlayingStateString(appState.getLoggedUser().userId);
                 PlayingState playingState = match.getPlayingState(appState.getLoggedUser().userId);
                 final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
@@ -36,7 +37,9 @@ class HomePage extends StatelessWidget {
                     leading: CircleAvatar(
                         child: Text(match.isOpen ? 'A' : 'C'),
                         backgroundColor: getMatchColor(match)),
-                    title: Text('${match.date.toString()}\n$playingStateStr$comment'),
+                    title: match.isOpen
+                        ? Text('${match.date.toString()}\n$playingStateStr$comment')
+                        : Text('${match.date.toString()}\nCONVOCATORIA NO DISPONIBLE'),
                     subtitle: match.isOpen
                         ? Text(
                             'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
@@ -74,6 +77,6 @@ Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
     default:
-      return Theme.of(context).listTileTheme.tileColor?? Theme.of(context).backgroundColor;
+      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).backgroundColor;
   }
 }
