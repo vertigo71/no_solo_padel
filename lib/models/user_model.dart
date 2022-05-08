@@ -11,6 +11,7 @@ class MyUser {
 
   String userId;
   String name;
+  String emergencyInfo;
   String _email;
   UserType userType;
   Date? lastLogin;
@@ -19,6 +20,7 @@ class MyUser {
   MyUser({
     this.userId = '',
     this.name = '',
+    this.emergencyInfo = '',
     String email = '',
     this.userType = UserType.basic,
     this.lastLogin,
@@ -28,6 +30,7 @@ class MyUser {
   MyUser copyWith({
     String? userId,
     String? name,
+    String? emergencyInfo,
     String? email,
     UserType? userType,
     Date? lastLogin,
@@ -36,6 +39,7 @@ class MyUser {
       MyUser(
         userId: userId ?? this.userId,
         name: name ?? this.name,
+        emergencyInfo: emergencyInfo ?? this.emergencyInfo,
         email: email ?? this.email,
         userType: userType ?? this.userType,
         lastLogin: lastLogin ?? this.lastLogin,
@@ -71,6 +75,7 @@ class MyUser {
     return MyUser(
       userId: json[DBFields.userId.name] ?? '',
       name: json[DBFields.name.name] ?? '',
+      emergencyInfo: json[DBFields.emergencyInfo.name] ?? '',
       email: json[DBFields.email.name] ?? '',
       userType: intToUserType(json[DBFields.userType.name]),
       lastLogin: Date.parse(json[DBFields.lastLogin.name]),
@@ -86,6 +91,7 @@ class MyUser {
     return {
       DBFields.userId.name: userId,
       DBFields.name.name: name,
+      DBFields.emergencyInfo.name: emergencyInfo,
       DBFields.email.name: email,
       DBFields.userType.name: userType.index, // int
       DBFields.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '', // String

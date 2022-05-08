@@ -11,7 +11,7 @@ import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
 
 // fields of the form
-enum _FormFieldsEnum { name, user, actualPwd, newPwd, checkPwd }
+enum _FormFieldsEnum { name, emergencyInfo, user, actualPwd, newPwd, checkPwd }
 
 class _FormFields {
   _FormFields() {
@@ -21,14 +21,15 @@ class _FormFields {
 
   static const List<String> text = [
     'Nombre (por este te conocerán los demás)',
+    'Información de emergencia',
     'Usuario (para conectarte a la aplicación)',
     'Contraseña Actual',
     'Nueva Contraseña',
     'Repetir contraseña'
   ];
 
-  static const List<bool> obscuredText = [false, false, true, true, true];
-  static const List<bool> mayBeEmpty = [false, false, true, true, true];
+  static const List<bool> obscuredText = [false, false, false, true, true, true];
+  static const List<bool> mayBeEmpty = [false, true, false, true, true, true];
 }
 
 final String _classString = 'SettingsPage'.toUpperCase();
@@ -63,6 +64,8 @@ class SettingsPageState extends State<SettingsPage> {
       listControllers.add(TextEditingController());
     }
     listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
+    listControllers[_FormFieldsEnum.emergencyInfo.index].text =
+        appState.getLoggedUser().emergencyInfo;
     // user = first part of email
     listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
     super.initState();
@@ -155,6 +158,24 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
+  Future<bool> updateEmergencyInfo(String newEmergencyInfo) async {
+    MyLog().log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
+
+    MyUser user = appState.getLoggedUser();
+    user.emergencyInfo = newEmergencyInfo;
+
+    try {
+      await firebaseHelper.updateUser(user);
+    } catch (e) {
+      showMessage(context, 'Error al actualizar la información de emergencia del usuario');
+      MyLog().log(_classString, 'Error al actualizar  la información de emergencia del usuario',
+          debugType: DebugType.error);
+      return false;
+    }
+
+    return true;
+  }
+
   bool checkEmail(String newEmail, String actualPwd) {
     // newEmail is not somebody else's
     MyLog().log(_classString, 'checkEmail $newEmail');
@@ -229,6 +250,7 @@ class SettingsPageState extends State<SettingsPage> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       String newName = listControllers[_FormFieldsEnum.name.index].text;
+      String newEmergencyInfo = listControllers[_FormFieldsEnum.emergencyInfo.index].text;
       String newEmail =
           listControllers[_FormFieldsEnum.user.index].text.toLowerCase() + MyUser.emailSuffix;
       String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
@@ -260,6 +282,13 @@ class SettingsPageState extends State<SettingsPage> {
       // update name
       if (newName != appState.getLoggedUser().name) {
         ok = await updateName(newName);
+        anyUpdatedField = true;
+        if (!ok) return;
+      }
+
+      // update emergencyInfo
+      if (newEmergencyInfo != appState.getLoggedUser().emergencyInfo) {
+        ok = await updateEmergencyInfo(newEmergencyInfo);
         anyUpdatedField = true;
         if (!ok) return;
       }

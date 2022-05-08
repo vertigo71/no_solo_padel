@@ -8,6 +8,7 @@ enum DBFields {
   users, // users
   userId,
   name,
+  emergencyInfo,
   email,
   userType,
   lastLogin,
