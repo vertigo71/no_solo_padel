@@ -76,15 +76,17 @@ class _InformationPageState extends State<InformationPage> {
                     numberOfMatchesTogether++;
                   }
                 }
+                final String startTimes = 'Habéis empezado juntos: ' +
+                    singularOrPlural(numberOfMatchesTogether, 'vez', 'veces');
+                final String sosInfo =
+                    user.emergencyInfo.isNotEmpty ? '\nSOS: ${user.emergencyInfo}' : '';
 
                 return ListTile(
                   leading: CircleAvatar(
                       child: Text(user.userType.name[0].toUpperCase()),
                       backgroundColor: getUserColor(user)),
-                  title: Text('${user.name}\n'
-                          'Habéis empezado juntos: ' +
-                      singularOrPlural(numberOfMatchesTogether, 'vez', 'veces')),
-                  subtitle: Text(user.email.split('@')[0]),
+                  title: Text(user.name + sosInfo),
+                  subtitle: Text(startTimes + '\n' + user.email.split('@')[0]),
                 );
               }))),
         ],
