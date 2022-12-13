@@ -36,7 +36,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   // not a GlobalKey<SettingsPageState>.
   final _formKey = GlobalKey<FormState>();
 
-  static const int maxNumberOfCourts = 4;
+  static const int maxNumberOfCourts = 6;
   List<TextEditingController> courtControllers = [];
   List<String> initialCourtValues = [];
 
