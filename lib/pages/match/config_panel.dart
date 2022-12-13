@@ -233,11 +233,11 @@ class ConfigurationFormWidgets extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Text('Pistas'),
-            const SizedBox(width: 20.0),
+            const SizedBox(width: 10.0),
             for (var controller in courtControllers)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(5.0),
                   child: ConfigurationFormSingleWidget(
                     fieldName: '',
                     textController: controller,
