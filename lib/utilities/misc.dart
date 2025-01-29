@@ -13,7 +13,7 @@ void myAlertDialog(BuildContext context, String text) {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             title: const Text('¡Atención!'),
             content: Text(text),
             actions: <Widget>[
@@ -33,7 +33,7 @@ Future<String> myReturnValueDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) => AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             title: const Text('¡Atención!'),
             content: Text(text),
             actionsPadding: const EdgeInsets.all(10.0),
@@ -141,8 +141,8 @@ Widget myCheckBox(
     value: value,
     size: GFSize.SMALL,
     type: GFCheckboxType.circle,
-    activeBgColor: darken(Theme.of(context).backgroundColor, 0.3),
-    inactiveBgColor: Theme.of(context).backgroundColor,
+    activeBgColor: darken(Theme.of(context).colorScheme.surface, 0.3),
+    inactiveBgColor: Theme.of(context).colorScheme.surface,
   );
 }
 

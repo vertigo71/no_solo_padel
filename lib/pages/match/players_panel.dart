@@ -170,7 +170,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
-                              color: Theme.of(context).backgroundColor),
+                              color: Theme.of(context).colorScheme.surface),
                           child: Center(
                               child: Text(u.name,
                                   style: const TextStyle(

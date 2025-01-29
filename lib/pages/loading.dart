@@ -99,7 +99,7 @@ class Loading extends StatelessWidget {
   }
 }
 
-void _addPostFrame({required Function function}) {
+void _addPostFrame({required Function function) {
   // wait till build method has completed
   var instance = WidgetsBinding.instance;
   if (instance == null) {

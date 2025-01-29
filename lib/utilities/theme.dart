@@ -20,11 +20,13 @@ ThemeData myTheme(BuildContext context) {
   return ThemeData(
     scaffoldBackgroundColor: _backgroundLight,
     // canvasColor
-    backgroundColor: _background,
+    colorScheme: ColorScheme.light(
+      surface: _background, // Use surface instead of background
+    ),
 
     primarySwatch: _primaryMaterial,
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(primary: _primaryMaterial),
+      style: ElevatedButton.styleFrom(backgroundColor: _primaryMaterial),
     ),
     textTheme: GoogleFonts.robotoTextTheme(
       Theme.of(context).textTheme,

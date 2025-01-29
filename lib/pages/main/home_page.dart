@@ -77,6 +77,6 @@ Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
     default:
-      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).backgroundColor;
+      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
   }
 }
