@@ -8,7 +8,7 @@ import 'user_admin_panel.dart';
 final String _classString = 'AdminPage'.toUpperCase();
 
 class AdminPage extends StatelessWidget {
-  const AdminPage({Key? key}) : super(key: key);
+  const AdminPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,7 @@ class AdminPage extends StatelessWidget {
 }
 
 class _TabBarText extends StatelessWidget {
-  const _TabBarText(this.text, {Key? key}) : super(key: key);
+  const _TabBarText(this.text);
 
   final String text;
 

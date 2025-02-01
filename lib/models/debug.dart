@@ -52,8 +52,8 @@ class MyLog {
           '\n****         *****\n******************';
       if ( Environment().isDevelopment) developer.log(errorMsg, name: heading);
       errorMsg += '\n$message';
-      if (myCustomObject != null) errorMsg += '\nOBJECT\n' + myCustomObject.toString();
-      if (exception != null) errorMsg += '\nEXCEPTION\n' + exception.toString();
+      if (myCustomObject != null) errorMsg += '\nOBJECT\n$myCustomObject';
+      if (exception != null) errorMsg += '\nEXCEPTION\n$exception';
       sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', botType: BotType.error);
     }
 
@@ -71,7 +71,7 @@ class MyLog {
         }
       } else if (myCustomObject is Map) {
         myCustomObject.forEach((k, v) => _log(
-            ''.padLeft(heading.length + 2) + '[${k.toString()}]: ${v.toString()}',
+            '${''.padLeft(heading.length + 2)}[${k.toString()}]: ${v.toString()}',
             heading: '>',
             debugType: debugType));
       } else {

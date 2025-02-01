@@ -19,15 +19,15 @@ import '../../utilities/misc.dart';
 final String _classString = 'PlayersPanel'.toUpperCase();
 
 class PlayersPanel extends StatefulWidget {
-  const PlayersPanel(this.date, {Key? key}) : super(key: key);
+  const PlayersPanel(this.date, {super.key});
 
   final Date date;
 
   @override
-  _PlayersPanelState createState() => _PlayersPanelState();
+  PlayersPanelState createState() => PlayersPanelState();
 }
 
-class _PlayersPanelState extends State<PlayersPanel> {
+class PlayersPanelState extends State<PlayersPanel> {
   late final AppState appState;
 
   late final MyUser loggedUser;
@@ -169,8 +169,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     .map((u) => Container(
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: Theme.of(context).colorScheme.surface),
+                              borderRadius: BorderRadius.circular(25), color: Theme.of(context).colorScheme.surface),
                           child: Center(
                               child: Text(u.name,
                                   style: const TextStyle(
@@ -196,8 +195,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') +
-                                selectedUser.name,
+                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + selectedUser.name,
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -247,21 +245,15 @@ class _PlayersPanelState extends State<PlayersPanel> {
           MyLog().log(_classString, 'Building listOfPlayers', debugType: DebugType.info);
           MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
-          List<MyUser> usersPlaying =
-              appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
-          List<MyUser> usersSigned =
-              appState.userIdsToUsers(match.getPlayers(state: PlayingState.signedNotPlaying));
-          List<MyUser> usersReserve =
-              appState.userIdsToUsers(match.getPlayers(state: PlayingState.reserve));
+          List<MyUser> usersPlaying = appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
+          List<MyUser> usersSigned = appState.userIdsToUsers(match.getPlayers(state: PlayingState.signedNotPlaying));
+          List<MyUser> usersReserve = appState.userIdsToUsers(match.getPlayers(state: PlayingState.reserve));
           List<MyUser> usersFillEmptySpaces = [];
-          for (int i = usersPlaying.length + usersSigned.length;
-              i < match.getNumberOfCourts() * 4;
-              i++) {
+          for (int i = usersPlaying.length + usersSigned.length; i < match.getNumberOfCourts() * 4; i++) {
             usersFillEmptySpaces.add(MyUser());
           }
 
-          String numCourtsText =
-              'disponible ' + singularOrPlural(match.getNumberOfCourts(), 'pista');
+          String numCourtsText = 'disponible ${singularOrPlural(match.getNumberOfCourts(), 'pista')}';
 
           return Column(
             children: [
@@ -281,13 +273,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ...usersPlaying.map((player) =>
-                          Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                      ...usersSigned.map((player) => Text(
-                          '${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                      ...usersPlaying
+                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                      ...usersSigned.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}',
                           style: const TextStyle(color: Colors.red))),
-                      ...usersFillEmptySpaces
-                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                      ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
                     ],
                   ),
                 ),
@@ -310,8 +300,8 @@ class _PlayersPanelState extends State<PlayersPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersReserve.map((player) =>
-                            Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                        ...usersReserve
+                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
                       ],
                     ),
                   ),
@@ -340,13 +330,11 @@ class _PlayersPanelState extends State<PlayersPanel> {
           listPosition = int.tryParse(userPositionController.text) ?? -1;
           if (listPosition > 0) listPosition--;
         }
-        myMatch = await firebaseHelper.addPlayerToMatch(
-            date: widget.date, userId: user.userId, position: listPosition);
+        myMatch = await firebaseHelper.addPlayerToMatch(date: widget.date, userId: user.userId, position: listPosition);
         if (myMatch != null) {
           listPosition = myMatch.getPlayerPosition(user.userId);
           if (listPosition == -1) {
-            MyLog().log(_classString, 'validate player $user not in match $myMatch',
-                debugType: DebugType.error);
+            MyLog().log(_classString, 'validate player $user not in match $myMatch', debugType: DebugType.error);
           }
           if (adminManagingUser) {
             registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
@@ -366,22 +354,23 @@ class _PlayersPanelState extends State<PlayersPanel> {
               // loggedUser is still in the match
               // refresh
             });
-            showMessage(context, 'Operación anulada');
+            if (mounted) showMessage(context, 'Operación anulada');
             return false;
           }
           registerText = '${user.name} se ha desapuntado';
         }
-        myMatch =
-            await firebaseHelper.deletePlayerFromMatch(date: widget.date, userId: user.userId);
+        myMatch = await firebaseHelper.deletePlayerFromMatch(date: widget.date, userId: user.userId);
       }
     } on FirebaseException catch (e) {
-      myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
+      if (mounted) myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
       return false;
     } catch (e) {
-      myAlertDialog(
-          context,
-          'Ha habido una incidencia! \n'
-          'Comprobar que la operación se ha realizado correctamente\n $e');
+      if (mounted) {
+        myAlertDialog(
+            context,
+            'Ha habido una incidencia! \n'
+            'Comprobar que la operación se ha realizado correctamente\n $e');
+      }
     }
 
     MyLog().log(_classString, 'validate firebase done: Match=$myMatch Register=$registerText',
@@ -390,9 +379,9 @@ class _PlayersPanelState extends State<PlayersPanel> {
     if (myMatch == null) {
       // no action has been taken
       if (toAdd) {
-        showMessage(context, 'El jugador ya estaba en el partido');
+        if (mounted) showMessage(context, 'El jugador ya estaba en el partido');
       } else {
-        showMessage(context, 'El jugador no estaba en el partido');
+        if (mounted) showMessage(context, 'El jugador no estaba en el partido');
       }
       return false;
     }
@@ -410,16 +399,17 @@ class _PlayersPanelState extends State<PlayersPanel> {
           message: '$registerText\n'
               'APUNTADOS: ${myMatch.players.length} de ${myMatch.getNumberOfCourts() * 4}',
           matchDate: widget.date,
-          fromDaysAgoToTelegram:
-              appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+          fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
     } catch (e) {
-      MyLog().log(_classString, 'ERROR sending message to telegram or register',
-          exception: e, debugType: DebugType.error);
-      myAlertDialog(
-          context,
-          'Ha habido una incidencia al enviar el mensaje de confirmación\n'
-          'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
-          'Error = $e');
+      MyLog()
+          .log(_classString, 'ERROR sending message to telegram or register', exception: e, debugType: DebugType.error);
+      if (mounted) {
+        myAlertDialog(
+            context,
+            'Ha habido una incidencia al enviar el mensaje de confirmación\n'
+            'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
+            'Error = $e');
+      }
 
       return false;
     }
@@ -430,8 +420,7 @@ class _PlayersPanelState extends State<PlayersPanel> {
   Future<bool> _confirmLoggedUserOutOfMatch() async {
     const String option1 = 'Confirmar';
     const String option2 = 'Anular';
-    String response =
-        await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+    String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
     MyLog().log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == option1;
   }

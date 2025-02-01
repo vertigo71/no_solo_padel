@@ -18,7 +18,7 @@ import '../routes/routes.dart';
 final String _classString = 'Loading'.toUpperCase();
 
 class Loading extends StatelessWidget {
-  const Loading({Key? key}) : super(key: key);
+  const Loading({super.key});
 
   void setupDB(BuildContext context) async {
     MyLog().log(_classString, 'Setting DB', debugType: DebugType.warning);
@@ -31,8 +31,7 @@ class Loading extends StatelessWidget {
       throw Exception('Error: No se ha registrado correctamente el usuario. \n'
           'Póngase en contacto con el administrador');
     }
-    MyLog()
-        .log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.warning);
+    MyLog().log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.warning);
 
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
@@ -51,8 +50,7 @@ class Loading extends StatelessWidget {
     MyUser? loggedUser = await firebaseHelper.getUserByEmail(user.email!);
     if (loggedUser == null) {
       // user is not in the DB
-      MyLog().log(_classString, 'setupDB user: ${user.email}  not registered. Abort!',
-          debugType: DebugType.warning);
+      MyLog().log(_classString, 'setupDB user: ${user.email}  not registered. Abort!', debugType: DebugType.warning);
       await AuthenticationHelper().signOut(signedOutFunction: firebaseHelper.disposeListeners);
       _addPostFrame(function: () {
         showMessage(context, 'Usuario no registrado. Hable con el administrador.');
@@ -69,9 +67,7 @@ class Loading extends StatelessWidget {
 
       /// create matches if missing
       /// from now to now+matchDaysToView
-      for (int days = 0;
-          days < appState.getIntParameterValue(ParametersEnum.matchDaysToView);
-          days++) {
+      for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
         Date date = Date.now().add(Duration(days: days));
         await firebaseHelper.createMatchIfNotExists(match: MyMatch(date: date));
       }
@@ -80,9 +76,7 @@ class Loading extends StatelessWidget {
       director.createListeners();
 
       // wait till build method has completed
-      _addPostFrame(
-          function: () =>
-              Navigator.pushReplacementNamed(context, RouteManager.mainPage, arguments: {}));
+      _addPostFrame(function: () => Navigator.pushReplacementNamed(context, RouteManager.mainPage, arguments: {}));
     }
   }
 
@@ -100,12 +94,14 @@ class Loading extends StatelessWidget {
 }
 
 void _addPostFrame({required Function function}) {
+  function();
+  /*
   // wait till build method has completed
-  var instance = WidgetsBinding.instance;
-  if (instance == null) {
-    function();
+    var instance = WidgetsBinding.instance;
+    if (instance == null) {
+      function();
   } else {
     MyLog().log(_classString, '_addPostFrame WidgetsBinding waiting');
     instance.addPostFrameCallback((_) => function());
-  }
+  }*/
 }

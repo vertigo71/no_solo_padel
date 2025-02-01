@@ -35,7 +35,7 @@ class _FormFields {
 final String _classString = 'SettingsPage'.toUpperCase();
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key? key}) : super(key: key);
+  const SettingsPage({super.key});
 
   @override
   SettingsPageState createState() {
@@ -64,8 +64,7 @@ class SettingsPageState extends State<SettingsPage> {
       listControllers.add(TextEditingController());
     }
     listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
-    listControllers[_FormFieldsEnum.emergencyInfo.index].text =
-        appState.getLoggedUser().emergencyInfo;
+    listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
     // user = first part of email
     listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
     super.initState();
@@ -149,9 +148,8 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await firebaseHelper.updateUser(user);
     } catch (e) {
-      showMessage(context, 'Error al actualizar el nombre del usuario');
-      MyLog().log(_classString, 'Error al actualizar el nombre del usuario',
-          debugType: DebugType.error);
+      if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
+      MyLog().log(_classString, 'Error al actualizar el nombre del usuario', debugType: DebugType.error);
       return false;
     }
 
@@ -167,7 +165,7 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await firebaseHelper.updateUser(user);
     } catch (e) {
-      showMessage(context, 'Error al actualizar la información de emergencia del usuario');
+      if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
       MyLog().log(_classString, 'Error al actualizar  la información de emergencia del usuario',
           debugType: DebugType.error);
       return false;
@@ -197,11 +195,10 @@ class SettingsPageState extends State<SettingsPage> {
   Future<bool> updateEmail(String newEmail, String actualPwd) async {
     MyLog().log(_classString, 'updateEmail $newEmail');
 
-    String response =
-        await AuthenticationHelper().updateEmail(newEmail: newEmail, actualPwd: actualPwd);
+    String response = await AuthenticationHelper().updateEmail(newEmail: newEmail, actualPwd: actualPwd);
 
     if (response.isNotEmpty) {
-      myAlertDialog(context, response);
+      if (mounted) myAlertDialog(context, response);
       return false;
     }
 
@@ -211,9 +208,8 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await firebaseHelper.updateUser(loggedUser);
     } catch (e) {
-      showMessage(context, 'Error al actualizar localmente el correo del usuario');
-      MyLog().log(_classString, 'Error al actualizar localmente el correo del usuario',
-          debugType: DebugType.error);
+      if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
+      MyLog().log(_classString, 'Error al actualizar localmente el correo del usuario', debugType: DebugType.error);
       return false;
     }
 
@@ -240,7 +236,7 @@ class SettingsPageState extends State<SettingsPage> {
     String response = await AuthenticationHelper().updatePwd(actualPwd: actualPwd, newPwd: newPwd);
 
     if (response.isNotEmpty) {
-      myAlertDialog(context, response);
+      if (mounted) myAlertDialog(context, response);
       return false;
     }
     return true;
@@ -251,8 +247,7 @@ class SettingsPageState extends State<SettingsPage> {
     if (_formKey.currentState!.validate()) {
       String newName = listControllers[_FormFieldsEnum.name.index].text;
       String newEmergencyInfo = listControllers[_FormFieldsEnum.emergencyInfo.index].text;
-      String newEmail =
-          listControllers[_FormFieldsEnum.user.index].text.toLowerCase() + MyUser.emailSuffix;
+      String newEmail = listControllers[_FormFieldsEnum.user.index].text.toLowerCase() + MyUser.emailSuffix;
       String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
       String newPwd = listControllers[_FormFieldsEnum.newPwd.index].text;
       String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
@@ -272,8 +267,7 @@ class SettingsPageState extends State<SettingsPage> {
       // check if is a sure thing
       const String yesOption = 'SI';
       const String noOption = 'NO';
-      String response = await myReturnValueDialog(
-          context, '¿Seguro que quieres actualizar?', yesOption, noOption);
+      String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
       MyLog().log(_classString, 'build response = $response');
 
@@ -308,17 +302,17 @@ class SettingsPageState extends State<SettingsPage> {
       }
 
       if (anyUpdatedField) {
-        showMessage(context, 'Los datos han sido actualizados');
+        if (mounted) showMessage(context, 'Los datos han sido actualizados');
       } else {
-        showMessage(context, 'Ningun dato para actualizar');
+        if (mounted) showMessage(context, 'Ningun dato para actualizar');
       }
     }
   }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.formFieldsEnum, this.textController, this.validate, {Key? key})
-      : super(key: key);
+  const _FormFieldWidget(this.formFieldsEnum, this.textController, this.validate);
+
   final _FormFieldsEnum formFieldsEnum;
   final TextEditingController textController;
   final Future<void> Function() validate;
@@ -335,8 +329,7 @@ class _FormFieldWidget extends StatelessWidget {
         onFieldSubmitted: (String str) async => await validate(),
         keyboardType: TextInputType.text,
         inputFormatters: [
-          if (formFieldsEnum == _FormFieldsEnum.user)
-            LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
+          if (formFieldsEnum == _FormFieldsEnum.user) LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
         ],
         decoration: InputDecoration(
           labelText: fieldName,

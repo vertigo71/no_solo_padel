@@ -10,7 +10,7 @@ import '../../utilities/theme.dart';
 final String _classString = 'HomePage'.toUpperCase();
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +22,7 @@ class HomePage extends StatelessWidget {
           ...ListTile.divideTiles(
               context: context,
               tiles: appState.getSortedMatchesIfDayPlayable().map(((match) {
-                String playingStateStr =
-                    match.getPlayingStateString(appState.getLoggedUser().userId);
+                String playingStateStr = match.getPlayingStateString(appState.getLoggedUser().userId);
                 PlayingState playingState = match.getPlayingState(appState.getLoggedUser().userId);
                 final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
@@ -31,20 +30,16 @@ class HomePage extends StatelessWidget {
                   elevation: 6,
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
-                    tileColor: match.isOpen
-                        ? getPlayingStateColor(context, playingState)
-                        : lighten(getMatchColor(match), 0.2),
-                    leading: CircleAvatar(
-                        child: Text(match.isOpen ? 'A' : 'C'),
-                        backgroundColor: getMatchColor(match)),
+                    tileColor:
+                        match.isOpen ? getPlayingStateColor(context, playingState) : lighten(getMatchColor(match), 0.2),
+                    leading: CircleAvatar(backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                     title: match.isOpen
                         ? Text('${match.date.toString()}\n$playingStateStr$comment')
                         : Text('${match.date.toString()}\nCONVOCATORIA NO DISPONIBLE'),
                     subtitle: match.isOpen
                         ? Text(
                             'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
-                            style:
-                                const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                           )
                         : null,
                     enabled: match.isOpen == true || appState.isLoggedUserAdmin,
@@ -76,7 +71,6 @@ Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
     case PlayingState.playing:
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
-    default:
       return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
   }
 }

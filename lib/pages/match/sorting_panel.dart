@@ -10,7 +10,7 @@ import '../../utilities/date.dart';
 final String _classString = 'SortingPanel'.toUpperCase();
 
 class SortingPanel extends StatelessWidget {
-  const SortingPanel(this.date, {Key? key}) : super(key: key);
+  const SortingPanel(this.date, {super.key});
 
   final Date date;
 
@@ -46,11 +46,11 @@ class SortingPanel extends StatelessWidget {
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
                   leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                       child: Text(
                         match.courtNames.elementAt(index),
                         style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
-                      ),
-                      backgroundColor: Theme.of(context).appBarTheme.backgroundColor),
+                      )),
                   title: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(

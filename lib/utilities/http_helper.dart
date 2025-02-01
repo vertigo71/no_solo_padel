@@ -25,20 +25,20 @@ void sendDatedMessageToTelegram(
 }
 
 Future<void> sendMessageToTelegram(String message , { BotType botType = BotType.register }) async {
-  late String _botToken;
-  late String _chatId;
+  late String tmpBotToken;
+  late String tmpChatId;
 
   if ( botType == BotType.error) {
-    _botToken = getTelegramErrorBotToken();
-    _chatId = getTelegramErrorChatId();
+    tmpBotToken = getTelegramErrorBotToken();
+    tmpChatId = getTelegramErrorChatId();
   }
   else if ( botType == BotType.register ){
-    _botToken = getTelegramBotToken();
-    _chatId = getTelegramChatId();
+    tmpBotToken = getTelegramBotToken();
+    tmpChatId = getTelegramChatId();
   }
 
-  var url = Uri.parse('https://api.telegram.org/bot$_botToken/'
-      'sendMessage?chat_id=$_chatId&text=$message');
+  var url = Uri.parse('https://api.telegram.org/bot$tmpBotToken/'
+      'sendMessage?chat_id=$tmpChatId&text=$message');
   http.Response response =  await http.post(url);
 
   if (response.statusCode != 200) {

@@ -15,7 +15,7 @@ import 'settings_page.dart';
 final String _classString = 'MainPage'.toUpperCase();
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
+  const MainPage({super.key});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -38,13 +38,12 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
+    return WillPopScope( // TODO: deprecated
       onWillPop: _onBackPressed,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Consumer<AppState>(
-              builder: (context, appState, _) => Text(appState.getLoggedUser().name)),
+          title: Consumer<AppState>(builder: (context, appState, _) => Text(appState.getLoggedUser().name)),
           actions: [
             Consumer<AppState>(
               builder: (context, appState, _) {
@@ -69,7 +68,7 @@ class _MainPageState extends State<MainPage> {
                 if (!response) return;
 
                 MyLog().log(_classString, 'Icon SignOut before pop');
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
               icon: const Icon(Icons.exit_to_app),
               tooltip: 'Salir',
@@ -111,8 +110,9 @@ class _MainPageState extends State<MainPage> {
     String response = await myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
     if (response.isEmpty || response == noOption) return false;
     MyLog().log(_classString, '_onBackPressed response = $response');
-    await AuthenticationHelper()
-        .signOut(signedOutFunction: context.read<Director>().firebaseHelper.disposeListeners);
+    if (mounted) {
+      await AuthenticationHelper().signOut(signedOutFunction: context.read<Director>().firebaseHelper.disposeListeners);
+    }
     MyLog().log(_classString, '_onBackPressed before exiting');
     return true;
   }

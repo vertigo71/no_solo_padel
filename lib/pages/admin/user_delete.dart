@@ -12,13 +12,13 @@ import '../../utilities/theme.dart';
 final String _classString = 'UserDeletePanel'.toUpperCase();
 
 class UserDeletePanel extends StatefulWidget {
-  const UserDeletePanel({Key? key}) : super(key: key);
+  const UserDeletePanel({super.key});
 
   @override
-  _UserDeletePanelState createState() => _UserDeletePanelState();
+  UserDeletePanelState createState() => UserDeletePanelState();
 }
 
-class _UserDeletePanelState extends State<UserDeletePanel> {
+class UserDeletePanelState extends State<UserDeletePanel> {
   String dropdownValue = '';
 
   late FirebaseHelper firebaseHelper;
@@ -48,8 +48,8 @@ class _UserDeletePanelState extends State<UserDeletePanel> {
                 context: context,
                 tiles: appState.allSortedUsers.map(((user) => ListTile(
                       leading: CircleAvatar(
-                          child: Text(user.userType.name[0].toUpperCase()),
-                          backgroundColor: getUserColor(user)),
+                          backgroundColor: getUserColor(user),
+                          child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
                           '${user.lastLogin ?? 'Nunca'}; '
@@ -90,7 +90,7 @@ class _UserDeletePanelState extends State<UserDeletePanel> {
                               debugType: DebugType.warning);
                           await firebaseHelper.deleteUser(user);
                         } catch (e) {
-                          showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
+                          if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
                           MyLog().log(_classString, 'eliminar usuario',
                               exception: e, debugType: DebugType.error);
                         }

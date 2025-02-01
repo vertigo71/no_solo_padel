@@ -88,7 +88,7 @@ class AuthenticationHelper {
       }
 
       if (newEmail.isNotEmpty) {
-        await userCredential.user!.updateEmail(newEmail);
+        await userCredential.user!.updateEmail(newEmail); // TODO: deprecated
       } else if (newPwd.isNotEmpty) {
         await userCredential.user!.updatePassword(newPwd);
       }

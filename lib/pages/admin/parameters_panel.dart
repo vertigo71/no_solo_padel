@@ -68,13 +68,13 @@ class _FormFields {
 final String _classString = 'ParametersPanel'.toUpperCase();
 
 class ParametersPanel extends StatefulWidget {
-  const ParametersPanel({Key? key}) : super(key: key);
+  const ParametersPanel({super.key});
 
   @override
-  _ParametersPanelState createState() => _ParametersPanelState();
+  ParametersPanelState createState() => ParametersPanelState();
 }
 
-class _ParametersPanelState extends State<ParametersPanel> {
+class ParametersPanelState extends State<ParametersPanel> {
   // Create a global key that uniquely identifies the Form widget
   // and allows validation of the form.
   //
@@ -188,21 +188,22 @@ class _ParametersPanelState extends State<ParametersPanel> {
 
       try {
         await firebaseHelper.updateParameters(myParameters);
-        showMessage(
-            context,
-            'Los parámetros han sido actualizados. \n'
-            'Volver a entrar en la app para que se tengan en cuenta');
+        if (mounted) {
+          showMessage(
+              context,
+              'Los parámetros han sido actualizados. \n'
+              'Volver a entrar en la app para que se tengan en cuenta');
+        }
       } catch (e) {
-        showMessage(context, 'Error actualizando parámetros ');
+        if (mounted) showMessage(context, 'Error actualizando parámetros ');
       }
     }
   }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate,
-      {Key? key})
-      : super(key: key);
+  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate);
+
   final TextEditingController textController;
   final String fieldName;
   final String allowedChars;

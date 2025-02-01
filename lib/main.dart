@@ -26,7 +26,7 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,3 +50,58 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+/*
+	import 'package:flutter/material.dart';
+	import 'package:go_router/go_router.dart';
+	import 'package:provider/provider.dart';
+
+	// ... (Your AppState, Director, myTheme, LoginPage, HomePage, etc. remain the same)
+
+	// Define your routes using GoRouter
+	final _router = GoRouter(
+	  initialLocation: '/login',
+	  routes: [
+		GoRoute(
+		  path: '/login',
+		  builder: (context, state) => LoginPage(),
+		),
+		GoRoute(
+		  path: '/home',
+		  builder: (context, state) => HomePage(),
+		),
+		// ... other routes
+	  ],
+	);
+
+	void main() {
+	  runApp(MyApp());
+	}
+
+	class MyApp extends StatelessWidget {
+	  const MyApp({super.key});
+
+	  @override
+	  Widget build(BuildContext context) {
+		MyLog().log(_classString, 'Building MyApp');
+
+		return MultiProvider(
+		  providers: [
+			ChangeNotifierProvider<AppState>(
+			  create: (context) => AppState(),
+			),
+			Provider<Director>(
+			  create: (context) => Director(appState: context.read<AppState>()),
+			),
+		  ],
+		  child: MaterialApp.router( // Use MaterialApp.router
+			routerConfig: _router,      // Provide the router config
+			debugShowCheckedModeBanner: false,
+			theme: myTheme(context),
+		  ),
+		);
+	  }
+	}
+
+	// ... (LoginPage, HomePage, myTheme, etc. remain the same)
+*/

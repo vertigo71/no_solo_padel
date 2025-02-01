@@ -1,10 +1,10 @@
-///
-/// apply after pulling from repository
-///
-/// copy pubspec_prod.yaml into pubspec.yaml
-///
-/// execute like: dart run production.dart
-///
+//
+// apply after pulling from repository
+//
+// copy pubspec_prod.yaml into pubspec.yaml
+//
+// execute like: dart run production.dart
+//
 import 'dart:io';
 import 'dart:convert';
 

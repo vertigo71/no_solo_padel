@@ -11,7 +11,7 @@ import '../../interface/app_state.dart';
 final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
-  const MatchPage({Key? key}) : super(key: key);
+  const MatchPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class MatchPage extends StatelessWidget {
 }
 
 class _TabBarText extends StatelessWidget {
-  const _TabBarText(this.text, {Key? key}) : super(key: key);
+  const _TabBarText(this.text);
 
   final String text;
 

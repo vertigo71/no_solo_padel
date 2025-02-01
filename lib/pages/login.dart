@@ -12,13 +12,13 @@ import '../database/authentication.dart';
 final String _classString = 'Login'.toUpperCase();
 
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+  const Login({super.key});
 
   @override
-  _LoginState createState() => _LoginState();
+  LoginState createState() => LoginState();
 }
 
-class _LoginState extends State<Login> {
+class LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController pwdController = TextEditingController();
@@ -60,6 +60,7 @@ class _LoginState extends State<Login> {
     return Scaffold(
       bottomNavigationBar: BottomAppBar(
         color: Colors.transparent,
+        elevation: 0,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text(
@@ -67,7 +68,6 @@ class _LoginState extends State<Login> {
             textAlign: TextAlign.end,
           ),
         ),
-        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(30.0),
@@ -134,14 +134,14 @@ class _LoginState extends State<Login> {
           .signIn(email: email, password: pwdController.text)
           .then((result) async {
         if (result == null) {
-          await Navigator.of(context).pushNamed(RouteManager.loadingPage);
+          if(mounted) await Navigator.of(context).pushNamed(RouteManager.loadingPage);
 
           MyLog().log(_classString, 'back to login');
           setState(() {
             pwdController.text = '';
           });
         } else {
-          showMessage(context, result);
+          if(mounted) showMessage(context, result);
         }
       });
     }

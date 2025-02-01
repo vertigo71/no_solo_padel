@@ -1,10 +1,10 @@
-///
-/// apply before pushing to repository
-///
-/// copy pubspec.yaml into dev and prod files
-///
-/// execute like: dart run development.dart
-///
+//
+// apply before pushing to repository
+//
+// copy pubspec.yaml into dev and prod files
+//
+// execute like: dart run development.dart
+//
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';

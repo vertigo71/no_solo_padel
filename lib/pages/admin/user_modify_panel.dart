@@ -11,7 +11,7 @@ import '../../utilities/theme.dart';
 final String _classString = 'ModifyUserPage'.toUpperCase();
 
 class UserModifyPanel extends StatelessWidget {
-  const UserModifyPanel({Key? key}) : super(key: key);
+  const UserModifyPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +25,7 @@ class UserModifyPanel extends StatelessWidget {
                 context: context,
                 tiles: appState.allSortedUsers.map(((user) => ListTile(
                       leading: CircleAvatar(
-                          child: Text(user.userType.name[0].toUpperCase()),
-                          backgroundColor: getUserColor(user)),
+                          backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
                           '${user.lastLogin ?? 'Nunca'}; '
@@ -36,8 +35,7 @@ class UserModifyPanel extends StatelessWidget {
                         const String option2 = 'Admin';
                         const String option3 = 'Super';
                         const String option4 = 'Cancelar';
-                        String response = await myReturnValueDialog(
-                            context, '¿Tipo de usuario?', option1, option2,
+                        String response = await myReturnValueDialog(context, '¿Tipo de usuario?', option1, option2,
                             option3: option3, option4: option4);
                         MyLog().log(_classString, 'build response = $response');
 
@@ -51,12 +49,13 @@ class UserModifyPanel extends StatelessWidget {
                           user.userType = UserType.superuser;
                         }
                         try {
-                          context.read<Director>().firebaseHelper.updateUser(user);
+                          if (context.mounted) context.read<Director>().firebaseHelper.updateUser(user);
                           MyLog().log(_classString, 'usuario modificado con $response');
                         } catch (e) {
-                          showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
-                          MyLog().log(_classString, 'modificar usuario',
-                              exception: e, debugType: DebugType.error);
+                          if (context.mounted) {
+                            showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
+                          }
+                          MyLog().log(_classString, 'modificar usuario', exception: e, debugType: DebugType.error);
                         }
                       },
                     )))),

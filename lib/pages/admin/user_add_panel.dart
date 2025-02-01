@@ -26,13 +26,13 @@ class _FormFields {
 final String _classString = 'UserAddPanel'.toUpperCase();
 
 class UserAddPanel extends StatefulWidget {
-  const UserAddPanel({Key? key}) : super(key: key);
+  const UserAddPanel({super.key});
 
   @override
-  _UserAddPanelState createState() => _UserAddPanelState();
+  UserAddPanelState createState() => UserAddPanelState();
 }
 
-class _UserAddPanelState extends State<UserAddPanel> {
+class UserAddPanelState extends State<UserAddPanel> {
   // Create a global key that uniquely identifies the Form widget
   // and allows validation of the form.
   //
@@ -188,7 +188,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
 
     String response =
         await AuthenticationHelper().createUserWithEmailAndPwd(email: email, pwd: pwd);
-    if (response.isNotEmpty) {
+    if (response.isNotEmpty && mounted) {
       myAlertDialog(context, response);
       return false;
     }
@@ -205,7 +205,7 @@ class _UserAddPanelState extends State<UserAddPanel> {
     try {
       firebaseHelper.updateUser(myUser);
     } catch (e) {
-      showMessage(context, 'Error al crear localmente el usuario');
+      if (mounted) showMessage(context, 'Error al crear localmente el usuario');
       MyLog().log(_classString, 'Error al crear localmente el usuario', debugType: DebugType.error);
       return false;
     }
@@ -244,14 +244,13 @@ class _UserAddPanelState extends State<UserAddPanel> {
       ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);
       if (!ok) return;
 
-      showMessage(context, 'El usuario ha sido creado');
+      if (mounted) showMessage(context, 'El usuario ha sido creado');
     }
   }
 }
 
 class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldsEnum, this.textController, this.validate, {Key? key})
-      : super(key: key);
+  const _FormFieldWidget(this.fieldsEnum, this.textController, this.validate);
 
   final _FormFieldsEnum fieldsEnum;
   final TextEditingController textController;

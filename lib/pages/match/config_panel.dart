@@ -17,7 +17,7 @@ import '../../utilities/misc.dart';
 final String _classString = 'ConfigurationPanel'.toUpperCase();
 
 class ConfigurationPanel extends StatefulWidget {
-  const ConfigurationPanel(this.date, {Key? key}) : super(key: key);
+  const ConfigurationPanel(this.date, {super.key});
 
   // arguments
   final Date date;
@@ -182,16 +182,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           /// otherwise detect if there is a change in the number of courts
           if (newMatch.isOpen != oldMatch.isOpen) {
             if (newMatch.isOpen) {
-              registerText = 'Nueva convocatoria\n'
-                      '${loggedUser.name} ha abierto ' +
-                  singularOrPlural(newNumCourts, 'pista');
+              registerText = 'Nueva convocatoria\n${loggedUser.name} ha abierto ${singularOrPlural(newNumCourts, 'pista')}';
             } else {
               registerText = '${loggedUser.name} ha cerrado la convocatoria';
             }
           } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
-            registerText = '${loggedUser.name}  ha modificado el número de pistas\n'
-                    'Ahora hay ' +
-                singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles');
+            registerText = '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles')}';
           }
 
           if (registerText.isNotEmpty) {
@@ -209,7 +205,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             exception: e, debugType: DebugType.error);
       }
 
-      showMessage(context, message);
+      if (mounted) showMessage(context, message);
     }
   }
 }
@@ -217,8 +213,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 class ConfigurationFormWidgets extends StatelessWidget {
   const ConfigurationFormWidgets(
       this.courtControllers, this.commentController, this.configurationPanelState,
-      {Key? key})
-      : super(key: key);
+      {super.key});
   final List<TextEditingController> courtControllers;
   final TextEditingController commentController;
   final ConfigurationPanelState configurationPanelState;
@@ -283,8 +278,7 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
       required this.validate,
       this.mayBeEmpty = true,
       this.formatter,
-      Key? key})
-      : super(key: key);
+      super.key});
   final String fieldName;
   final TextEditingController textController;
   final bool mayBeEmpty;

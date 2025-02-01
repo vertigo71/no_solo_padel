@@ -8,13 +8,13 @@ import 'user_modify_panel.dart';
 final String _classString = 'UserAdminPanel'.toUpperCase();
 
 class UserAdminPanel extends StatefulWidget {
-  const UserAdminPanel({Key? key}) : super(key: key);
+  const UserAdminPanel({super.key});
 
   @override
-  _UserAdminPanelState createState() => _UserAdminPanelState();
+  UserAdminPanelState createState() => UserAdminPanelState();
 }
 
-class _UserAdminPanelState extends State<UserAdminPanel> {
+class UserAdminPanelState extends State<UserAdminPanel> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     UserAddPanel(),

@@ -70,33 +70,33 @@ Future<String> myReturnValueDialog(
 }
 
 void showMessage(BuildContext context, String text) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(
-    text,
-    style: const TextStyle(fontSize: 16),
-  )));
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+      text,
+      style: const TextStyle(fontSize: 16),
+    )));
+  }
 }
 
 /// TextFormField uppercase formatter: allow = false => deny list
 class UpperCaseTextFormatter extends CaseTextFormatter {
-  UpperCaseTextFormatter(Pattern filterPattern,
-      {required bool allow, String replacementString = ''})
-      : super(filterPattern, toUppercase: true, allow: allow, replacementString: replacementString);
+  UpperCaseTextFormatter(super.filterPattern,
+      {required super.allow, super.replacementString})
+      : super(toUppercase: true);
 }
 
 /// TextFormField lowercase formatter: allow = false => deny list
 class LowerCaseTextFormatter extends CaseTextFormatter {
-  LowerCaseTextFormatter(Pattern filterPattern,
-      {required bool allow, String replacementString = ''})
-      : super(filterPattern,
-            toUppercase: false, allow: allow, replacementString: replacementString);
+  LowerCaseTextFormatter(super.filterPattern,
+      {required super.allow, super.replacementString})
+      : super(toUppercase: false);
 }
 
 /// TextFormField uppercase/lowercase formatter: allow = false => deny list
 class CaseTextFormatter extends FilteringTextInputFormatter {
-  CaseTextFormatter(Pattern filterPattern,
-      {required this.toUppercase, required bool allow, String replacementString = ''})
-      : super(filterPattern, allow: allow, replacementString: replacementString);
+  CaseTextFormatter(super.filterPattern,
+      {required this.toUppercase, required super.allow, super.replacementString});
 
   final bool toUppercase;
 
@@ -151,5 +151,5 @@ Widget myCheckBox(
 /// number = 2, singular = car, plural = null => 2 cars
 String singularOrPlural(int number, String singular, [String? plural]) {
   if (number == 1) return '1 $singular';
-  return '$number ' + (plural ?? singular + (singular.toUpperCase() == singular ? 'S' : 's'));
+  return '$number ${plural ?? singular + (singular.toUpperCase() == singular ? 'S' : 's')}';
 }

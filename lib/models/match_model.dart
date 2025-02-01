@@ -44,7 +44,7 @@ class MyMatch {
     if (state == null) return players;
     Map<String, PlayingState> map = getAllPlayingStates();
     Set<String> list = {};
-    map.forEach((_user, _state) => _state == state ? list.add(_user) : null);
+    map.forEach((player, playerState) => playerState == state ? list.add(player) : null);
     return list;
   }
 
@@ -62,9 +62,9 @@ class MyMatch {
       players.add(player);
       return players.length - 1;
     }
-    List<String> _players = players.toList()..insert(position, player);
+    List<String> allPlayers = players.toList()..insert(position, player);
     players.clear();
-    players.addAll(_players);
+    players.addAll(allPlayers);
     return position;
   }
 

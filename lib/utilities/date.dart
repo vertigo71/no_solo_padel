@@ -9,7 +9,7 @@ final String _classString = 'Date'.toUpperCase();
 class Date extends DateTime {
   Date(DateTime dateTime) : super(dateTime.year, dateTime.month, dateTime.day);
 
-  Date.ymd(int year, [int month = 1, int day = 1]) : super(year, month, day);
+  Date.ymd(super.year, [super.month, super.day]);
 
   static Date dateTimeToDate(DateTime dateTime) => Date(dateTime);
 
