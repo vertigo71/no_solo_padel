@@ -173,8 +173,7 @@ class Director {
     }
 
     if (matches) {
-      List<MyUser> users = _appState.allUsers;
-      assert(users.isNotEmpty);
+      assert(_appState.numUsers>0);
       const int numMatches = 10;
       const int maxUsers = 10;
       for (int d = 0; d < numMatches; d++) {
@@ -184,7 +183,7 @@ class Director {
         match.comment = 'Las Tablas a las 10h30';
         match.isOpen = randomInts.first.isEven;
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1));
-        match.players.addAll(randomInts.map((e) => (e % users.length).toString()).toSet());
+        match.players.addAll(randomInts.map((e) => (e % _appState.numUsers).toString()).toSet());
         MyLog().log(_classString, 'createTestData $match');
         await firebaseHelper.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }

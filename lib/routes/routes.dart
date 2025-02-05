@@ -1,37 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../pages/admin/admin_page.dart';
 import '../pages/main/main_page.dart';
 import '../pages/loading.dart';
 import '../pages/login.dart';
 import '../pages/match/match_page.dart';
+import '../utilities/date.dart';
 
-class RouteManager {
-  static const String loginPage = '/';
-  static const String loadingPage = '/loadingPage';
-  static const String mainPage = '/mainPage';
-  static const String matchPage = '/matchPage';
-  static const String adminPage = '/adminPage';
-
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case loginPage:
-        return MaterialPageRoute(builder: (context) => const Login(), settings: settings);
-
-      case loadingPage:
-        return MaterialPageRoute(builder: (context) => const Loading(), settings: settings);
-
-      case mainPage:
-        return MaterialPageRoute(builder: (context) => const MainPage(), settings: settings);
-
-      case matchPage:
-        return MaterialPageRoute(builder: (context) => const MatchPage(), settings: settings);
-
-      case adminPage:
-        return MaterialPageRoute(builder: (context) => const AdminPage(), settings: settings);
-
-      default:
-        throw const FormatException('Route not found! Check routes again!');
-    }
-  }
+// Define route names (recommended):
+class AppRoutes {
+  static const String loginPath = '/login';
+  static const String login = 'login';
+  static const String loadingPath = '/loading';
+  static const String loading = 'loading';
+  static const String mainPath = '/main';
+  static const String main = 'main';
+  static const String matchPath = '/match';
+  static const String match = 'match';
+  static const String adminPath = '/admin';
+  static const String admin = 'admin';
 }
+
+class AppRouter {
+  static final GoRouter router = GoRouter(
+    initialLocation: AppRoutes.loginPath,
+    routes: <RouteBase>[
+      GoRoute(
+          path: AppRoutes.loginPath,
+          builder: (BuildContext context, GoRouterState state) => const LoginPage(),
+          name: AppRoutes.login // Optional: give the route a name
+          ),
+      GoRoute(
+          path: AppRoutes.loadingPath,
+          builder: (BuildContext context, GoRouterState state) => const LoadingPage(),
+          name: AppRoutes.loading),
+      GoRoute(
+          path: AppRoutes.mainPath,
+          builder: (BuildContext context, GoRouterState state) => const MainPage(),
+          name: AppRoutes.main),
+      GoRoute(
+          path: AppRoutes.matchPath,
+          builder: (BuildContext context, GoRouterState state) {
+            final matchDate = state.extra as Date; // Retrieve the argument
+            return MatchPage(matchDate: matchDate); // Pass it to the widget
+          },
+          name: AppRoutes.match),
+      GoRoute(
+          path: AppRoutes.adminPath,
+          builder: (BuildContext context, GoRouterState state) => const AdminPage(),
+          name: AppRoutes.admin),
+    ],
+    errorBuilder: (context, state) => const Scaffold(
+      body: Center(child: Text('Page Not Found')),
+    ),
+  );
+}
+

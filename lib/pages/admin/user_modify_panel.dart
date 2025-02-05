@@ -23,7 +23,7 @@ class UserModifyPanel extends StatelessWidget {
           children: [
             ...ListTile.divideTiles(
                 context: context,
-                tiles: appState.allSortedUsers.map(((user) => ListTile(
+                tiles: appState.sortUsers.map(((user) => ListTile(
                       leading: CircleAvatar(
                           backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),

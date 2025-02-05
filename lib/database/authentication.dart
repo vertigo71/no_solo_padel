@@ -4,8 +4,9 @@ import '../models/debug.dart';
 
 final String _classString = 'AuthenticationHelper'.toUpperCase();
 
+// TODO: it could be static
 class AuthenticationHelper {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? get user => _auth.currentUser;
 
@@ -71,8 +72,7 @@ class AuthenticationHelper {
     return await _updateEmailOrPwd(actualPwd: actualPwd, newPwd: newPwd);
   }
 
-  Future<String> _updateEmailOrPwd(
-      {required String actualPwd, String newEmail = '', String newPwd = ''}) async {
+  Future<String> _updateEmailOrPwd({required String actualPwd, String newEmail = '', String newPwd = ''}) async {
     MyLog().log(_classString, '_updateEmailOrPwd $newEmail', debugType: DebugType.warning);
 
     final String errorField = newPwd.isEmpty ? 'el correo' : 'la contraseña';
@@ -105,7 +105,7 @@ class AuthenticationHelper {
   }
 
   Future<UserCredential> _getUserCredential({required User user, required String actualPwd}) async {
-    MyLog().log(_classString, '_getUserCredential $user', debugType: DebugType.warning );
+    MyLog().log(_classString, '_getUserCredential $user', debugType: DebugType.warning);
 
     AuthCredential authCredential = EmailAuthProvider.credential(
       email: user.email ?? '',

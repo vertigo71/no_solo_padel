@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';
@@ -11,14 +12,14 @@ import '../database/authentication.dart';
 
 final String _classString = 'Login'.toUpperCase();
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  LoginState createState() => LoginState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class LoginState extends State<Login> {
+class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController pwdController = TextEditingController();
@@ -28,8 +29,7 @@ class LoginState extends State<Login> {
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
-      setState(() =>
-          version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(() => version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
       setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
     }
@@ -130,18 +130,16 @@ class LoginState extends State<Login> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       String email = emailController.text + MyUser.emailSuffix;
-      AuthenticationHelper()
-          .signIn(email: email, password: pwdController.text)
-          .then((result) async {
+      AuthenticationHelper().signIn(email: email, password: pwdController.text).then((result) async {
         if (result == null) {
-          if(mounted) await Navigator.of(context).pushNamed(RouteManager.loadingPage);
+          if (mounted) context.pushNamed(AppRoutes.loading);
 
           MyLog().log(_classString, 'back to login');
           setState(() {
             pwdController.text = '';
           });
         } else {
-          if(mounted) showMessage(context, result);
+          if (mounted) showMessage(context, result);
         }
       });
     }

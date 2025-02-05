@@ -11,19 +11,22 @@ import '../../interface/app_state.dart';
 final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
-  const MatchPage({super.key});
+  final Date matchDate;
+
+  const MatchPage({super.key, required this.matchDate});
+
+  MatchPage.now({super.key}) : matchDate = Date.now();
 
   @override
   Widget build(BuildContext context) {
     MyLog().log(_classString, 'Building');
 
-    final Date date = ModalRoute.of(context)!.settings.arguments as Date;
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
     return DefaultTabController(
       length: isLoggedUserAdmin ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(date.toString()),
+          title: Text(matchDate.toString()),
           bottom: TabBar(
             tabs: [
               if (isLoggedUserAdmin) const _TabBarText('Configurar'),
@@ -34,9 +37,9 @@ class MatchPage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            if (isLoggedUserAdmin) ConfigurationPanel(date),
-            PlayersPanel(date),
-            SortingPanel(date),
+            if (isLoggedUserAdmin) ConfigurationPanel(matchDate),
+            PlayersPanel(matchDate),
+            SortingPanel(matchDate),
           ],
         ),
       ),

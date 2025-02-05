@@ -41,7 +41,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
 
     loggedUser = appState.getLoggedUser();
-    selectedUser = appState.allSortedUsers[0];
+    selectedUser = appState.sortUsers[0];
 
     MyLog().log(_classString, 'initState arguments = $match');
 
@@ -131,7 +131,7 @@ class PlayersPanelState extends State<PlayersPanel> {
       );
 
   Widget signUpAdminForm() {
-    List<MyUser> users = appState.allSortedUsers;
+    List<MyUser> users = appState.sortUsers;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),

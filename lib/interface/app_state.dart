@@ -15,11 +15,14 @@ class AppState with ChangeNotifier {
     MyLog().log(_classString, 'Building ');
   }
 
+  /// attributes
   MyParameters _parameters = MyParameters();
   MyUser _loggedUser = MyUser();
   final List<MyUser> _allUsers = [];
   final List<MyMatch> _allMatches = [];
 
+  /// deleteALL: reset parameters attribute, loggedUser=none
+  /// remove all matches and users from memory
   void deleteAll() {
     MyLog().log(_classString, 'deleteAll ');
     setLoggedUser(MyUser(), notify: false);
@@ -28,6 +31,7 @@ class AppState with ChangeNotifier {
     _allUsers.clear();
   }
 
+  /// parameter methods
   String getParameterValue(ParametersEnum parameter) => _parameters.getStrValue(parameter);
 
   int getIntParameterValue(ParametersEnum parameter) => _parameters.getIntValue(parameter);
@@ -52,6 +56,7 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
+  /// user methods
   MyUser getLoggedUser() => _loggedUser;
 
   void setLoggedUser(MyUser loggedUser, {required bool notify}) {
@@ -73,19 +78,20 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  List<MyUser> get allUsers => _allUsers;
+  List<MyUser> get usersCopy => List.from(_allUsers);
+  int get numUsers => _allUsers.length;
 
-  List<MyUser> get allSortedUsers {
+  List<MyUser> get sortUsers {
     // _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     _allUsers.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
     return _allUsers;
   }
 
-  List<MyMatch> get allMatches => _allMatches;
+  List<MyMatch> get matchesCopy => List.from(_allMatches);
 
-  List<MyMatch> get allSortedMatches {
+  List<MyMatch> get sortMatches {
     _allMatches.sort((a, b) => a.date.compareTo(b.date));
-    return _allMatches;
+    return matchesCopy;
   }
 
   List<MyMatch> getSortedMatchesIfDayPlayable() {

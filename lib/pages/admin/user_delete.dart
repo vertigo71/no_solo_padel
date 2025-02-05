@@ -46,7 +46,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
           children: [
             ...ListTile.divideTiles(
                 context: context,
-                tiles: appState.allSortedUsers.map(((user) => ListTile(
+                tiles: appState.sortUsers.map(((user) => ListTile(
                       leading: CircleAvatar(
                           backgroundColor: getUserColor(user),
                           child: Text(user.userType.name[0].toUpperCase())),
@@ -69,7 +69,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                         if (response.isEmpty || response == option2) return;
 
                         // Delete user from matches
-                        for (MyMatch match in appState.allMatches) {
+                        for (MyMatch match in appState.matchesCopy) {
                           bool playerExisted = match.removePlayer(user.userId);
                           if (playerExisted) {
                             MyLog().log(_classString, 'deleting $user from ${match.date}',

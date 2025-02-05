@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
@@ -23,6 +24,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
+
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
     RegisterPage(),
@@ -38,8 +40,20 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope( // TODO: deprecated
-      onWillPop: _onBackPressed,
+    return PopScope(
+      canPop: false, // Important: Initially set to false
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return; // If already popped by system, do nothing
+        bool response = await _onBackPressed(); // Your custom logic
+
+        if (response && context.mounted) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            showMessage(context, "Error al pulsar salir de la pantalla.");
+          }
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -50,7 +64,7 @@ class _MainPageState extends State<MainPage> {
                 if (appState.isLoggedUserSuper) {
                   return IconButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, RouteManager.adminPage);
+                      context.pushNamed(AppRoutes.admin);
                     },
                     icon: const Icon(Icons.admin_panel_settings),
                     tooltip: 'Configuración',
@@ -68,7 +82,13 @@ class _MainPageState extends State<MainPage> {
                 if (!response) return;
 
                 MyLog().log(_classString, 'Icon SignOut before pop');
-                if (context.mounted) Navigator.pop(context);
+                if (context.mounted) {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    showMessage(context, "Error al pulsar salir de la pantalla.");
+                  }
+                }
               },
               icon: const Icon(Icons.exit_to_app),
               tooltip: 'Salir',
@@ -112,6 +132,7 @@ class _MainPageState extends State<MainPage> {
     MyLog().log(_classString, '_onBackPressed response = $response');
     if (mounted) {
       await AuthenticationHelper().signOut(signedOutFunction: context.read<Director>().firebaseHelper.disposeListeners);
+      if (mounted) context.read<AppState>().deleteAll();
     }
     MyLog().log(_classString, '_onBackPressed before exiting');
     return true;

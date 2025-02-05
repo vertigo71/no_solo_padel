@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -44,7 +45,10 @@ class HomePage extends StatelessWidget {
                         : null,
                     enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                     onTap: () {
-                      Navigator.pushNamed(context, RouteManager.matchPage, arguments: match.date);
+                      context.pushNamed(
+                        AppRoutes.match,
+                        extra: match.date,
+                      );
                     },
                   ),
                 );
