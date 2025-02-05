@@ -25,12 +25,10 @@ class FirebaseHelper {
 
   // return false if existed, true if created
   Future<bool> createMatchIfNotExists({required MyMatch match}) async {
-    bool exists =
-        await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
+    bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
     MyLog().log(_classString, 'createMatchIfNotExists exists? $exists $match');
     if (exists) return false;
-    MyLog().log(_classString, 'createMatchIfNotExists creating $exists $match',
-        debugType: DebugType.warning);
+    MyLog().log(_classString, 'createMatchIfNotExists creating $exists $match', debugType: DebugType.warning);
     await updateMatch(match: match, updateCore: true, updatePlayers: true);
     return true;
   }
@@ -43,10 +41,8 @@ class FirebaseHelper {
     required Date fromDate,
     required int numDays,
     required void Function(MyParameters? parameters) parametersFunction,
-    required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed)
-        usersFunction,
-    required void Function(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed)
-        matchesFunction,
+    required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
+    required void Function(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed) matchesFunction,
   }) async {
     await disposeListeners();
 
@@ -64,8 +60,7 @@ class FirebaseHelper {
         if (snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
-        MyLog()
-            .log(_classString, 'LISTENER parameters = $myParameters', debugType: DebugType.warning);
+        MyLog().log(_classString, 'LISTENER parameters = $myParameters', debugType: DebugType.warning);
         parametersFunction(myParameters ?? MyParameters());
       });
     } catch (e) {
@@ -102,8 +97,7 @@ class FirebaseHelper {
       _matchesListener = _instance
           .collection(strDB(DBFields.matches))
           .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId,
-              isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
+          .where(FieldPath.documentId, isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
           .snapshots()
           .listen((snapshot) {
         MyLog().log(_classString, 'LISTENER matches started');
@@ -148,8 +142,7 @@ class FirebaseHelper {
     required List<MyUser> modifiedUsers,
     required List<MyUser> removedUsers,
   }) {
-    MyLog().log(_classString, '_downloadChangedUsers #users = ${snapshot.docs.length}',
-        debugType: DebugType.warning);
+    MyLog().log(_classString, '_downloadChangedUsers #users = ${snapshot.docs.length}', debugType: DebugType.warning);
 
     addedUsers.clear();
     modifiedUsers.clear();
@@ -224,18 +217,15 @@ class FirebaseHelper {
 
     return _instance
         .collection(strDB(collection))
-        .where(FieldPath.documentId,
-            isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
+        .where(FieldPath.documentId, isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog()
-            .log(_classString, 'Delete ${collection.name} ${ds.id}', debugType: DebugType.warning);
+        MyLog().log(_classString, 'Delete ${collection.name} ${ds.id}', debugType: DebugType.warning);
         ds.reference.delete();
       }
     }).catchError((onError) {
-      MyLog().log(_classString, 'delete ${collection.name}',
-          exception: onError, debugType: DebugType.error);
+      MyLog().log(_classString, 'delete ${collection.name}', exception: onError, debugType: DebugType.error);
     });
   }
 
@@ -275,8 +265,7 @@ class FirebaseHelper {
       );
 
   // stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({ Date? fromDate,  Date? maxDate}) =>
-      getStream(
+  Stream<List<MyMatch>>? getMatchesStream({Date? fromDate, Date? maxDate}) => getStream(
         collection: strDB(DBFields.matches),
         fromJson: MyMatch.fromJson,
         fromDate: fromDate,
@@ -297,8 +286,7 @@ class FirebaseHelper {
       if (data != null && data.isNotEmpty) {
         return fromJson(data);
       } else {
-        MyLog().log(_classString, 'getObject $collection $doc not found or empty',
-            debugType: DebugType.error);
+        MyLog().log(_classString, 'getObject $collection $doc not found or empty', debugType: DebugType.error);
       }
     } catch (e) {
       MyLog().log(_classString, 'getObject ', exception: e, debugType: DebugType.error);
@@ -314,9 +302,7 @@ class FirebaseHelper {
 
   Future<MyParameters> getParameters() async =>
       await getObject(
-          collection: strDB(DBFields.parameters),
-          doc: strDB(DBFields.parameters),
-          fromJson: MyParameters.fromJson) ??
+          collection: strDB(DBFields.parameters), doc: strDB(DBFields.parameters), fromJson: MyParameters.fromJson) ??
       MyParameters();
 
   Future<MyUser?> getUserByEmail(String email) async {
@@ -327,13 +313,11 @@ class FirebaseHelper {
           await _instance.collection(strDB(DBFields.users)).where('email', isEqualTo: email).get();
 
       if (querySnapshot.size > 1) {
-        MyLog().log(_classString, 'getUserByEmail $email number = ${querySnapshot.size}',
-            debugType: DebugType.error);
+        MyLog().log(_classString, 'getUserByEmail $email number = ${querySnapshot.size}', debugType: DebugType.error);
         return null;
       }
       if (querySnapshot.size == 0) {
-        MyLog()
-            .log(_classString, 'getUserByEmail $email doesnt exist', debugType: DebugType.warning);
+        MyLog().log(_classString, 'getUserByEmail $email doesnt exist', debugType: DebugType.warning);
         return null;
       }
 
@@ -341,8 +325,7 @@ class FirebaseHelper {
       if (data != null && data.isNotEmpty) {
         return MyUser.fromJson(data);
       } else {
-        MyLog().log(_classString, 'getUserByEmail $email not found or empty',
-            debugType: DebugType.error);
+        MyLog().log(_classString, 'getUserByEmail $email not found or empty', debugType: DebugType.error);
       }
     } catch (e) {
       MyLog().log(_classString, 'getUserByEmail ', exception: e, debugType: DebugType.error);
@@ -379,8 +362,7 @@ class FirebaseHelper {
     } catch (e) {
       MyLog().log(_classString, 'gelAllObjects', exception: e, debugType: DebugType.error);
     }
-    MyLog().log(_classString, 'gelAllObjects #$collection = ${items.length} ',
-        debugType: DebugType.warning);
+    MyLog().log(_classString, 'gelAllObjects #$collection = ${items.length} ', debugType: DebugType.warning);
     return items;
   }
 
@@ -406,8 +388,7 @@ class FirebaseHelper {
     required String doc,
     bool forceSet = false,
   }) async {
-    MyLog().log(_classString, 'updateObject  $collection $doc',
-        myCustomObject: map, debugType: DebugType.warning);
+    MyLog().log(_classString, 'updateObject  $collection $doc', myCustomObject: map, debugType: DebugType.warning);
     if (forceSet) {
       return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
         MyLog().log(_classString, 'updateObject ', exception: onError, debugType: DebugType.error);
@@ -434,8 +415,7 @@ class FirebaseHelper {
   }
 
   // core = comment + isOpen + courtNAmes (all except players)
-  Future<void> updateMatch(
-          {required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
+  Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       updateObject(
         map: match.toJson(core: updateCore, matchPlayers: updatePlayers),
         collection: strDB(DBFields.matches),
@@ -460,8 +440,7 @@ class FirebaseHelper {
   Future<void> deleteUser(MyUser myUser) async {
     MyLog().log(_classString, 'deleteUser deleting user $myUser');
     if (myUser.userId == '') {
-      MyLog().log(_classString, 'deleteUser wrong id',
-          myCustomObject: myUser, debugType: DebugType.error);
+      MyLog().log(_classString, 'deleteUser wrong id', myCustomObject: myUser, debugType: DebugType.error);
     }
 
     // delete user
@@ -469,17 +448,14 @@ class FirebaseHelper {
       MyLog().log(_classString, 'deleteUser user $myUser deleted');
       await _instance.collection(strDB(DBFields.users)).doc(myUser.userId).delete();
     } catch (e) {
-      MyLog().log(_classString, 'deleteUser error when deleting',
-          myCustomObject: myUser, debugType: DebugType.error);
+      MyLog().log(_classString, 'deleteUser error when deleting', myCustomObject: myUser, debugType: DebugType.error);
     }
   }
 
   /// return match if it was inserted. null otherwise
-  Future<MyMatch?> addPlayerToMatch(
-      {required Date date, required String userId, int position = -1}) async {
+  Future<MyMatch?> addPlayerToMatch({required Date date, required String userId, int position = -1}) async {
     MyLog().log(_classString, 'addPlayer adding user $userId to $date position $position');
-    DocumentReference documentReference =
-        _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
       // get match
@@ -501,8 +477,7 @@ class FirebaseHelper {
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog().log(_classString, 'addPlayer error adding $userId to match $date',
-          debugType: DebugType.error);
+      MyLog().log(_classString, 'addPlayer error adding $userId to match $date', debugType: DebugType.error);
       throw Exception('Error al añadir jugador $userId al partido $date\n'
           'Error = $onError');
     });
@@ -511,8 +486,7 @@ class FirebaseHelper {
   /// return match if it was deleted. null otherwise
   Future<MyMatch?> deletePlayerFromMatch({required Date date, required String userId}) async {
     MyLog().log(_classString, 'deletePlayerFromMatch deleting user $userId from $date');
-    DocumentReference documentReference =
-        _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
       // get match
