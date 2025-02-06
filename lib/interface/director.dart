@@ -57,7 +57,7 @@ class Director {
       numDays: _appState.getIntParameterValue(ParametersEnum.matchDaysToView),
       parametersFunction: _appState.setAllParametersAndNotify,
       usersFunction: _appState.setChangedUsersAndNotify,
-      matchesFunction: _appState.setChangedMatchesAndNotify,
+      // matchesFunction: _appState.setChangedMatchesAndNotify,
     );
   }
 

@@ -7,45 +7,47 @@ import 'package:provider/provider.dart';
 import '../../database/firebase.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
+import '../../interface/matchNotifier.dart';
 import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
-import '../../utilities/date.dart';
 import '../../utilities/misc.dart';
 
 final String _classString = 'PlayersPanel'.toUpperCase();
 
 class PlayersPanel extends StatefulWidget {
-  const PlayersPanel(this.date, {super.key});
+  const PlayersPanel(this.initialMatch, {super.key});
 
-  final Date date;
+  final MyMatch initialMatch;
 
   @override
   PlayersPanelState createState() => PlayersPanelState();
 }
 
+/// TODO: call updateMatch when match updated in the firebase
+
 class PlayersPanelState extends State<PlayersPanel> {
   late final AppState appState;
-
   late final MyUser loggedUser;
-
   late MyUser selectedUser;
+  late MyMatch initialMatch;
+
   final TextEditingController userPositionController = TextEditingController();
 
   @override
   void initState() {
+    super.initState();
+
     appState = context.read<AppState>();
-    MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+    initialMatch = widget.initialMatch;
 
     loggedUser = appState.getLoggedUser();
     selectedUser = appState.sortUsers[0];
 
-    MyLog().log(_classString, 'initState arguments = $match');
-
-    super.initState();
+    MyLog().log(_classString, 'initState arguments = $initialMatch');
   }
 
   @override
@@ -57,6 +59,9 @@ class PlayersPanelState extends State<PlayersPanel> {
   @override
   Widget build(BuildContext context) {
     MyLog().log(_classString, 'Building for $loggedUser');
+
+    final matchNotifier = context.watch<MatchNotifier>(); // Watch for changes in the match
+    initialMatch = matchNotifier.match;
 
     return ListView(
       children: [
@@ -76,12 +81,12 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   Widget actualState() => Padding(
         padding: const EdgeInsets.all(18.0),
-        child: Consumer<AppState>(
-          builder: (context, appState, _) {
-            MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+        child: Builder(
+          builder: (context) {
             String returnText = '';
-            if (match.isInTheMatch(loggedUser.userId)) {
-              if (match.isPlaying(loggedUser.userId)) {
+            initialMatch = context.read<MatchNotifier>().match;
+            if (initialMatch.isInTheMatch(loggedUser.userId)) {
+              if (initialMatch.isPlaying(loggedUser.userId)) {
                 returnText = 'Juegas!!!';
               } else {
                 returnText = 'Apuntado\n(pendiente de completar pista)';
@@ -105,10 +110,9 @@ class PlayersPanelState extends State<PlayersPanel> {
           children: [
             const Text('¿Te apuntas?'),
             const SizedBox(width: 20),
-            Consumer<AppState>(
-              builder: (context, appState, _) {
-                MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                bool loggedUserInTheMatch = match.isInTheMatch(loggedUser.userId);
+            Builder(
+              builder: (context) {
+                bool loggedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(loggedUser.userId);
 
                 return myCheckBox(
                   context: context,
@@ -119,7 +123,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                     });
                     validate(
                       user: loggedUser,
-                      toAdd: loggedUserInTheMatch,
+                      toAdd: loggedUserInTheMatch, // loggedUserInTheMatch? add Player : delete Player
                       adminManagingUser: false,
                     );
                   },
@@ -130,120 +134,11 @@ class PlayersPanelState extends State<PlayersPanel> {
         ),
       );
 
-  Widget signUpAdminForm() {
-    List<MyUser> users = appState.sortUsers;
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Flexible(
-            flex: 3,
-            child: SizedBox(
-              height: 260,
-              child: ListWheelScrollView(
-                itemExtent: 40,
-                magnification: 1.3,
-                useMagnifier: true,
-                diameterRatio: 2,
-                squeeze: 0.7,
-                offAxisFraction: -0.3,
-                perspective: 0.01,
-                physics: const FixedExtentScrollPhysics(),
-                scrollBehavior: const MaterialScrollBehavior().copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.mouse,
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.stylus,
-                    PointerDeviceKind.unknown
-                  },
-                ),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedUser = users[index];
-                  });
-                },
-                children: users
-                    .map((u) => Container(
-                          margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25), color: Theme.of(context).colorScheme.surface),
-                          child: Center(
-                              child: Text(u.name,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ))),
-                        ))
-                    .toList(),
-              ),
-            ),
-          ),
-          const Spacer(),
-          Flexible(
-              flex: 2,
-              child: Consumer<AppState>(
-                builder: (context, appState, _) {
-                  MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
-                  bool isSelectedUserInTheMatch = match.isInTheMatch(selectedUser.userId);
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + selectedUser.name,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        onPressed: () => validate(
-                          user: selectedUser,
-                          toAdd: !isSelectedUserInTheMatch,
-                          adminManagingUser: true,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Opacity(
-                        opacity: isSelectedUserInTheMatch ? 0 : 1,
-                        child: Form(
-                            child: TextFormField(
-                          enabled: !isSelectedUserInTheMatch,
-                          decoration: const InputDecoration(
-                            labelText: 'Posición',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                            ),
-                          ),
-                          onFieldSubmitted: (String str) async => validate(
-                            user: selectedUser,
-                            toAdd: true,
-                            adminManagingUser: true,
-                          ),
-                          keyboardType: TextInputType.text,
-                          inputFormatters: [
-                            FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
-                          ],
-                          controller: userPositionController,
-                          // The validator receives the text that the user has entered.
-                        )),
-                      ),
-                    ],
-                  );
-                },
-              ))
-        ],
-      ),
-    );
-  }
-
-  Widget listOfPlayers() => Consumer<AppState>(
-        builder: (context, appState, _) {
+  Widget listOfPlayers() => Builder(
+        builder: (context) {
           int playerNumber = 0;
           MyLog().log(_classString, 'Building listOfPlayers', debugType: DebugType.info);
-          MyMatch match = appState.getMatch(widget.date) ?? MyMatch(date: widget.date);
+          MyMatch match = context.read<MatchNotifier>().match;
 
           List<MyUser> usersPlaying = appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
           List<MyUser> usersSigned = appState.userIdsToUsers(match.getPlayers(state: PlayingState.signedNotPlaying));
@@ -312,8 +207,9 @@ class PlayersPanelState extends State<PlayersPanel> {
       );
 
   Future<bool> validate({
+    /// add/remove user from Match in Firebase
     required MyUser user,
-    required bool toAdd, // add user to match
+    required bool toAdd, // add/remove user to match
     required bool adminManagingUser,
   }) async {
     MyLog().log(_classString, 'validate');
@@ -330,7 +226,8 @@ class PlayersPanelState extends State<PlayersPanel> {
           listPosition = int.tryParse(userPositionController.text) ?? -1;
           if (listPosition > 0) listPosition--;
         }
-        myMatch = await firebaseHelper.addPlayerToMatch(date: widget.date, userId: user.userId, position: listPosition);
+        myMatch = await firebaseHelper.addPlayerToMatch(
+            date: context.read<MatchNotifier>().match.date, userId: user.userId, position: listPosition);
         if (myMatch != null) {
           listPosition = myMatch.getPlayerPosition(user.userId);
           if (listPosition == -1) {
@@ -359,7 +256,10 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
           registerText = '${user.name} se ha desapuntado';
         }
-        myMatch = await firebaseHelper.deletePlayerFromMatch(date: widget.date, userId: user.userId);
+        if (mounted) {
+          myMatch = await firebaseHelper.deletePlayerFromMatch(
+              date: context.read<MatchNotifier>().match.date, userId: user.userId);
+        }
       }
     } on FirebaseException catch (e) {
       if (mounted) myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
@@ -384,22 +284,30 @@ class PlayersPanelState extends State<PlayersPanel> {
         if (mounted) showMessage(context, 'El jugador no estaba en el partido');
       }
       return false;
+    } else {
+      // notify match has changed
+      // this is Key to update all panels
+      if (mounted) context.read<MatchNotifier>().updateMatch(myMatch);
     }
 
     //  state updated via consumers
     // telegram and register
     try {
       MyLog().log(_classString, 'validate $user update register', debugType: DebugType.warning);
-      await firebaseHelper.updateRegister(RegisterModel(
-        date: widget.date,
-        message: registerText,
-      ));
+      if (mounted) {
+        await firebaseHelper.updateRegister(RegisterModel(
+          date: context.read<MatchNotifier>().match.date,
+          message: registerText,
+        ));
+      }
       MyLog().log(_classString, 'validate $user send telegram', debugType: DebugType.warning);
-      sendDatedMessageToTelegram(
-          message: '$registerText\n'
-              'APUNTADOS: ${myMatch.players.length} de ${myMatch.getNumberOfCourts() * 4}',
-          matchDate: widget.date,
-          fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+      if (mounted) {
+        sendDatedMessageToTelegram(
+            message: '$registerText\n'
+                'APUNTADOS: ${myMatch.players.length} de ${myMatch.getNumberOfCourts() * 4}',
+            matchDate: context.read<MatchNotifier>().match.date,
+            fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+      }
     } catch (e) {
       MyLog()
           .log(_classString, 'ERROR sending message to telegram or register', exception: e, debugType: DebugType.error);
@@ -423,5 +331,113 @@ class PlayersPanelState extends State<PlayersPanel> {
     String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
     MyLog().log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == option1;
+  }
+
+  Widget signUpAdminForm() {
+    List<MyUser> users = appState.sortUsers;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Flexible(
+            flex: 3,
+            child: SizedBox(
+              height: 260,
+              child: ListWheelScrollView(
+                itemExtent: 40,
+                magnification: 1.3,
+                useMagnifier: true,
+                diameterRatio: 2,
+                squeeze: 0.7,
+                offAxisFraction: -0.3,
+                perspective: 0.01,
+                physics: const FixedExtentScrollPhysics(),
+                scrollBehavior: const MaterialScrollBehavior().copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.stylus,
+                    PointerDeviceKind.unknown
+                  },
+                ),
+                onSelectedItemChanged: (index) {
+                  setState(() {
+                    selectedUser = users[index];
+                  });
+                },
+                children: users
+                    .map((u) => Container(
+                          margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25), color: Theme.of(context).colorScheme.surface),
+                          child: Center(
+                              child: Text(u.name,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ))),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+          const Spacer(),
+          Flexible(
+              flex: 2,
+              child: Builder(
+                builder: (context) {
+                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(selectedUser.userId);
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + selectedUser.name,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        onPressed: () => validate(
+                          user: selectedUser,
+                          toAdd: !isSelectedUserInTheMatch,
+                          adminManagingUser: true,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Opacity(
+                        opacity: isSelectedUserInTheMatch ? 0 : 1,
+                        child: Form(
+                            child: TextFormField(
+                          enabled: !isSelectedUserInTheMatch,
+                          decoration: const InputDecoration(
+                            labelText: 'Posición',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                            ),
+                          ),
+                          onFieldSubmitted: (String str) async => validate(
+                            user: selectedUser,
+                            toAdd: true,
+                            adminManagingUser: true,
+                          ),
+                          keyboardType: TextInputType.text,
+                          inputFormatters: [
+                            FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
+                          ],
+                          controller: userPositionController,
+                          // The validator receives the text that the user has entered.
+                        )),
+                      ),
+                    ],
+                  );
+                },
+              ))
+        ],
+      ),
+    );
   }
 }

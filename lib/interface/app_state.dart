@@ -19,7 +19,8 @@ class AppState with ChangeNotifier {
   MyParameters _parameters = MyParameters();
   MyUser _loggedUser = MyUser();
   final List<MyUser> _allUsers = [];
-  final List<MyMatch> _allMatches = [];
+
+  // final List<MyMatch> _allMatches = [];
 
   /// deleteALL: reset parameters attribute, loggedUser=none
   /// remove all matches and users from memory
@@ -27,7 +28,7 @@ class AppState with ChangeNotifier {
     MyLog().log(_classString, 'deleteAll ');
     setLoggedUser(MyUser(), notify: false);
     setAllParameters(null, notify: false);
-    _allMatches.clear();
+    // _allMatches.clear();
     _allUsers.clear();
   }
 
@@ -40,14 +41,16 @@ class AppState with ChangeNotifier {
 
   bool isDayPlayable(Date date) => _parameters.isDayPlayable(date);
 
+  Date get maxDateOfMatchesToView =>
+      Date.now().add(Duration(days: getIntParameterValue(ParametersEnum.matchDaysToView)));
+
   void setParameterValue(ParametersEnum parameter, String value, {required bool notify}) {
     MyLog().log(_classString, 'setParameter $parameter $value');
     _parameters.setValue(parameter, value);
     if (notify) notifyListeners();
   }
 
-  void setAllParametersAndNotify(MyParameters? myParameters) =>
-      setAllParameters(myParameters, notify: true);
+  void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {
     MyLog().log(_classString, 'setAllParameters $myParameters', debugType: DebugType.warning);
@@ -79,24 +82,13 @@ class AppState with ChangeNotifier {
   }
 
   List<MyUser> get usersCopy => List.from(_allUsers);
+
   int get numUsers => _allUsers.length;
 
   List<MyUser> get sortUsers {
     // _allUsers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     _allUsers.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
     return _allUsers;
-  }
-
-  List<MyMatch> get matchesCopy => List.from(_allMatches);
-
-  List<MyMatch> get sortMatches {
-    _allMatches.sort((a, b) => a.date.compareTo(b.date));
-    return matchesCopy;
-  }
-
-  List<MyMatch> getSortedMatchesIfDayPlayable() {
-    _allMatches.sort((a, b) => a.date.compareTo(b.date));
-    return _allMatches.where((element) => isDayPlayable(element.date)).toList();
   }
 
   bool get isLoggedUserAdmin => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
@@ -121,10 +113,8 @@ class AppState with ChangeNotifier {
   void setChangedUsersAndNotify(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) =>
       setChangedUsers(added, modified, removed, notify: true);
 
-  void setChangedUsers(List<MyUser> added, List<MyUser> modified, List<MyUser> removed,
-      {required bool notify}) {
-    MyLog().log(
-        _classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ',
+  void setChangedUsers(List<MyUser> added, List<MyUser> modified, List<MyUser> removed, {required bool notify}) {
+    MyLog().log(_classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ',
         debugType: DebugType.warning);
 
     if (added.isNotEmpty) {
@@ -154,38 +144,6 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void setChangedMatchesAndNotify(
-          List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed) =>
-      setChangedMatches(added, modified, removed, notify: true);
-
-  void setChangedMatches(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed,
-      {required bool notify}) {
-    MyLog().log(_classString,
-        'setChangedMatches a=${added.length} m=${modified.length} r=${removed.length} ',
-        debugType: DebugType.warning);
-
-    if (added.isNotEmpty) {
-      MyLog().log(_classString, 'setChangedMatches added $added ');
-    }
-    if (modified.isNotEmpty) {
-      MyLog().log(_classString, 'setChangedMatches modified $modified ');
-    }
-    if (removed.isNotEmpty) {
-      MyLog().log(_classString, 'setChangedMatches removed $removed ');
-    }
-
-    added.addAll(modified);
-    MyLog().log(_classString, 'setChangedMatches updating matches: $added');
-    for (var newMatch in added) {
-      removeMatchByDateBold(newMatch.date);
-    }
-    _allMatches.addAll(added);
-    for (var newMatch in removed) {
-      MyLog().log(_classString, 'setChangedMatches remove match: $newMatch ');
-      removeMatchByDateBold(newMatch.date);
-    }
-    if (notify) notifyListeners();
-  }
 
   MyUser? getUserByName(String name) => _allUsers.firstWhereOrNull((user) => user.name == name);
 
@@ -194,10 +152,6 @@ class AppState with ChangeNotifier {
   MyUser? getUserByEmail(String email) => _allUsers.firstWhereOrNull((user) => user.email == email);
 
   void removeUserByIdBold(String id) => _allUsers.removeWhere((user) => user.userId == id);
-
-  MyMatch? getMatch(Date date) => _allMatches.firstWhereOrNull((match) => match.date == date);
-
-  void removeMatchByDateBold(Date date) => _allMatches.removeWhere((match) => match.date == date);
 
   /// return null if exists or incorrect format
   /// unique name, email and id
@@ -232,24 +186,21 @@ class AppState with ChangeNotifier {
         userExists = getUserById(user.userId);
       } while (userExists != null);
     }
-    MyLog()
-        .log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.warning);
+    MyLog().log(_classString, 'createNewUserByEmail new User = $user', debugType: DebugType.warning);
     return user;
   }
 
   List<MyUser> userIdsToUsers(Iterable<String> usersId) {
     List<MyUser> users = usersId.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
     if (usersId.length != users.length) {
-      MyLog().log(_classString, 'stringToUsers ERROR $usersId',
-          myCustomObject: users, debugType: DebugType.error);
+      MyLog().log(_classString, 'stringToUsers ERROR $usersId', myCustomObject: users, debugType: DebugType.error);
     }
     return users;
   }
 
   // true if nothing deleted
   bool deleteNonUsersInMatch(MyMatch match) {
-    List<MyUser> players =
-        match.players.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
+    List<MyUser> players = match.players.map((userId) => getUserById(userId)).whereType<MyUser>().toList();
     if (match.players.length != players.length) {
       MyLog().log(_classString, 'deleteNonUsersInMatch Non existing users $match',
           myCustomObject: players, debugType: DebugType.error);
@@ -262,6 +213,6 @@ class AppState with ChangeNotifier {
 
   @override
   String toString() => 'Parameters = $_parameters\n'
-      '#users=${_allUsers.length} #matches=${_allMatches.length}\n'
+      '#users=${_allUsers.length}\n'
       'loggedUser=$_loggedUser';
 }

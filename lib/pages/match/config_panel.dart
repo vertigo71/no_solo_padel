@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel_dev/interface/matchNotifier.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase.dart';
@@ -11,16 +12,14 @@ import '../../interface/app_state.dart';
 import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/user_model.dart';
-import '../../utilities/date.dart';
 import '../../utilities/misc.dart';
 
 final String _classString = 'ConfigurationPanel'.toUpperCase();
 
 class ConfigurationPanel extends StatefulWidget {
-  const ConfigurationPanel(this.date, {super.key});
+  const ConfigurationPanel(this.initialMatch, {super.key});
 
-  // arguments
-  final Date date;
+  final MyMatch initialMatch;
 
   @override
   ConfigurationPanelState createState() {
@@ -35,6 +34,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<SettingsPageState>.
   final _formKey = GlobalKey<FormState>();
+  late MyMatch initialMatch;
 
   static const int maxNumberOfCourts = 6;
   List<TextEditingController> courtControllers = [];
@@ -49,15 +49,14 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
   @override
   void initState() {
-    MyMatch match = context.read<AppState>().getMatch(widget.date) ?? MyMatch(date: widget.date);
-    MyLog().log(_classString, 'initState arguments = $match');
+    initialMatch = widget.initialMatch;
+    MyLog().log(_classString, 'initState arguments = $initialMatch');
 
-    isMatchOpen = match.isOpen;
-    initialCourtValues.addAll(match.courtNames);
-    initialCommentValue = match.comment;
+    isMatchOpen = initialMatch.isOpen;
+    initialCourtValues.addAll(initialMatch.courtNames);
+    initialCommentValue = initialMatch.comment;
     if (initialCommentValue.isEmpty) {
-      initialCommentValue =
-          context.read<AppState>().getParameterValue(ParametersEnum.defaultCommentText);
+      initialCommentValue = context.read<AppState>().getParameterValue(ParametersEnum.defaultCommentText);
     }
 
     MyLog().log(_classString, 'initState Initial court values = $initialCourtValues');
@@ -91,6 +90,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     MyLog().log(_classString, 'Building');
+
+    final matchNotifier = context.watch<MatchNotifier>(); // Watch for changes in the match
+    initialMatch=matchNotifier.match;
 
     return Padding(
       padding: const EdgeInsets.all(18.0),
@@ -150,7 +152,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
 
       // all is correct or match is not open
-      MyMatch newMatch = MyMatch(date: widget.date);
+      MyMatch newMatch = MyMatch(date: context.read<MatchNotifier>().match.date);
       // add courts available
       for (var controller in courtControllers) {
         if (controller.text.isNotEmpty) {
@@ -163,46 +165,41 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // Update to Firebase
       String message = 'Los datos han sido actualizados';
       try {
-        MyMatch? oldMatch = context.read<AppState>().getMatch(widget.date);
+        MyMatch oldMatch = context.read<MatchNotifier>().match;
         FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
         AppState appState = context.read<AppState>();
 
         /// upload firebase
-        await context
-            .read<Director>()
-            .firebaseHelper
-            .updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        await firebaseHelper.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
 
-        if (oldMatch != null) {
-          String registerText = '';
-          MyUser loggedUser = appState.getLoggedUser();
-          int newNumCourts = newMatch.getNumberOfCourts();
+        String registerText = '';
+        MyUser loggedUser = appState.getLoggedUser();
+        int newNumCourts = newMatch.getNumberOfCourts();
 
-          /// detect if the match has been opened or closed
-          /// otherwise detect if there is a change in the number of courts
-          if (newMatch.isOpen != oldMatch.isOpen) {
-            if (newMatch.isOpen) {
-              registerText = 'Nueva convocatoria\n${loggedUser.name} ha abierto ${singularOrPlural(newNumCourts, 'pista')}';
-            } else {
-              registerText = '${loggedUser.name} ha cerrado la convocatoria';
-            }
-          } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
-            registerText = '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles')}';
+        /// detect if the match has been opened or closed
+        /// otherwise detect if there is a change in the number of courts
+        if (newMatch.isOpen != oldMatch.isOpen) {
+          if (newMatch.isOpen) {
+            registerText =
+                'Nueva convocatoria\n${loggedUser.name} ha abierto ${singularOrPlural(newNumCourts, 'pista')}';
+          } else {
+            registerText = '${loggedUser.name} ha cerrado la convocatoria';
           }
-
-          if (registerText.isNotEmpty) {
-            firebaseHelper
-                .updateRegister(RegisterModel(date: newMatch.date, message: registerText));
-            sendDatedMessageToTelegram(
-              message: registerText,
-              matchDate: newMatch.date,
-            );
-          }
+        } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
+          registerText =
+              '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles')}';
         }
-      } catch (e) {
+
+        if (registerText.isNotEmpty) {
+          firebaseHelper.updateRegister(RegisterModel(date: newMatch.date, message: registerText));
+          sendDatedMessageToTelegram(
+            message: registerText,
+            matchDate: newMatch.date,
+          );
+        }
+            } catch (e) {
         message = 'ERROR en la actualización de los datos. \n\n $e';
-        MyLog().log(_classString, 'ERROR en la actualización de los datos',
-            exception: e, debugType: DebugType.error);
+        MyLog().log(_classString, 'ERROR en la actualización de los datos', exception: e, debugType: DebugType.error);
       }
 
       if (mounted) showMessage(context, message);
@@ -211,9 +208,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 }
 
 class ConfigurationFormWidgets extends StatelessWidget {
-  const ConfigurationFormWidgets(
-      this.courtControllers, this.commentController, this.configurationPanelState,
+  const ConfigurationFormWidgets(this.courtControllers, this.commentController, this.configurationPanelState,
       {super.key});
+
   final List<TextEditingController> courtControllers;
   final TextEditingController commentController;
   final ConfigurationPanelState configurationPanelState;
@@ -279,6 +276,7 @@ class ConfigurationFormSingleWidget extends StatelessWidget {
       this.mayBeEmpty = true,
       this.formatter,
       super.key});
+
   final String fieldName;
   final TextEditingController textController;
   final bool mayBeEmpty;

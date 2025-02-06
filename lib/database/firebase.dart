@@ -42,7 +42,6 @@ class FirebaseHelper {
     required int numDays,
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
-    required void Function(List<MyMatch> added, List<MyMatch> modified, List<MyMatch> removed) matchesFunction,
   }) async {
     await disposeListeners();
 
@@ -90,38 +89,6 @@ class FirebaseHelper {
     } catch (e) {
       MyLog().log(_classString, 'createListeners users',
           myCustomObject: _usersListener, exception: e, debugType: DebugType.error);
-    }
-
-    // update matches
-    try {
-      _matchesListener = _instance
-          .collection(strDB(DBFields.matches))
-          .where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd())
-          .where(FieldPath.documentId, isLessThan: Date.now().add(Duration(days: numDays)).toYyyyMMdd())
-          .snapshots()
-          .listen((snapshot) {
-        MyLog().log(_classString, 'LISTENER matches started');
-
-        List<MyMatch> addedMatches = [];
-        List<MyMatch> modifiedMatches = [];
-        List<MyMatch> removedMatches = [];
-        _downloadChangedMatches(
-          snapshot: snapshot,
-          addedMatches: addedMatches,
-          modifiedMatches: modifiedMatches,
-          removedMatches: removedMatches,
-        );
-        MyLog().log(_classString,
-            'LISTENER matches added=${addedMatches.length} mod=${modifiedMatches.length} removed=${removedMatches.length}',
-            debugType: DebugType.warning);
-        MyLog().log(_classString, 'createListeners added', myCustomObject: addedMatches);
-        MyLog().log(_classString, 'createListeners modified', myCustomObject: modifiedMatches);
-        MyLog().log(_classString, 'createListeners removed', myCustomObject: removedMatches);
-        matchesFunction(addedMatches, modifiedMatches, removedMatches);
-      });
-    } catch (e) {
-      MyLog().log(_classString, 'createListeners matches',
-          myCustomObject: _matchesListener, exception: e, debugType: DebugType.error);
     }
   }
 
@@ -237,6 +204,10 @@ class FirebaseHelper {
   }) {
     MyLog().log(_classString, 'getStream $collection', debugType: DebugType.warning);
     Query query = _instance.collection(collection);
+
+    // Order by documentId FIRST
+    query = query.orderBy(FieldPath.documentId); // Add this line FIRST
+
     if (fromDate != null) {
       query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
     }

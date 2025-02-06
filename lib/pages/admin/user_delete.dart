@@ -48,8 +48,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                 context: context,
                 tiles: appState.sortUsers.map(((user) => ListTile(
                       leading: CircleAvatar(
-                          backgroundColor: getUserColor(user),
-                          child: Text(user.userType.name[0].toUpperCase())),
+                          backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
                           '${user.lastLogin ?? 'Nunca'}; '
@@ -62,37 +61,19 @@ class UserDeletePanelState extends State<UserDeletePanel> {
 
                         const String option1 = 'Eliminar';
                         const String option2 = 'Cancelar';
-                        String response = await myReturnValueDialog(
-                            context, '¿Eliminar usuario ${user.name}?', option1, option2);
+                        String response =
+                            await myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', option1, option2);
                         MyLog().log(_classString, 'build response = $response');
 
                         if (response.isEmpty || response == option2) return;
 
-                        // Delete user from matches
-                        for (MyMatch match in appState.matchesCopy) {
-                          bool playerExisted = match.removePlayer(user.userId);
-                          if (playerExisted) {
-                            MyLog().log(_classString, 'deleting $user from ${match.date}',
-                                debugType: DebugType.warning);
-                            try {
-                              await firebaseHelper.updateMatch(
-                                  match: match, updateCore: false, updatePlayers: true);
-                            } catch (e) {
-                              MyLog().log(_classString, 'error delete from matches',
-                                  myCustomObject: user, debugType: DebugType.error);
-                            }
-                          }
-                        }
-
                         // Delete user
                         try {
-                          MyLog().log(_classString, 'Elminando usuario  $user',
-                              debugType: DebugType.warning);
+                          MyLog().log(_classString, 'Elminando usuario  $user', debugType: DebugType.warning);
                           await firebaseHelper.deleteUser(user);
                         } catch (e) {
                           if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
-                          MyLog().log(_classString, 'eliminar usuario',
-                              exception: e, debugType: DebugType.error);
+                          MyLog().log(_classString, 'eliminar usuario', exception: e, debugType: DebugType.error);
                         }
                       },
                     )))),

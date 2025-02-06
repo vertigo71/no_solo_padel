@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:no_solo_padel_dev/models/match_model.dart';
 
 import '../pages/admin/admin_page.dart';
 import '../pages/main/main_page.dart';
@@ -42,8 +43,8 @@ class AppRouter {
       GoRoute(
           path: AppRoutes.matchPath,
           builder: (BuildContext context, GoRouterState state) {
-            final matchDate = state.extra as Date; // Retrieve the argument
-            return MatchPage(matchDate: matchDate); // Pass it to the widget
+            final match = state.extra as MyMatch; // Retrieve the argument
+            return MatchPage(match: match); // Pass it to the widget
           },
           name: AppRoutes.match),
       GoRoute(

@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
+
 import '../database/fields.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
@@ -23,12 +25,7 @@ class MyMatch {
   String comment;
   bool isOpen;
 
-  MyMatch(
-      {required this.date,
-      this.comment = '',
-      this.isOpen = false,
-      Set<String>? players,
-      Set<String>? courtNames}) {
+  MyMatch({required this.date, this.comment = '', this.isOpen = false, Set<String>? players, Set<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
   }
@@ -116,8 +113,7 @@ class MyMatch {
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
-          MyLog().log(_classString, '$date $userId1 played with $userId2 sorting=$sortedList',
-              myCustomObject: players);
+          MyLog().log(_classString, '$date $userId1 played with $userId2 sorting=$sortedList', myCustomObject: players);
           return true;
         }
       }
@@ -145,4 +141,42 @@ class MyMatch {
         if (core) DBFields.comment.name: comment,
         if (core) DBFields.isOpen.name: isOpen, // bool
       };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true; // Check for identity
+    if (other is! MyMatch) return false; // Check for type
+
+    return date == other.date &&
+        SetEquality().equals(players, other.players) && // Use SetEquality
+        SetEquality().equals(courtNames, other.courtNames) && // Use SetEquality
+        comment == other.comment &&
+        isOpen == other.isOpen;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        date,
+        Object.hashAll(players), // Hash the set
+        Object.hashAll(courtNames), // Hash the set
+        comment,
+        isOpen,
+      );
+
+  MyMatch copyWith({
+    Date? date,
+    String? comment,
+    bool? isOpen,
+    Set<String>? players,
+    Set<String>? courtNames,
+  }) {
+    return MyMatch(
+      date: date ?? this.date,
+      comment: comment ?? this.comment,
+      isOpen: isOpen ?? this.isOpen,
+      players: players ?? Set.from(this.players),
+      // Create a new Set if players is provided
+      courtNames: courtNames ?? Set.from(this.courtNames), // Create a new Set if courtNames is provided
+    );
+  }
 }
