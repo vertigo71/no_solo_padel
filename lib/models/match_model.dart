@@ -131,7 +131,7 @@ class MyMatch {
         players: ((json[DBFields.players.name] ?? []).cast<String>()).toSet(),
         courtNames: ((json[DBFields.courtNames.name] ?? []).cast<String>()).toSet(),
         comment: json[DBFields.comment.name] ?? '',
-        isOpen: json[DBFields.isOpen.name], // bool
+        isOpen: json[DBFields.isOpen.name] ?? false, // bool
       );
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {

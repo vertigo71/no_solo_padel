@@ -16,7 +16,6 @@ final String _classString = 'FirebaseHelper'.toUpperCase();
 class FirebaseHelper {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
-  StreamSubscription? _matchesListener;
   StreamSubscription? _paramListener;
 
   FirebaseHelper() {
@@ -96,7 +95,6 @@ class FirebaseHelper {
     MyLog().log(_classString, 'disposeListeners Building  ');
     try {
       await _usersListener?.cancel();
-      await _matchesListener?.cancel();
       await _paramListener?.cancel();
     } catch (e) {
       MyLog().log(_classString, 'disposeListeners', exception: e, debugType: DebugType.error);
@@ -138,40 +136,6 @@ class FirebaseHelper {
         }
       } catch (e) {
         MyLog().log(_classString, '_downloadUsers Wrong Format',
-            myCustomObject: data, exception: e, debugType: DebugType.error);
-      }
-    }
-  }
-
-  void _downloadChangedMatches({
-    required QuerySnapshot snapshot,
-    required List<MyMatch> addedMatches,
-    required List<MyMatch> modifiedMatches,
-    required List<MyMatch> removedMatches,
-  }) {
-    MyLog().log(_classString, '_downloadChangedMatches Number of matches = ${snapshot.docs.length}',
-        debugType: DebugType.warning);
-
-    addedMatches.clear();
-    modifiedMatches.clear();
-    removedMatches.clear();
-
-    for (var docChanged in snapshot.docChanges) {
-      if (docChanged.doc.data() == null) {
-        throw 'Error en la base de datos de partidos';
-      }
-      Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
-      try {
-        MyMatch match = MyMatch.fromJson(data);
-        if (docChanged.type == DocumentChangeType.added) {
-          addedMatches.add(match);
-        } else if (docChanged.type == DocumentChangeType.modified) {
-          modifiedMatches.add(match);
-        } else if (docChanged.type == DocumentChangeType.removed) {
-          removedMatches.add(match);
-        }
-      } catch (e) {
-        MyLog().log(_classString, '_downloadChangedMatches wrong format',
             myCustomObject: data, exception: e, debugType: DebugType.error);
       }
     }
@@ -288,7 +252,7 @@ class FirebaseHelper {
         return null;
       }
       if (querySnapshot.size == 0) {
-        MyLog().log(_classString, 'getUserByEmail $email doesnt exist', debugType: DebugType.warning);
+        MyLog().log(_classString, 'getUserByEmail $email doesn\'t exist', debugType: DebugType.warning);
         return null;
       }
 

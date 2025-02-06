@@ -28,7 +28,6 @@ class AppState with ChangeNotifier {
     MyLog().log(_classString, 'deleteAll ');
     setLoggedUser(MyUser(), notify: false);
     setAllParameters(null, notify: false);
-    // _allMatches.clear();
     _allUsers.clear();
   }
 
