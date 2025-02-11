@@ -76,12 +76,12 @@ class _MainPageState extends State<MainPage> {
             ),
             IconButton(
               onPressed: () async {
-                MyLog().log(_classString, 'Icon SignOut begin');
+                MyLog.log(_classString, 'Icon SignOut begin');
 
                 bool response = await _onBackPressed();
                 if (!response) return;
 
-                MyLog().log(_classString, 'Icon SignOut before pop');
+                MyLog.log(_classString, 'Icon SignOut before pop');
                 if (context.mounted) {
                   if (context.canPop()) {
                     context.pop();
@@ -124,17 +124,17 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<bool> _onBackPressed() async {
-    MyLog().log(_classString, '_onBackPressed begin');
+    MyLog.log(_classString, '_onBackPressed begin');
     const String yesOption = 'SI';
     const String noOption = 'NO';
     String response = await myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
     if (response.isEmpty || response == noOption) return false;
-    MyLog().log(_classString, '_onBackPressed response = $response');
+    MyLog.log(_classString, '_onBackPressed response = $response');
     if (mounted) {
-      await AuthenticationHelper().signOut(signedOutFunction: context.read<Director>().firebaseHelper.disposeListeners);
-      if (mounted) context.read<AppState>().deleteAll();
+      await AuthenticationHelper.signOut();
+      if (mounted) context.read<AppState>().resetLoggedUser();
     }
-    MyLog().log(_classString, '_onBackPressed before exiting');
+    MyLog.log(_classString, '_onBackPressed before exiting');
     return true;
   }
 }

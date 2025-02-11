@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
@@ -57,17 +58,23 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   void initState() {
-    appState = context.read<AppState>();
-    firebaseHelper = context.read<Director>().firebaseHelper;
-
-    for (var _ in _FormFieldsEnum.values) {
-      listControllers.add(TextEditingController());
-    }
-    listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
-    listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
-    // user = first part of email
-    listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Context Available: addPostFrameCallback ensures that the callback is executed
+      // after the first frame is built,
+      // so the BuildContext is available and providers are initialized.
+      appState = context.read<AppState>();
+      firebaseHelper = context.read<Director>().firebaseHelper;
+
+      for (var _ in _FormFieldsEnum.values) {
+        listControllers.add(TextEditingController());
+      }
+      listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
+      listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
+      // user = first part of email
+      listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
+    });
   }
 
   @override
@@ -81,7 +88,7 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return Scaffold(
       body: Padding(
@@ -120,7 +127,7 @@ class SettingsPageState extends State<SettingsPage> {
   bool checkName(String newName) {
     // newName is not somebody else's
 
-    MyLog().log(_classString, 'checkName $newName');
+    MyLog.log(_classString, 'checkName $newName');
 
     if (newName != appState.getLoggedUser().name) {
       MyUser? user = appState.getUserByName(newName);
@@ -130,7 +137,7 @@ class SettingsPageState extends State<SettingsPage> {
       }
     }
 
-    User? user = AuthenticationHelper().user;
+    User? user = AuthenticationHelper.user;
     if (user == null) {
       showMessage(context, 'ERROR: el usuario no está identificado correctamente');
       return false;
@@ -140,7 +147,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> updateName(String newName) async {
-    MyLog().log(_classString, 'updateName $newName');
+    MyLog.log(_classString, 'updateName $newName');
 
     MyUser user = appState.getLoggedUser();
     user.name = newName;
@@ -149,7 +156,7 @@ class SettingsPageState extends State<SettingsPage> {
       await firebaseHelper.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
-      MyLog().log(_classString, 'Error al actualizar el nombre del usuario', debugType: DebugType.error);
+      MyLog.log(_classString, 'Error al actualizar el nombre del usuario', level: Level.SEVERE);
       return false;
     }
 
@@ -157,7 +164,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> updateEmergencyInfo(String newEmergencyInfo) async {
-    MyLog().log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
+    MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
 
     MyUser user = appState.getLoggedUser();
     user.emergencyInfo = newEmergencyInfo;
@@ -166,8 +173,8 @@ class SettingsPageState extends State<SettingsPage> {
       await firebaseHelper.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
-      MyLog().log(_classString, 'Error al actualizar  la información de emergencia del usuario',
-          debugType: DebugType.error);
+      MyLog.log(_classString, 'Error al actualizar  la información de emergencia del usuario',
+          level: Level.SEVERE);
       return false;
     }
 
@@ -176,7 +183,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   bool checkEmail(String newEmail, String actualPwd) {
     // newEmail is not somebody else's
-    MyLog().log(_classString, 'checkEmail $newEmail');
+    MyLog.log(_classString, 'checkEmail $newEmail');
 
     if (newEmail != appState.getLoggedUser().email) {
       MyUser? user = appState.getUserByEmail(newEmail);
@@ -193,9 +200,9 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> updateEmail(String newEmail, String actualPwd) async {
-    MyLog().log(_classString, 'updateEmail $newEmail');
+    MyLog.log(_classString, 'updateEmail $newEmail');
 
-    String response = await AuthenticationHelper().updateEmail(newEmail: newEmail, actualPwd: actualPwd);
+    String response = await AuthenticationHelper.updateEmail(newEmail: newEmail, actualPwd: actualPwd);
 
     if (response.isNotEmpty) {
       if (mounted) myAlertDialog(context, response);
@@ -209,7 +216,7 @@ class SettingsPageState extends State<SettingsPage> {
       await firebaseHelper.updateUser(loggedUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
-      MyLog().log(_classString, 'Error al actualizar localmente el correo del usuario', debugType: DebugType.error);
+      MyLog.log(_classString, 'Error al actualizar localmente el correo del usuario', level: Level.SEVERE);
       return false;
     }
 
@@ -217,7 +224,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   bool checkAllPwd(String actualPwd, String newPwd, String checkPwd) {
-    MyLog().log(_classString, 'checkAllPwd');
+    MyLog.log(_classString, 'checkAllPwd');
 
     if (newPwd != checkPwd) {
       showMessage(context, 'Las dos contraseñas no coinciden');
@@ -231,9 +238,9 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<bool> updatePwd(String actualPwd, String newPwd) async {
-    MyLog().log(_classString, 'updatePwd');
+    MyLog.log(_classString, 'updatePwd');
 
-    String response = await AuthenticationHelper().updatePwd(actualPwd: actualPwd, newPwd: newPwd);
+    String response = await AuthenticationHelper.updatePwd(actualPwd: actualPwd, newPwd: newPwd);
 
     if (response.isNotEmpty) {
       if (mounted) myAlertDialog(context, response);
@@ -269,7 +276,7 @@ class SettingsPageState extends State<SettingsPage> {
       const String noOption = 'NO';
       String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
-      MyLog().log(_classString, 'build response = $response');
+      MyLog.log(_classString, 'build response = $response');
 
       bool anyUpdatedField = false;
 

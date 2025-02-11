@@ -12,7 +12,7 @@ class AdminPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return DefaultTabController(
       length: 2,

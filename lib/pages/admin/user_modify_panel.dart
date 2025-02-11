@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -15,7 +16,7 @@ class UserModifyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return Scaffold(
       body: Consumer<AppState>(
@@ -37,7 +38,7 @@ class UserModifyPanel extends StatelessWidget {
                         const String option4 = 'Cancelar';
                         String response = await myReturnValueDialog(context, '¿Tipo de usuario?', option1, option2,
                             option3: option3, option4: option4);
-                        MyLog().log(_classString, 'build response = $response');
+                        MyLog.log(_classString, 'build response = $response');
 
                         if (response.isEmpty || response == option4) return;
 
@@ -50,12 +51,12 @@ class UserModifyPanel extends StatelessWidget {
                         }
                         try {
                           if (context.mounted) context.read<Director>().firebaseHelper.updateUser(user);
-                          MyLog().log(_classString, 'usuario modificado con $response');
+                          MyLog.log(_classString, 'usuario modificado con $response');
                         } catch (e) {
                           if (context.mounted) {
                             showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
                           }
-                          MyLog().log(_classString, 'modificar usuario', exception: e, debugType: DebugType.error);
+                          MyLog.log(_classString, 'modificar usuario', exception: e, level: Level.SEVERE);
                         }
                       },
                     )))),

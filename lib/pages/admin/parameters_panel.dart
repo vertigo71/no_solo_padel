@@ -17,7 +17,7 @@ class _FormFields {
     'Registro: histórico de días a conservar', // registerDaysKeeping
     'Enviar telegram si partido es antes de (días)', // fromDaysAgoToTelegram
     'Texto por defecto del comentario', // defaultCommentText
-    'Debug: nivel mínimo (0 - ${DebugType.values.length - 1})', // minDebugLevel
+    'Debug: nivel mínimo (0 - ${MyLog.levels.length - 1})', // minDebugLevel
     'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
     '', // not a textFormField // showLog
   ];
@@ -36,7 +36,7 @@ class _FormFields {
     // defaultCommentText free text
     '',
     // minDebugLevel
-    '[0-${DebugType.values.length - 1}]',
+    '[0-${MyLog.levels.length - 1}]',
     // weekDaysMatch
     '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
     // not a textFormField // showLog
@@ -90,7 +90,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   @override
   void initState() {
-    MyLog().log(_classString, 'initState');
+    MyLog.log(_classString, 'initState');
 
     appState = context.read<AppState>();
     firebaseHelper = context.read<Director>().firebaseHelper;
@@ -106,7 +106,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   @override
   void dispose() {
-    MyLog().log(_classString, 'dispose');
+    MyLog.log(_classString, 'dispose');
 
     for (var controller in listControllers) {
       controller?.dispose();
@@ -116,7 +116,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return Scaffold(
       body: Padding(

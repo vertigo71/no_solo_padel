@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:logging/logging.dart';
 
 import '../models/debug.dart';
 
@@ -8,11 +9,11 @@ final String _classString = 'AuthenticationHelper'.toUpperCase();
 class AuthenticationHelper {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  User? get user => _auth.currentUser;
+  static User? get user => _auth.currentUser;
 
   //SIGN UP METHOD
-  Future signUp({required String email, required String password}) async {
-    MyLog().log(_classString, 'signUp $email', debugType: DebugType.warning);
+  static Future signUp({required String email, required String password}) async {
+    MyLog.log(_classString, 'signUp $email', level: Level.INFO);
     try {
       await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -24,9 +25,11 @@ class AuthenticationHelper {
     }
   }
 
-  //SIGN IN METHOD
-  Future signIn({required String email, required String password}) async {
-    MyLog().log(_classString, 'signIn $email', debugType: DebugType.warning);
+  /// SIGN IN METHOD
+  /// Return null if signedIn
+  /// else return Error message
+  static Future signIn({required String email, required String password}) async {
+    MyLog.log(_classString, 'signIn $email', level: Level.INFO);
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       return null;
@@ -35,17 +38,14 @@ class AuthenticationHelper {
     }
   }
 
-  //SIGN OUT METHOD
-  Future signOut({required Function() signedOutFunction}) async {
-    MyLog().log(_classString, 'SignOut begin', debugType: DebugType.warning);
-    await signedOutFunction();
-    MyLog().log(_classString, 'SignOut listeners deleted');
+  //SIGN OUT METHOD TODO:repasar
+  static Future signOut() async {
+    MyLog.log(_classString, 'SignOut');
     await _auth.signOut();
-    MyLog().log(_classString, 'SignOut ended', debugType: DebugType.warning);
   }
 
-  Future<String> createUserWithEmailAndPwd({required String email, required String pwd}) async {
-    MyLog().log(_classString, 'createUserWithEmailAndPwd $email', debugType: DebugType.warning);
+  static Future<String> createUserWithEmailAndPwd({required String email, required String pwd}) async {
+    MyLog.log(_classString, 'createUserWithEmailAndPwd $email', level: Level.INFO);
 
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: pwd);
@@ -61,19 +61,19 @@ class AuthenticationHelper {
     return '';
   }
 
-  Future<String> updateEmail({required String newEmail, required String actualPwd}) async {
-    MyLog().log(_classString, 'updateEmail $newEmail');
+  static Future<String> updateEmail({required String newEmail, required String actualPwd}) async {
+    MyLog.log(_classString, 'updateEmail $newEmail');
 
     return await _updateEmailOrPwd(actualPwd: actualPwd, newEmail: newEmail);
   }
 
-  Future<String> updatePwd({required String actualPwd, required String newPwd}) async {
-    MyLog().log(_classString, 'updatePwd');
+  static Future<String> updatePwd({required String actualPwd, required String newPwd}) async {
+    MyLog.log(_classString, 'updatePwd');
     return await _updateEmailOrPwd(actualPwd: actualPwd, newPwd: newPwd);
   }
 
-  Future<String> _updateEmailOrPwd({required String actualPwd, String newEmail = '', String newPwd = ''}) async {
-    MyLog().log(_classString, '_updateEmailOrPwd $newEmail', debugType: DebugType.warning);
+  static Future<String> _updateEmailOrPwd({required String actualPwd, String newEmail = '', String newPwd = ''}) async {
+    MyLog.log(_classString, '_updateEmailOrPwd $newEmail', level: Level.INFO);
 
     final String errorField = newPwd.isEmpty ? 'el correo' : 'la contraseña';
 
@@ -104,22 +104,22 @@ class AuthenticationHelper {
     return '';
   }
 
-  Future<UserCredential> _getUserCredential({required User user, required String actualPwd}) async {
-    MyLog().log(_classString, '_getUserCredential $user', debugType: DebugType.warning);
+  static Future<UserCredential> _getUserCredential({required User user, required String actualPwd}) async {
+    MyLog.log(_classString, '_getUserCredential $user', level: Level.INFO);
 
     AuthCredential authCredential = EmailAuthProvider.credential(
       email: user.email ?? '',
       password: actualPwd,
     );
-    MyLog().log(_classString, '_getUserCredential authcred', myCustomObject: authCredential);
+    MyLog.log(_classString, '_getUserCredential authcred', myCustomObject: authCredential);
     UserCredential userCredential = await user.reauthenticateWithCredential(authCredential);
-    MyLog().log(_classString, '_getUserCredential usercred', myCustomObject: userCredential);
+    MyLog.log(_classString, '_getUserCredential usercred', myCustomObject: userCredential);
 
     return userCredential;
   }
 
-  String _toSpanish(FirebaseAuthException e) {
-    MyLog().log(_classString, '_toSpanish ${e.code} $e');
+  static String _toSpanish(FirebaseAuthException e) {
+    MyLog.log(_classString, '_toSpanish ${e.code} $e');
     switch (e.code) {
       case 'email-already-in-use':
         {

@@ -26,7 +26,7 @@ class _InformationPageState extends State<InformationPage> {
   late FirebaseHelper firebaseHelper;
 
   Future<void> _getAllMatches() async {
-    List<MyMatch> allMatches = await firebaseHelper.getAllMatches();
+    List<MyMatch> allMatches = await firebaseHelper.getAllMatches(appState: appState);
     setState(() {
       _allMatches = allMatches;
     });
@@ -34,23 +34,29 @@ class _InformationPageState extends State<InformationPage> {
 
   @override
   void initState() {
-    appState = context.read<AppState>();
-    firebaseHelper = context.read<Director>().firebaseHelper;
-
-    _loggedUser = appState.getLoggedUser();
-    _getAllMatches();
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Context Available: addPostFrameCallback ensures that the callback is executed
+      // after the first frame is built,
+      // so the BuildContext is available and providers are initialized.
+      appState = context.read<AppState>();
+      firebaseHelper = context.read<Director>().firebaseHelper;
+
+      _loggedUser = appState.getLoggedUser();
+      _getAllMatches();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     int matchesPlayed = 0;
     int matchesSigned = 0;
     for (MyMatch match in _allMatches ?? []) {
-      if (match.isInTheMatch(_loggedUser.userId)) matchesSigned++;
-      if (match.isPlaying(_loggedUser.userId)) matchesPlayed++;
+      if (match.isInTheMatch(_loggedUser)) matchesSigned++;
+      if (match.isPlaying(_loggedUser)) matchesPlayed++;
     }
 
     return Scaffold(
@@ -72,18 +78,17 @@ class _InformationPageState extends State<InformationPage> {
               tiles: appState.sortUsers.map(((user) {
                 int numberOfMatchesTogether = 0;
                 for (MyMatch match in _allMatches ?? []) {
-                  if (match.arePlayingTogether(user.userId, _loggedUser.userId)) {
+                  if (match.arePlayingTogether(user, _loggedUser)) {
                     numberOfMatchesTogether++;
                   }
                 }
-                final String startTimes = 'Habéis empezado juntos: ${singularOrPlural(numberOfMatchesTogether, 'vez', 'veces')}';
-                final String sosInfo =
-                    user.emergencyInfo.isNotEmpty ? '\nSOS: ${user.emergencyInfo}' : '';
+                final String startTimes =
+                    'Habéis empezado juntos: ${singularOrPlural(numberOfMatchesTogether, 'vez', 'veces')}';
+                final String sosInfo = user.emergencyInfo.isNotEmpty ? '\nSOS: ${user.emergencyInfo}' : '';
 
                 return ListTile(
                   leading: CircleAvatar(
-                      backgroundColor: getUserColor(user),
-                      child: Text(user.userType.name[0].toUpperCase())),
+                      backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                   title: Text(user.name + sosInfo),
                   subtitle: Text('$startTimes\n${user.email.split('@')[0]}'),
                 );

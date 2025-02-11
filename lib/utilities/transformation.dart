@@ -1,13 +1,25 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diacritic/diacritic.dart';
+import 'package:no_solo_padel_dev/interface/app_state.dart';
 
 StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> transformer<T>(
-        T Function(Map<String, dynamic> json) fromJson) =>
+    T Function(Map<String, dynamic> json) fromJson) =>
     StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
       handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink) {
         final List<Map<String, dynamic>> snaps = data.docs.map((doc) => doc.data()).toList();
         final List<T> items = snaps.map((json) => fromJson(json)).toList();
+
+        sink.add(items);
+      },
+    );
+
+StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> transformerWithState<T>(
+    T Function(Map<String, dynamic> , AppState ) fromJson, AppState appState) =>
+    StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
+      handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink) {
+        final List<Map<String, dynamic>> snaps = data.docs.map((doc) => doc.data()).toList();
+        final List<T> items = snaps.map((json) => fromJson(json,appState)).toList();
 
         sink.add(items);
       },

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
+import 'package:no_solo_padel_dev/interface/app_state.dart';
 
 import '../models/debug.dart';
 import '../models/register_model.dart';
@@ -17,18 +19,21 @@ class FirebaseHelper {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
+  bool _usersDataLoaded = false;
+  bool _parametersDataLoaded = false;
+  final Completer<void> _dataLoadedCompleter = Completer<void>(); // completed after initial download
 
   FirebaseHelper() {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
   }
 
-  // return false if existed, true if created
-  Future<bool> createMatchIfNotExists({required MyMatch match}) async {
-    bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: match.date.toYyyyMMdd());
-    MyLog().log(_classString, 'createMatchIfNotExists exists? $exists $match');
+  /// return false if existed, true if created
+  Future<bool> createMatchIfNotExists({required Date date}) async {
+    bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: date.toYyyyMMdd());
+    MyLog.log(_classString, 'createMatchIfNotExists exists=$exists date=$date', level: Level.INFO);
     if (exists) return false;
-    MyLog().log(_classString, 'createMatchIfNotExists creating $exists $match', debugType: DebugType.warning);
-    await updateMatch(match: match, updateCore: true, updatePlayers: true);
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$date', level: Level.INFO);
+    await updateMatch(match: MyMatch(date: date), updateCore: true, updatePlayers: true);
     return true;
   }
 
@@ -37,14 +42,12 @@ class FirebaseHelper {
   }
 
   Future<void> createListeners({
-    required Date fromDate,
-    required int numDays,
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
-    await disposeListeners();
-
-    MyLog().log(_classString, 'Building createListeners ');
+    MyLog.log(_classString, 'Building createListeners ');
+    assert(_paramListener == null);
+    assert(_usersListener == null);
 
     // update parameters
     try {
@@ -53,23 +56,25 @@ class FirebaseHelper {
           .doc(strDB(DBFields.parameters))
           .snapshots()
           .listen((snapshot) {
-        MyLog().log(_classString, 'LISTENER parameters started');
+        MyLog.log(_classString, 'LISTENER parameters started');
         MyParameters? myParameters;
         if (snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
-        MyLog().log(_classString, 'LISTENER parameters = $myParameters', debugType: DebugType.warning);
+        MyLog.log(_classString, 'LISTENER parameters = $myParameters', level: Level.INFO);
         parametersFunction(myParameters ?? MyParameters());
+        _parametersDataLoaded = true;
+        _checkDataLoaded();
       });
     } catch (e) {
-      MyLog().log(_classString, 'createListeners parameters',
-          myCustomObject: _paramListener, exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'createListeners parameters',
+          myCustomObject: _paramListener, exception: e, level: Level.SEVERE);
     }
 
     // update users
     try {
       _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen((snapshot) {
-        MyLog().log(_classString, 'LISTENER users started');
+        MyLog.log(_classString, 'LISTENER users started');
 
         List<MyUser> addedUsers = [];
         List<MyUser> modifiedUsers = [];
@@ -80,24 +85,38 @@ class FirebaseHelper {
           modifiedUsers: modifiedUsers,
           removedUsers: removedUsers,
         );
-        MyLog().log(_classString,
+        MyLog.log(_classString,
             'LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} removed=${removedUsers.length}',
-            debugType: DebugType.warning);
+            level: Level.INFO);
         usersFunction(addedUsers, modifiedUsers, removedUsers);
+        _usersDataLoaded = true;
+        _checkDataLoaded();
       });
     } catch (e) {
-      MyLog().log(_classString, 'createListeners users',
-          myCustomObject: _usersListener, exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'createListeners users',
+          myCustomObject: _usersListener, exception: e, level: Level.SEVERE);
     }
   }
 
+  void _checkDataLoaded() {
+    if (_usersDataLoaded && _parametersDataLoaded && !_dataLoadedCompleter.isCompleted) {
+      MyLog.log(_classString, '_checkDataLoaded Completer completed...  ', level: Level.INFO);
+      _dataLoadedCompleter.complete();
+    }
+  }
+
+  Future<void> get dataLoaded {
+    MyLog.log(_classString, 'dataLoaded waiting to complete the Completer...  ', level: Level.INFO);
+    return _dataLoadedCompleter.future;
+  }
+
   Future<void> disposeListeners() async {
-    MyLog().log(_classString, 'disposeListeners Building  ');
+    MyLog.log(_classString, 'disposeListeners Building  ');
     try {
       await _usersListener?.cancel();
       await _paramListener?.cancel();
     } catch (e) {
-      MyLog().log(_classString, 'disposeListeners', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'disposeListeners', exception: e, level: Level.SEVERE);
     }
   }
 
@@ -107,7 +126,7 @@ class FirebaseHelper {
     required List<MyUser> modifiedUsers,
     required List<MyUser> removedUsers,
   }) {
-    MyLog().log(_classString, '_downloadChangedUsers #users = ${snapshot.docs.length}', debugType: DebugType.warning);
+    MyLog.log(_classString, '_downloadChangedUsers #users = ${snapshot.docs.length}', level: Level.INFO);
 
     addedUsers.clear();
     modifiedUsers.clear();
@@ -131,18 +150,16 @@ class FirebaseHelper {
             removedUsers.add(user);
           }
         } else {
-          MyLog().log(_classString, '_downloadChangedUsers Empty user!!!',
-              debugType: DebugType.error, myCustomObject: user);
+          MyLog.log(_classString, '_downloadChangedUsers Empty user!!!', level: Level.SEVERE, myCustomObject: user);
         }
       } catch (e) {
-        MyLog().log(_classString, '_downloadUsers Wrong Format',
-            myCustomObject: data, exception: e, debugType: DebugType.error);
+        MyLog.log(_classString, '_downloadUsers Wrong Format', myCustomObject: data, exception: e, level: Level.SEVERE);
       }
     }
   }
 
   Future<void> deleteOldData(DBFields collection, int daysAgo) async {
-    MyLog().log(_classString, '_deleteOldData ${collection.name} $daysAgo');
+    MyLog.log(_classString, '_deleteOldData collection=${collection.name} days=$daysAgo', level: Level.INFO);
 
     if (daysAgo <= 0) return;
 
@@ -152,21 +169,23 @@ class FirebaseHelper {
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog().log(_classString, 'Delete ${collection.name} ${ds.id}', debugType: DebugType.warning);
+        MyLog.log(_classString, 'Delete collection=${collection.name} id=${ds.id}', level: Level.INFO);
         ds.reference.delete();
       }
     }).catchError((onError) {
-      MyLog().log(_classString, 'delete ${collection.name}', exception: onError, debugType: DebugType.error);
+      MyLog.log(_classString, 'Delete collection=${collection.name}', exception: onError, level: Level.SEVERE);
     });
   }
 
-  Stream<List<T>>? getStream<T>({
+  Stream<List<T>>? _getStream<T>({
     required String collection,
-    required T Function(Map<String, dynamic> json) fromJson,
+    T Function(Map<String, dynamic>)? fromJson,
+    T Function(Map<String, dynamic>, AppState)? fromJsonWithState,
     Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    AppState? appState,
   }) {
-    MyLog().log(_classString, 'getStream $collection', debugType: DebugType.warning);
+    MyLog.log(_classString, '_getStream collection=$collection', level: Level.INFO);
     Query query = _instance.collection(collection);
 
     // Order by documentId FIRST
@@ -178,81 +197,143 @@ class FirebaseHelper {
     if (maxDate != null) {
       query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
     }
+
     try {
-      return query.snapshots().transform(transformer(fromJson));
+      if (fromJson != null) {
+        return query.snapshots().transform(transformer(fromJson));
+      } else if (fromJsonWithState != null && appState != null) {
+        return query.snapshots().transform(transformerWithState(fromJsonWithState, appState));
+      } else {
+        throw ArgumentError("Error transforming matches");
+      }
     } catch (e) {
-      MyLog().log(_classString, 'getStream $collection', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, '_getStream collection=$collection', exception: e, level: Level.SEVERE);
       return null;
     }
   }
 
+  Stream<List<T>>? getStreamNoState<T>({
+    required String collection,
+    required T Function(Map<String, dynamic>) fromJson,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+  }) {
+    MyLog.log(_classString, 'getStream collection=$collection', level: Level.INFO);
+    return _getStream(collection: collection, fromJson: fromJson, fromDate: fromDate, maxDate: maxDate);
+  }
+
+  Stream<List<T>>? getStreamWithState<T>({
+    required String collection,
+    required T Function(Map<String, dynamic>, AppState) fromJsonWithState,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    required AppState appState,
+  }) {
+    MyLog.log(_classString, 'getStream collection=$collection', level: Level.INFO);
+    return _getStream(
+        collection: collection,
+        fromJsonWithState: fromJsonWithState,
+        fromDate: fromDate,
+        maxDate: maxDate,
+        appState: appState);
+  }
+
   // stream of messages registered
-  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
+  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStreamNoState(
         collection: strDB(DBFields.register),
         fromJson: RegisterModel.fromJson,
         fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
       );
 
   // stream of users
-  Stream<List<MyUser>>? getUsersStream() => getStream(
+  Stream<List<MyUser>>? getUsersStream() => getStreamNoState(
         collection: strDB(DBFields.users),
         fromJson: MyUser.fromJson,
       );
 
   // stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({Date? fromDate, Date? maxDate}) => getStream(
+  Stream<List<MyMatch>>? getMatchesStream({required AppState appState, Date? fromDate, Date? maxDate}) =>
+      getStreamWithState(
         collection: strDB(DBFields.matches),
-        fromJson: MyMatch.fromJson,
+        fromJsonWithState: MyMatch.fromJson,
         fromDate: fromDate,
         maxDate: maxDate,
+        appState: appState,
       );
 
-  Future<T?> getObject<T>({
+  Future<T?> getObjectWithState<T>({
+    required String collection,
+    required String doc,
+    required T Function(Map<String, dynamic>, AppState) fromJson,
+    required AppState appState,
+  }) async =>
+      _getObject(collection: collection, doc: doc, fromJsonAppState: fromJson, appState: appState);
+
+  Future<T?> getObjectNoState<T>({
     required String collection,
     required String doc,
     required T Function(Map<String, dynamic> json) fromJson,
+  }) async =>
+      _getObject(collection: collection, doc: doc, fromJson: fromJson);
+
+  Future<T?> _getObject<T>({
+    required String collection,
+    required String doc,
+    T Function(Map<String, dynamic> json)? fromJson,
+    T Function(Map<String, dynamic> json, AppState appState)? fromJsonAppState,
+    AppState? appState,
   }) async {
-    MyLog().log(_classString, 'getObject $collection $doc');
+    MyLog.log(_classString, 'getObject $collection $doc');
 
     try {
       DocumentSnapshot documentSnapshot = await _instance.collection(collection).doc(doc).get();
 
       Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
       if (data != null && data.isNotEmpty) {
-        return fromJson(data);
+        T item;
+        if (appState == null && fromJson != null) {
+          item = fromJson(data);
+        } else if (appState != null && fromJsonAppState != null) {
+          item = fromJsonAppState(data, appState);
+        } else {
+          throw ArgumentError("Argument error for _getObject.");
+        }
+
+        return item;
       } else {
-        MyLog().log(_classString, 'getObject $collection $doc not found or empty', debugType: DebugType.error);
+        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.SEVERE);
       }
     } catch (e) {
-      MyLog().log(_classString, 'getObject ', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'getObject ', exception: e, level: Level.SEVERE);
     }
     return null;
   }
 
   Future<MyUser?> getUser(String userId) async =>
-      getObject(collection: strDB(DBFields.users), doc: userId, fromJson: MyUser.fromJson);
+      getObjectNoState(collection: strDB(DBFields.users), doc: userId, fromJson: MyUser.fromJson);
 
-  Future<MyMatch?> getMatch(String date) async =>
-      getObject(collection: strDB(DBFields.matches), doc: date, fromJson: MyMatch.fromJson);
+  Future<MyMatch?> getMatch(String date, AppState appState) async => getObjectWithState(
+      collection: strDB(DBFields.matches), doc: date, fromJson: MyMatch.fromJson, appState: appState);
 
   Future<MyParameters> getParameters() async =>
-      await getObject(
+      await getObjectNoState(
           collection: strDB(DBFields.parameters), doc: strDB(DBFields.parameters), fromJson: MyParameters.fromJson) ??
       MyParameters();
 
+  // TODO: not used
   Future<MyUser?> getUserByEmail(String email) async {
-    MyLog().log(_classString, 'getUserByEmail $email');
+    MyLog.log(_classString, 'getUserByEmail $email', level: Level.INFO);
 
     try {
       QuerySnapshot querySnapshot =
           await _instance.collection(strDB(DBFields.users)).where('email', isEqualTo: email).get();
 
       if (querySnapshot.size > 1) {
-        MyLog().log(_classString, 'getUserByEmail $email number = ${querySnapshot.size}', debugType: DebugType.error);
+        MyLog.log(_classString, 'getUserByEmail $email number = ${querySnapshot.size}', level: Level.SEVERE);
         return null;
       }
       if (querySnapshot.size == 0) {
-        MyLog().log(_classString, 'getUserByEmail $email doesn\'t exist', debugType: DebugType.warning);
+        MyLog.log(_classString, 'getUserByEmail $email doesn\'t exist', level: Level.INFO);
         return null;
       }
 
@@ -260,22 +341,25 @@ class FirebaseHelper {
       if (data != null && data.isNotEmpty) {
         return MyUser.fromJson(data);
       } else {
-        MyLog().log(_classString, 'getUserByEmail $email not found or empty', debugType: DebugType.error);
+        MyLog.log(_classString, 'getUserByEmail $email not found or empty', level: Level.SEVERE);
       }
     } catch (e) {
-      MyLog().log(_classString, 'getUserByEmail ', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'getUserByEmail ', exception: e, level: Level.SEVERE);
       return null;
     }
     return null;
   }
 
-  Future<List<T>> getAllObjects<T>({
+  Future<List<T>> _getAllObjects<T>({
     required String collection,
-    required T Function(Map<String, dynamic> json) fromJson,
+    T Function(Map<String, dynamic>, AppState appState)? fromJsonAppState,
+    T Function(Map<String, dynamic>)? fromJson,
     Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    AppState? appState,
   }) async {
-    MyLog().log(_classString, 'gelAllObjects');
+    MyLog.log(_classString, '_getAllObjects');
+
     List<T> items = [];
     Query query = _instance.collection(collection);
     if (fromDate != null) {
@@ -290,79 +374,117 @@ class FirebaseHelper {
       for (var doc in querySnapshot.docs) {
         if (doc.data() == null) throw 'Error en la base de datos $collection';
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        T item = fromJson(data);
-        MyLog().log(_classString, 'gelAllObjects $collection = $item');
+        T item;
+        if (appState == null && fromJson != null) {
+          item = fromJson(data);
+        } else if (appState != null && fromJsonAppState != null) {
+          item = fromJsonAppState(data, appState);
+        } else {
+          throw ArgumentError("Argument error for _getAllObjects.");
+        }
+
+        MyLog.log(_classString, '_getAllObjects $collection = $item');
         items.add(item);
       }
     } catch (e) {
-      MyLog().log(_classString, 'gelAllObjects', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE);
     }
-    MyLog().log(_classString, 'gelAllObjects #$collection = ${items.length} ', debugType: DebugType.warning);
+    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', level: Level.INFO);
     return items;
   }
 
-  Future<List<MyUser>> getAllUsers() async => getAllObjects(
+  /// Retrieves a list of objects from the specified Firestore collection.
+  ///
+  /// This function should be used when the [fromJson] function *does not* require
+  /// an [AppState] instance.
+  Future<List<T>> getAllObjectsNoAppState<T>({
+    required String collection,
+    required T Function(Map<String, dynamic>) fromJson,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+  }) async =>
+      _getAllObjects(collection: collection, fromJson: fromJson, fromDate: fromDate, maxDate: maxDate);
+
+  /// Retrieves a list of objects from the specified Firestore collection.
+  ///
+  /// This function should be used when the [fromJson] function *requires*
+  /// an [AppState] instance.
+  Future<List<T>> getAllObjectsAppState<T>({
+    required String collection,
+    required T Function(Map<String, dynamic>, AppState) fromJson,
+    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
+    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    required AppState appState,
+  }) async =>
+      _getAllObjects(
+          collection: collection, fromJsonAppState: fromJson, fromDate: fromDate, maxDate: maxDate, appState: appState);
+
+  Future<List<MyUser>> getAllUsers() async => getAllObjectsNoAppState<MyUser>(
         collection: strDB(DBFields.users),
         fromJson: MyUser.fromJson,
       );
 
   Future<List<MyMatch>> getAllMatches({
+    required AppState appState,
     Date? fromDate,
     Date? maxDate,
   }) async =>
-      getAllObjects(
+      getAllObjectsAppState(
         collection: strDB(DBFields.matches),
         fromJson: MyMatch.fromJson,
         fromDate: fromDate,
         maxDate: maxDate,
+        appState: appState,
       );
 
   Future<void> updateObject({
     required Map<String, dynamic> map,
     required String collection,
     required String doc,
-    bool forceSet = false,
+    bool forceSet = false, // replaces the old object if exists
   }) async {
-    MyLog().log(_classString, 'updateObject  $collection $doc', myCustomObject: map, debugType: DebugType.warning);
+    MyLog.log(_classString, 'updateObject  $collection $doc', myCustomObject: map, level: Level.INFO);
     if (forceSet) {
       return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
-        MyLog().log(_classString, 'updateObject ', exception: onError, debugType: DebugType.error);
+        MyLog.log(_classString, 'updateObject ERROR setting:', exception: onError, level: Level.SEVERE);
       });
     } else {
       return _instance.collection(collection).doc(doc).update(map).catchError((onError) {
+        MyLog.log(_classString, 'updateObject ERROR updating:', exception: onError, level: Level.WARNING);
+        MyLog.log(_classString, 'updateObject creating:', level: Level.INFO );
         _instance.collection(collection).doc(doc).set(map);
       }).catchError((onError) {
-        MyLog().log(_classString, 'updateObject ', exception: onError, debugType: DebugType.error);
+        MyLog.log(_classString, 'updateObject ERROR:', exception: onError, level: Level.SEVERE);
       });
     }
   }
 
   Future<void> updateUser(MyUser myUser) async {
-    if (myUser.userId == '') {
-      MyLog().log(_classString, 'updateUser ', myCustomObject: myUser, debugType: DebugType.error);
+    if (myUser.id == '') {
+      MyLog.log(_classString, 'updateUser ', myCustomObject: myUser, level: Level.SEVERE);
     }
     return updateObject(
       map: myUser.toJson(),
       collection: strDB(DBFields.users),
-      doc: myUser.userId,
-      forceSet: false,
+      doc: myUser.id,
+      forceSet: false, // replaces the old object if exists
     );
   }
 
-  // core = comment + isOpen + courtNAmes (all except players)
+  /// core = comment + isOpen + courtNames (all except players)
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       updateObject(
         map: match.toJson(core: updateCore, matchPlayers: updatePlayers),
         collection: strDB(DBFields.matches),
         doc: match.date.toYyyyMMdd(),
-        forceSet: false,
+        forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateRegister(RegisterModel registerModel) async => updateObject(
         map: registerModel.toJson(),
         collection: strDB(DBFields.register),
         doc: registerModel.date.toYyyyMMdd(),
-        forceSet: false,
+        forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateParameters(MyParameters myParameters) async => updateObject(
@@ -373,54 +495,63 @@ class FirebaseHelper {
       );
 
   Future<void> deleteUser(MyUser myUser) async {
-    MyLog().log(_classString, 'deleteUser deleting user $myUser');
-    if (myUser.userId == '') {
-      MyLog().log(_classString, 'deleteUser wrong id', myCustomObject: myUser, debugType: DebugType.error);
+    MyLog.log(_classString, 'deleteUser deleting user $myUser');
+    if (myUser.id == '') {
+      MyLog.log(_classString, 'deleteUser wrong id', myCustomObject: myUser, level: Level.SEVERE);
     }
 
     // delete user
     try {
-      MyLog().log(_classString, 'deleteUser user $myUser deleted');
-      await _instance.collection(strDB(DBFields.users)).doc(myUser.userId).delete();
+      MyLog.log(_classString, 'deleteUser user $myUser deleted');
+      await _instance.collection(strDB(DBFields.users)).doc(myUser.id).delete();
     } catch (e) {
-      MyLog().log(_classString, 'deleteUser error when deleting', myCustomObject: myUser, debugType: DebugType.error);
+      MyLog.log(_classString, 'deleteUser error when deleting', myCustomObject: myUser, level: Level.SEVERE);
     }
   }
 
   /// return match if it was inserted. null otherwise
-  Future<MyMatch?> addPlayerToMatch({required Date date, required String userId, int position = -1}) async {
-    MyLog().log(_classString, 'addPlayer adding user $userId to $date position $position');
+  Future<MyMatch?> addPlayerToMatch({
+    required Date date,
+    required MyUser player,
+    required AppState appState,
+    int position = -1,
+  }) async {
+    MyLog.log(_classString, 'addPlayer adding user $player to $date position $position');
     DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
-      // get match
+      // get snapshot
       DocumentSnapshot snapshot = await transaction.get(documentReference);
       if (!snapshot.exists) {
         throw Exception('No existe el partido asociado a la fecha $date');
       }
 
       // get match
-      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>);
-      MyLog().log(_classString, 'addPlayer match = ', myCustomObject: myMatch);
+      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+      MyLog.log(_classString, 'addPlayer match = ', myCustomObject: myMatch);
 
-      // add player in match
-      int posInserted = myMatch.insertPlayer(userId, position: position);
+      // add player in memory match
+      int posInserted = myMatch.insertPlayer(player, position: position);
       if (posInserted == -1) return null;
-      MyLog().log(_classString, 'addPlayer inserted match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'addPlayer inserted match = ', myCustomObject: myMatch);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog().log(_classString, 'addPlayer error adding $userId to match $date', debugType: DebugType.error);
-      throw Exception('Error al añadir jugador $userId al partido $date\n'
+      MyLog.log(_classString, 'addPlayer error adding $player to match $date', level: Level.SEVERE);
+      throw Exception('Error al añadir jugador $player al partido $date\n'
           'Error = $onError');
     });
   }
 
   /// return match if it was deleted. null otherwise
-  Future<MyMatch?> deletePlayerFromMatch({required Date date, required String userId}) async {
-    MyLog().log(_classString, 'deletePlayerFromMatch deleting user $userId from $date');
+  Future<MyMatch?> deletePlayerFromMatch({
+    required Date date,
+    required MyUser user,
+    required AppState appState,
+  }) async {
+    MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $date');
     DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
@@ -431,21 +562,20 @@ class FirebaseHelper {
       }
 
       // get match
-      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>);
-      MyLog().log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch);
+      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+      MyLog.log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch);
 
       // delete player in match
-      bool removed = myMatch.removePlayer(userId);
+      bool removed = myMatch.removePlayer(user);
       if (!removed) return null;
-      MyLog().log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog().log(_classString, 'deletePlayerFromMatch error deleting $userId from match $date',
-          debugType: DebugType.error);
-      throw Exception('Error al eliminar el jugador $userId del partido $date\n'
+      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $date', level: Level.SEVERE);
+      throw Exception('Error al eliminar el jugador $user del partido $date\n'
           'Error = $onError');
     });
   }

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../database/authentication.dart';
@@ -28,26 +29,31 @@ class LoadingPage extends StatefulWidget {
 class _LoadingPageState extends State<LoadingPage> {
   @override
   void initState() {
+    // TODO: verify it's called everytime loading is created
     super.initState();
-    MyLog().log(_classString, '_LoadingState:initState', debugType: DebugType.warning);
-    _initialize();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Context Available: addPostFrameCallback ensures that the callback is executed
+      // after the first frame is built,
+      // so the BuildContext is available and providers are initialized.
+      MyLog.log(_classString, '_LoadingState:initState');
+      _initialize();
+    });
   }
 
   Future<void> _initialize() async {
-    MyLog().log(_classString, '_initialize');
+    MyLog.log(_classString, '_initialize');
     try {
       AppState appState = context.read<AppState>();
-      if (appState.getLoggedUser().userId != "") {
+      if (appState.getLoggedUser().id != "") {
         // there is already an user logged.
         // it shouldn't be logged
         // this happens in web browser going back from mainPAge
-        MyLog().log(_classString, 'user=${appState.getLoggedUser().userId}. Going back to login page',
-            debugType: DebugType.warning);
+        MyLog.log(_classString, 'user=${appState.getLoggedUser().id}. Going back to login page', level: Level.WARNING);
         if (mounted) {
-          await AuthenticationHelper()
-              .signOut(signedOutFunction: context.read<Director>().firebaseHelper.disposeListeners);
-          appState.deleteAll();
-          MyLog().log(_classString, 'Going back to main...');
+          await AuthenticationHelper.signOut();
+          appState.resetLoggedUser();
+          MyLog.log(_classString, 'Going back to main...');
           if (mounted) context.goNamed(AppRoutes.login);
         }
       } else {
@@ -92,36 +98,35 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<bool> setupDB(BuildContext context) async {
-    MyLog().log(_classString, '_LoadingState:Setting DB', debugType: DebugType.warning);
+    MyLog.log(_classString, '_LoadingState:Setting DB');
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
     FirebaseHelper firebaseHelper = director.firebaseHelper;
 
-    /// restart error logs
-    MyLog().delete;
-
-    User? user = AuthenticationHelper().user;
+    User? user = AuthenticationHelper.user;
     if (user == null || user.email == null) {
+      MyLog.log(_classString, 'setupDB user not authenticated = $user', level: Level.SEVERE);
       throw Exception('Error: No se ha registrado correctamente el usuario. \n'
           'Póngase en contacto con el administrador');
     }
-    MyLog().log(_classString, 'setupDB authenticated user = ${user.email}', debugType: DebugType.warning);
+    MyLog.log(_classString, 'setupDB authenticated user = ${user.email}', level: Level.INFO);
 
-    /// delete local model, download parameters and delete old logs
-    await director.initialize();
+    //  delete old logs and matches
+    director.deleteOldData();
 
-    ///
-    /// create test data
-    /// do only once for populating
-    ///
-    /// await director.createTestData(users: true, matches: false);
+    //
+    // create test data
+    // do only once for populating
+    //
+    // await director.createTestData(users: true, matches: false);
 
-    // loggedUser
-    MyUser? loggedUser = await firebaseHelper.getUserByEmail(user.email!);
+    // get loggedUser
+    MyUser? loggedUser = appState.getUserByEmail(user.email!);
     if (loggedUser == null) {
       // user is not in the DB
-      MyLog().log(_classString, 'setupDB user: ${user.email}  not registered. Abort!', debugType: DebugType.warning);
-      await AuthenticationHelper().signOut(signedOutFunction: firebaseHelper.disposeListeners);
+      MyLog.log(_classString, 'setupDB user: ${user.email}  not registered. Abort!', level: Level.SEVERE);
+      await AuthenticationHelper.signOut();
+      appState.resetLoggedUser();
       return false; // user doesn't exist
     } else {
       appState.setLoggedUser(loggedUser, notify: false);
@@ -129,18 +134,15 @@ class _LoadingPageState extends State<LoadingPage> {
       loggedUser.loginCount++;
       await firebaseHelper.updateUser(loggedUser);
 
-      /// (async) check the integrity of the database
-      director.checkUsersInMatches(delete: false);
+      // (async) check the integrity of the database
+      // director.checkUsersInMatches(delete: false); TODO:erase
 
-      /// create matches if missing
-      /// from now to now+matchDaysToView
+      // create matches if missing
+      // from now to now+matchDaysToView
       for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
         Date date = Date.now().add(Duration(days: days));
-        await firebaseHelper.createMatchIfNotExists(match: MyMatch(date: date));
+        await firebaseHelper.createMatchIfNotExists(date: date);
       }
-
-      // create listeners async
-      director.createListeners();
 
       // all gone ok
       return true;

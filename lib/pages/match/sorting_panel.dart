@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../interface/matchNotifier.dart';
+import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
-import '../../interface/app_state.dart';
 
 final String _classString = 'SortingPanel'.toUpperCase();
 
@@ -16,18 +15,17 @@ class SortingPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     final matchNotifier = context.watch<MatchNotifier>(); // Watch for changes in the match
-    final appState = context.read<AppState>();
 
     return Builder(
       builder: (context) {
         int filledCourts = matchNotifier.match.getNumberOfFilledCourts();
         List<int> sortedList = matchNotifier.match.getCouplesPlainList();
-        List<MyUser> players = appState.userIdsToUsers(matchNotifier.match.players);
-        MyLog().log(_classString, 'players = $players');
-        MyLog().log(_classString, 'courts = $filledCourts');
+        List<MyUser> players = matchNotifier.match.players;
+        MyLog.log(_classString, 'players = $players');
+        MyLog.log(_classString, 'courts = $filledCourts');
 
         return ListView(children: [
           if (matchNotifier.match.comment.isNotEmpty)

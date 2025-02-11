@@ -1,3 +1,5 @@
+import 'package:logging/logging.dart';
+
 import '../utilities/date.dart';
 import '../utilities/transformation.dart';
 import 'debug.dart';
@@ -23,16 +25,17 @@ const List<String> parametersDefault = [
   '15', // registerDaysKeeping
   '2', // fromDaysAgoToTelegram
   'Introducir comentario por defecto', //defaultCommentText
-  '1', // according to DebugType, minDebugLevel
+  '1', // according to Level, minDebugLevel
   'LMXJ', // weekDaysMatch
   '0', //showLog
 ];
 
 class MyParameters {
-  final List<String> _values =
-      List.generate(ParametersEnum.values.length, (index) => parametersDefault[index]);
-
+  // assign to _values the values of parametersDefault
+  final List<String> _values = List.generate(ParametersEnum.values.length, (index) => parametersDefault[index]);
   static const String daysOfWeek = 'LMXJVSD';
+
+  MyParameters();
 
   static String dayOfTheWeekToStr(Date date) => daysOfWeek[date.weekday - DateTime.monday];
 
@@ -41,8 +44,7 @@ class MyParameters {
   int getIntValue(ParametersEnum parameter) {
     int? intValue = int.tryParse(_values[parameter.index]);
     if (intValue != null) return intValue;
-    MyLog()
-        .log(_classString, 'ERROR: value $parameter is not an integer', debugType: DebugType.error);
+    MyLog.log(_classString, 'ERROR: value $parameter is not an integer', level: Level.SEVERE);
     return -1;
   }
 
@@ -60,14 +62,14 @@ class MyParameters {
     return getStrValue(ParametersEnum.weekDaysMatch).contains(dayOfTheWeekToStr(date));
   }
 
-  DebugType get minDebugLevel => DebugType.values[getIntValue(ParametersEnum.minDebugLevel)];
+  Level get minDebugLevel => MyLog.int2level(getIntValue(ParametersEnum.minDebugLevel));
 
   @override
   String toString() {
     return _values.toString();
   }
 
-  static MyParameters fromJson(Map<String, dynamic> json) {
+  factory MyParameters.fromJson(Map<String, dynamic> json) {
     MyParameters myParameters = MyParameters();
     for (ParametersEnum value in ParametersEnum.values) {
       myParameters.setValue(value, json[value.name]);

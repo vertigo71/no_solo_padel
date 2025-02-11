@@ -1,8 +1,8 @@
 import 'dart:math';
-
-import 'package:collection/collection.dart';
+import 'package:no_solo_padel_dev/models/user_model.dart';
 
 import '../database/fields.dart';
+import '../interface/app_state.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
 import 'debug.dart';
@@ -20,12 +20,13 @@ const Map playingStateMap = {
 
 class MyMatch {
   Date date;
-  final Set<String> players = {};
-  final Set<String> courtNames = {};
+  final List<MyUser> players = [];
+  final List<String> courtNames = [];
   String comment;
   bool isOpen;
 
-  MyMatch({required this.date, this.comment = '', this.isOpen = false, Set<String>? players, Set<String>? courtNames}) {
+  MyMatch(
+      {required this.date, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
   }
@@ -37,39 +38,39 @@ class MyMatch {
   int getNumberOfCourts() => courtNames.length;
 
   // null for all
-  Set<String> getPlayers({PlayingState? state}) {
+  List<MyUser> getPlayers({PlayingState? state}) {
     if (state == null) return players;
-    Map<String, PlayingState> map = getAllPlayingStates();
-    Set<String> list = {};
+    Map<MyUser, PlayingState> map = getAllPlayingStates();
+    List<MyUser> list = [];
     map.forEach((player, playerState) => playerState == state ? list.add(player) : null);
     return list;
   }
 
   /// return -1 if not found
-  int getPlayerPosition(String userId) => players.toList().indexOf(userId);
+  int getPlayerPosition(MyUser user) => players.toList().indexOf(user);
 
-  bool isInTheMatch(String userId) => players.contains(userId);
+  bool isInTheMatch(MyUser player) => players.contains(player);
 
-  bool isPlaying(String userId) => getPlayingState(userId) == PlayingState.playing;
+  bool isPlaying(MyUser player) => getPlayingState(player) == PlayingState.playing;
 
   /// return position it was inserted [0 .. length-1]. -1 if already existed
-  int insertPlayer(String player, {int position = -1}) {
+  int insertPlayer(MyUser player, {int position = -1}) {
     if (players.contains(player)) return -1;
     if (position < 0 || position >= players.length) {
       players.add(player);
       return players.length - 1;
     }
-    List<String> allPlayers = players.toList()..insert(position, player);
+    List<MyUser> allPlayers = players.toList()..insert(position, player);
     players.clear();
     players.addAll(allPlayers);
     return position;
   }
 
-  /// Returns `true` if [player] was in the set, and `false` if not.
-  bool removePlayer(String player) => players.remove(player);
+  /// Returns `true` if [player] was in the list, and `false` if not.
+  bool removePlayer(MyUser player) => players.remove(player);
 
-  PlayingState getPlayingState(String player) {
-    Map<String, PlayingState> map = getAllPlayingStates();
+  PlayingState getPlayingState(MyUser player) {
+    Map<MyUser, PlayingState> map = getAllPlayingStates();
     PlayingState? playingState = map[player];
     if (playingState == null) {
       return PlayingState.unsigned;
@@ -78,10 +79,10 @@ class MyMatch {
     }
   }
 
-  String getPlayingStateString(String player) => playingStateMap[getPlayingState(player)];
+  String getPlayingStateString(MyUser player) => playingStateMap[getPlayingState(player)];
 
-  Map<String, PlayingState> getAllPlayingStates() {
-    Map<String, PlayingState> map = {};
+  Map<MyUser, PlayingState> getAllPlayingStates() {
+    Map<MyUser, PlayingState> map = {};
     int numberOfFilledCourts = getNumberOfFilledCourts();
     for (int i = 0; i < players.length; i++) {
       if (i < numberOfFilledCourts * 4) {
@@ -102,18 +103,18 @@ class MyMatch {
   List<int> getCouplesPlainList() => getRandomList(getNumberOfFilledCourts() * 4, date);
 
   /// true if they play together
-  bool arePlayingTogether(String userId1, String userId2) {
-    int posUser1 = getPlayerPosition(userId1);
-    int posUser2 = getPlayerPosition(userId2);
+  bool arePlayingTogether(MyUser user1, MyUser user2) {
+    int posUser1 = getPlayerPosition(user1);
+    int posUser2 = getPlayerPosition(user2);
     if (posUser1 != -1 &&
         posUser2 != -1 &&
-        getPlayingState(userId1) == PlayingState.playing &&
-        getPlayingState(userId2) == PlayingState.playing) {
+        getPlayingState(user1) == PlayingState.playing &&
+        getPlayingState(user2) == PlayingState.playing) {
       List<int> sortedList = getCouplesPlainList();
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
-          MyLog().log(_classString, '$date $userId1 played with $userId2 sorting=$sortedList', myCustomObject: players);
+          MyLog.log(_classString, '$date $user1 played with $user2 sorting=$sortedList', myCustomObject: players);
           return true;
         }
       }
@@ -122,61 +123,50 @@ class MyMatch {
   }
 
   @override
-  String toString() {
-    return ('($date,$isOpen,$courtNames,$players)');
+  String toString() => ('($date,open=$isOpen,courts=$courtNames,names=$players)');
+
+  factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
+
+    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
+    final players = <MyUser>[];
+
+    for (final playerId in playerIds) {
+      final user = appState.getUserById(playerId);
+      if (user != null) {
+        players.add(user);
+      }
+    }
+
+    return MyMatch(
+      date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
+      players: players,
+      courtNames: List<String>.from(json[DBFields.courtNames.name] ?? []),
+      comment: json[DBFields.comment.name] ?? '',
+      isOpen: json[DBFields.isOpen.name] ?? false,
+    );
   }
 
-  static MyMatch fromJson(Map<String, dynamic> json) => MyMatch(
-        date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
-        players: ((json[DBFields.players.name] ?? []).cast<String>()).toSet(),
-        courtNames: ((json[DBFields.courtNames.name] ?? []).cast<String>()).toSet(),
-        comment: json[DBFields.comment.name] ?? '',
-        isOpen: json[DBFields.isOpen.name] ?? false, // bool
-      );
+  Set<String> getNonExistingUsersFromJson(Map<String, dynamic> json, AppState appState) {
+    Set<String> nonExistingUserIds = {};
+    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
+    final players = <MyUser>{};
+
+    for (final playerId in playerIds) {
+      final user = appState.getUserById(playerId);
+      if (user != null) {
+        players.add(user);
+      } else {
+        nonExistingUserIds.add(playerId);
+      }
+    }
+    return nonExistingUserIds;
+  }
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         DBFields.date.name: date.toYyyyMMdd(),
-        if (matchPlayers) DBFields.players.name: players.toList(),
+        if (matchPlayers) DBFields.players.name: players.map((user) => user.id).toList(),
         if (core) DBFields.courtNames.name: courtNames.toList(),
         if (core) DBFields.comment.name: comment,
         if (core) DBFields.isOpen.name: isOpen, // bool
       };
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true; // Check for identity
-    if (other is! MyMatch) return false; // Check for type
-
-    return date == other.date &&
-        SetEquality().equals(players, other.players) && // Use SetEquality
-        SetEquality().equals(courtNames, other.courtNames) && // Use SetEquality
-        comment == other.comment &&
-        isOpen == other.isOpen;
-  }
-
-  @override
-  int get hashCode => Object.hash(
-        date,
-        Object.hashAll(players), // Hash the set
-        Object.hashAll(courtNames), // Hash the set
-        comment,
-        isOpen,
-      );
-
-  MyMatch copyWith({
-    Date? date,
-    String? comment,
-    bool? isOpen,
-    Set<String>? players,
-    Set<String>? courtNames,
-  }) {
-    return MyMatch(
-      date: date ?? this.date,
-      comment: comment ?? this.comment,
-      isOpen: isOpen ?? this.isOpen,
-      players: players ?? Set.from(this.players),
-      // Create a new Set if players is provided
-      courtNames: courtNames ?? Set.from(this.courtNames), // Create a new Set if courtNames is provided
-    );
-  }
 }

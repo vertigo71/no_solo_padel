@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
@@ -51,7 +52,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
   @override
   void initState() {
-    MyLog().log(_classString, 'initState');
+    MyLog.log(_classString, 'initState');
 
     appState = context.read<AppState>();
     firebaseHelper = context.read<Director>().firebaseHelper;
@@ -60,7 +61,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
   @override
   void dispose() {
-    MyLog().log(_classString, 'dispose');
+    MyLog.log(_classString, 'dispose');
 
     for (var controller in listControllers) {
       controller.dispose();
@@ -70,7 +71,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return Scaffold(
       body: Padding(
@@ -138,7 +139,7 @@ class UserAddPanelState extends State<UserAddPanel> {
   bool checkName(String name) {
     // newName is not somebody else's
 
-    MyLog().log(_classString, 'checkName $name');
+    MyLog.log(_classString, 'checkName $name');
 
     MyUser? myUser = appState.getUserByName(name);
     if (myUser != null) {
@@ -146,7 +147,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       return false;
     }
 
-    User? user = AuthenticationHelper().user;
+    User? user = AuthenticationHelper.user;
     if (user == null) {
       showMessage(context, 'ERROR: el usuario no está identificado correctamente');
       return false;
@@ -157,7 +158,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
   bool checkEmail(String email) {
     // newEmail is not somebody else's
-    MyLog().log(_classString, 'checkEmail $email');
+    MyLog.log(_classString, 'checkEmail $email');
 
     MyUser? user = appState.getUserByEmail(email);
     if (user != null) {
@@ -168,7 +169,7 @@ class UserAddPanelState extends State<UserAddPanel> {
   }
 
   bool checkAllPwd(String pwd, String checkPwd) {
-    MyLog().log(_classString, 'checkAllPwd');
+    MyLog.log(_classString, 'checkAllPwd');
 
     if (pwd != checkPwd) {
       showMessage(context, 'Las dos contraseñas no coinciden');
@@ -178,7 +179,7 @@ class UserAddPanelState extends State<UserAddPanel> {
   }
 
   Future<bool> createNewUser(name, email, pwd, isAdmin, isSuperuser) async {
-    MyLog().log(_classString, 'createNewUser $name $email $isAdmin $isSuperuser');
+    MyLog.log(_classString, 'createNewUser $name $email $isAdmin $isSuperuser');
 
     MyUser? myUser = appState.createNewUserByEmail(email);
     if (myUser == null) {
@@ -187,7 +188,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     }
 
     String response =
-        await AuthenticationHelper().createUserWithEmailAndPwd(email: email, pwd: pwd);
+        await AuthenticationHelper.createUserWithEmailAndPwd(email: email, pwd: pwd);
     if (response.isNotEmpty && mounted) {
       myAlertDialog(context, response);
       return false;
@@ -206,7 +207,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       firebaseHelper.updateUser(myUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al crear localmente el usuario');
-      MyLog().log(_classString, 'Error al crear localmente el usuario', debugType: DebugType.error);
+      MyLog.log(_classString, 'Error al crear localmente el usuario', level: Level.SEVERE);
       return false;
     }
     return true;
@@ -238,7 +239,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       String response = await myReturnValueDialog(
           context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
-      MyLog().log(_classString, 'build response = $response');
+      MyLog.log(_classString, 'build response = $response');
 
       // create new user
       ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);

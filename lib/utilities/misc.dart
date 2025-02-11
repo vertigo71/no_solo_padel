@@ -116,10 +116,10 @@ class CaseTextFormatter extends FilteringTextInputFormatter {
 List<int> getRandomList(int num, DateTime date) {
   int baseNum = date.millisecondsSinceEpoch;
   List<int> base = List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num).toSet().toList();
-  MyLog().log(_classString, 'getRandomList Base Sinus generated list $base');
+  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base');
   List<int> all = List<int>.generate(num, (int index) => num - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();
-  MyLog().log(_classString, 'getRandomList Missing numbers list $diff');
+  MyLog.log(_classString, 'getRandomList Missing numbers list $diff');
   // add missing numbers
   for (int i = 0; i < diff.length; i++) {
     if (base[i] <= base.length) {
@@ -128,7 +128,7 @@ List<int> getRandomList(int num, DateTime date) {
       base.insert(0, diff[i]);
     }
   }
-  MyLog().log(_classString, 'getRandomList Final order $base');
+  MyLog.log(_classString, 'getRandomList Final order $base');
 
   return base;
 }

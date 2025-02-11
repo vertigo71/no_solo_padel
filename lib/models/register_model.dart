@@ -44,7 +44,7 @@ class RegisterModel {
     return ('${date.toYyyyMMdd()}:${_msgList.last}>');
   }
 
-  static RegisterModel fromJson(Map<String, dynamic> json) => RegisterModel.list(
+  factory RegisterModel.fromJson(Map<String, dynamic> json) => RegisterModel.list(
         date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
         timedMsgList: (json[DBFields.registerMessage.name] ?? []).cast<String>(),
       );

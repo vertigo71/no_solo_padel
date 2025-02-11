@@ -14,7 +14,7 @@ void sendDatedMessageToTelegram(
       throw Exception('Periodo para mandar un telegram tiene que ser positivo');
     }
     Date minDate = matchDate.subtract(Duration(days: fromDaysAgoToTelegram));
-    MyLog().log(_classString, 'days ago = $fromDaysAgoToTelegram, minDate = $minDate');
+    MyLog.log(_classString, 'days ago = $fromDaysAgoToTelegram, minDate = $minDate');
 
     if (Date.now().isBefore(minDate)) return;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:no_solo_padel_dev/database/firebase.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
+import '../../models/parameter_model.dart';
 import '../../routes/routes.dart';
 import '../../utilities/theme.dart';
 import '../../utilities/date.dart';
@@ -18,17 +20,25 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
+        FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
+        MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', level: Level.INFO);
 
-        FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+        // create matches if missing: from now to now+matchDaysToView
+        for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
+          Date date = Date.now().add(Duration(days: days));
+          firebaseHelper.createMatchIfNotExists(date: date);
+        }
+
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>
-          stream: firebaseHelper.getMatchesStream(fromDate: fromDate, maxDate: maxDate), // Use your stream function
+          stream: firebaseHelper.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Something went wrong: ${snapshot.error}'));
@@ -48,8 +58,8 @@ class HomePage extends StatelessWidget {
                 ...ListTile.divideTiles(
                   context: context,
                   tiles: playableMatches.map((match) {
-                    String playingStateStr = match.getPlayingStateString(appState.getLoggedUser().userId);
-                    PlayingState playingState = match.getPlayingState(appState.getLoggedUser().userId);
+                    String playingStateStr = match.getPlayingStateString(appState.getLoggedUser());
+                    PlayingState playingState = match.getPlayingState(appState.getLoggedUser());
                     final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
                     return Card(

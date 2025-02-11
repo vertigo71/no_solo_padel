@@ -2,12 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
-import '../../interface/matchNotifier.dart';
+import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
@@ -41,13 +42,18 @@ class PlayersPanelState extends State<PlayersPanel> {
   void initState() {
     super.initState();
 
-    appState = context.read<AppState>();
-    initialMatch = widget.initialMatch;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Context Available: addPostFrameCallback ensures that the callback is executed
+      // after the first frame is built,
+      // so the BuildContext is available and providers are initialized.
+      appState = context.read<AppState>();
+      initialMatch = widget.initialMatch;
 
-    loggedUser = appState.getLoggedUser();
-    selectedUser = appState.sortUsers[0];
+      loggedUser = appState.getLoggedUser();
+      selectedUser = appState.sortUsers[0];
 
-    MyLog().log(_classString, 'initState arguments = $initialMatch');
+      MyLog.log(_classString, 'initState arguments = $initialMatch');
+    });
   }
 
   @override
@@ -58,7 +64,7 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building for $loggedUser');
+    MyLog.log(_classString, 'Building for $loggedUser');
 
     final matchNotifier = context.watch<MatchNotifier>(); // Watch for changes in the match
     initialMatch = matchNotifier.match;
@@ -85,8 +91,8 @@ class PlayersPanelState extends State<PlayersPanel> {
           builder: (context) {
             String returnText = '';
             initialMatch = context.read<MatchNotifier>().match;
-            if (initialMatch.isInTheMatch(loggedUser.userId)) {
-              if (initialMatch.isPlaying(loggedUser.userId)) {
+            if (initialMatch.isInTheMatch(loggedUser)) {
+              if (initialMatch.isPlaying(loggedUser)) {
                 returnText = 'Juegas!!!';
               } else {
                 returnText = 'Apuntado\n(pendiente de completar pista)';
@@ -112,7 +118,7 @@ class PlayersPanelState extends State<PlayersPanel> {
             const SizedBox(width: 20),
             Builder(
               builder: (context) {
-                bool loggedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(loggedUser.userId);
+                bool loggedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(loggedUser);
 
                 return myCheckBox(
                   context: context,
@@ -137,12 +143,12 @@ class PlayersPanelState extends State<PlayersPanel> {
   Widget listOfPlayers() => Builder(
         builder: (context) {
           int playerNumber = 0;
-          MyLog().log(_classString, 'Building listOfPlayers', debugType: DebugType.info);
+          MyLog.log(_classString, 'Building listOfPlayers');
           MyMatch match = context.read<MatchNotifier>().match;
 
-          List<MyUser> usersPlaying = appState.userIdsToUsers(match.getPlayers(state: PlayingState.playing));
-          List<MyUser> usersSigned = appState.userIdsToUsers(match.getPlayers(state: PlayingState.signedNotPlaying));
-          List<MyUser> usersReserve = appState.userIdsToUsers(match.getPlayers(state: PlayingState.reserve));
+          List<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
+          List<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
+          List<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
           for (int i = usersPlaying.length + usersSigned.length; i < match.getNumberOfCourts() * 4; i++) {
             usersFillEmptySpaces.add(MyUser());
@@ -212,7 +218,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     required bool toAdd, // add/remove user to match
     required bool adminManagingUser,
   }) async {
-    MyLog().log(_classString, 'validate');
+    MyLog.log(_classString, 'validate');
     FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
 
     MyMatch? myMatch; // match != null if added or deleted
@@ -227,11 +233,11 @@ class PlayersPanelState extends State<PlayersPanel> {
           if (listPosition > 0) listPosition--;
         }
         myMatch = await firebaseHelper.addPlayerToMatch(
-            date: context.read<MatchNotifier>().match.date, userId: user.userId, position: listPosition);
+            appState: appState, date: context.read<MatchNotifier>().match.date, player: user, position: listPosition);
         if (myMatch != null) {
-          listPosition = myMatch.getPlayerPosition(user.userId);
+          listPosition = myMatch.getPlayerPosition(user);
           if (listPosition == -1) {
-            MyLog().log(_classString, 'validate player $user not in match $myMatch', debugType: DebugType.error);
+            MyLog.log(_classString, 'validate player $user not in match $myMatch', level: Level.SEVERE);
           }
           if (adminManagingUser) {
             registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
@@ -258,7 +264,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         }
         if (mounted) {
           myMatch = await firebaseHelper.deletePlayerFromMatch(
-              date: context.read<MatchNotifier>().match.date, userId: user.userId);
+              appState: appState, date: context.read<MatchNotifier>().match.date, user: user);
         }
       }
     } on FirebaseException catch (e) {
@@ -273,8 +279,7 @@ class PlayersPanelState extends State<PlayersPanel> {
       }
     }
 
-    MyLog().log(_classString, 'validate firebase done: Match=$myMatch Register=$registerText',
-        debugType: DebugType.warning);
+    MyLog.log(_classString, 'validate firebase done: Match=$myMatch Register=$registerText', level: Level.INFO);
 
     if (myMatch == null) {
       // no action has been taken
@@ -293,14 +298,14 @@ class PlayersPanelState extends State<PlayersPanel> {
     //  state updated via consumers
     // telegram and register
     try {
-      MyLog().log(_classString, 'validate $user update register', debugType: DebugType.warning);
+      MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
       if (mounted) {
         await firebaseHelper.updateRegister(RegisterModel(
           date: context.read<MatchNotifier>().match.date,
           message: registerText,
         ));
       }
-      MyLog().log(_classString, 'validate $user send telegram', debugType: DebugType.warning);
+      MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO);
       if (mounted) {
         sendDatedMessageToTelegram(
             message: '$registerText\n'
@@ -309,8 +314,7 @@ class PlayersPanelState extends State<PlayersPanel> {
             fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
       }
     } catch (e) {
-      MyLog()
-          .log(_classString, 'ERROR sending message to telegram or register', exception: e, debugType: DebugType.error);
+      MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE);
       if (mounted) {
         myAlertDialog(
             context,
@@ -329,7 +333,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     const String option1 = 'Confirmar';
     const String option2 = 'Anular';
     String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
-    MyLog().log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
+    MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == option1;
   }
 
@@ -389,7 +393,7 @@ class PlayersPanelState extends State<PlayersPanel> {
               flex: 2,
               child: Builder(
                 builder: (context) {
-                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(selectedUser.userId);
+                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(selectedUser);
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

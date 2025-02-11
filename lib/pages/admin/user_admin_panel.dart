@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 import '../../models/debug.dart';
 import 'user_add_panel.dart';
@@ -30,7 +31,7 @@ class UserAdminPanelState extends State<UserAdminPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building'  );
     return Scaffold(
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),

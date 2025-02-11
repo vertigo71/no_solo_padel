@@ -5,11 +5,11 @@ import '../models/match_model.dart';
 
 final String _classString = 'MatchNotifier'.toUpperCase();
 
-/// holds a Match. If a change is made ti propagates to anyone who is listening
+/// holds a Match. If a change is made propagates to anyone who is listening
 class MatchNotifier with ChangeNotifier {
   MatchNotifier(this._match) {
     // Initialize with the initial match
-    MyLog().log(_classString, 'Building ');
+    MyLog.log(_classString, 'Building ');
   }
 
   MyMatch _match;

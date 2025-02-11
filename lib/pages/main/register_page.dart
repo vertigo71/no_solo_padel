@@ -15,7 +15,7 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog().log(_classString, 'Building');
+    MyLog.log(_classString, 'Building');
 
     AppState appState = context.read<AppState>();
     FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;

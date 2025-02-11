@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';
@@ -24,10 +25,10 @@ class Environment {
       _appName = _packageInfo!.appName;
       if (_appName.contains('_dev')) {
         _isProduction = false;
-        MyLog().log(_classString, 'Development environment initialized', debugType: DebugType.warning);
+        MyLog.log(_classString, 'Development environment initialized', level: Level.INFO);
       } else {
         _isProduction = true;
-        MyLog().log(_classString, 'Production environment initialized', debugType: DebugType.warning);
+        MyLog.log(_classString, 'Production environment initialized', level: Level.INFO);
       }
     }
   }

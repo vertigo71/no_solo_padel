@@ -1,3 +1,5 @@
+import 'package:logging/logging.dart';
+
 import '../database/fields.dart';
 import '../utilities/date.dart';
 import 'debug.dart';
@@ -9,7 +11,7 @@ enum UserType { basic, admin, superuser }
 class MyUser {
   static const String emailSuffix = '@nsp.com';
 
-  String userId;
+  String id;
   String name;
   String emergencyInfo;
   String _email;
@@ -18,7 +20,7 @@ class MyUser {
   int loginCount;
 
   MyUser({
-    this.userId = '',
+    this.id = '',
     this.name = '',
     this.emergencyInfo = '',
     String email = '',
@@ -28,26 +30,40 @@ class MyUser {
   }) : _email = email.toLowerCase();
 
   MyUser copyWith({
-    String? userId,
+    String? id,
     String? name,
     String? emergencyInfo,
     String? email,
     UserType? userType,
     Date? lastLogin,
     int? loginCount,
-  }) =>
-      MyUser(
-        userId: userId ?? this.userId,
-        name: name ?? this.name,
-        emergencyInfo: emergencyInfo ?? this.emergencyInfo,
-        email: email ?? this.email,
-        userType: userType ?? this.userType,
-        lastLogin: lastLogin ?? this.lastLogin,
-        loginCount: loginCount ?? this.loginCount,
-      );
+  }) {
+    return MyUser(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      emergencyInfo: emergencyInfo ?? this.emergencyInfo,
+      email: email ?? this.email,
+      // Use the provided email or the current one
+      userType: userType ?? this.userType,
+      lastLogin: lastLogin ?? this.lastLogin,
+      loginCount: loginCount ?? this.loginCount,
+    );
+  }
+
+  MyUser copyFrom(MyUser user) {
+    return MyUser(
+      id: user.id,
+      name: user.name,
+      emergencyInfo: user.emergencyInfo,
+      email: user.email,
+      userType: user.userType,
+      lastLogin: user.lastLogin,
+      loginCount: user.loginCount,
+    );
+  }
 
   bool hasNotEmptyFields() {
-    return userId.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
+    return id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
   }
 
   String get email => _email;
@@ -64,16 +80,15 @@ class MyUser {
 
   @override
   String toString() {
-    return ('$userId:$name');
+    return ('$id:$name');
   }
 
-  static MyUser fromJson(Map<String, dynamic> json) {
+  factory MyUser.fromJson(Map<String, dynamic> json) {
     if (json[DBFields.userId.name] == null || json[DBFields.userId.name] == '') {
-      MyLog()
-          .log(_classString, 'fromJson id null ', myCustomObject: json, debugType: DebugType.error);
+      MyLog.log(_classString, 'fromJson id null ', myCustomObject: json, level: Level.SEVERE);
     }
     return MyUser(
-      userId: json[DBFields.userId.name] ?? '',
+      id: json[DBFields.userId.name] ?? '',
       name: json[DBFields.name.name] ?? '',
       emergencyInfo: json[DBFields.emergencyInfo.name] ?? '',
       email: json[DBFields.email.name] ?? '',
@@ -84,12 +99,11 @@ class MyUser {
   }
 
   Map<String, dynamic> toJson() {
-    if (userId == '') {
-      MyLog()
-          .log(_classString, 'toJson id null ', myCustomObject: this, debugType: DebugType.error);
+    if (id == '') {
+      MyLog.log(_classString, 'toJson id null ', myCustomObject: this, level: Level.SEVERE);
     }
     return {
-      DBFields.userId.name: userId,
+      DBFields.userId.name: id,
       DBFields.name.name: name,
       DBFields.emergencyInfo.name: emergencyInfo,
       DBFields.email.name: email,
