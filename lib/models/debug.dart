@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 
 import 'package:flutter_bugfender/flutter_bugfender.dart';
@@ -61,7 +64,27 @@ class MyLog {
 
     // show in console
     _logger.log(level, "[$heading] $message", exception);
-    if (myCustomObject != null) _logger.log(level, myCustomObject);
+    if (myCustomObject != null) {
+      try {
+        final prettyJson = JsonEncoder.withIndent('  ').convert(myCustomObject);
+        _logger.log(level, "Custom Object:\n$prettyJson");
+      } catch (e) {
+        try {
+          if (myCustomObject is Map) {
+            String data = "{\n\t";
+            int num = 1;
+            myCustomObject.forEach((key, value) {
+              data += '"$key": $value ,';
+              if (num++ % 5 == 0) data += '\n\t';
+            });
+            data += "\n}";
+            _logger.log(level, data);
+          } else {
+            _logger.log(level, myCustomObject);
+          }
+        } catch (_) {}
+      }
+    }
 
     // show in BugFender
     Future<void> Function(String) logFunction = FlutterBugfender.info;

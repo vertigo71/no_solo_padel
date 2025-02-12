@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
-import 'package:no_solo_padel_dev/database/firebase.dart';
+import 'package:no_solo_padel_dev/database/firestore_helpers.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
@@ -24,7 +24,7 @@ class HomePage extends StatelessWidget {
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
-        FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+        FsHelpers fsHelpers = context.read<Director>().fsHelpers;
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
@@ -33,12 +33,12 @@ class HomePage extends StatelessWidget {
         // create matches if missing: from now to now+matchDaysToView
         for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
           Date date = Date.now().add(Duration(days: days));
-          firebaseHelper.createMatchIfNotExists(date: date);
+          fsHelpers.createMatchIfNotExists(date: date);
         }
 
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>
-          stream: firebaseHelper.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
+          stream: fsHelpers.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Something went wrong: ${snapshot.error}'));

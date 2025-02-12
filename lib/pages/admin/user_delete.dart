@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -23,7 +23,7 @@ class UserDeletePanel extends StatefulWidget {
 class UserDeletePanelState extends State<UserDeletePanel> {
   String dropdownValue = '';
 
-  late FirebaseHelper firebaseHelper;
+  late FsHelpers fsHelpers;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
       // after the first frame is built,
       // so the BuildContext is available and providers are initialized.
       MyLog.log(_classString, 'initState');
-      firebaseHelper = context.read<Director>().firebaseHelper;
+      fsHelpers = context.read<Director>().fsHelpers;
     });
   }
 
@@ -77,7 +77,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                         // Delete user
                         try {
                           MyLog.log(_classString, 'Elminando usuario  $user', level: Level.INFO);
-                          await firebaseHelper.deleteUser(user);
+                          await fsHelpers.deleteUser(user);
                         } catch (e) {
                           if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
                           MyLog.log(_classString, 'eliminar usuario', exception: e, level: Level.SEVERE);

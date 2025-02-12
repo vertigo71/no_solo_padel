@@ -4,7 +4,7 @@ import 'package:no_solo_padel_dev/interface/director.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
-import '../database/firebase.dart';
+import '../database/firestore_helpers.dart';
 import '../interface/app_state.dart';
 import '../models/debug.dart';
 import '../models/user_model.dart';
@@ -63,16 +63,16 @@ class LoginPageState extends State<LoginPage> {
 
     Director director = context.read<Director>();
     AppState appState = director.appState;
-    FirebaseHelper firebaseHelper = director.firebaseHelper;
+    FsHelpers fsHelpers = director.fsHelpers;
 
     // create listeners for users and parameters
     // any changes to those classes will change appState
     MyLog.log(_classString, 'createListeners. To be called only ONCE');
-    await firebaseHelper.createListeners(
+    await fsHelpers.createListeners(
       parametersFunction: appState.setAllParametersAndNotify,
       usersFunction: appState.setChangedUsersAndNotify,
     );
-    await firebaseHelper.dataLoaded; //  future completed when initial data is loaded
+    await fsHelpers.dataLoaded; //  future completed when initial data is loaded
 
     if (mounted) {
       setState(() {
@@ -84,11 +84,11 @@ class LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     Director director = context.read<Director>();
-    FirebaseHelper firebaseHelper = director.firebaseHelper;
+    FsHelpers fsHelpers = director.fsHelpers;
 
     emailController.dispose();
     pwdController.dispose();
-    firebaseHelper.disposeListeners();
+    fsHelpers.disposeListeners();
 
     super.dispose();
   }

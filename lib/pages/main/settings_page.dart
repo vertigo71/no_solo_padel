@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -54,7 +54,7 @@ class SettingsPageState extends State<SettingsPage> {
   List<TextEditingController> listControllers = [];
 
   late AppState appState;
-  late FirebaseHelper firebaseHelper;
+  late FsHelpers fsHelpers;
 
   @override
   void initState() {
@@ -65,7 +65,7 @@ class SettingsPageState extends State<SettingsPage> {
       // after the first frame is built,
       // so the BuildContext is available and providers are initialized.
       appState = context.read<AppState>();
-      firebaseHelper = context.read<Director>().firebaseHelper;
+      fsHelpers = context.read<Director>().fsHelpers;
 
       for (var _ in _FormFieldsEnum.values) {
         listControllers.add(TextEditingController());
@@ -153,7 +153,7 @@ class SettingsPageState extends State<SettingsPage> {
     user.name = newName;
 
     try {
-      await firebaseHelper.updateUser(user);
+      await fsHelpers.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
       MyLog.log(_classString, 'Error al actualizar el nombre del usuario', level: Level.SEVERE);
@@ -170,7 +170,7 @@ class SettingsPageState extends State<SettingsPage> {
     user.emergencyInfo = newEmergencyInfo;
 
     try {
-      await firebaseHelper.updateUser(user);
+      await fsHelpers.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
       MyLog.log(_classString, 'Error al actualizar  la información de emergencia del usuario',
@@ -213,7 +213,7 @@ class SettingsPageState extends State<SettingsPage> {
     loggedUser.email = newEmail;
 
     try {
-      await firebaseHelper.updateUser(loggedUser);
+      await fsHelpers.updateUser(loggedUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
       MyLog.log(_classString, 'Error al actualizar localmente el correo del usuario', level: Level.SEVERE);

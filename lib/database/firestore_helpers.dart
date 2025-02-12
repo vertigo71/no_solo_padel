@@ -13,9 +13,10 @@ import '../utilities/date.dart';
 import '../utilities/transformation.dart';
 import 'fields.dart';
 
-final String _classString = 'FirebaseHelper'.toUpperCase();
+final String _classString = 'FsHelper'.toUpperCase();
 
-class FirebaseHelper {
+/// Firestore helpers
+class FsHelpers {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
@@ -23,7 +24,7 @@ class FirebaseHelper {
   bool _parametersDataLoaded = false;
   final Completer<void> _dataLoadedCompleter = Completer<void>(); // completed after initial download
 
-  FirebaseHelper() {
+  FsHelpers() {
     MyLog.log(_classString, 'Building');
   }
 
@@ -38,6 +39,34 @@ class FirebaseHelper {
 
   Future<bool> doesDocExist({required String collection, required String doc}) async {
     return _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
+  }
+
+  /// create a subscription to a match
+  /// matchFunction: checks if match has change and notify to listeners
+  StreamSubscription? listenToMatch({
+    required Date date,
+    required AppState appState,
+    required void Function(MyMatch match) matchFunction,
+  }) {
+    StreamSubscription? streamSubscription;
+    MyLog.log(_classString, 'creating LISTENER for match=$date');
+    try {
+      streamSubscription =
+          _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd()).snapshots().listen((snapshot) {
+        if (snapshot.exists && snapshot.data() != null) {
+          MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+          MyLog.log(_classString, 'LISTENER newMatch found = $newMatch', level: Level.INFO);
+          matchFunction(newMatch);
+        } else {
+          MyLog.log(_classString, 'LISTENER Match data is null in Firestore.', level: Level.SEVERE);
+          matchFunction(MyMatch(date: date));
+        }
+      });
+    } catch (e) {
+      MyLog.log(_classString, 'createListeners ERROR listening to match $date', exception: e, level: Level.SEVERE);
+    }
+
+    return streamSubscription;
   }
 
   Future<void> createListeners({
@@ -57,7 +86,7 @@ class FirebaseHelper {
           .listen((snapshot) {
         MyLog.log(_classString, 'LISTENER parameters started');
         MyParameters? myParameters;
-        if (snapshot.data() != null) {
+        if (snapshot.exists && snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
         MyLog.log(_classString, 'LISTENER parameters = $myParameters', level: Level.INFO);
@@ -442,7 +471,7 @@ class FirebaseHelper {
     required String doc,
     bool forceSet = false, // replaces the old object if exists
   }) async {
-    MyLog.log(_classString, 'updateObject  $collection $doc', myCustomObject: map, level: Level.INFO);
+    MyLog.log(_classString, 'updateObject  $collection $doc', level: Level.INFO);
     if (forceSet) {
       return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
         MyLog.log(_classString, 'updateObject ERROR setting:', exception: onError, level: Level.SEVERE);
@@ -450,7 +479,7 @@ class FirebaseHelper {
     } else {
       return _instance.collection(collection).doc(doc).update(map).catchError((onError) {
         MyLog.log(_classString, 'updateObject ERROR updating:', exception: onError, level: Level.WARNING);
-        MyLog.log(_classString, 'updateObject creating:', level: Level.INFO );
+        MyLog.log(_classString, 'updateObject creating:', level: Level.INFO);
         _instance.collection(collection).doc(doc).set(map);
       }).catchError((onError) {
         MyLog.log(_classString, 'updateObject ERROR:', exception: onError, level: Level.SEVERE);

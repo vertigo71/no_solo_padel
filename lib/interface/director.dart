@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 
 import '../database/authentication.dart';
 import '../database/fields.dart';
-import '../database/firebase.dart';
+import '../database/firestore_helpers.dart';
 import '../secret.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
@@ -21,7 +21,7 @@ final String _classString = 'Director'.toUpperCase();
 class Director {
   final AppState _appState;
 
-  final FirebaseHelper firebaseHelper = FirebaseHelper();
+  final FsHelpers fsHelpers = FsHelpers();
 
   Director({required AppState appState}) : _appState = appState {
     MyLog.log(_classString, 'Building');
@@ -41,9 +41,9 @@ class Director {
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firebase
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    firebaseHelper.deleteOldData(
+    fsHelpers.deleteOldData(
         DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping));
-    firebaseHelper.deleteOldData(
+    fsHelpers.deleteOldData(
         DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping));
   }
 
@@ -51,7 +51,7 @@ class Director {
   /// TODO: Erase
   Future<void> checkUsersInMatches({bool delete = false}) async {
     MyLog.log(_classString, 'checkUsersInMatches');
-    List<MyUser> users = await firebaseHelper.getAllUsers();
+    List<MyUser> users = await fsHelpers.getAllUsers();
     Set<String> usersId = users.map((user) => user.id).toSet();
 
     if (usersId.contains('')) {
@@ -62,7 +62,7 @@ class Director {
         }
       }
     }
-    // List<MyMatch> matches = await firebaseHelper.getAllMatches(fromDate: Date.now(), appState: appState);
+    // List<MyMatch> matches = await fsHelpers.getAllMatches(fromDate: Date.now(), appState: appState);
     // TODO: match now has users not strings
     /*for (MyMatch match in matches) {
       if (match.date.isBefore(DateTime(1980))) {
@@ -75,7 +75,7 @@ class Director {
         if (delete) {
           match.players.clear();
           match.players.addAll(existingPlayers);
-          firebaseHelper.updateMatch(match: match, updateCore: false, updatePlayers: true);
+          fsHelpers.updateMatch(match: match, updateCore: false, updatePlayers: true);
         }
       }
     }*/
@@ -151,10 +151,10 @@ class Director {
           myUser = MyUser(name: user, email: '$user${MyUser.emailSuffix}', id: user);
         }
         await AuthenticationHelper.createUserWithEmailAndPwd(email: myUser.email, pwd: getInitialPwd());
-        await firebaseHelper.updateUser(myUser);
+        await fsHelpers.updateUser(myUser);
       }
       MyLog.log(_classString, 'Users');
-      List<MyUser> allUsers = await firebaseHelper.getAllUsers();
+      List<MyUser> allUsers = await fsHelpers.getAllUsers();
       _appState.setAllUsers(allUsers, notify: false);
     }
 
@@ -172,7 +172,7 @@ class Director {
         // TODO: something is wrong
         // match.players.addAll(randomInts.map((e) => (e % _appState.numUsers).toString()).toSet());
         MyLog.log(_classString, 'createTestData $match');
-        await firebaseHelper.updateMatch(match: match, updateCore: true, updatePlayers: true);
+        await fsHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }
   }

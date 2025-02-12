@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
@@ -219,7 +219,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     required bool adminManagingUser,
   }) async {
     MyLog.log(_classString, 'validate');
-    FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+    FsHelpers fsHelpers = context.read<Director>().fsHelpers;
 
     MyMatch? myMatch; // match != null if added or deleted
     String registerText = ''; // text to be added to the register
@@ -232,7 +232,7 @@ class PlayersPanelState extends State<PlayersPanel> {
           listPosition = int.tryParse(userPositionController.text) ?? -1;
           if (listPosition > 0) listPosition--;
         }
-        myMatch = await firebaseHelper.addPlayerToMatch(
+        myMatch = await fsHelpers.addPlayerToMatch(
             appState: appState, date: context.read<MatchNotifier>().match.date, player: user, position: listPosition);
         if (myMatch != null) {
           listPosition = myMatch.getPlayerPosition(user);
@@ -263,7 +263,7 @@ class PlayersPanelState extends State<PlayersPanel> {
           registerText = '${user.name} se ha desapuntado';
         }
         if (mounted) {
-          myMatch = await firebaseHelper.deletePlayerFromMatch(
+          myMatch = await fsHelpers.deletePlayerFromMatch(
               appState: appState, date: context.read<MatchNotifier>().match.date, user: user);
         }
       }
@@ -292,7 +292,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     } else {
       // notify match has changed
       // this is Key to update all panels
-      if (mounted) context.read<MatchNotifier>().updateMatch(myMatch);
+      // if (mounted) context.read<MatchNotifier>().updateMatch(myMatch); // TODO: not to do listener will
     }
 
     //  state updated via consumers
@@ -300,7 +300,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     try {
       MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
       if (mounted) {
-        await firebaseHelper.updateRegister(RegisterModel(
+        await fsHelpers.updateRegister(RegisterModel(
           date: context.read<MatchNotifier>().match.date,
           message: registerText,
         ));

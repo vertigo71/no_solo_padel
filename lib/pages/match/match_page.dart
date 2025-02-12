@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel_dev/interface/director.dart';
 import 'package:no_solo_padel_dev/interface/match_notifier.dart';
 import 'package:no_solo_padel_dev/models/match_model.dart';
 import 'package:provider/provider.dart';
@@ -11,37 +12,20 @@ import '../../interface/app_state.dart';
 
 final String _classString = 'MatchPage'.toUpperCase();
 
-class MatchPage extends StatefulWidget {
+class MatchPage extends StatelessWidget {
   final MyMatch match;
 
   const MatchPage({super.key, required this.match});
-
-  @override
-  State<MatchPage> createState() => _MatchPageState();
-}
-
-class _MatchPageState extends State<MatchPage> {
-  late MatchNotifier _matchNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    _matchNotifier = MatchNotifier(widget.match);
-  }
-
-  @override
-  void dispose() {
-    _matchNotifier.dispose(); // Dispose the notifier and listeners within
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
-    return ChangeNotifierProvider<MatchNotifier>.value(
-      value: _matchNotifier,
+
+    return ChangeNotifierProvider<MatchNotifier>(
+      // create and dispose of MatchNotifier
+      create: (context) => MatchNotifier(match, context.read<Director>()),
       child: Consumer<MatchNotifier>(builder: (context, matchNotifier, _) {
         return DefaultTabController(
           length: isLoggedUserAdmin ? 3 : 2,

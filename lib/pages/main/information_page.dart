@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -23,10 +23,10 @@ class _InformationPageState extends State<InformationPage> {
   List<MyMatch>? _allMatches;
   late MyUser _loggedUser;
   late AppState appState;
-  late FirebaseHelper firebaseHelper;
+  late FsHelpers fsHelpers;
 
   Future<void> _getAllMatches() async {
-    List<MyMatch> allMatches = await firebaseHelper.getAllMatches(appState: appState);
+    List<MyMatch> allMatches = await fsHelpers.getAllMatches(appState: appState);
     setState(() {
       _allMatches = allMatches;
     });
@@ -41,7 +41,7 @@ class _InformationPageState extends State<InformationPage> {
       // after the first frame is built,
       // so the BuildContext is available and providers are initialized.
       appState = context.read<AppState>();
-      firebaseHelper = context.read<Director>().firebaseHelper;
+      fsHelpers = context.read<Director>().fsHelpers;
 
       _loggedUser = appState.getLoggedUser();
       _getAllMatches();

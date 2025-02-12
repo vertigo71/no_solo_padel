@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -48,14 +48,14 @@ class UserAddPanelState extends State<UserAddPanel> {
   bool isSuperuser = false;
 
   late AppState appState;
-  late FirebaseHelper firebaseHelper;
+  late FsHelpers fsHelpers;
 
   @override
   void initState() {
     MyLog.log(_classString, 'initState');
 
     appState = context.read<AppState>();
-    firebaseHelper = context.read<Director>().firebaseHelper;
+    fsHelpers = context.read<Director>().fsHelpers;
     super.initState();
   }
 
@@ -204,7 +204,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     }
 
     try {
-      firebaseHelper.updateUser(myUser);
+      fsHelpers.updateUser(myUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al crear localmente el usuario');
       MyLog.log(_classString, 'Error al crear localmente el usuario', level: Level.SEVERE);

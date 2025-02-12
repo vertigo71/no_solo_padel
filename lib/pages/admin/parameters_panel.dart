@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -85,7 +85,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
 
   late AppState appState;
-  late FirebaseHelper firebaseHelper;
+  late FsHelpers fsHelpers;
   bool showLog = false;
 
   @override
@@ -93,7 +93,7 @@ class ParametersPanelState extends State<ParametersPanel> {
     MyLog.log(_classString, 'initState');
 
     appState = context.read<AppState>();
-    firebaseHelper = context.read<Director>().firebaseHelper;
+    fsHelpers = context.read<Director>().fsHelpers;
 
     showLog = appState.showLog;
     List<String> initialValues = _FormFields().initialValues(appState);
@@ -187,7 +187,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       }
 
       try {
-        await firebaseHelper.updateParameters(myParameters);
+        await fsHelpers.updateParameters(myParameters);
         if (mounted) {
           showMessage(
               context,

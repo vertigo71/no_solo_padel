@@ -50,7 +50,7 @@ class UserModifyPanel extends StatelessWidget {
                           user.userType = UserType.superuser;
                         }
                         try {
-                          if (context.mounted) context.read<Director>().firebaseHelper.updateUser(user);
+                          if (context.mounted) context.read<Director>().fsHelpers.updateUser(user);
                           MyLog.log(_classString, 'usuario modificado con $response');
                         } catch (e) {
                           if (context.mounted) {

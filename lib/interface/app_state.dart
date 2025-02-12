@@ -42,12 +42,6 @@ class AppState with ChangeNotifier {
   Date get maxDateOfMatchesToView =>
       Date.now().add(Duration(days: getIntParameterValue(ParametersEnum.matchDaysToView)));
 
-  void setParameterValue(ParametersEnum parameter, String value, {required bool notify}) {
-    MyLog.log(_classString, 'setParameter $parameter $value');
-    _parametersCache.setValue(parameter, value);
-    if (notify) notifyListeners();
-  }
-
   void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {

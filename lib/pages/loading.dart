@@ -6,7 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import '../database/authentication.dart';
-import '../database/firebase.dart';
+import '../database/firestore_helpers.dart';
 import '../interface/app_state.dart';
 import '../interface/director.dart';
 import '../models/debug.dart';
@@ -100,7 +100,7 @@ class _LoadingPageState extends State<LoadingPage> {
     MyLog.log(_classString, '_LoadingState:Setting DB');
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
-    FirebaseHelper firebaseHelper = director.firebaseHelper;
+    FsHelpers fsHelpers = director.fsHelpers;
 
     User? user = AuthenticationHelper.user;
     if (user == null || user.email == null) {
@@ -131,7 +131,7 @@ class _LoadingPageState extends State<LoadingPage> {
       appState.setLoggedUser(loggedUser, notify: false);
       loggedUser.lastLogin = Date.now();
       loggedUser.loginCount++;
-      await firebaseHelper.updateUser(loggedUser);
+      await fsHelpers.updateUser(loggedUser);
 
       // (async) check the integrity of the database
       // director.checkUsersInMatches(delete: false); TODO:erase
@@ -140,7 +140,7 @@ class _LoadingPageState extends State<LoadingPage> {
       // from now to now+matchDaysToView
       for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
         Date date = Date.now().add(Duration(days: days));
-        await firebaseHelper.createMatchIfNotExists(date: date);
+        await fsHelpers.createMatchIfNotExists(date: date);
       }
 
       // all gone ok

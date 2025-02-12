@@ -3,7 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firebase.dart';
+import '../../database/firestore_helpers.dart';
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
@@ -64,7 +64,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                         name: '$courtId$i',
                         // Unique name for each field
                         decoration: InputDecoration(
-                          labelText: 'Pista ${i+1}',
+                          labelText: 'Pista ${i + 1}',
                           contentPadding: const EdgeInsets.all(8.0),
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -195,11 +195,13 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       String message = 'Los datos han sido actualizados';
       try {
         MyMatch oldMatch = context.read<MatchNotifier>().match;
-        FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
+        FsHelpers fsHelpers = context.read<Director>().fsHelpers;
         AppState appState = context.read<AppState>();
 
         // upload firebase
-        await firebaseHelper.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        await fsHelpers.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        // do not update notifier as the listener will do it
+        // if (mounted) context.read<MatchNotifier>().updateMatch(newMatch);
 
         String registerText = '';
         MyUser loggedUser = appState.getLoggedUser();
@@ -220,15 +222,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
 
         if (registerText.isNotEmpty) {
-          firebaseHelper.updateRegister(RegisterModel(date: newMatch.date, message: registerText));
+          fsHelpers.updateRegister(RegisterModel(date: newMatch.date, message: registerText));
           sendDatedMessageToTelegram(
             message: registerText,
             matchDate: newMatch.date,
           );
         }
-
-        // update notifier
-        if (mounted) context.read<MatchNotifier>().updateMatch(newMatch);
       } catch (e) {
         message = 'ERROR en la actualización de los datos. \n\n $e';
         MyLog.log(_classString, 'ERROR en la actualización de los datos', exception: e, level: Level.SEVERE);
