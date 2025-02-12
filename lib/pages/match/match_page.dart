@@ -11,10 +11,29 @@ import '../../interface/app_state.dart';
 
 final String _classString = 'MatchPage'.toUpperCase();
 
-class MatchPage extends StatelessWidget {
+class MatchPage extends StatefulWidget {
   final MyMatch match;
 
   const MatchPage({super.key, required this.match});
+
+  @override
+  State<MatchPage> createState() => _MatchPageState();
+}
+
+class _MatchPageState extends State<MatchPage> {
+  late MatchNotifier _matchNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _matchNotifier = MatchNotifier(widget.match);
+  }
+
+  @override
+  void dispose() {
+    _matchNotifier.dispose(); // Dispose the notifier and listeners within
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +41,7 @@ class MatchPage extends StatelessWidget {
 
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
     return ChangeNotifierProvider<MatchNotifier>.value(
-      value: MatchNotifier(match),
+      value: _matchNotifier,
       child: Consumer<MatchNotifier>(builder: (context, matchNotifier, _) {
         return DefaultTabController(
           length: isLoggedUserAdmin ? 3 : 2,

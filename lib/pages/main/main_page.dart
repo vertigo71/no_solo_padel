@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../routes/routes.dart';
 import '../../utilities/misc.dart';
+import '../../utilities/ui_helpers.dart';
 import 'home_page.dart';
 import 'information_page.dart';
 import 'register_page.dart';
@@ -31,12 +31,6 @@ class _MainPageState extends State<MainPage> {
     InformationPage(),
     SettingsPage(),
   ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,26 +92,18 @@ class _MainPageState extends State<MainPage> {
         body: _widgetOptions.elementAt(_selectedIndex),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Inicio',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/list.png')),
-              label: 'Registro',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('assets/images/padel.png')),
-              label: 'Jugadores',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Ajustes',
-            ),
+          items: <BottomNavigationBarItem>[
+            UiHelpers.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
+            UiHelpers.buildNavItem(1, ImageIcon(AssetImage('assets/images/list.png')), 'Registro', _selectedIndex),
+            UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/images/padel.png')), 'Jugadores', _selectedIndex),
+            UiHelpers.buildNavItem(3, Icon(Icons.settings), 'Ajustes', _selectedIndex),
           ],
           currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
         ),
       ),
     );

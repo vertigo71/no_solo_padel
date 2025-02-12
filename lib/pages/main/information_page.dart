@@ -8,7 +8,7 @@ import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
-import '../../utilities/theme.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
 

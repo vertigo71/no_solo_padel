@@ -7,7 +7,7 @@ import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../utilities/misc.dart';
-import '../../utilities/theme.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'UserDeletePanel'.toUpperCase();
 

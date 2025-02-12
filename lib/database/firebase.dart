@@ -30,7 +30,6 @@ class FirebaseHelper {
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date date}) async {
     bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: date.toYyyyMMdd());
-    MyLog.log(_classString, 'createMatchIfNotExists exists=$exists date=$date', level: Level.INFO);
     if (exists) return false;
     MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$date', level: Level.INFO);
     await updateMatch(match: MyMatch(date: date), updateCore: true, updatePlayers: true);

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'dart:math';
 
 import '../models/debug.dart';
-import 'theme.dart';
 
 final String _classString = 'Miscellaneous'.toUpperCase();
 
@@ -139,7 +138,7 @@ Widget myCheckBox({required BuildContext context, required void Function(bool?) 
     value: value,
     size: GFSize.SMALL,
     type: GFCheckboxType.circle,
-    activeBgColor: darken(Theme.of(context).colorScheme.surface, 0.3),
+    activeBgColor: Theme.of(context).primaryColor,
     inactiveBgColor: Theme.of(context).colorScheme.surface,
   );
 }

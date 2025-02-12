@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:collection/collection.dart';
 import 'package:no_solo_padel_dev/models/user_model.dart';
 
 import '../database/fields.dart';
@@ -29,6 +30,22 @@ class MyMatch {
       {required this.date, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
+  }
+
+  MyMatch copyWith({
+    Date? date,
+    List<MyUser>? players,
+    List<String>? courtNames,
+    String? comment,
+    bool? isOpen,
+  }) {
+    return MyMatch(
+      date: date ?? this.date,
+      players: players ?? List.from(this.players),
+      courtNames: courtNames ?? List.from(this.courtNames),
+      comment: comment ?? this.comment,
+      isOpen: isOpen ?? this.isOpen,
+    );
   }
 
   bool isCourtInMatch(String court) => courtNames.contains(court);
@@ -126,7 +143,6 @@ class MyMatch {
   String toString() => ('($date,open=$isOpen,courts=$courtNames,names=$players)');
 
   factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-
     final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
     final players = <MyUser>[];
 
@@ -169,4 +185,25 @@ class MyMatch {
         if (core) DBFields.comment.name: comment,
         if (core) DBFields.isOpen.name: isOpen, // bool
       };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals; // Use collection package
+    return other is MyMatch &&
+        date == other.date &&
+        listEquals(players, other.players) && // Compare lists using collection package
+        listEquals(courtNames, other.courtNames) && // Compare lists using collection package
+        comment == other.comment &&
+        isOpen == other.isOpen;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        date,
+        const DeepCollectionEquality().hash(players), // Hash lists using collection package
+        const DeepCollectionEquality().hash(courtNames), // Hash lists using collection package
+        comment,
+        isOpen,
+      );
 }

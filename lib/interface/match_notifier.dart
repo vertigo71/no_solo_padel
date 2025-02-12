@@ -6,6 +6,7 @@ import '../models/match_model.dart';
 final String _classString = 'MatchNotifier'.toUpperCase();
 
 /// holds a Match. If a change is made propagates to anyone who is listening
+/// listens to firebase if the match changes
 class MatchNotifier with ChangeNotifier {
   MatchNotifier(this._match) {
     // Initialize with the initial match

@@ -43,7 +43,6 @@ class MyUser {
       name: name ?? this.name,
       emergencyInfo: emergencyInfo ?? this.emergencyInfo,
       email: email ?? this.email,
-      // Use the provided email or the current one
       userType: userType ?? this.userType,
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
@@ -112,4 +111,28 @@ class MyUser {
       DBFields.loginCount.name: loginCount, // int
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true; // Check for identity first
+    if (other is! MyUser) return false; // Check for type
+    return id == other.id &&
+        name == other.name &&
+        emergencyInfo == other.emergencyInfo &&
+        email == other.email &&
+        userType == other.userType &&
+        lastLogin == other.lastLogin &&
+        loginCount == other.loginCount;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        name,
+        emergencyInfo,
+        email,
+        userType,
+        lastLogin,
+        loginCount,
+      );
 }

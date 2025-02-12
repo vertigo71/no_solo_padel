@@ -1,7 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +10,6 @@ import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../interface/app_state.dart';
-import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
@@ -34,84 +31,96 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   //
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<SettingsPageState>.
-  final _formKey = GlobalKey<FormState>();
-
+  final _formKey = GlobalKey<FormBuilderState>();
   static const int maxNumberOfCourts = 6;
-  final List<TextEditingController> _courtControllers =
-      List.generate(maxNumberOfCourts, (index) => TextEditingController());
-
-  static const String commentTextField = 'Comentarios';
-  final TextEditingController _commentController = TextEditingController();
-
-  // checkBox
-  bool _isMatchOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    MyLog.log(_classString, 'initState');
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final MyMatch match = context.read<MatchNotifier>().match;
-    final AppState appState = context.read<AppState>();
-    MyLog.log(_classString, 'didChangeDependencies initial values match=$match', level: Level.INFO);
-
-    _isMatchOpen = match.isOpen;
-    // initial comment
-    if (match.comment == '') {
-      _commentController.text = appState.getParameterValue(ParametersEnum.defaultCommentText);
-    } else {
-      _commentController.text = match.comment;
-    }
-
-    // initial courtValues
-    for (int i = 0; i < min(match.courtNames.length, _courtControllers.length); i++) {
-      _courtControllers[i].text = match.courtNames[i];
-    }
-  }
-
-  @override
-  void dispose() {
-    MyLog.log(_classString, 'dispose');
-
-    _commentController.dispose();
-    for (var controller in _courtControllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  void _handleIsOpenChanged(bool newValue) {
-    MyLog.log(_classString, '_handleIsOpenChanged isMatchOpen changed $newValue', level: Level.INFO);
-
-    setState(() {
-      _isMatchOpen = newValue;
-    });
-  }
+  static const String commentId = 'comment';
+  static const String courtId = 'court';
+  static const String isOpenId = 'isOpen';
 
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     MyLog.log(_classString, 'Building Form');
 
-    return Form(
+    MyMatch match = context.read<MatchNotifier>().match;
+
+    return FormBuilder(
       key: _formKey,
       child: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ConfigurationFormWidgets(
-              courtControllers: _courtControllers,
-              commentController: _commentController,
-              formKey: _formKey,
-              onIsOpenChanged: _handleIsOpenChanged,
-              isMatchOpen: _isMatchOpen,
+            // Courts
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                for (int i = 0; i < maxNumberOfCourts; i++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: FormBuilderTextField(
+                        name: '$courtId$i',
+                        // Unique name for each field
+                        decoration: InputDecoration(
+                          labelText: 'Pista ${i+1}',
+                          contentPadding: const EdgeInsets.all(8.0),
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                          ),
+                        ),
+                        initialValue: i < match.courtNames.length ? match.courtNames[i] : '',
+                        inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
+                        keyboardType: TextInputType.text,
+                        textAlign: TextAlign.center, // Center the text
+                      ),
+                    ),
+                  ),
+              ],
             ),
+
+            const SizedBox(height: 10.0),
+
+            // Open match
+            Row(
+              children: <Widget>[
+                const SizedBox(width: 10),
+                const Text('Abrir convocatoria'),
+                const SizedBox(width: 10),
+                FormBuilderField<bool>(
+                  name: isOpenId,
+                  initialValue: match.isOpen,
+                  builder: (FormFieldState<bool> field) {
+                    return myCheckBox(
+                      context: context,
+                      value: field.value ?? false,
+                      onChanged: (newValue) {
+                        field.didChange(newValue);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10.0),
+
+            // Comments
+            FormBuilderTextField(
+              name: commentId,
+              decoration: InputDecoration(
+                labelText: 'Comentarios',
+                contentPadding: const EdgeInsets.all(8.0),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                ),
+              ),
+              keyboardType: TextInputType.text,
+              initialValue: match.comment,
+            ),
+
+            // Aceptar button
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
               child: Row(
@@ -131,14 +140,14 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     );
   }
 
-  String _checkConfigurationForm() {
-    MyLog.log(_classString, 'check all fields');
+  String _checkForm() {
+    MyLog.log(_classString, 'check all courts');
 
     // empty courts
     List<String> courts = [];
-    for (var controller in _courtControllers) {
-      if (controller.text.isNotEmpty) {
-        courts.add(controller.text);
+    for (int i = 0; i < maxNumberOfCourts; i++) {
+      if (_formKey.currentState?.value['$courtId$i'].isNotEmpty) {
+        courts.add(_formKey.currentState?.value['$courtId$i']);
       }
     }
     if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
@@ -152,13 +161,19 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   }
 
   Future<void> _formValidate() async {
-    MyLog.log(_classString, 'validate the form');
+    MyLog.log(_classString, '_formValidate: validate the form');
+
+    var state = _formKey.currentState;
 
     // Validate returns true if the form is valid, or false otherwise.
-    if (_formKey.currentState!.validate()) {
-      if (_isMatchOpen) {
+    if (state?.validate() ?? false) {
+      // save all values
+      state!.save();
+
+      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', level: Level.INFO);
+      if (state.value[isOpenId]) {
         // if opening a match, check all fields
-        String errorString = _checkConfigurationForm();
+        String errorString = _checkForm();
         if (errorString.isNotEmpty) {
           myAlertDialog(context, errorString);
           return;
@@ -168,14 +183,14 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // all is correct or match is not open
       MyMatch newMatch = MyMatch(date: context.read<MatchNotifier>().match.date);
       // add courts available
-      for (var controller in _courtControllers) {
-        if (controller.text.isNotEmpty) {
-          newMatch.courtNames.add(controller.text);
+      for (int i = 0; i < maxNumberOfCourts; i++) {
+        if (state.value['$courtId$i'].isNotEmpty) {
+          newMatch.courtNames.add(state.value['$courtId$i']);
         }
       }
-      newMatch.comment = _commentController.text;
-      newMatch.isOpen = _isMatchOpen;
-      MyLog.log(_classString, 'update match = $newMatch');
+      newMatch.comment = state.value[commentId];
+      newMatch.isOpen = state.value[isOpenId];
+      MyLog.log(_classString, '_formValidate: update match = $newMatch', level: Level.INFO);
       // Update to Firebase
       String message = 'Los datos han sido actualizados';
       try {
@@ -183,15 +198,15 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         FirebaseHelper firebaseHelper = context.read<Director>().firebaseHelper;
         AppState appState = context.read<AppState>();
 
-        /// upload firebase
+        // upload firebase
         await firebaseHelper.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
 
         String registerText = '';
         MyUser loggedUser = appState.getLoggedUser();
         int newNumCourts = newMatch.getNumberOfCourts();
 
-        /// detect if the match has been opened or closed
-        /// otherwise detect if there is a change in the number of courts
+        // detect if the match has been opened or closed
+        // otherwise detect if there is a change in the number of courts
         if (newMatch.isOpen != oldMatch.isOpen) {
           if (newMatch.isOpen) {
             registerText =
@@ -221,121 +236,5 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
       if (mounted) showMessage(context, message);
     }
-  }
-}
-
-class ConfigurationFormWidgets extends StatelessWidget {
-  const ConfigurationFormWidgets({
-    required this.courtControllers,
-    required this.commentController,
-    required this.formKey,
-    required this.onIsOpenChanged,
-    required this.isMatchOpen,
-    super.key,
-  });
-
-  final List<TextEditingController> courtControllers;
-  final TextEditingController commentController;
-  final GlobalKey<FormState> formKey;
-  final Function(bool) onIsOpenChanged;
-  final bool isMatchOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    MyLog.log(_classString, 'ConfigurationFormWidgets creating widgets. Open=$isMatchOpen', level: Level.INFO);
-
-    return Column(
-      children: [
-        // Courts
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const Text('Pistas'),
-            const SizedBox(width: 10.0),
-            for (var controller in courtControllers)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(5.0),
-                  child: ConfigurationFormSingleWidget(
-                    fieldName: '',
-                    textController: controller,
-                    formatter: UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true),
-                    formKey: formKey,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        // Open match
-        const SizedBox(height: 10.0),
-        Row(
-          children: <Widget>[
-            const SizedBox(width: 10),
-            const Text('Abrir convocatoria'),
-            const SizedBox(width: 10),
-            myCheckBox(
-              context: context,
-              value: isMatchOpen,
-              onChanged: (bool? value) {
-                onIsOpenChanged(value!);
-              },
-            ),
-          ],
-        ),
-        // comments
-        const SizedBox(height: 10.0),
-        ConfigurationFormSingleWidget(
-          fieldName: ConfigurationPanelState.commentTextField,
-          textController: commentController,
-          formKey: formKey,
-        )
-      ],
-    );
-  }
-}
-
-class ConfigurationFormSingleWidget extends StatelessWidget {
-  const ConfigurationFormSingleWidget(
-      {required this.fieldName,
-      required this.textController,
-      required this.formKey,
-      this.mayBeEmpty = true,
-      this.formatter,
-      super.key});
-
-  final String fieldName;
-  final TextEditingController textController;
-  final GlobalKey<FormState> formKey;
-  final bool mayBeEmpty;
-  final FilteringTextInputFormatter? formatter;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      inputFormatters: [
-        // only accept letters from a to z
-        if (formatter != null) formatter!,
-      ],
-      onFieldSubmitted: (String str) {
-        formKey.currentState!.validate(); // Validate using the formKey
-      },
-      keyboardType: TextInputType.text,
-      decoration: InputDecoration(
-        labelText: fieldName,
-        contentPadding: const EdgeInsets.all(8.0),
-        border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(4.0)),
-        ),
-      ),
-      controller: textController,
-      // The validator receives the text that the user has entered.
-      validator: (value) {
-        if (!mayBeEmpty && (value == null || value.isEmpty)) {
-          return 'No puede estar vacío';
-        }
-        return null;
-      },
-    );
   }
 }

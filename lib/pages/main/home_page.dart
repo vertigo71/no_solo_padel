@@ -10,8 +10,8 @@ import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/parameter_model.dart';
 import '../../routes/routes.dart';
-import '../../utilities/theme.dart';
 import '../../utilities/date.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'HomePage'.toUpperCase();
 
@@ -109,7 +109,7 @@ Color getMatchColor(MyMatch match) {
 Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
   switch (playingState) {
     case PlayingState.unsigned:
-      return darken(Theme.of(context).canvasColor, .2);
+      return darken(Theme.of(context).canvasColor, .1);
     case PlayingState.playing:
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
