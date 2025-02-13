@@ -20,54 +20,35 @@ import '../../utilities/misc.dart';
 final String _classString = 'PlayersPanel'.toUpperCase();
 
 class PlayersPanel extends StatefulWidget {
-  const PlayersPanel(this.initialMatch, {super.key});
-
-  final MyMatch initialMatch;
+  const PlayersPanel({super.key});
 
   @override
   PlayersPanelState createState() => PlayersPanelState();
 }
 
-/// TODO: call updateMatch when match updated in the firebase
-
 class PlayersPanelState extends State<PlayersPanel> {
-  late final AppState appState;
-  late final MyUser loggedUser;
-  late MyUser selectedUser;
-  late MyMatch initialMatch;
-
-  final TextEditingController userPositionController = TextEditingController();
+  late MyUser _selectedUser;
+  late MyUser _loggedUser;
+  final TextEditingController _userPositionController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      appState = context.read<AppState>();
-      initialMatch = widget.initialMatch;
-
-      loggedUser = appState.getLoggedUser();
-      selectedUser = appState.sortUsers[0];
-
-      MyLog.log(_classString, 'initState arguments = $initialMatch');
-    });
+    MyLog.log(_classString, 'didChangeDependencies initializing variables ONLY ONCE');
+    _selectedUser = context.read<AppState>().users[0];
+    _loggedUser = context.read<AppState>().getLoggedUser();
   }
 
   @override
   void dispose() {
-    userPositionController.dispose();
+    _userPositionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building for $loggedUser');
-
-    final matchNotifier = context.watch<MatchNotifier>(); // Watch for changes in the match
-    initialMatch = matchNotifier.match;
+    MyLog.log(_classString, 'Building for $_loggedUser');
 
     return ListView(
       children: [
@@ -77,9 +58,9 @@ class PlayersPanelState extends State<PlayersPanel> {
         const Divider(thickness: 5),
         listOfPlayers(),
         const SizedBox(height: 20),
-        if (appState.isLoggedUserAdmin) const Divider(thickness: 5),
+        if (context.read<AppState>().isLoggedUserAdmin) const Divider(thickness: 5),
         const SizedBox(height: 20),
-        if (appState.isLoggedUserAdmin) signUpAdminForm(),
+        if (context.read<AppState>().isLoggedUserAdmin) signUpAdminForm(),
         const SizedBox(height: 50),
       ],
     );
@@ -90,9 +71,10 @@ class PlayersPanelState extends State<PlayersPanel> {
         child: Builder(
           builder: (context) {
             String returnText = '';
-            initialMatch = context.read<MatchNotifier>().match;
-            if (initialMatch.isInTheMatch(loggedUser)) {
-              if (initialMatch.isPlaying(loggedUser)) {
+            MyMatch initialMatch = context.read<MatchNotifier>().match;
+
+            if (initialMatch.isInTheMatch(_loggedUser)) {
+              if (initialMatch.isPlaying(_loggedUser)) {
                 returnText = 'Juegas!!!';
               } else {
                 returnText = 'Apuntado\n(pendiente de completar pista)';
@@ -118,20 +100,21 @@ class PlayersPanelState extends State<PlayersPanel> {
             const SizedBox(width: 20),
             Builder(
               builder: (context) {
-                bool loggedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(loggedUser);
+                bool isLoggedUserInMatch = context.read<MatchNotifier>().match.isInTheMatch(_loggedUser);
 
                 return myCheckBox(
                   context: context,
-                  value: loggedUserInTheMatch,
-                  onChanged: (bool? value) {
+                  value: isLoggedUserInMatch,
+                  onChanged: (bool? newValue) async {
                     setState(() {
-                      loggedUserInTheMatch = value!;
+                      isLoggedUserInMatch = newValue!;
                     });
-                    validate(
-                      user: loggedUser,
-                      toAdd: loggedUserInTheMatch, // loggedUserInTheMatch? add Player : delete Player
+                    bool ok = await validate(
+                      user: _loggedUser,
+                      toAdd: isLoggedUserInMatch, // isLoggedUserInMatch? add Player : delete Player
                       adminManagingUser: false,
                     );
+                    if (!ok) setState(() {}); // user was not deleted or added
                   },
                 );
               },
@@ -163,6 +146,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
                   tileColor: Theme.of(context).appBarTheme.backgroundColor,
+                  titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                   title: Text('Apuntados ($numCourtsText)'),
                 ),
               ),
@@ -212,59 +196,91 @@ class PlayersPanelState extends State<PlayersPanel> {
         },
       );
 
+  /// Validates the form and updates the match in Firestore.
+  ///
+  /// Parameters:
+  ///   - [user]: The user to add or remove from the match.
+  ///   - [toAdd]: `true` to add the user, `false` to remove.
+  ///   - [adminManagingUser]: `true` if an administrator is performing the action, `false` otherwise.
+  ///
+  /// Returns:
+  ///   `true` if the operation was successful, `false` otherwise.
   Future<bool> validate({
-    /// add/remove user from Match in Firebase
+    /// add/remove user from Match in Firestore
     required MyUser user,
     required bool toAdd, // add/remove user to match
     required bool adminManagingUser,
   }) async {
     MyLog.log(_classString, 'validate');
     FsHelpers fsHelpers = context.read<Director>().fsHelpers;
+    AppState appState = context.read<AppState>();
+    MatchNotifier matchNotifier = context.read<MatchNotifier>();
 
-    MyMatch? myMatch; // match != null if added or deleted
+    MyMatch? newMatchFromFirestore;
     String registerText = ''; // text to be added to the register
-    // add/remove from Firebase
+    // add/remove from Firestore
     try {
       if (toAdd) {
+        // add user to match
+        if (matchNotifier.match.isInTheMatch(user)) {
+          MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE);
+          return false;
+        }
         int listPosition = -1;
         if (adminManagingUser) {
           // get position from the controller (position = controllerText -1)
-          listPosition = int.tryParse(userPositionController.text) ?? -1;
+          listPosition = int.tryParse(_userPositionController.text) ?? -1;
           if (listPosition > 0) listPosition--;
         }
-        myMatch = await fsHelpers.addPlayerToMatch(
-            appState: appState, date: context.read<MatchNotifier>().match.date, player: user, position: listPosition);
-        if (myMatch != null) {
-          listPosition = myMatch.getPlayerPosition(user);
+
+        newMatchFromFirestore = await fsHelpers.addPlayerToMatch(
+            appState: appState, date: matchNotifier.match.date, player: user, position: listPosition);
+
+        if (newMatchFromFirestore == null) {
+          MyLog.log(_classString, 'validate2 player $user already was in match', level: Level.SEVERE);
+          if (mounted) showMessage(context, 'El jugador ya estaba en el partido');
+          return false;
+        } else {
+          listPosition = newMatchFromFirestore.getPlayerPosition(user);
           if (listPosition == -1) {
-            MyLog.log(_classString, 'validate player $user not in match $myMatch', level: Level.SEVERE);
+            MyLog.log(_classString, 'validate3 player $user not in match $newMatchFromFirestore', level: Level.SEVERE);
           }
           if (adminManagingUser) {
-            registerText = '${loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
+            registerText = '${_loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
           } else {
             registerText = '${user.name} se ha apuntado  (${listPosition + 1})';
           }
         }
       } else {
+        // removing user
+        if (!matchNotifier.match.isInTheMatch(user)) {
+          MyLog.log(_classString, 'validate4 removing: player $user is not in match', level: Level.SEVERE);
+          return false;
+        }
         if (adminManagingUser) {
-          registerText = '${loggedUser.name} ha desapuntado a ${user.name}';
+          registerText = '${_loggedUser.name} ha desapuntado a ${user.name}';
         } else {
           // if not admin mode, certify loggedUser wants to signOff from the match
           bool delete = await _confirmLoggedUserOutOfMatch();
           if (!delete) {
             // abort deletion
-            setState(() {
-              // loggedUser is still in the match
-              // refresh
-            });
+            // setState(() { // will be done after the call of validate
+            //   // loggedUser is still in the match
+            //   // refresh
+            // });
             if (mounted) showMessage(context, 'Operación anulada');
             return false;
           }
           registerText = '${user.name} se ha desapuntado';
         }
-        if (mounted) {
-          myMatch = await fsHelpers.deletePlayerFromMatch(
-              appState: appState, date: context.read<MatchNotifier>().match.date, user: user);
+
+        newMatchFromFirestore =
+            await fsHelpers.deletePlayerFromMatch(appState: appState, date: matchNotifier.match.date, user: user);
+        if (newMatchFromFirestore == null) {
+          MyLog.log(_classString, 'validate5 player $user not in the match ${matchNotifier.match}',
+              level: Level.SEVERE);
+          if (mounted) showMessage(context, 'El jugador no estaba en el partido');
+          return false;
         }
       }
     } on FirebaseException catch (e) {
@@ -279,51 +295,42 @@ class PlayersPanelState extends State<PlayersPanel> {
       }
     }
 
-    MyLog.log(_classString, 'validate firebase done: Match=$myMatch Register=$registerText', level: Level.INFO);
+    MyLog.log(_classString, 'validate firebase done: Match=$newMatchFromFirestore Register=$registerText',
+        level: Level.INFO);
 
-    if (myMatch == null) {
-      // no action has been taken
-      if (toAdd) {
-        if (mounted) showMessage(context, 'El jugador ya estaba en el partido');
-      } else {
-        if (mounted) showMessage(context, 'El jugador no estaba en el partido');
-      }
+    if (newMatchFromFirestore == null) {
+      MyLog.log(_classString, 'validate6 ERROR newMatchFromFirestore=null', level: Level.SEVERE);
       return false;
     } else {
-      // notify match has changed
-      // this is Key to update all panels
-      // if (mounted) context.read<MatchNotifier>().updateMatch(myMatch); // TODO: not to do listener will
-    }
+      //  state updated via consumers
+      // telegram and register
+      try {
+        MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
 
-    //  state updated via consumers
-    // telegram and register
-    try {
-      MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
-      if (mounted) {
         await fsHelpers.updateRegister(RegisterModel(
-          date: context.read<MatchNotifier>().match.date,
+          date: matchNotifier.match.date,
           message: registerText,
         ));
-      }
-      MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO);
-      if (mounted) {
+
+        MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO);
+
         sendDatedMessageToTelegram(
             message: '$registerText\n'
-                'APUNTADOS: ${myMatch.players.length} de ${myMatch.getNumberOfCourts() * 4}',
-            matchDate: context.read<MatchNotifier>().match.date,
+                'APUNTADOS: ${newMatchFromFirestore.players.length} de ${newMatchFromFirestore.getNumberOfCourts() * 4}',
+            matchDate: matchNotifier.match.date,
             fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
-      }
-    } catch (e) {
-      MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE);
-      if (mounted) {
-        myAlertDialog(
-            context,
-            'Ha habido una incidencia al enviar el mensaje de confirmación\n'
-            'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
-            'Error = $e');
-      }
+      } catch (e) {
+        MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE);
+        if (mounted) {
+          myAlertDialog(
+              context,
+              'Ha habido una incidencia al enviar el mensaje de confirmación\n'
+              'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
+              'Error = $e');
+        }
 
-      return false;
+        return false;
+      }
     }
 
     return true;
@@ -338,7 +345,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   Widget signUpAdminForm() {
-    List<MyUser> users = appState.sortUsers;
+    List<MyUser> users = context.read<AppState>().users;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -369,7 +376,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                 ),
                 onSelectedItemChanged: (index) {
                   setState(() {
-                    selectedUser = users[index];
+                    _selectedUser = users[index];
                   });
                 },
                 children: users
@@ -393,7 +400,7 @@ class PlayersPanelState extends State<PlayersPanel> {
               flex: 2,
               child: Builder(
                 builder: (context) {
-                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(selectedUser);
+                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(_selectedUser);
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -401,12 +408,12 @@ class PlayersPanelState extends State<PlayersPanel> {
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + selectedUser.name,
+                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + _selectedUser.name,
                             textAlign: TextAlign.center,
                           ),
                         ),
                         onPressed: () => validate(
-                          user: selectedUser,
+                          user: _selectedUser,
                           toAdd: !isSelectedUserInTheMatch,
                           adminManagingUser: true,
                         ),
@@ -424,7 +431,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                             ),
                           ),
                           onFieldSubmitted: (String str) async => validate(
-                            user: selectedUser,
+                            user: _selectedUser,
                             toAdd: true,
                             adminManagingUser: true,
                           ),
@@ -432,7 +439,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
                           ],
-                          controller: userPositionController,
+                          controller: _userPositionController,
                           // The validator receives the text that the user has entered.
                         )),
                       ),

@@ -32,6 +32,26 @@ class MyMatch {
     this.courtNames.addAll(courtNames ?? {});
   }
 
+  factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
+    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
+    final players = <MyUser>[];
+
+    for (final playerId in playerIds) {
+      final user = appState.getUserById(playerId);
+      if (user != null) {
+        players.add(user);
+      }
+    }
+
+    return MyMatch(
+      date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
+      players: players,
+      courtNames: List<String>.from(json[DBFields.courtNames.name] ?? []),
+      comment: json[DBFields.comment.name] ?? '',
+      isOpen: json[DBFields.isOpen.name] ?? false,
+    );
+  }
+
   MyMatch copyWith({
     Date? date,
     List<MyUser>? players,
@@ -142,25 +162,6 @@ class MyMatch {
   @override
   String toString() => ('($date,open=$isOpen,courts=$courtNames,names=$players)');
 
-  factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
-    final players = <MyUser>[];
-
-    for (final playerId in playerIds) {
-      final user = appState.getUserById(playerId);
-      if (user != null) {
-        players.add(user);
-      }
-    }
-
-    return MyMatch(
-      date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
-      players: players,
-      courtNames: List<String>.from(json[DBFields.courtNames.name] ?? []),
-      comment: json[DBFields.comment.name] ?? '',
-      isOpen: json[DBFields.isOpen.name] ?? false,
-    );
-  }
 
   Set<String> getNonExistingUsersFromJson(Map<String, dynamic> json, AppState appState) {
     Set<String> nonExistingUserIds = {};

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel_dev/database/firestore_helpers.dart';
 
 import '../models/debug.dart';
 import '../models/match_model.dart';

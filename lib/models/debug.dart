@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 
 import 'package:flutter_bugfender/flutter_bugfender.dart';

@@ -191,7 +191,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       newMatch.comment = state.value[commentId];
       newMatch.isOpen = state.value[isOpenId];
       MyLog.log(_classString, '_formValidate: update match = $newMatch', level: Level.INFO);
-      // Update to Firebase
+      // Update to Firestore
       String message = 'Los datos han sido actualizados';
       try {
         MyMatch oldMatch = context.read<MatchNotifier>().match;

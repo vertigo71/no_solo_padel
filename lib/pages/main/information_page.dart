@@ -75,7 +75,7 @@ class _InformationPageState extends State<InformationPage> {
           ),
           ...ListTile.divideTiles(
               context: context,
-              tiles: appState.sortUsers.map(((user) {
+              tiles: appState.users.map(((user) {
                 int numberOfMatchesTogether = 0;
                 for (MyMatch match in _allMatches ?? []) {
                   if (match.arePlayingTogether(user, _loggedUser)) {

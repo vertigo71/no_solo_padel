@@ -43,7 +43,7 @@ class MatchPage extends StatelessWidget {
             body: TabBarView(
               children: [
                 if (isLoggedUserAdmin) ConfigurationPanel(),
-                PlayersPanel(matchNotifier.match),
+                PlayersPanel(),
                 SortingPanel(matchNotifier.match),
               ],
             ),

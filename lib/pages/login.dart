@@ -41,18 +41,10 @@ class LoginPageState extends State<LoginPage> {
   }
 
   @override
-  void initState() {
-    // TODO: verify it's called ONLY ONCE
-
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      MyLog.log(_classString, '_LoginState:initState');
-      _initializeData();
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    MyLog.log(_classString, 'didChangeDependencies initializing variables ONLY ONCE');
+    _initializeData();
   }
 
   Future<void> _initializeData() async {

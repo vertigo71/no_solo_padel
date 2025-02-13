@@ -537,7 +537,7 @@ class FsHelpers {
     }
   }
 
-  /// return match if it was inserted. null otherwise
+  /// return match if user was inserted. null otherwise
   Future<MyMatch?> addPlayerToMatch({
     required Date date,
     required MyUser player,
@@ -573,7 +573,7 @@ class FsHelpers {
     });
   }
 
-  /// return match if it was deleted. null otherwise
+  /// return match if user was deleted. null otherwise
   Future<MyMatch?> deletePlayerFromMatch({
     required Date date,
     required MyUser user,

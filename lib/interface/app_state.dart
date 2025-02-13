@@ -73,14 +73,11 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  List<MyUser> get usersCopy => List.from(_usersCache);
-
   int get numUsers => _usersCache.length;
 
-  List<MyUser> get sortUsers {
-    _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
-    return _usersCache;
-  }
+  List<MyUser> get users => List.from(_usersCache);
+
+  void _sortUsers() => _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
 
   bool get isLoggedUserAdmin => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
 
@@ -96,6 +93,9 @@ class AppState with ChangeNotifier {
 
     // convert loggedUser
     setLoggedUserById(_loggedUser.id, notify: false);
+
+    // sort
+    _sortUsers();
 
     if (notify) notifyListeners();
   }
@@ -114,7 +114,7 @@ class AppState with ChangeNotifier {
     if (modified.isNotEmpty) {
       MyLog.log(_classString, 'setChangedUsers modified $modified ');
       for (var newUser in modified) {
-        bool correct = copyUserToCache(newUser);
+        bool correct = _updateCachedUser(newUser);
         if (!correct) {
           MyLog.log(_classString, 'setChangedUsers user to modify not found $newUser ', level: Level.SEVERE);
         }
@@ -127,6 +127,9 @@ class AppState with ChangeNotifier {
         removeUserByIdBold(newUser.id);
       }
     }
+
+    // sort users
+    _sortUsers();
 
     if (notify) notifyListeners();
   }
@@ -142,17 +145,17 @@ class AppState with ChangeNotifier {
   /// search usersCache for newUserId
   /// if not found, return false
   /// if found copy all data from newUser to User
-  bool copyUserToCache(MyUser newUser) {
+  bool _updateCachedUser(MyUser newUser) {
     Set<MyUser> usersFound = _usersCache.where((user) => user.id == newUser.id).toSet();
     if (usersFound.isEmpty) {
-      MyLog.log(_classString, 'copyUserToCache. No users found = $newUser ', level: Level.SEVERE);
+      MyLog.log(_classString, '_updateCachedUser. No users found = $newUser ', level: Level.SEVERE);
       return false;
     }
     if (usersFound.length > 1) {
-      MyLog.log(_classString, 'copyUserToCache. More than 1 users found = $newUser ', level: Level.SEVERE);
+      MyLog.log(_classString, '_updateCachedUser. More than 1 users found = $newUser ', level: Level.SEVERE);
     }
     for (var user in usersFound) {
-      MyLog.log(_classString, 'copyUserToCache. Copying: $newUser ');
+      MyLog.log(_classString, '_updateCachedUser. Updating: $newUser ');
       user.copyFrom(newUser);
     }
     return true;

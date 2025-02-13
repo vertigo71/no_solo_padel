@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel_dev/models/match_model.dart';
 
+import '../models/debug.dart';
 import '../pages/admin/admin_page.dart';
 import '../pages/main/main_page.dart';
 import '../pages/loading.dart';
 import '../pages/login.dart';
 import '../pages/match/match_page.dart';
+
+final String _classString = 'Routes'.toUpperCase();
 
 // Define route names (recommended):
 class AppRoutes {
@@ -43,6 +46,7 @@ class AppRouter {
           path: AppRoutes.matchPath,
           builder: (BuildContext context, GoRouterState state) {
             final match = state.extra as MyMatch; // Retrieve the argument
+            MyLog.log(_classString, 'going to MatchPAge: match=$match');
             return MatchPage(match: match); // Pass it to the widget
           },
           name: AppRoutes.match),

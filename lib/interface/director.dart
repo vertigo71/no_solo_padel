@@ -39,7 +39,7 @@ class Director {
 
   /// delete old logs and matches
   Future<void> deleteOldData() async {
-    // delete old register logs & matches at the Firebase
+    // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
     fsHelpers.deleteOldData(
         DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping));

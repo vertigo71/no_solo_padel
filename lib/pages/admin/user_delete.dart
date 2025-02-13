@@ -53,7 +53,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
           children: [
             ...ListTile.divideTiles(
                 context: context,
-                tiles: appState.sortUsers.map(((user) => ListTile(
+                tiles: appState.users.map(((user) => ListTile(
                       leading: CircleAvatar(
                           backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),
