@@ -58,7 +58,7 @@ class FsHelpers {
           MyLog.log(_classString, 'LISTENER newMatch found = $newMatch', level: Level.INFO);
           matchFunction(newMatch);
         } else {
-          MyLog.log(_classString, 'LISTENER Match data is null in Firestore.', level: Level.SEVERE);
+          MyLog.log(_classString, 'LISTENER Match data is null in Firestore.', level: Level.WARNING );
           matchFunction(MyMatch(id: matchId));
         }
       });

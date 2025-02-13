@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 import '../models/debug.dart';
 import '../models/match_model.dart';
@@ -21,15 +22,27 @@ class MatchNotifier with ChangeNotifier {
 
   MyMatch get match => _match;
 
+  /// ONLY to use if the match is updated with a new one
+  /// which matchId is different
   /// update the match in the notifier
   /// notify any listener that match has changed
   ///
   /// Not to call if the match has been updated
+  /// with the same matchId
   /// to the Firestore
   /// in this case, _notifyIfChanged will do the updating
   ///
   void updateMatch(MyMatch newMatch) {
-    _match = newMatch;
+    MyLog.log(_classString, 'updateMatch: $newMatch');
+    if (_match.id != newMatch.id) {
+      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO);
+      _match = newMatch;
+      // redo the listener
+      _matchSubscription?.cancel();
+      _init();
+    } else {
+      _match = newMatch;
+    }
     notifyListeners(); // Notify listeners about the change
   }
 
@@ -44,7 +57,8 @@ class MatchNotifier with ChangeNotifier {
   void _notifyIfChanged(MyMatch newMatch) {
     if (_match != newMatch) {
       MyLog.log(_classString, 'Match updated from Firestore: $newMatch');
-      updateMatch(newMatch);
+      _match = newMatch;
+      notifyListeners(); // Notify listeners about the change
     }
   }
 
