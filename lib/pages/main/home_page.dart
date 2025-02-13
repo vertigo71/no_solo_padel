@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
+import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/parameter_model.dart';
@@ -51,7 +52,8 @@ class HomePage extends StatelessWidget {
             // snapshot.data is now a List<MyMatch> (or null if there's an error)
             final List<MyMatch> matches = snapshot.data ?? []; // Handle the null case
 
-            final List<MyMatch> playableMatches = matches.where((match) => appState.isDayPlayable(match.id)).toList();
+            final List<MyMatch> playableMatches =
+                matches.where((match) => appState.isDayPlayable(match.id)).toList();
 
             return ListView(
               children: [
@@ -69,8 +71,8 @@ class HomePage extends StatelessWidget {
                         tileColor: match.isOpen
                             ? getPlayingStateColor(context, playingState)
                             : lighten(getMatchColor(match), 0.2),
-                        leading:
-                            CircleAvatar(backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
+                        leading: CircleAvatar(
+                            backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
@@ -82,7 +84,8 @@ class HomePage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match);
+                          context.read<MatchNotifier>().updateMatch(match);
+                          context.pushNamed(AppRoutes.match);
                         },
                       ),
                     );

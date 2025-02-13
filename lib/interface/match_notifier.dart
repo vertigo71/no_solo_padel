@@ -47,6 +47,8 @@ class MatchNotifier with ChangeNotifier {
   }
 
   void _init() {
+    MyLog.log(_classString, '_init: create _matchSubscription for match=$_match', level: Level.INFO);
+
     _matchSubscription = _director.fsHelpers.listenToMatch(
       matchId: _match.id,
       appState: _director.appState,
