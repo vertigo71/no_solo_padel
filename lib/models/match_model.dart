@@ -20,14 +20,14 @@ const Map playingStateMap = {
 };
 
 class MyMatch {
-  Date date;
+  Date id;
   final List<MyUser> players = [];
   final List<String> courtNames = [];
   String comment;
   bool isOpen;
 
   MyMatch(
-      {required this.date, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
+      {required this.id, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
   }
@@ -44,7 +44,7 @@ class MyMatch {
     }
 
     return MyMatch(
-      date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
+      id: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
       players: players,
       courtNames: List<String>.from(json[DBFields.courtNames.name] ?? []),
       comment: json[DBFields.comment.name] ?? '',
@@ -53,14 +53,14 @@ class MyMatch {
   }
 
   MyMatch copyWith({
-    Date? date,
+    Date? id,
     List<MyUser>? players,
     List<String>? courtNames,
     String? comment,
     bool? isOpen,
   }) {
     return MyMatch(
-      date: date ?? this.date,
+      id: id ?? this.id,
       players: players ?? List.from(this.players),
       courtNames: courtNames ?? List.from(this.courtNames),
       comment: comment ?? this.comment,
@@ -137,7 +137,7 @@ class MyMatch {
   }
 
   /// list of who plays with who in this match
-  List<int> getCouplesPlainList() => getRandomList(getNumberOfFilledCourts() * 4, date);
+  List<int> getCouplesPlainList() => getRandomList(getNumberOfFilledCourts() * 4, id);
 
   /// true if they play together
   bool arePlayingTogether(MyUser user1, MyUser user2) {
@@ -151,7 +151,7 @@ class MyMatch {
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
-          MyLog.log(_classString, '$date $user1 played with $user2 sorting=$sortedList', myCustomObject: players);
+          MyLog.log(_classString, '$id $user1 played with $user2 sorting=$sortedList', myCustomObject: players);
           return true;
         }
       }
@@ -160,7 +160,7 @@ class MyMatch {
   }
 
   @override
-  String toString() => ('($date,open=$isOpen,courts=$courtNames,names=$players)');
+  String toString() => ('($id,open=$isOpen,courts=$courtNames,names=$players)');
 
 
   Set<String> getNonExistingUsersFromJson(Map<String, dynamic> json, AppState appState) {
@@ -180,7 +180,7 @@ class MyMatch {
   }
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
-        DBFields.date.name: date.toYyyyMMdd(),
+        DBFields.date.name: id.toYyyyMMdd(),
         if (matchPlayers) DBFields.players.name: players.map((user) => user.id).toList(),
         if (core) DBFields.courtNames.name: courtNames.toList(),
         if (core) DBFields.comment.name: comment,
@@ -192,7 +192,7 @@ class MyMatch {
     if (identical(this, other)) return true;
     final listEquals = const DeepCollectionEquality().equals; // Use collection package
     return other is MyMatch &&
-        date == other.date &&
+        id == other.id &&
         listEquals(players, other.players) && // Compare lists using collection package
         listEquals(courtNames, other.courtNames) && // Compare lists using collection package
         comment == other.comment &&
@@ -201,7 +201,7 @@ class MyMatch {
 
   @override
   int get hashCode => Object.hash(
-        date,
+        id,
         const DeepCollectionEquality().hash(players), // Hash lists using collection package
         const DeepCollectionEquality().hash(courtNames), // Hash lists using collection package
         comment,

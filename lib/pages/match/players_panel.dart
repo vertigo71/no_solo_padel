@@ -234,7 +234,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         }
 
         newMatchFromFirestore = await fsHelpers.addPlayerToMatch(
-            appState: appState, date: matchNotifier.match.date, player: user, position: listPosition);
+            appState: appState, matchId: matchNotifier.match.id, player: user, position: listPosition);
 
         if (newMatchFromFirestore == null) {
           MyLog.log(_classString, 'validate2 player $user already was in match', level: Level.SEVERE);
@@ -275,7 +275,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         }
 
         newMatchFromFirestore =
-            await fsHelpers.deletePlayerFromMatch(appState: appState, date: matchNotifier.match.date, user: user);
+            await fsHelpers.deletePlayerFromMatch(appState: appState, matchId: matchNotifier.match.id, user: user);
         if (newMatchFromFirestore == null) {
           MyLog.log(_classString, 'validate5 player $user not in the match ${matchNotifier.match}',
               level: Level.SEVERE);
@@ -308,7 +308,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
 
         await fsHelpers.updateRegister(RegisterModel(
-          date: matchNotifier.match.date,
+          date: matchNotifier.match.id,
           message: registerText,
         ));
 
@@ -317,7 +317,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         sendDatedMessageToTelegram(
             message: '$registerText\n'
                 'APUNTADOS: ${newMatchFromFirestore.players.length} de ${newMatchFromFirestore.getNumberOfCourts() * 4}',
-            matchDate: matchNotifier.match.date,
+            matchDate: matchNotifier.match.id,
             fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
       } catch (e) {
         MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE);

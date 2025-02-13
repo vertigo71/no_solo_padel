@@ -165,7 +165,7 @@ class Director {
       for (int d = 0; d < numMatches; d++) {
         Date date = Date.now().add(Duration(days: d));
         List<int> randomInts = getRandomList(maxUsers, date);
-        MyMatch match = MyMatch(date: date);
+        MyMatch match = MyMatch(id: date);
         match.comment = 'Las Tablas a las 10h30';
         match.isOpen = randomInts.first.isEven;
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1));

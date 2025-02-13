@@ -33,7 +33,7 @@ class HomePage extends StatelessWidget {
         // create matches if missing: from now to now+matchDaysToView
         for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
           Date date = Date.now().add(Duration(days: days));
-          fsHelpers.createMatchIfNotExists(date: date);
+          fsHelpers.createMatchIfNotExists(matchId: date);
         }
 
         return StreamBuilder<List<MyMatch>>(
@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
             // snapshot.data is now a List<MyMatch> (or null if there's an error)
             final List<MyMatch> matches = snapshot.data ?? []; // Handle the null case
 
-            final List<MyMatch> playableMatches = matches.where((match) => appState.isDayPlayable(match.date)).toList();
+            final List<MyMatch> playableMatches = matches.where((match) => appState.isDayPlayable(match.id)).toList();
 
             return ListView(
               children: [
@@ -72,8 +72,8 @@ class HomePage extends StatelessWidget {
                         leading:
                             CircleAvatar(backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
-                            ? Text('${match.date.toString()}\n$playingStateStr$comment')
-                            : Text('${match.date.toString()}\nCONVOCATORIA NO DISPONIBLE'),
+                            ? Text('${match.id.toString()}\n$playingStateStr$comment')
+                            : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
                         subtitle: match.isOpen
                             ? Text(
                                 'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',

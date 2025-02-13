@@ -35,7 +35,7 @@ class MatchNotifier with ChangeNotifier {
 
   void _init() {
     _matchSubscription = _director.fsHelpers.listenToMatch(
-      date: _match.date,
+      matchId: _match.id,
       appState: _director.appState,
       matchFunction: _notifyIfChanged,
     );

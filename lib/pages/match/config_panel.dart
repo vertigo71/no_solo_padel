@@ -181,7 +181,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
 
       // all is correct or match is not open
-      MyMatch newMatch = MyMatch(date: context.read<MatchNotifier>().match.date);
+      MyMatch newMatch = MyMatch(id: context.read<MatchNotifier>().match.id);
       // add courts available
       for (int i = 0; i < maxNumberOfCourts; i++) {
         if (state.value['$courtId$i'].isNotEmpty) {
@@ -222,10 +222,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
 
         if (registerText.isNotEmpty) {
-          fsHelpers.updateRegister(RegisterModel(date: newMatch.date, message: registerText));
+          fsHelpers.updateRegister(RegisterModel(date: newMatch.id, message: registerText));
           sendDatedMessageToTelegram(
             message: registerText,
-            matchDate: newMatch.date,
+            matchDate: newMatch.id,
           );
         }
       } catch (e) {

@@ -29,11 +29,11 @@ class FsHelpers {
   }
 
   /// return false if existed, true if created
-  Future<bool> createMatchIfNotExists({required Date date}) async {
-    bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: date.toYyyyMMdd());
+  Future<bool> createMatchIfNotExists({required Date matchId}) async {
+    bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: matchId.toYyyyMMdd());
     if (exists) return false;
-    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$date', level: Level.INFO);
-    await updateMatch(match: MyMatch(date: date), updateCore: true, updatePlayers: true);
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId', level: Level.INFO);
+    await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
     return true;
   }
 
@@ -44,26 +44,26 @@ class FsHelpers {
   /// create a subscription to a match
   /// matchFunction: checks if match has change and notify to listeners
   StreamSubscription? listenToMatch({
-    required Date date,
+    required Date matchId,
     required AppState appState,
     required void Function(MyMatch match) matchFunction,
   }) {
     StreamSubscription? streamSubscription;
-    MyLog.log(_classString, 'creating LISTENER for match=$date');
+    MyLog.log(_classString, 'creating LISTENER for match=$matchId');
     try {
       streamSubscription =
-          _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd()).snapshots().listen((snapshot) {
+          _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
         if (snapshot.exists && snapshot.data() != null) {
           MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
           MyLog.log(_classString, 'LISTENER newMatch found = $newMatch', level: Level.INFO);
           matchFunction(newMatch);
         } else {
           MyLog.log(_classString, 'LISTENER Match data is null in Firestore.', level: Level.SEVERE);
-          matchFunction(MyMatch(date: date));
+          matchFunction(MyMatch(id: matchId));
         }
       });
     } catch (e) {
-      MyLog.log(_classString, 'createListeners ERROR listening to match $date', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, 'createListeners ERROR listening to match $matchId', exception: e, level: Level.SEVERE);
     }
 
     return streamSubscription;
@@ -340,8 +340,8 @@ class FsHelpers {
   Future<MyUser?> getUser(String userId) async =>
       getObjectNoState(collection: strDB(DBFields.users), doc: userId, fromJson: MyUser.fromJson);
 
-  Future<MyMatch?> getMatch(String date, AppState appState) async => getObjectWithState(
-      collection: strDB(DBFields.matches), doc: date, fromJson: MyMatch.fromJson, appState: appState);
+  Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObjectWithState(
+      collection: strDB(DBFields.matches), doc: matchId, fromJson: MyMatch.fromJson, appState: appState);
 
   Future<MyParameters> getParameters() async =>
       await getObjectNoState(
@@ -504,7 +504,7 @@ class FsHelpers {
       updateObject(
         map: match.toJson(core: updateCore, matchPlayers: updatePlayers),
         collection: strDB(DBFields.matches),
-        doc: match.date.toYyyyMMdd(),
+        doc: match.id.toYyyyMMdd(),
         forceSet: false, // replaces the old object if exists
       );
 
@@ -539,19 +539,19 @@ class FsHelpers {
 
   /// return match if user was inserted. null otherwise
   Future<MyMatch?> addPlayerToMatch({
-    required Date date,
+    required Date matchId,
     required MyUser player,
     required AppState appState,
     int position = -1,
   }) async {
-    MyLog.log(_classString, 'addPlayer adding user $player to $date position $position');
-    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+    MyLog.log(_classString, 'addPlayer adding user $player to $matchId position $position');
+    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
       // get snapshot
       DocumentSnapshot snapshot = await transaction.get(documentReference);
       if (!snapshot.exists) {
-        throw Exception('No existe el partido asociado a la fecha $date');
+        throw Exception('No existe el partido asociado a la fecha $matchId');
       }
 
       // get match
@@ -567,26 +567,26 @@ class FsHelpers {
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog.log(_classString, 'addPlayer error adding $player to match $date', level: Level.SEVERE);
-      throw Exception('Error al añadir jugador $player al partido $date\n'
+      MyLog.log(_classString, 'addPlayer error adding $player to match $matchId', level: Level.SEVERE);
+      throw Exception('Error al añadir jugador $player al partido $matchId\n'
           'Error = $onError');
     });
   }
 
   /// return match if user was deleted. null otherwise
   Future<MyMatch?> deletePlayerFromMatch({
-    required Date date,
+    required Date matchId,
     required MyUser user,
     required AppState appState,
   }) async {
-    MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $date');
-    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(date.toYyyyMMdd());
+    MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $matchId');
+    DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
       // get match
       DocumentSnapshot snapshot = await transaction.get(documentReference);
       if (!snapshot.exists) {
-        throw Exception('No existe el partido asociado a la fecha $date');
+        throw Exception('No existe el partido asociado a la fecha $matchId');
       }
 
       // get match
@@ -602,8 +602,8 @@ class FsHelpers {
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $date', level: Level.SEVERE);
-      throw Exception('Error al eliminar el jugador $user del partido $date\n'
+      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $matchId', level: Level.SEVERE);
+      throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
           'Error = $onError');
     });
   }

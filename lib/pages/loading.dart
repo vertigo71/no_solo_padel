@@ -140,7 +140,7 @@ class _LoadingPageState extends State<LoadingPage> {
       // from now to now+matchDaysToView
       for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
         Date date = Date.now().add(Duration(days: days));
-        await fsHelpers.createMatchIfNotExists(date: date);
+        await fsHelpers.createMatchIfNotExists(matchId: date);
       }
 
       // all gone ok

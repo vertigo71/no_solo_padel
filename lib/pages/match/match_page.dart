@@ -31,7 +31,7 @@ class MatchPage extends StatelessWidget {
           length: isLoggedUserAdmin ? 3 : 2,
           child: Scaffold(
             appBar: AppBar(
-              title: Text(matchNotifier.match.date.toString()),
+              title: Text(matchNotifier.match.id.toString()),
               bottom: TabBar(
                 tabs: [
                   if (isLoggedUserAdmin) const _TabBarText('Configurar'),
