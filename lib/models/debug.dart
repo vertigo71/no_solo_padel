@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:logging/logging.dart';
 
@@ -65,24 +64,19 @@ class MyLog {
     _logger.log(level, "[$heading] $message", exception);
     if (myCustomObject != null) {
       try {
-        final prettyJson = JsonEncoder.withIndent('  ').convert(myCustomObject);
-        _logger.log(level, "Custom Object:\n$prettyJson");
-      } catch (e) {
-        try {
-          if (myCustomObject is Map) {
-            String data = "{\n\t";
-            int num = 1;
-            myCustomObject.forEach((key, value) {
-              data += '"$key": $value ,';
-              if (num++ % 5 == 0) data += '\n\t';
-            });
-            data += "\n}";
-            _logger.log(level, data);
-          } else {
-            _logger.log(level, myCustomObject);
-          }
-        } catch (_) {}
-      }
+        if (myCustomObject is Map) {
+          String data = "{\n\t";
+          int num = 1;
+          myCustomObject.forEach((key, value) {
+            data += '"$key": $value ,';
+            if (num++ % 5 == 0) data += '\n\t';
+          });
+          data += "\n}";
+          _logger.log(level, data);
+        } else {
+          _logger.log(level, myCustomObject);
+        }
+      } catch (_) {}
     }
 
     // show in BugFender

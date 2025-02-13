@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
+import 'package:logging/logging.dart';
 import 'package:no_solo_padel_dev/models/user_model.dart';
 
 import '../database/fields.dart';
@@ -26,8 +28,7 @@ class MyMatch {
   String comment;
   bool isOpen;
 
-  MyMatch(
-      {required this.id, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
+  MyMatch({required this.id, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
     this.players.addAll(players ?? {});
     this.courtNames.addAll(courtNames ?? {});
   }
@@ -50,6 +51,16 @@ class MyMatch {
       comment: json[DBFields.comment.name] ?? '',
       isOpen: json[DBFields.isOpen.name] ?? false,
     );
+  }
+
+  factory MyMatch.fromJsonString(String jsonString, AppState appState) {
+    // Make jsonString nullable
+    try {
+      return MyMatch.fromJson(jsonDecode(jsonString), appState);
+    } catch (e) {
+      MyLog.log(_classString, 'fromJsonString: Error decoding JSON: $e', level: Level.SEVERE);
+      throw Exception('Error: no se ha podido acceder al partido\n$e');
+    }
   }
 
   MyMatch copyWith({
@@ -162,7 +173,6 @@ class MyMatch {
   @override
   String toString() => ('($id,open=$isOpen,courts=$courtNames,names=$players)');
 
-
   Set<String> getNonExistingUsersFromJson(Map<String, dynamic> json, AppState appState) {
     Set<String> nonExistingUserIds = {};
     final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
@@ -186,6 +196,8 @@ class MyMatch {
         if (core) DBFields.comment.name: comment,
         if (core) DBFields.isOpen.name: isOpen, // bool
       };
+
+  String toJsonString() => jsonEncode(toJson());
 
   @override
   bool operator ==(Object other) {

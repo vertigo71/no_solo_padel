@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.id.toYyyyMMdd() );
+                          context.pushNamed(AppRoutes.match, extra: match.toJsonString() );
                         },
                       ),
                     );
