@@ -57,6 +57,7 @@ class MatchNotifier with ChangeNotifier {
   }
 
   void _notifyIfChanged(MyMatch newMatch) {
+    MyLog.log(_classString, '_init: create _matchSubscription for match=$_match', level: Level.INFO);
     if (_match != newMatch) {
       MyLog.log(_classString, 'Match updated from Firestore: $newMatch');
       _match = newMatch;
