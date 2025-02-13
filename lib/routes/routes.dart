@@ -45,9 +45,9 @@ class AppRouter {
       GoRoute(
           path: AppRoutes.matchPath,
           builder: (BuildContext context, GoRouterState state) {
-            final match = state.extra as MyMatch; // Retrieve the argument
-            MyLog.log(_classString, 'going to MatchPAge: match=$match');
-            return MatchPage(match: match); // Pass it to the widget
+            final matchId = state.extra as String; // Retrieve the argument
+            MyLog.log(_classString, 'going to MatchPAge: match=$matchId');
+            return MatchPage(matchId: matchId); // Pass it to the widget
           },
           name: AppRoutes.match),
       GoRoute(

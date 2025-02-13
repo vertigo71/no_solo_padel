@@ -45,13 +45,6 @@ class MyApp extends StatelessWidget {
         Provider<Director>(
           create: (context) => Director(appState: context.read<AppState>()), // knows it all
         ),
-        ChangeNotifierProvider<MatchNotifier>(
-          // this notifier will be used in home page to pass the match as argument
-          // cannot be done directly using arguments in GoRoute because the back browser button kept
-          // giving errors as MyMatch is too complex
-          // a possible solution would be to pass a String with the date of the match as an argument (not tested)
-          create: (context) => MatchNotifier(MyMatch(id:Date.now()), context.read<Director>()),
-        ),
       ],
       child: MaterialApp.router(
         // Use MaterialApp.router
