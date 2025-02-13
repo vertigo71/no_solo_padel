@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel_dev/models/match_model.dart';
 
 import '../models/debug.dart';
 import '../pages/admin/admin_page.dart';
@@ -45,6 +44,8 @@ class AppRouter {
       GoRoute(
           path: AppRoutes.matchPath,
           builder: (BuildContext context, GoRouterState state) {
+            // never use a complex object as an argument
+            // back button will not work
             final matchId = state.extra as String; // Retrieve the argument
             MyLog.log(_classString, 'going to MatchPAge: match=$matchId');
             return MatchPage(matchId: matchId); // Pass it to the widget

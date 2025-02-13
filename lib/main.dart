@@ -6,13 +6,10 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'firebase_options.dart';
 import 'interface/director.dart';
-import 'interface/match_notifier.dart';
 import 'models/debug.dart';
-import 'models/match_model.dart';
 import 'routes/routes.dart';
 import 'interface/app_state.dart';
 import 'secret.dart';
-import 'utilities/date.dart';
 import 'utilities/environment.dart';
 import 'utilities/theme.dart';
 
