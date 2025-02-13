@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -14,7 +15,6 @@ import 'utilities/environment.dart';
 import 'utilities/theme.dart';
 
 final String _classString = 'main'.toUpperCase();
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel_dev/interface/director.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -24,12 +26,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController pwdController = TextEditingController();
+  final _formKey = GlobalKey<FormBuilderState>();
   bool _isLoading = true; // Initially loading
-
   String version = '';
+  static const String userId = 'username';
+  static const String pwdId = 'password';
 
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
@@ -49,9 +50,6 @@ class LoginPageState extends State<LoginPage> {
 
   Future<void> _initializeData() async {
     getVersion();
-    // for development
-    emailController.text = getInitialUserName();
-    pwdController.text = getInitialPwd();
 
     Director director = context.read<Director>();
     AppState appState = director.appState;
@@ -64,7 +62,7 @@ class LoginPageState extends State<LoginPage> {
       parametersFunction: appState.setAllParametersAndNotify,
       usersFunction: appState.setChangedUsersAndNotify,
     );
-    await fsHelpers.dataLoaded; //  future completed when initial data is loaded
+    await fsHelpers.dataLoaded; //  Completer: future completed when initial data is loaded
 
     if (mounted) {
       setState(() {
@@ -78,10 +76,7 @@ class LoginPageState extends State<LoginPage> {
     Director director = context.read<Director>();
     FsHelpers fsHelpers = director.fsHelpers;
 
-    emailController.dispose();
-    pwdController.dispose();
     fsHelpers.disposeListeners();
-
     super.dispose();
   }
 
@@ -113,41 +108,46 @@ class LoginPageState extends State<LoginPage> {
                   height: 300,
                 ),
                 const SizedBox(height: 20.0),
-                Form(
+                FormBuilder(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      TextFormField(
-                          onFieldSubmitted: (String str) => _formValidate(),
-                          inputFormatters: [
-                            LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
-                          ],
-                          keyboardType: TextInputType.text,
-                          controller: emailController,
-                          decoration: const InputDecoration(labelText: 'Usuario'),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'No puede estar vacío';
-                            }
-                            return null;
-                          }),
-                      Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: TextFormField(
-                            onFieldSubmitted: (String str) => _formValidate(),
-                            keyboardType: TextInputType.text,
-                            controller: pwdController,
-                            obscureText: true,
-                            decoration: const InputDecoration(labelText: 'Contraseña'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'No puede estar vacío';
-                              }
-                              return null;
-                            }),
+                      // username
+                      FormBuilderTextField(
+                        name: userId,
+                        autofillHints: const [AutofillHints.username],
+                        initialValue: getInitialUserName(),
+                        onSubmitted: (String? str) => _formValidate(),
+                        inputFormatters: [
+                          LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
+                        ],
+                        keyboardType: TextInputType.text,
+                        decoration: const InputDecoration(labelText: 'Usuario'),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                        ]),
                       ),
-                      const SizedBox(height: 10.0),
+
+                      const SizedBox(height: 20.0),
+
+                      // password
+                      FormBuilderTextField(
+                        name: pwdId,
+                        autofillHints: const [AutofillHints.password],
+                        initialValue: getInitialPwd(),
+                        onSubmitted: (String? str) => _formValidate(),
+                        keyboardType: TextInputType.text,
+                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Contraseña'),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                        ]),
+                      ),
+
+                      const SizedBox(height: 30.0),
+
+                      // Validar
                       ElevatedButton(
                         onPressed: () => _formValidate(),
                         child: const Text('Entrar'),
@@ -164,17 +164,18 @@ class LoginPageState extends State<LoginPage> {
   void _formValidate() {
     MyLog.log(_classString, '_formValidate');
     // Validate returns true if the form is valid, or false otherwise.
-    if (_formKey.currentState!.validate()) {
-      String email = emailController.text + MyUser.emailSuffix;
-      AuthenticationHelper.signIn(email: email, password: pwdController.text).then((result) async {
+    if (_formKey.currentState!.saveAndValidate()) {
+      final formData = _formKey.currentState!.value;
+      String email = formData[userId] + MyUser.emailSuffix;
+
+      AuthenticationHelper.signIn(email: email, password: formData[pwdId]).then((result) async {
         if (result == null) {
           // user has signed in
           if (mounted) context.pushNamed(AppRoutes.loading);
 
           MyLog.log(_classString, 'Back to login');
-          setState(() {
-            pwdController.text = '';
-          });
+
+          _formKey.currentState?.fields[pwdId]?.didChange('');
         } else {
           if (mounted) showMessage(context, result);
         }
