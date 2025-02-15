@@ -32,8 +32,7 @@ class FsHelpers {
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
     bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: matchId.toYyyyMMdd());
     if (exists) return false;
-    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId',
-        level: Level.INFO);
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId', level: Level.INFO);
     await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
     return true;
   }
@@ -398,6 +397,7 @@ class FsHelpers {
     Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
     AppState? appState,
+    Query Function(Query)? filter, // Optional filter function
   }) async {
     MyLog.log(_classString, '_getAllObjects');
 
@@ -408,6 +408,10 @@ class FsHelpers {
     }
     if (maxDate != null) {
       query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+    }
+
+    if (filter != null) {
+      query = filter(query);
     }
 
     try {
@@ -453,30 +457,43 @@ class FsHelpers {
   Future<List<T>> getAllObjectsAppState<T>({
     required String collection,
     required T Function(Map<String, dynamic>, AppState) fromJson,
+    required AppState appState,
     Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
-    required AppState appState,
+    Query Function(Query)? filter, // Optional filter function
   }) async =>
       _getAllObjects(
-          collection: collection, fromJsonAppState: fromJson, fromDate: fromDate, maxDate: maxDate, appState: appState);
+        collection: collection,
+        fromJsonAppState: fromJson,
+        fromDate: fromDate,
+        maxDate: maxDate,
+        appState: appState,
+        filter: filter,
+      );
 
   Future<List<MyUser>> getAllUsers() async => getAllObjectsNoAppState<MyUser>(
         collection: strDB(DBFields.users),
         fromJson: MyUser.fromJson,
       );
 
-  Future<List<MyMatch>> getAllMatches({
+  /// returns all matches containing a player
+  Future<List<MyMatch>> getAllPlayerMatches({
     required AppState appState,
+    required String playerId,
     Date? fromDate,
     Date? maxDate,
-  }) async =>
-      getAllObjectsAppState(
-        collection: strDB(DBFields.matches),
-        fromJson: MyMatch.fromJson,
-        fromDate: fromDate,
-        maxDate: maxDate,
-        appState: appState,
-      );
+  }) async {
+    return getAllObjectsAppState(
+      collection: strDB(DBFields.matches),
+      fromJson: MyMatch.fromJson,
+      fromDate: fromDate,
+      maxDate: maxDate,
+      appState: appState,
+      filter: (query) => query.where(strDB(DBFields.players), arrayContains: playerId),
+    );
+
+    // query = query.where('players', arrayContains: playerId);
+  }
 
   Future<void> updateObject({
     required Map<String, dynamic> map,

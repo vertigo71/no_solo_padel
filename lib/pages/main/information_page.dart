@@ -21,7 +21,7 @@ class InformationPage extends StatefulWidget {
 }
 
 class _InformationPageState extends State<InformationPage> {
-  List<MyMatch>? _allMatches;
+  List<MyMatch>? _allLoggedUserMatches;
   late MyUser _loggedUser;
   late AppState appState;
   late FsHelpers fsHelpers;
@@ -34,15 +34,16 @@ class _InformationPageState extends State<InformationPage> {
     appState = context.read<AppState>();
     fsHelpers = context.read<Director>().fsHelpers;
     _loggedUser = appState.getLoggedUser();
-    _getAllMatches();
+    _getAllLoggedUserMatches();
   }
 
-  Future<void> _getAllMatches() async {
-    List<MyMatch> allMatches = await fsHelpers.getAllMatches(appState: appState);
-    MyLog.log(_classString, 'initState num of matches = ${allMatches.length}', indent: true);
+  Future<void> _getAllLoggedUserMatches() async {
+    List<MyMatch> allLoggedUserMatches =
+        await fsHelpers.getAllPlayerMatches(playerId: _loggedUser.id, appState: appState);
+    MyLog.log(_classString, 'initState num of matches = ${allLoggedUserMatches.length}', indent: true);
 
     setState(() {
-      _allMatches = allMatches;
+      _allLoggedUserMatches = allLoggedUserMatches;
     });
   }
 
@@ -50,13 +51,13 @@ class _InformationPageState extends State<InformationPage> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
-    if (_allMatches == null) {
+    if (_allLoggedUserMatches == null) {
       return SpinKitFadingCube(color: Colors.blue, size: 50.0);
     }
 
     int matchesPlayed = 0;
     int matchesSigned = 0;
-    for (MyMatch match in _allMatches ?? []) {
+    for (MyMatch match in _allLoggedUserMatches ?? []) {
       if (match.isInTheMatch(_loggedUser)) matchesSigned++;
       if (match.isPlaying(_loggedUser)) matchesPlayed++;
     }
@@ -79,7 +80,7 @@ class _InformationPageState extends State<InformationPage> {
               context: context,
               tiles: appState.users.map(((user) {
                 int numberOfMatchesTogether = 0;
-                for (MyMatch match in _allMatches ?? []) {
+                for (MyMatch match in _allLoggedUserMatches ?? []) {
                   if (match.arePlayingTogether(user, _loggedUser)) {
                     numberOfMatchesTogether++;
                   }

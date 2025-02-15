@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
@@ -50,8 +51,7 @@ class SettingsPageState extends State<SettingsPage> {
   //
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<SettingsPageState>.
-  final _formKey = GlobalKey<FormState>();
-  List<TextEditingController> listControllers = [];
+  final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
   late AppState appState;
   late FsHelpers fsHelpers;
@@ -62,22 +62,6 @@ class SettingsPageState extends State<SettingsPage> {
 
     appState = context.read<AppState>();
     fsHelpers = context.read<Director>().fsHelpers;
-
-    for (var _ in _FormFieldsEnum.values) {
-      listControllers.add(TextEditingController());
-    }
-    listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
-    listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
-    // user = first part of email
-    listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
-  }
-
-  @override
-  void dispose() {
-    for (var controller in listControllers) {
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -88,17 +72,17 @@ class SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(18.0),
-        child: Form(
+        child: FormBuilder(
           key: _formKey,
           child: ListView(
             // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (var value in _FormFieldsEnum.values)
-                _FormFieldWidget(
-                  value,
-                  listControllers[value.index],
-                  _formValidate,
-                ),
+              _buildFormField(_FormFieldsEnum.name),
+              _buildFormField(_FormFieldsEnum.emergencyInfo),
+              _buildFormField(_FormFieldsEnum.user),
+              _buildFormField(_FormFieldsEnum.actualPwd),
+              _buildFormField(_FormFieldsEnum.newPwd),
+              _buildFormField(_FormFieldsEnum.checkPwd),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(
@@ -106,8 +90,8 @@ class SettingsPageState extends State<SettingsPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
+                      onPressed: _formValidate,
                       child: const Text('Actualizar'),
-                      onPressed: () async => await _formValidate(),
                     ),
                   ],
                 ),
@@ -117,6 +101,120 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildFormField(_FormFieldsEnum formFieldEnum) {
+    final fieldName = _FormFields.text[formFieldEnum.index];
+    final isPassword = _FormFields.obscuredText[formFieldEnum.index];
+    final isOptional = _FormFields.mayBeEmpty[formFieldEnum.index];
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderTextField(
+        name: formFieldEnum.toString(),
+        initialValue: _getInitialValue(formFieldEnum),
+        decoration: InputDecoration(
+          labelText: fieldName,
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(4.0)),
+          ),
+        ),
+        obscureText: isPassword,
+        validator: (value) {
+          if (isOptional) return null;
+          if (value == null || value.isEmpty) return 'No puede estar vacío';
+          return null;
+        },
+      ),
+    );
+  }
+
+  String _getInitialValue(_FormFieldsEnum formFieldEnum) {
+    switch (formFieldEnum) {
+      case _FormFieldsEnum.name:
+        return appState.getLoggedUser().name;
+      case _FormFieldsEnum.emergencyInfo:
+        return appState.getLoggedUser().emergencyInfo;
+      case _FormFieldsEnum.user:
+        return appState.getLoggedUser().email.split('@')[0];
+      default:
+        return '';
+    }
+  }
+
+  Future<void> _formValidate() async {
+    MyLog.log(_classString, '_formValidate');
+    // Validate returns true if the form is valid, or false otherwise.
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
+      final formValues = _formKey.currentState?.value;
+
+      final newName = formValues?[_FormFieldsEnum.name.toString()] ?? '';
+      MyLog.log(_classString, '_formValidate $newName', indent: true);
+      final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.toString()] ?? '';
+      MyLog.log(_classString, '_formValidate $newEmergencyInfo', indent: true);
+      final newEmail = formValues?[_FormFieldsEnum.user.toString()]?.toLowerCase() + MyUser.emailSuffix ?? '';
+      MyLog.log(_classString, '_formValidate $newEmail', indent: true);
+      final actualPwd = formValues?[_FormFieldsEnum.actualPwd.toString()] ?? '';
+      MyLog.log(_classString, '_formValidate $actualPwd', indent: true);
+      final newPwd = formValues?[_FormFieldsEnum.newPwd.toString()] ?? '';
+      MyLog.log(_classString, '_formValidate $newPwd', indent: true);
+      final checkPwd = formValues?[_FormFieldsEnum.checkPwd.toString()] ?? '';
+      MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
+
+      MyLog.log(_classString, '_formValidate');
+
+
+      // Validation and Update Logic
+      bool isValid = checkName(newName);
+      if (!isValid) return;
+
+      isValid = checkEmail(newEmail, actualPwd);
+      if (!isValid) return;
+
+      isValid = checkAllPwd(actualPwd, newPwd, checkPwd);
+      if (!isValid) return;
+
+      const String yesOption = 'SI';
+      const String noOption = 'NO';
+      String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
+      if (response.isEmpty || response == noOption) return;
+
+      bool anyUpdatedField = false;
+
+      // Handle name update
+      if (newName != appState.getLoggedUser().name) {
+        isValid = await updateName(newName);
+        anyUpdatedField = true;
+        if (!isValid) return;
+      }
+
+      // Handle emergency info update
+      if (newEmergencyInfo != appState.getLoggedUser().emergencyInfo) {
+        isValid = await updateEmergencyInfo(newEmergencyInfo);
+        anyUpdatedField = true;
+        if (!isValid) return;
+      }
+
+      // Handle email update
+      if (newEmail != appState.getLoggedUser().email) {
+        isValid = await updateEmail(newEmail, actualPwd);
+        anyUpdatedField = true;
+        if (!isValid) return;
+      }
+
+// Handle password update
+      if (newPwd.isNotEmpty) {
+        isValid = await updatePwd(actualPwd, newPwd);
+        anyUpdatedField = true;
+        if (!isValid) return;
+      }
+
+      if (anyUpdatedField) {
+        if (mounted) showMessage(context, 'Los datos han sido actualizados');
+      } else {
+        if (mounted) showMessage(context, 'Ningún dato para actualizar');
+      }
+    }
   }
 
   bool checkName(String newName) {
@@ -130,12 +228,6 @@ class SettingsPageState extends State<SettingsPage> {
         showMessage(context, 'Ya hay un usuario con ese nombre');
         return false;
       }
-    }
-
-    User? user = AuthenticationHelper.user;
-    if (user == null) {
-      showMessage(context, 'ERROR: el usuario no está identificado correctamente');
-      return false;
     }
 
     return true;
@@ -159,24 +251,6 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<bool> updateEmergencyInfo(String newEmergencyInfo) async {
-    MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
-
-    MyUser user = appState.getLoggedUser();
-    user.emergencyInfo = newEmergencyInfo;
-
-    try {
-      await fsHelpers.updateUser(user);
-    } catch (e) {
-      if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
-      MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
-          level: Level.SEVERE, indent: true);
-      return false;
-    }
-
-    return true;
-  }
-
   bool checkEmail(String newEmail, String actualPwd) {
     // newEmail is not somebody else's
     MyLog.log(_classString, 'checkEmail $newEmail');
@@ -188,7 +262,7 @@ class SettingsPageState extends State<SettingsPage> {
         return false;
       }
       if (actualPwd.isEmpty) {
-        showMessage(context, 'Para cambiar el correo, introduzca tambien la contraseña actual');
+        showMessage(context, 'Para cambiar el usuario, introduzca tambien la contraseña actual');
         return false;
       }
     }
@@ -211,8 +285,8 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await fsHelpers.updateUser(loggedUser);
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
-      MyLog.log(_classString, 'updateEmail Error al actualizar localmente el correo del usuario',
+      if (mounted) showMessage(context, 'Error al actualizar el correo del usuario en la base de datos');
+      MyLog.log(_classString, 'updateEmail Error al actualizar el correo del usuario en la base de datos',
           level: Level.SEVERE, indent: true);
       return false;
     }
@@ -246,113 +320,21 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate');
-    // Validate returns true if the form is valid, or false otherwise.
-    if (_formKey.currentState!.validate()) {
-      String newName = listControllers[_FormFieldsEnum.name.index].text;
-      String newEmergencyInfo = listControllers[_FormFieldsEnum.emergencyInfo.index].text;
-      String newEmail = listControllers[_FormFieldsEnum.user.index].text.toLowerCase() + MyUser.emailSuffix;
-      String actualPwd = listControllers[_FormFieldsEnum.actualPwd.index].text;
-      String newPwd = listControllers[_FormFieldsEnum.newPwd.index].text;
-      String checkPwd = listControllers[_FormFieldsEnum.checkPwd.index].text;
+  Future<bool> updateEmergencyInfo(String newEmergencyInfo) async {
+    MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
 
-      // check name
-      bool ok = checkName(newName);
-      if (!ok) return;
+    MyUser user = appState.getLoggedUser();
+    user.emergencyInfo = newEmergencyInfo;
 
-      // check email
-      ok = checkEmail(newEmail, actualPwd);
-      if (!ok) return;
-
-      // check passwords
-      ok = checkAllPwd(actualPwd, newPwd, checkPwd);
-      if (!ok) return;
-
-      // check if is a sure thing
-      const String yesOption = 'SI';
-      const String noOption = 'NO';
-      String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
-      if (response.isEmpty || response == noOption) return;
-      MyLog.log(_classString, 'build response = $response', indent: true);
-
-      bool anyUpdatedField = false;
-
-      // update name
-      if (newName != appState.getLoggedUser().name) {
-        ok = await updateName(newName);
-        anyUpdatedField = true;
-        if (!ok) return;
-      }
-
-      // update emergencyInfo
-      if (newEmergencyInfo != appState.getLoggedUser().emergencyInfo) {
-        ok = await updateEmergencyInfo(newEmergencyInfo);
-        anyUpdatedField = true;
-        if (!ok) return;
-      }
-
-      // update email
-      if (newEmail != appState.getLoggedUser().email) {
-        ok = await updateEmail(newEmail, actualPwd);
-        anyUpdatedField = true;
-        if (!ok) return;
-      }
-
-      // update pwd
-      if (newPwd.isNotEmpty) {
-        ok = await updatePwd(actualPwd, newPwd);
-        anyUpdatedField = true;
-        if (!ok) return;
-      }
-
-      if (anyUpdatedField) {
-        if (mounted) showMessage(context, 'Los datos han sido actualizados');
-      } else {
-        if (mounted) showMessage(context, 'Ningun dato para actualizar');
-      }
+    try {
+      await fsHelpers.updateUser(user);
+    } catch (e) {
+      if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
+      MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
+          level: Level.SEVERE, indent: true);
+      return false;
     }
-  }
-}
 
-class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.formFieldsEnum, this.textController, this.validate);
-
-  final _FormFieldsEnum formFieldsEnum;
-  final TextEditingController textController;
-  final Future<void> Function() validate;
-
-  @override
-  Widget build(BuildContext context) {
-    final String fieldName = _FormFields.text[formFieldsEnum.index];
-    final bool protectedField = _FormFields.obscuredText[formFieldsEnum.index];
-    final bool mayBeEmpty = _FormFields.mayBeEmpty[formFieldsEnum.index];
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        onFieldSubmitted: (String str) async => await validate(),
-        keyboardType: TextInputType.text,
-        inputFormatters: [
-          if (formFieldsEnum == _FormFieldsEnum.user) LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
-        ],
-        decoration: InputDecoration(
-          labelText: fieldName,
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(4.0)),
-          ),
-        ),
-        controller: textController,
-        obscureText: protectedField,
-        // The validator receives the text that the user has entered.
-        validator: (value) {
-          if (mayBeEmpty) return null;
-          if (value == null || value.isEmpty) {
-            return 'No puede estar vacío';
-          }
-          return null;
-        },
-      ),
-    );
+    return true;
   }
 }

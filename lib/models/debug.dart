@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
@@ -21,9 +23,6 @@ class MyLog {
           print('${rec.stackTrace}');
         }
       }
-      if (rec.object != null) {
-        print('  Object: ${rec.object}');
-      }
     });
   }
 
@@ -46,10 +45,12 @@ class MyLog {
   /// return -1 if not valid
   static int level2int(Level level) => levels.indexOf(level);
 
-  static void setDebugLevel(Level level) => Logger.root.level = level;
+  static void setDebugLevel(Level level) => _logger.level = level;
 
   static void log(String heading, Object message,
-      {Object? myCustomObject, Object? exception, Level level = Level.FINE, bool indent = false }) {
+      {Object? myCustomObject, Object? exception, Level level = Level.FINE, bool indent = false}) {
+    String indentation = indent ? '     >> ' : ' ';
+
     // show in Telegram
     if (level == Level.SEVERE) {
       String errorMsg = '\n******************'
@@ -64,7 +65,7 @@ class MyLog {
     }
 
     // show in console
-    _logger.log(level, "[$heading]${indent?'     >>':''} $message", exception);
+    _logger.log(level, "[$heading]$indentation$message", exception);
     if (myCustomObject != null) {
       try {
         if (myCustomObject is Map) {
@@ -75,9 +76,9 @@ class MyLog {
             if (num++ % 5 == 0) data += '\n\t';
           });
           data += "\n}";
-          _logger.log(level, data);
+          _logger.log(level, '$indentation$indentation$data');
         } else {
-          _logger.log(level, myCustomObject);
+          _logger.log(level, '$indentation$indentation$myCustomObject');
         }
       } catch (_) {}
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'dart:math';
 
 import '../models/debug.dart';
@@ -113,13 +114,15 @@ class CaseTextFormatter extends FilteringTextInputFormatter {
 
 /// 'date random' list from 0 to num-1
 List<int> getRandomList(int num, DateTime date) {
-  MyLog.log(_classString, 'getRandomList');
+  MyLog.log(_classString, 'getRandomList', level: Level.ALL);
   int baseNum = date.millisecondsSinceEpoch;
   List<int> base = List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num).toSet().toList();
-  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true);
+  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.ALL );
+
   List<int> all = List<int>.generate(num, (int index) => num - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();
-  MyLog.log(_classString, 'getRandomList Missing numbers list $diff', indent: true);
+  MyLog.log(_classString, 'getRandomList Missing numbers list $diff', indent: true, level: Level.ALL);
+
   // add missing numbers
   for (int i = 0; i < diff.length; i++) {
     if (base[i] <= base.length) {
@@ -128,7 +131,7 @@ List<int> getRandomList(int num, DateTime date) {
       base.insert(0, diff[i]);
     }
   }
-  MyLog.log(_classString, 'getRandomList Final order $base', indent: true);
+  MyLog.log(_classString, 'getRandomList Final order $base', indent: true, level: Level.ALL);
 
   return base;
 }

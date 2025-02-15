@@ -97,7 +97,7 @@ class _MainPageState extends State<MainPage> {
           items: <BottomNavigationBarItem>[
             UiHelpers.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
             UiHelpers.buildNavItem(1, ImageIcon(AssetImage('assets/images/list.png')), 'Registro', _selectedIndex),
-            UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/images/padel.png')), 'Jugadores', _selectedIndex),
+            UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/images/padel.png')), 'Información', _selectedIndex),
             UiHelpers.buildNavItem(3, Icon(Icons.settings), 'Ajustes', _selectedIndex),
           ],
           currentIndex: _selectedIndex,

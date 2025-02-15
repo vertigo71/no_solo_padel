@@ -47,6 +47,7 @@ class AppState with ChangeNotifier {
     MyLog.log(_classString, 'setAllParameters $myParameters', level: Level.INFO);
     _parametersCache = myParameters ?? MyParameters();
     MyLog.setDebugLevel(_parametersCache.minDebugLevel); // new level of debugging
+
     if (notify) notifyListeners();
   }
 

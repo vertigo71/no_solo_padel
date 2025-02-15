@@ -147,10 +147,21 @@ class MyMatch {
     return map;
   }
 
-  /// list of who plays with who in this match
-  List<int> getCouplesPlainList() => getRandomList(getNumberOfFilledCourts() * 4, id);
+  /// Generates a random list of player pairs for the match.
+  ///
+  /// The returned list `c` follows this format:
+  /// - `players[c[0]]` plays with `players[c[1]]`
+  /// - `players[c[2]]` plays with `players[c[3]]`
+  /// - And so on...
+  ///
+  /// The number of pairs is based on the number of filled courts.
+  /// Each court has 4 players, so the total number of players is:
+  /// `getNumberOfFilledCourts() * 4`.
+  ///
+  /// Returns a list of integers where each pair of indices represents teammates.
+  List<int> getRandomPlayerPairs() => getRandomList(getNumberOfFilledCourts() * 4, id);
 
-  /// true if they play together
+  /// true if they play together in this match
   bool arePlayingTogether(MyUser user1, MyUser user2) {
     int posUser1 = getPlayerPosition(user1);
     int posUser2 = getPlayerPosition(user2);
@@ -158,7 +169,7 @@ class MyMatch {
         posUser2 != -1 &&
         getPlayingState(user1) == PlayingState.playing &&
         getPlayingState(user2) == PlayingState.playing) {
-      List<int> sortedList = getCouplesPlainList();
+      List<int> sortedList = getRandomPlayerPairs();
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
