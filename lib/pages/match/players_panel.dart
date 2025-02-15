@@ -32,10 +32,10 @@ class PlayersPanelState extends State<PlayersPanel> {
   final TextEditingController _userPositionController = TextEditingController();
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
 
-    MyLog.log(_classString, 'didChangeDependencies initializing variables ONLY ONCE');
+    MyLog.log(_classString, 'initState initializing variables ONLY ONCE');
     _selectedUser = context.read<AppState>().users[0];
     _loggedUser = context.read<AppState>().getLoggedUser();
   }

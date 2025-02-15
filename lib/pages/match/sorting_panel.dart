@@ -22,7 +22,7 @@ class SortingPanel extends StatelessWidget {
     return Builder(
       builder: (context) {
         int filledCourts = matchNotifier.match.getNumberOfFilledCourts();
-        List<int> sortedList = matchNotifier.match.getCouplesPlainList();
+        List<int> sortedList = matchNotifier.match.getCouplesPlainList(); // how players play
         List<MyUser> players = matchNotifier.match.players;
         MyLog.log(_classString, 'build players = $players', indent: true);
         MyLog.log(_classString, 'build courts = $filledCourts', indent: true);

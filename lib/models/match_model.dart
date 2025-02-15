@@ -135,13 +135,13 @@ class MyMatch {
     for (int i = 0; i < players.length; i++) {
       if (i < numberOfFilledCourts * 4) {
         // the player is playing
-        map[players.elementAt(i)] = PlayingState.playing;
+        map[players[i]] = PlayingState.playing;
       } else if (i < courtNames.length * 4) {
         // the player is waiting for the court to fill
-        map[players.elementAt(i)] = PlayingState.signedNotPlaying;
+        map[players[i]] = PlayingState.signedNotPlaying;
       } else {
         // all available courts are full
-        map[players.elementAt(i)] = PlayingState.reserve;
+        map[players[i]] = PlayingState.reserve;
       }
     }
     return map;
@@ -152,8 +152,6 @@ class MyMatch {
 
   /// true if they play together
   bool arePlayingTogether(MyUser user1, MyUser user2) {
-    MyLog.log(_classString, 'arePlayingTogether $user1 $user2',
-        myCustomObject: players);
     int posUser1 = getPlayerPosition(user1);
     int posUser2 = getPlayerPosition(user2);
     if (posUser1 != -1 &&
@@ -175,22 +173,6 @@ class MyMatch {
 
   @override
   String toString() => ('($id,open=$isOpen,courts=$courtNames,names=$players)');
-
-  Set<String> getNonExistingUsersFromJson(Map<String, dynamic> json, AppState appState) {
-    Set<String> nonExistingUserIds = {};
-    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
-    final players = <MyUser>{};
-
-    for (final playerId in playerIds) {
-      final user = appState.getUserById(playerId);
-      if (user != null) {
-        players.add(user);
-      } else {
-        nonExistingUserIds.add(playerId);
-      }
-    }
-    return nonExistingUserIds;
-  }
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         DBFields.date.name: id.toYyyyMMdd(),

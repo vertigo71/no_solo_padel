@@ -28,13 +28,9 @@ class UserDeletePanelState extends State<UserDeletePanel> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      MyLog.log(_classString, 'initState');
-      fsHelpers = context.read<Director>().fsHelpers;
-    });
+
+    MyLog.log(_classString, 'initState');
+    fsHelpers = context.read<Director>().fsHelpers;
   }
 
   @override

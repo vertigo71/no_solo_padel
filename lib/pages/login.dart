@@ -42,9 +42,10 @@ class LoginPageState extends State<LoginPage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    MyLog.log(_classString, 'didChangeDependencies to be called ONLY ONCE');
+  void initState() {
+    super.initState();
+
+    MyLog.log(_classString, 'initState to be called ONLY ONCE');
     _initializeData();
   }
 
@@ -64,11 +65,9 @@ class LoginPageState extends State<LoginPage> {
     );
     await fsHelpers.dataLoaded; //  Completer: future completed when initial data is loaded
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override

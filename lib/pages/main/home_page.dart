@@ -41,7 +41,7 @@ class HomePage extends StatelessWidget {
           stream: fsHelpers.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(child: Text('Something went wrong: ${snapshot.error}'));
+              return Center(child: Text('Error al obtener los partidos: ${snapshot.error}'));
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {

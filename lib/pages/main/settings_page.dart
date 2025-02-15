@@ -60,21 +60,16 @@ class SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      appState = context.read<AppState>();
-      fsHelpers = context.read<Director>().fsHelpers;
+    appState = context.read<AppState>();
+    fsHelpers = context.read<Director>().fsHelpers;
 
-      for (var _ in _FormFieldsEnum.values) {
-        listControllers.add(TextEditingController());
-      }
-      listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
-      listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
-      // user = first part of email
-      listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
-    });
+    for (var _ in _FormFieldsEnum.values) {
+      listControllers.add(TextEditingController());
+    }
+    listControllers[_FormFieldsEnum.name.index].text = appState.getLoggedUser().name;
+    listControllers[_FormFieldsEnum.emergencyInfo.index].text = appState.getLoggedUser().emergencyInfo;
+    // user = first part of email
+    listControllers[_FormFieldsEnum.user.index].text = appState.getLoggedUser().email.split('@')[0];
   }
 
   @override
@@ -156,7 +151,8 @@ class SettingsPageState extends State<SettingsPage> {
       await fsHelpers.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
-      MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario', level: Level.SEVERE, indent: true);
+      MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario',
+          level: Level.SEVERE, indent: true);
       return false;
     }
 
@@ -216,8 +212,8 @@ class SettingsPageState extends State<SettingsPage> {
       await fsHelpers.updateUser(loggedUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
-      MyLog.log(_classString, 'updateEmail Error al actualizar localmente el correo del usuario', level: Level.SEVERE, indent:
-      true);
+      MyLog.log(_classString, 'updateEmail Error al actualizar localmente el correo del usuario',
+          level: Level.SEVERE, indent: true);
       return false;
     }
 

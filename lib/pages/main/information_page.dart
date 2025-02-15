@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firestore_helpers.dart';
@@ -25,32 +26,33 @@ class _InformationPageState extends State<InformationPage> {
   late AppState appState;
   late FsHelpers fsHelpers;
 
+  @override
+  void initState() {
+    super.initState();
+
+    MyLog.log(_classString, 'initState');
+    appState = context.read<AppState>();
+    fsHelpers = context.read<Director>().fsHelpers;
+    _loggedUser = appState.getLoggedUser();
+    _getAllMatches();
+  }
+
   Future<void> _getAllMatches() async {
     List<MyMatch> allMatches = await fsHelpers.getAllMatches(appState: appState);
+    MyLog.log(_classString, 'initState num of matches = ${allMatches.length}', indent: true);
+
     setState(() {
       _allMatches = allMatches;
     });
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      appState = context.read<AppState>();
-      fsHelpers = context.read<Director>().fsHelpers;
-
-      _loggedUser = appState.getLoggedUser();
-      _getAllMatches();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
+
+    if (_allMatches == null) {
+      return SpinKitFadingCube(color: Colors.blue, size: 50.0);
+    }
 
     int matchesPlayed = 0;
     int matchesSigned = 0;

@@ -25,43 +25,41 @@ class RegisterPage extends StatelessWidget {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: fsHelpers.getRegisterStream(
-                  appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView)),
+              stream: fsHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView)),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error al acceder al registro: ${snapshot.error}'));
+                }
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.connectionState == ConnectionState.active ||
-                    snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return const Text('Error');
-                  } else if (snapshot.hasData) {
-                    List<RegisterModel> logs = snapshot.data as List<RegisterModel>;
-                    return ListView.builder(
-                      itemCount: logs.length,
-                      itemBuilder: (BuildContext context, int index) => Card(
-                        elevation: 6,
-                        margin: const EdgeInsets.all(10),
-                        child: ListTile(
-                          title: Text(
-                            logs.elementAt(index).date.toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            logs.elementAt(index).foldedString,
-                            style: const TextStyle(color: Colors.black),
-                          ),
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasData) {
+                  List<RegisterModel> logs = snapshot.data as List<RegisterModel>;
+                  return ListView.builder(
+                    itemCount: logs.length,
+                    itemBuilder: (BuildContext context, int index) => Card(
+                      elevation: 6,
+                      margin: const EdgeInsets.all(10),
+                      child: ListTile(
+                        title: Text(
+                          logs.elementAt(index).date.toString(),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          logs.elementAt(index).foldedString,
+                          style: const TextStyle(color: Colors.black),
                         ),
                       ),
-                    );
-                  } else {
-                    return const Center(
-                        child: Text(
-                      'No hay datos',
-                      style: TextStyle(fontSize: 24.0),
-                    ));
-                  }
+                    ),
+                  );
                 } else {
-                  return Text('Estado: ${snapshot.connectionState}');
+                  return const Center(
+                      child: Text(
+                    'No hay datos',
+                    style: TextStyle(fontSize: 24.0),
+                  ));
                 }
               },
             ),

@@ -29,25 +29,11 @@ class LoadingPage extends StatefulWidget {
 class _LoadingPageState extends State<LoadingPage> {
   @override
   void initState() {
-    // TODO: verify it's called everytime loading is created
     super.initState();
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   // Context Available: addPostFrameCallback ensures that the callback is executed
-    //   // after the first frame is built,
-    //   // so the BuildContext is available and providers are initialized.
-    //   MyLog.log(_classString, '_LoadingState:initState');
-    //   _initialize();
-    // });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    MyLog.log(_classString, 'didChangeDependencies to be called ONLY ONCE');
+    MyLog.log(_classString, 'initState to be called ONLY ONCE');
     _initialize();
   }
-
 
   Future<void> _initialize() async {
     MyLog.log(_classString, '_initialize');
