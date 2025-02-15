@@ -4,7 +4,7 @@ import '../utilities/date.dart';
 import '../utilities/transformation.dart';
 import 'debug.dart';
 
-final String _classString = 'Parameters'.toUpperCase();
+final String _classString = '<md> Parameters'.toLowerCase();
 
 enum ParametersEnum {
   matchDaysToView,
@@ -35,7 +35,9 @@ class MyParameters {
   final List<String> _values = List.generate(ParametersEnum.values.length, (index) => parametersDefault[index]);
   static const String daysOfWeek = 'LMXJVSD';
 
-  MyParameters();
+  MyParameters() {
+    MyLog.log(_classString, 'Constructor');
+  }
 
   static String dayOfTheWeekToStr(Date date) => daysOfWeek[date.weekday - DateTime.monday];
 

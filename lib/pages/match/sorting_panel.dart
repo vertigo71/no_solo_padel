@@ -24,8 +24,8 @@ class SortingPanel extends StatelessWidget {
         int filledCourts = matchNotifier.match.getNumberOfFilledCourts();
         List<int> sortedList = matchNotifier.match.getCouplesPlainList();
         List<MyUser> players = matchNotifier.match.players;
-        MyLog.log(_classString, 'players = $players');
-        MyLog.log(_classString, 'courts = $filledCourts');
+        MyLog.log(_classString, 'build players = $players', indent: true);
+        MyLog.log(_classString, 'build courts = $filledCourts', indent: true);
 
         return ListView(children: [
           if (matchNotifier.match.comment.isNotEmpty)
@@ -34,6 +34,7 @@ class SortingPanel extends StatelessWidget {
               margin: const EdgeInsets.all(10),
               child: ListTile(
                 tileColor: Theme.of(context).appBarTheme.backgroundColor,
+                titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                 title: Text(matchNotifier.match.comment),
               ),
             ),
@@ -50,8 +51,7 @@ class SortingPanel extends StatelessWidget {
                     )),
                 title: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                      '(${sortedList[4 * index] + 1}) ${players.elementAt(sortedList[4 * index]).name} y '
+                  child: Text('(${sortedList[4 * index] + 1}) ${players.elementAt(sortedList[4 * index]).name} y '
                       '(${sortedList[4 * index + 1] + 1}) ${players.elementAt(sortedList[4 * index + 1]).name}\n\n'
                       '(${sortedList[4 * index + 2] + 1}) ${players.elementAt(sortedList[4 * index + 2]).name} y '
                       '(${sortedList[4 * index + 3] + 1}) ${players.elementAt(sortedList[4 * index + 3]).name}'),
@@ -59,7 +59,7 @@ class SortingPanel extends StatelessWidget {
               ),
             ),
         ]);
-            },
+      },
     );
   }
 }

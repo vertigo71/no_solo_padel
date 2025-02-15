@@ -4,7 +4,7 @@ import '../database/fields.dart';
 import '../utilities/date.dart';
 import 'debug.dart';
 
-final String _classString = 'MyUser'.toUpperCase();
+final String _classString = '<md> MyUser'.toLowerCase();
 
 enum UserType { basic, admin, superuser }
 

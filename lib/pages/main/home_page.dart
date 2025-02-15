@@ -28,7 +28,7 @@ class HomePage extends StatelessWidget {
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
-        MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', level: Level.INFO);
+        MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', level: Level.INFO, indent: true);
 
         // create matches if missing: from now to now+matchDaysToView
         for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
@@ -66,10 +66,13 @@ class HomePage extends StatelessWidget {
                       elevation: 6,
                       margin: const EdgeInsets.all(10),
                       child: ListTile(
-                        tileColor: match.isOpen
-                            ? getPlayingStateColor(context, playingState)
-                            : lighten(getMatchColor(match), 0.2),
+                        tileColor:
+                            // light red: closed, stateColor: open
+                            match.isOpen
+                                ? getPlayingStateColor(context, playingState)
+                                : lighten(getMatchColor(match), 0.2),
                         leading:
+                            // red circle= closed, green circle=open
                             CircleAvatar(backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
@@ -82,7 +85,7 @@ class HomePage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.toJsonString() );
+                          context.pushNamed(AppRoutes.match, extra: match.toJsonString());
                         },
                       ),
                     );
@@ -109,10 +112,10 @@ Color getMatchColor(MyMatch match) {
 Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
   switch (playingState) {
     case PlayingState.unsigned:
-      return darken(Theme.of(context).canvasColor, .1);
+      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
     case PlayingState.playing:
     case PlayingState.signedNotPlaying:
     case PlayingState.reserve:
-      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
+      return darken(Theme.of(context).canvasColor, .2);
   }
 }

@@ -181,33 +181,40 @@ class UserAddPanelState extends State<UserAddPanel> {
   Future<bool> createNewUser(name, email, pwd, isAdmin, isSuperuser) async {
     MyLog.log(_classString, 'createNewUser $name $email $isAdmin $isSuperuser');
 
-    MyUser? myUser = appState.createNewUserByEmail(email);
-    if (myUser == null) {
-      myAlertDialog(context, 'correo del usuario ya existe');
+    MyUser? existingUser = appState.getUserByEmail(email);
+    if (existingUser != null) {
+      MyLog.log(_classString, 'createNewUser user already exists', level: Level.WARNING, indent: true);
+      myAlertDialog(context, 'El correo del usuario ya existe');
       return false;
     }
 
-    String response =
-        await AuthenticationHelper.createUserWithEmailAndPwd(email: email, pwd: pwd);
+    String response = await AuthenticationHelper.createUserWithEmailAndPwd(email: email, pwd: pwd);
     if (response.isNotEmpty && mounted) {
+      // error creating new user
+      MyLog.log(_classString, 'createNewUser ERROR creating user', level: Level.SEVERE, indent: true);
       myAlertDialog(context, response);
       return false;
     }
 
-    myUser.name = name;
-    if (isSuperuser) {
-      myUser.userType = UserType.superuser;
-    } else if (isAdmin) {
-      myUser.userType = UserType.admin;
-    } else {
-      myUser.userType = UserType.basic;
-    }
+    // create a user
+    MyUser myUser = MyUser(
+      id: email.split('@')[0],
+      name: name,
+      email: email,
+      userType: isSuperuser
+          ? isSuperuser
+          : isAdmin
+              ? isAdmin
+              : UserType.basic,
+      loginCount: 0,
+    );
+    MyLog.log(_classString, 'createNewUser user created=$myUser', indent: true);
 
     try {
       fsHelpers.updateUser(myUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al crear localmente el usuario');
-      MyLog.log(_classString, 'Error al crear localmente el usuario', level: Level.SEVERE);
+      MyLog.log(_classString, 'Error creating user in Firestore', level: Level.SEVERE, indent: true);
       return false;
     }
     return true;
@@ -236,10 +243,10 @@ class UserAddPanelState extends State<UserAddPanel> {
       // check if is a sure thing
       const String yesOption = 'SI';
       const String noOption = 'NO';
-      String response = await myReturnValueDialog(
-          context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
+      String response =
+          await myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
-      MyLog.log(_classString, 'build response = $response');
+      MyLog.log(_classString, 'build response = $response', indent: true);
 
       // create new user
       ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);

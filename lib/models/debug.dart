@@ -1,4 +1,4 @@
-
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'package:flutter_bugfender/flutter_bugfender.dart';
@@ -11,7 +11,10 @@ class MyLog {
   static void initialize() {
     _logger.level = Level.ALL;
     _logger.onRecord.listen((LogRecord rec) {
-      print('[${rec.time} ${rec.level.name}]: ${rec.message}'); // Customize format
+      var timeFormat = DateFormat('HH:mm:ss'); // Format: Hour:Minute:Second
+      String formattedTime = timeFormat.format(rec.time);
+
+      print('[$formattedTime ${rec.level.name}]: ${rec.message}');
       if (rec.error != null) {
         print('  Error: ${rec.error}');
         if (rec.stackTrace != null) {
@@ -46,7 +49,7 @@ class MyLog {
   static void setDebugLevel(Level level) => Logger.root.level = level;
 
   static void log(String heading, Object message,
-      {Object? myCustomObject, Object? exception, Level level = Level.FINE}) {
+      {Object? myCustomObject, Object? exception, Level level = Level.FINE, bool indent = false }) {
     // show in Telegram
     if (level == Level.SEVERE) {
       String errorMsg = '\n******************'
@@ -61,7 +64,7 @@ class MyLog {
     }
 
     // show in console
-    _logger.log(level, "[$heading] $message", exception);
+    _logger.log(level, "[$heading]${indent?'     >>':''} $message", exception);
     if (myCustomObject != null) {
       try {
         if (myCustomObject is Map) {

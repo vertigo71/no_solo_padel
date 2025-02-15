@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
+import 'package:no_solo_padel_dev/utilities/environment.dart';
 import 'package:provider/provider.dart';
 
 import '../database/authentication.dart';
@@ -31,14 +32,22 @@ class _LoadingPageState extends State<LoadingPage> {
     // TODO: verify it's called everytime loading is created
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Context Available: addPostFrameCallback ensures that the callback is executed
-      // after the first frame is built,
-      // so the BuildContext is available and providers are initialized.
-      MyLog.log(_classString, '_LoadingState:initState');
-      _initialize();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   // Context Available: addPostFrameCallback ensures that the callback is executed
+    //   // after the first frame is built,
+    //   // so the BuildContext is available and providers are initialized.
+    //   MyLog.log(_classString, '_LoadingState:initState');
+    //   _initialize();
+    // });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    MyLog.log(_classString, 'didChangeDependencies to be called ONLY ONCE');
+    _initialize();
+  }
+
 
   Future<void> _initialize() async {
     MyLog.log(_classString, '_initialize');
@@ -48,11 +57,11 @@ class _LoadingPageState extends State<LoadingPage> {
         // there is already an user logged.
         // it shouldn't be logged
         // this happens in web browser going back from mainPAge
-        MyLog.log(_classString, 'user=${appState.getLoggedUser().id}. Going back to login page', level: Level.WARNING);
+        MyLog.log(_classString, 'user=${appState.getLoggedUser().id}. Going back to login page', level: Level.WARNING, indent: true);
         if (mounted) {
           await AuthenticationHelper.signOut();
           appState.resetLoggedUser();
-          MyLog.log(_classString, 'Going back to main...');
+          MyLog.log(_classString, '_initialize Going back to main...', indent: true);
           if (mounted) context.goNamed(AppRoutes.login);
         }
       } else {
@@ -97,18 +106,18 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<bool> setupDB(BuildContext context) async {
-    MyLog.log(_classString, '_LoadingState:Setting DB');
+    MyLog.log(_classString, 'Setting DB');
     AppState appState = context.read<AppState>();
     Director director = context.read<Director>();
     FsHelpers fsHelpers = director.fsHelpers;
 
     User? user = AuthenticationHelper.user;
     if (user == null || user.email == null) {
-      MyLog.log(_classString, 'setupDB user not authenticated = $user', level: Level.SEVERE);
+      MyLog.log(_classString, 'setupDB user not authenticated = $user', level: Level.SEVERE, indent: true);
       throw Exception('Error: No se ha registrado correctamente el usuario. \n'
           'Póngase en contacto con el administrador');
     }
-    MyLog.log(_classString, 'setupDB authenticated user = ${user.email}', level: Level.INFO);
+    MyLog.log(_classString, 'setupDB authenticated user = ${user.email}', level: Level.INFO, indent: true);
 
     //  delete old logs and matches
     director.deleteOldData();
@@ -116,14 +125,13 @@ class _LoadingPageState extends State<LoadingPage> {
     //
     // create test data
     // do only once for populating
-    //
-    // await director.createTestData(users: true, matches: false);
+    if (Environment().isDevelopment) await director.createTestData( );
 
     // get loggedUser
     MyUser? loggedUser = appState.getUserByEmail(user.email!);
     if (loggedUser == null) {
       // user is not in the DB
-      MyLog.log(_classString, 'setupDB user: ${user.email}  not registered. Abort!', level: Level.SEVERE);
+      MyLog.log(_classString, 'setupDB user: ${user.email}  not registered. Abort!', level: Level.SEVERE, indent: true);
       await AuthenticationHelper.signOut();
       appState.resetLoggedUser();
       return false; // user doesn't exist

@@ -13,7 +13,7 @@ import '../utilities/date.dart';
 import '../utilities/transformation.dart';
 import 'fields.dart';
 
-final String _classString = 'FsHelper'.toUpperCase();
+final String _classString = '<db> FsHelper'.toLowerCase();
 
 /// Firestore helpers
 class FsHelpers {
@@ -25,14 +25,15 @@ class FsHelpers {
   final Completer<void> _dataLoadedCompleter = Completer<void>(); // completed after initial download
 
   FsHelpers() {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Constructor');
   }
 
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
     bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: matchId.toYyyyMMdd());
     if (exists) return false;
-    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId', level: Level.INFO);
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId',
+        level: Level.INFO);
     await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
     return true;
   }
@@ -48,22 +49,24 @@ class FsHelpers {
     required AppState appState,
     required void Function(MyMatch match) matchFunction,
   }) {
+    MyLog.log(_classString, 'listenToMatch creating LISTENER for match=$matchId');
     StreamSubscription? streamSubscription;
-    MyLog.log(_classString, 'creating LISTENER for match=$matchId');
     try {
       streamSubscription =
           _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
         if (snapshot.exists && snapshot.data() != null) {
           MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-          MyLog.log(_classString, 'LISTENER newMatch found = $newMatch', level: Level.INFO);
+          MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', level: Level.INFO, indent: true);
           matchFunction(newMatch);
         } else {
-          MyLog.log(_classString, 'LISTENER Match data is null in Firestore.', level: Level.WARNING );
+          MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.',
+              level: Level.WARNING, indent: true);
           matchFunction(MyMatch(id: matchId));
         }
       });
     } catch (e) {
-      MyLog.log(_classString, 'createListeners ERROR listening to match $matchId', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, 'listenToMatch ERROR listening to match $matchId',
+          exception: e, level: Level.SEVERE, indent: true);
     }
 
     return streamSubscription;
@@ -73,7 +76,7 @@ class FsHelpers {
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
-    MyLog.log(_classString, 'Building createListeners ');
+    MyLog.log(_classString, 'createListeners ');
     assert(_paramListener == null);
     assert(_usersListener == null);
 
@@ -84,25 +87,26 @@ class FsHelpers {
           .doc(strDB(DBFields.parameters))
           .snapshots()
           .listen((snapshot) {
-        MyLog.log(_classString, 'LISTENER parameters started');
+        MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
         MyParameters? myParameters;
         if (snapshot.exists && snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
-        MyLog.log(_classString, 'LISTENER parameters = $myParameters', level: Level.INFO);
+        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
+            level: Level.INFO, indent: true);
         parametersFunction(myParameters ?? MyParameters());
         _parametersDataLoaded = true;
         _checkDataLoaded();
       });
     } catch (e) {
       MyLog.log(_classString, 'createListeners parameters',
-          myCustomObject: _paramListener, exception: e, level: Level.SEVERE);
+          myCustomObject: _paramListener, exception: e, level: Level.SEVERE, indent: true);
     }
 
     // update users
     try {
       _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen((snapshot) {
-        MyLog.log(_classString, 'LISTENER users started');
+        MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
         List<MyUser> addedUsers = [];
         List<MyUser> modifiedUsers = [];
@@ -113,38 +117,42 @@ class FsHelpers {
           modifiedUsers: modifiedUsers,
           removedUsers: removedUsers,
         );
-        MyLog.log(_classString,
-            'LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} removed=${removedUsers.length}',
-            level: Level.INFO);
+        MyLog.log(
+            _classString,
+            'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
+            'removed=${removedUsers.length}',
+            level: Level.INFO,
+            indent: true);
         usersFunction(addedUsers, modifiedUsers, removedUsers);
         _usersDataLoaded = true;
         _checkDataLoaded();
       });
     } catch (e) {
-      MyLog.log(_classString, 'createListeners users',
-          myCustomObject: _usersListener, exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, 'createListeners createListeners Error loading users',
+          myCustomObject: _usersListener, exception: e, level: Level.SEVERE, indent: true);
     }
   }
 
   void _checkDataLoaded() {
     if (_usersDataLoaded && _parametersDataLoaded && !_dataLoadedCompleter.isCompleted) {
-      MyLog.log(_classString, '_checkDataLoaded Completer completed...  ', level: Level.INFO);
+      MyLog.log(_classString, '_checkDataLoaded Loading Completer completed...  ', level: Level.INFO);
       _dataLoadedCompleter.complete();
     }
   }
 
+  /// completed when the completer _dataLoadedCompleter is complete
   Future<void> get dataLoaded {
-    MyLog.log(_classString, 'dataLoaded waiting to complete the Completer...  ', level: Level.INFO);
+    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...  ', level: Level.INFO);
     return _dataLoadedCompleter.future;
   }
 
   Future<void> disposeListeners() async {
-    MyLog.log(_classString, 'disposeListeners Building  ');
+    MyLog.log(_classString, 'disposeListeners');
     try {
       await _usersListener?.cancel();
       await _paramListener?.cancel();
     } catch (e) {
-      MyLog.log(_classString, 'disposeListeners', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, 'disposeListeners', exception: e, level: Level.SEVERE, indent: true);
     }
   }
 
@@ -154,7 +162,7 @@ class FsHelpers {
     required List<MyUser> modifiedUsers,
     required List<MyUser> removedUsers,
   }) {
-    MyLog.log(_classString, '_downloadChangedUsers #users = ${snapshot.docs.length}', level: Level.INFO);
+    MyLog.log(_classString, '_downloadChangedUsers update #users = ${snapshot.docs.length}', level: Level.INFO);
 
     addedUsers.clear();
     modifiedUsers.clear();
@@ -162,12 +170,14 @@ class FsHelpers {
 
     for (var docChanged in snapshot.docChanges) {
       if (docChanged.doc.data() == null) {
+        MyLog.log(_classString, '_downloadChangedUsers ERROR data null', level: Level.SEVERE, indent: true);
         throw 'Error en la base de datos de usuarios';
       }
 
       Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
       try {
         MyUser user = MyUser.fromJson(data);
+        MyLog.log(_classString, '_downloadChangedUsers user=$user', indent: true);
 
         if (user.hasNotEmptyFields()) {
           if (docChanged.type == DocumentChangeType.added) {
@@ -178,10 +188,12 @@ class FsHelpers {
             removedUsers.add(user);
           }
         } else {
-          MyLog.log(_classString, '_downloadChangedUsers Empty user!!!', level: Level.SEVERE, myCustomObject: user);
+          MyLog.log(_classString, '_downloadChangedUsers Error: Empty user!!!',
+              level: Level.SEVERE, myCustomObject: user, indent: true);
         }
       } catch (e) {
-        MyLog.log(_classString, '_downloadUsers Wrong Format', myCustomObject: data, exception: e, level: Level.SEVERE);
+        MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
+            myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
       }
     }
   }
@@ -197,11 +209,13 @@ class FsHelpers {
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog.log(_classString, 'Delete collection=${collection.name} id=${ds.id}', level: Level.INFO);
+        MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name} id=${ds.id}',
+            level: Level.INFO, indent: true);
         ds.reference.delete();
       }
     }).catchError((onError) {
-      MyLog.log(_classString, 'Delete collection=${collection.name}', exception: onError, level: Level.SEVERE);
+      MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name}',
+          exception: onError, level: Level.SEVERE, indent: true);
     });
   }
 
@@ -235,7 +249,8 @@ class FsHelpers {
         throw ArgumentError("Error transforming matches");
       }
     } catch (e) {
-      MyLog.log(_classString, '_getStream collection=$collection', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, '_getStream ERROR collection=$collection',
+          exception: e, level: Level.SEVERE, indent: true);
       return null;
     }
   }
@@ -311,8 +326,6 @@ class FsHelpers {
     T Function(Map<String, dynamic> json, AppState appState)? fromJsonAppState,
     AppState? appState,
   }) async {
-    MyLog.log(_classString, 'getObject $collection $doc');
-
     try {
       DocumentSnapshot documentSnapshot = await _instance.collection(collection).doc(doc).get();
 
@@ -329,10 +342,10 @@ class FsHelpers {
 
         return item;
       } else {
-        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.SEVERE);
+        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.SEVERE, indent: true);
       }
     } catch (e) {
-      MyLog.log(_classString, 'getObject ', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, 'getObject ', exception: e, level: Level.SEVERE, indent: true);
     }
     return null;
   }
@@ -411,13 +424,13 @@ class FsHelpers {
           throw ArgumentError("Argument error for _getAllObjects.");
         }
 
-        MyLog.log(_classString, '_getAllObjects $collection = $item');
+        MyLog.log(_classString, '_getAllObjects $collection = $item', indent: true);
         items.add(item);
       }
     } catch (e) {
-      MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE);
+      MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE, indent: true);
     }
-    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', level: Level.INFO);
+    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', level: Level.INFO, indent: true);
     return items;
   }
 
@@ -474,15 +487,15 @@ class FsHelpers {
     MyLog.log(_classString, 'updateObject  $collection $doc', level: Level.INFO);
     if (forceSet) {
       return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR setting:', exception: onError, level: Level.SEVERE);
+        MyLog.log(_classString, 'updateObject ERROR setting:', exception: onError, level: Level.SEVERE, indent: true);
       });
     } else {
       return _instance.collection(collection).doc(doc).update(map).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR updating:', exception: onError, level: Level.WARNING);
-        MyLog.log(_classString, 'updateObject creating:', level: Level.INFO);
+        MyLog.log(_classString, 'updateObject ERROR updating:', exception: onError, level: Level.WARNING, indent: true);
+        MyLog.log(_classString, 'updateObject try creating:', level: Level.INFO, indent: true);
         _instance.collection(collection).doc(doc).set(map);
       }).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR:', exception: onError, level: Level.SEVERE);
+        MyLog.log(_classString, 'updateObject ERROR:', exception: onError, level: Level.SEVERE, indent: true);
       });
     }
   }
@@ -525,7 +538,7 @@ class FsHelpers {
   Future<void> deleteUser(MyUser myUser) async {
     MyLog.log(_classString, 'deleteUser deleting user $myUser');
     if (myUser.id == '') {
-      MyLog.log(_classString, 'deleteUser wrong id', myCustomObject: myUser, level: Level.SEVERE);
+      MyLog.log(_classString, 'deleteUser wrong id', myCustomObject: myUser, level: Level.SEVERE, indent: true);
     }
 
     // delete user
@@ -533,7 +546,8 @@ class FsHelpers {
       MyLog.log(_classString, 'deleteUser user $myUser deleted');
       await _instance.collection(strDB(DBFields.users)).doc(myUser.id).delete();
     } catch (e) {
-      MyLog.log(_classString, 'deleteUser error when deleting', myCustomObject: myUser, level: Level.SEVERE);
+      MyLog.log(_classString, 'deleteUser error when deleting',
+          myCustomObject: myUser, level: Level.SEVERE, indent: true);
     }
   }
 
@@ -544,7 +558,7 @@ class FsHelpers {
     required AppState appState,
     int position = -1,
   }) async {
-    MyLog.log(_classString, 'addPlayer adding user $player to $matchId position $position');
+    MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
     DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd());
 
     return _instance.runTransaction((transaction) async {
@@ -556,18 +570,19 @@ class FsHelpers {
 
       // get match
       MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-      MyLog.log(_classString, 'addPlayer match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'addPlayerToMatch match = ', myCustomObject: myMatch, indent: true);
 
       // add player in memory match
       int posInserted = myMatch.insertPlayer(player, position: position);
       if (posInserted == -1) return null;
-      MyLog.log(_classString, 'addPlayer inserted match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog.log(_classString, 'addPlayer error adding $player to match $matchId', level: Level.SEVERE);
+      MyLog.log(_classString, 'addPlayerToMatch error adding $player to match $matchId',
+          level: Level.SEVERE, indent: true);
       throw Exception('Error al añadir jugador $player al partido $matchId\n'
           'Error = $onError');
     });
@@ -591,18 +606,19 @@ class FsHelpers {
 
       // get match
       MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-      MyLog.log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch, indent: true);
 
       // delete player in match
       bool removed = myMatch.removePlayer(user);
       if (!removed) return null;
-      MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch);
+      MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
       return myMatch;
     }).catchError((onError) {
-      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $matchId', level: Level.SEVERE);
+      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $matchId',
+          level: Level.SEVERE, indent: true);
       throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
           'Error = $onError');
     });

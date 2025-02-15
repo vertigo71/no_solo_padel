@@ -6,7 +6,7 @@ import '../models/debug.dart';
 import '../models/match_model.dart';
 import 'director.dart';
 
-final String _classString = 'MatchNotifier'.toUpperCase();
+final String _classString = '<st> MatchNotifier'.toLowerCase();
 
 /// holds a Match. If a change is made propagates to anyone who is listening
 /// listens to firebase if the match changes
@@ -16,7 +16,7 @@ class MatchNotifier with ChangeNotifier {
   StreamSubscription? _matchSubscription;
 
   MatchNotifier(this._match, this._director) {
-    MyLog.log(_classString, 'Building $_match');
+    MyLog.log(_classString, 'Constructor match = $_match');
     _init();
   }
 
@@ -35,7 +35,7 @@ class MatchNotifier with ChangeNotifier {
   void updateMatch(MyMatch newMatch) {
     MyLog.log(_classString, 'updateMatch: $newMatch');
     if (_match.id != newMatch.id) {
-      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO);
+      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO, indent: true);
       _match = newMatch;
       // redo the listener
       _matchSubscription?.cancel();
@@ -57,9 +57,9 @@ class MatchNotifier with ChangeNotifier {
   }
 
   void _notifyIfChanged(MyMatch newMatch) {
-    MyLog.log(_classString, '_init: create _matchSubscription for match=$_match', level: Level.INFO);
+    MyLog.log(_classString, '_notifyIfChanged: create _matchSubscription for match=$_match', level: Level.INFO);
     if (_match != newMatch) {
-      MyLog.log(_classString, 'Match updated from Firestore: $newMatch');
+      MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', indent: true);
       _match = newMatch;
       notifyListeners(); // Notify listeners about the change
     }

@@ -44,7 +44,7 @@ class LoginPageState extends State<LoginPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    MyLog.log(_classString, 'didChangeDependencies initializing variables ONLY ONCE');
+    MyLog.log(_classString, 'didChangeDependencies to be called ONLY ONCE');
     _initializeData();
   }
 
@@ -57,7 +57,7 @@ class LoginPageState extends State<LoginPage> {
 
     // create listeners for users and parameters
     // any changes to those classes will change appState
-    MyLog.log(_classString, 'createListeners. To be called only ONCE');
+    MyLog.log(_classString, '_initializeData createListeners for users and parameters. To be called only ONCE');
     await fsHelpers.createListeners(
       parametersFunction: appState.setAllParametersAndNotify,
       usersFunction: appState.setChangedUsersAndNotify,
@@ -173,7 +173,7 @@ class LoginPageState extends State<LoginPage> {
           // user has signed in
           if (mounted) context.pushNamed(AppRoutes.loading);
 
-          MyLog.log(_classString, 'Back to login');
+          MyLog.log(_classString, '_formValidate Back to login', indent: true);
 
           _formKey.currentState?.fields[pwdId]?.didChange('');
         } else {

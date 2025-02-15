@@ -51,11 +51,15 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 30.0),
+
             // Courts
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                const Text('Pistas'),
+                const SizedBox(width: 10.0),
                 for (int i = 0; i < maxNumberOfCourts; i++)
                   Expanded(
                     child: Padding(
@@ -64,7 +68,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                         name: '$courtId$i',
                         // Unique name for each field
                         decoration: InputDecoration(
-                          labelText: 'Pista ${i + 1}',
+                          // labelText: 'Pista ${i + 1}',
                           contentPadding: const EdgeInsets.all(8.0),
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -80,7 +84,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
               ],
             ),
 
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 30.0),
 
             // Open match
             Row(
@@ -104,7 +108,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
               ],
             ),
 
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 40.0),
 
             // Comments
             FormBuilderTextField(
@@ -122,7 +126,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
             // Aceptar button
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+              padding: const EdgeInsets.fromLTRB(0, 60, 0, 0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -141,7 +145,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   }
 
   String _checkForm() {
-    MyLog.log(_classString, 'check all courts');
+    MyLog.log(_classString, '_checkForm check all courts');
 
     // empty courts
     List<String> courts = [];
@@ -170,7 +174,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // save all values
       state!.save();
 
-      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', level: Level.INFO);
+      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', level: Level.INFO, indent: true);
       if (state.value[isOpenId]) {
         // if opening a match, check all fields
         String errorString = _checkForm();
@@ -190,7 +194,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
       newMatch.comment = state.value[commentId];
       newMatch.isOpen = state.value[isOpenId];
-      MyLog.log(_classString, '_formValidate: update match = $newMatch', level: Level.INFO);
+      MyLog.log(_classString, '_formValidate: update match = $newMatch', level: Level.INFO, indent: true);
       // Update to Firestore
       String message = 'Los datos han sido actualizados';
       try {
@@ -230,7 +234,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
       } catch (e) {
         message = 'ERROR en la actualización de los datos. \n\n $e';
-        MyLog.log(_classString, 'ERROR en la actualización de los datos', exception: e, level: Level.SEVERE);
+        MyLog.log(_classString, '_formValidate ERROR en la actualización de los datos',
+            exception: e, level: Level.SEVERE, indent: true);
       }
 
       if (mounted) showMessage(context, message);

@@ -173,6 +173,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
                     tileColor: Theme.of(context).appBarTheme.backgroundColor,
+                    titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                     title: const Text('Reservas'),
                   ),
                 ),
@@ -223,7 +224,7 @@ class PlayersPanelState extends State<PlayersPanel> {
       if (toAdd) {
         // add user to match
         if (matchNotifier.match.isInTheMatch(user)) {
-          MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE);
+          MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE, indent: true);
           return false;
         }
         int listPosition = -1;
@@ -237,13 +238,13 @@ class PlayersPanelState extends State<PlayersPanel> {
             appState: appState, matchId: matchNotifier.match.id, player: user, position: listPosition);
 
         if (newMatchFromFirestore == null) {
-          MyLog.log(_classString, 'validate2 player $user already was in match', level: Level.SEVERE);
+          MyLog.log(_classString, 'validate2 player $user already was in match', level: Level.SEVERE, indent: true);
           if (mounted) showMessage(context, 'El jugador ya estaba en el partido');
           return false;
         } else {
           listPosition = newMatchFromFirestore.getPlayerPosition(user);
           if (listPosition == -1) {
-            MyLog.log(_classString, 'validate3 player $user not in match $newMatchFromFirestore', level: Level.SEVERE);
+            MyLog.log(_classString, 'validate3 player $user not in match $newMatchFromFirestore', level: Level.SEVERE, indent: true);
           }
           if (adminManagingUser) {
             registerText = '${_loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
@@ -254,7 +255,7 @@ class PlayersPanelState extends State<PlayersPanel> {
       } else {
         // removing user
         if (!matchNotifier.match.isInTheMatch(user)) {
-          MyLog.log(_classString, 'validate4 removing: player $user is not in match', level: Level.SEVERE);
+          MyLog.log(_classString, 'validate4 removing: player $user is not in match', level: Level.SEVERE, indent: true);
           return false;
         }
         if (adminManagingUser) {
@@ -278,7 +279,7 @@ class PlayersPanelState extends State<PlayersPanel> {
             await fsHelpers.deletePlayerFromMatch(appState: appState, matchId: matchNotifier.match.id, user: user);
         if (newMatchFromFirestore == null) {
           MyLog.log(_classString, 'validate5 player $user not in the match ${matchNotifier.match}',
-              level: Level.SEVERE);
+              level: Level.SEVERE, indent: true);
           if (mounted) showMessage(context, 'El jugador no estaba en el partido');
           return false;
         }
@@ -296,23 +297,23 @@ class PlayersPanelState extends State<PlayersPanel> {
     }
 
     MyLog.log(_classString, 'validate firebase done: Match=$newMatchFromFirestore Register=$registerText',
-        level: Level.INFO);
+        level: Level.INFO, indent: true);
 
     if (newMatchFromFirestore == null) {
-      MyLog.log(_classString, 'validate6 ERROR newMatchFromFirestore=null', level: Level.SEVERE);
+      MyLog.log(_classString, 'validate6 ERROR newMatchFromFirestore=null', level: Level.SEVERE, indent: true);
       return false;
     } else {
       //  state updated via consumers
       // telegram and register
       try {
-        MyLog.log(_classString, 'validate $user update register', level: Level.INFO);
+        MyLog.log(_classString, 'validate $user update register', level: Level.INFO, indent: true);
 
         await fsHelpers.updateRegister(RegisterModel(
           date: matchNotifier.match.id,
           message: registerText,
         ));
 
-        MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO);
+        MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO, indent: true);
 
         sendDatedMessageToTelegram(
             message: '$registerText\n'
@@ -320,7 +321,7 @@ class PlayersPanelState extends State<PlayersPanel> {
             matchDate: matchNotifier.match.id,
             fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
       } catch (e) {
-        MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE);
+        MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE, indent: true);
         if (mounted) {
           myAlertDialog(
               context,

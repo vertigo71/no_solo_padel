@@ -156,7 +156,7 @@ class SettingsPageState extends State<SettingsPage> {
       await fsHelpers.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
-      MyLog.log(_classString, 'Error al actualizar el nombre del usuario', level: Level.SEVERE);
+      MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario', level: Level.SEVERE, indent: true);
       return false;
     }
 
@@ -173,8 +173,8 @@ class SettingsPageState extends State<SettingsPage> {
       await fsHelpers.updateUser(user);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
-      MyLog.log(_classString, 'Error al actualizar  la información de emergencia del usuario',
-          level: Level.SEVERE);
+      MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
+          level: Level.SEVERE, indent: true);
       return false;
     }
 
@@ -216,7 +216,8 @@ class SettingsPageState extends State<SettingsPage> {
       await fsHelpers.updateUser(loggedUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al actualizar localmente el correo del usuario');
-      MyLog.log(_classString, 'Error al actualizar localmente el correo del usuario', level: Level.SEVERE);
+      MyLog.log(_classString, 'updateEmail Error al actualizar localmente el correo del usuario', level: Level.SEVERE, indent:
+      true);
       return false;
     }
 
@@ -250,6 +251,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _formValidate() async {
+    MyLog.log(_classString, '_formValidate');
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.validate()) {
       String newName = listControllers[_FormFieldsEnum.name.index].text;
@@ -276,7 +278,7 @@ class SettingsPageState extends State<SettingsPage> {
       const String noOption = 'NO';
       String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
-      MyLog.log(_classString, 'build response = $response');
+      MyLog.log(_classString, 'build response = $response', indent: true);
 
       bool anyUpdatedField = false;
 

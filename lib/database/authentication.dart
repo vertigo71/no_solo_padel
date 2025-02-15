@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 
 import '../models/debug.dart';
 
-final String _classString = 'AuthenticationHelper'.toUpperCase();
+final String _classString = '<db> AuthenticationHelper'.toLowerCase();
 
 // TODO: it could be static
 class AuthenticationHelper {
@@ -38,12 +38,25 @@ class AuthenticationHelper {
     }
   }
 
-  //SIGN OUT METHOD TODO:repasar
+  //SIGN OUT METHOD
   static Future signOut() async {
     MyLog.log(_classString, 'SignOut');
     await _auth.signOut();
   }
 
+  /// Creates a new user in Firestore using email and password authentication.
+  ///
+  /// This function attempts to create a new user with the provided email and password
+  /// using Firebase Authentication.  It handles potential `FirebaseAuthException` errors
+  /// and other exceptions, returning a localized error message (Spanish) if the
+  /// creation fails.
+  ///
+  /// Returns:
+  ///   - A Spanish error message (`String`) if user creation fails.  The message
+  ///     will attempt to provide specific details about the error, including
+  ///     handling `FirebaseAuthException`s and other exceptions.
+  ///   - An empty string (`''`) if user creation is successful.
+  ///
   static Future<String> createUserWithEmailAndPwd({required String email, required String pwd}) async {
     MyLog.log(_classString, 'createUserWithEmailAndPwd $email', level: Level.INFO);
 
@@ -52,11 +65,11 @@ class AuthenticationHelper {
     } on FirebaseAuthException catch (e) {
       String message = _toSpanish(e);
       if (message.isEmpty) {
-        message = 'Error al crear el usuario (error indefinido de la base de datos) \n $e';
+        message = 'Error al crear usuario $email (error indefinido de la base de datos) \n $e';
       }
       return message;
     } catch (e) {
-      return 'Error al crear (error indefinido) \n $e';
+      return 'Error al crear usuario $email (error indefinido) \n $e';
     }
     return '';
   }
@@ -111,44 +124,45 @@ class AuthenticationHelper {
       email: user.email ?? '',
       password: actualPwd,
     );
-    MyLog.log(_classString, '_getUserCredential authcred', myCustomObject: authCredential);
+    MyLog.log(_classString, '_getUserCredential authcred', myCustomObject: authCredential, indent: true );
     UserCredential userCredential = await user.reauthenticateWithCredential(authCredential);
-    MyLog.log(_classString, '_getUserCredential usercred', myCustomObject: userCredential);
+    MyLog.log(_classString, '_getUserCredential usercred', myCustomObject: userCredential, indent: true );
 
     return userCredential;
   }
 
+  /// Converts a `FirebaseAuthException` to a localized Spanish error message.
+  ///
+  /// This function takes a `FirebaseAuthException` object and attempts to convert
+  /// it to a user-friendly Spanish error message.  It handles common Firebase
+  /// Authentication error codes and provides corresponding Spanish translations.
+  /// If the error code is not recognized, it returns a generic error message,
+  /// including the original Firebase error code for debugging purposes.
+  ///
+  /// Parameters:
+  ///   - `e`: The `FirebaseAuthException` to convert.
+  ///
+  /// Returns:
+  ///   - A localized Spanish error message (`String`). If the error code is not
+  ///     recognized, a generic message including the Firebase error code is returned.
   static String _toSpanish(FirebaseAuthException e) {
     MyLog.log(_classString, '_toSpanish ${e.code} $e');
+
     switch (e.code) {
       case 'email-already-in-use':
-        {
-          return ('Correo ya existente');
-        }
+        return 'Correo ya existente';
       case 'invalid-email':
-        {
-          return ('Correo no válido');
-        }
+        return 'Correo no válido';
       case 'user-disabled':
-        {
-          return ('Usuario inhabilitado');
-        }
+        return 'Usuario inhabilitado';
       case 'user-not-found':
-        {
-          return ('Usuario no encontrado');
-        }
+        return 'Usuario no encontrado';
       case 'wrong-password':
-        {
-          return ('Contraseña no válida');
-        }
+        return 'Contraseña no válida';
       case 'weak-password':
-        {
-          return ('Contraseña debe de tener más de 6 caracteres');
-        }
+        return 'Contraseña debe de tener más de 6 caracteres';
       default:
-        {
-          return e.message ?? '';
-        }
+        return 'Error de autenticación: ${e.code} (mensaje: ${e.message ?? 'No disponible'})';
     }
   }
 }

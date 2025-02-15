@@ -10,7 +10,7 @@ import '../utilities/date.dart';
 import '../utilities/misc.dart';
 import 'debug.dart';
 
-final String _classString = 'MyMatch'.toUpperCase();
+final String _classString = '<md> MyMatch'.toLowerCase();
 
 enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
 
@@ -152,6 +152,8 @@ class MyMatch {
 
   /// true if they play together
   bool arePlayingTogether(MyUser user1, MyUser user2) {
+    MyLog.log(_classString, 'arePlayingTogether $user1 $user2',
+        myCustomObject: players);
     int posUser1 = getPlayerPosition(user1);
     int posUser2 = getPlayerPosition(user2);
     if (posUser1 != -1 &&
@@ -162,7 +164,8 @@ class MyMatch {
       for (int pos = 0; pos < sortedList.length; pos += 2) {
         if (sortedList[pos] == posUser1 && sortedList[pos + 1] == posUser2 ||
             sortedList[pos] == posUser2 && sortedList[pos + 1] == posUser1) {
-          MyLog.log(_classString, '$id $user1 played with $user2 sorting=$sortedList', myCustomObject: players);
+          MyLog.log(_classString, 'arePlayingTogether $id $user1 played with $user2 sorting=$sortedList',
+              myCustomObject: players, indent: true);
           return true;
         }
       }

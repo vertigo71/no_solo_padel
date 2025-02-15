@@ -8,14 +8,14 @@ import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/transformation.dart';
 
-final String _classString = 'AppState'.toUpperCase();
+final String _classString = '<st> AppState'.toLowerCase();
 
 /// registers the state of the app
 /// Saves users and parameters in Cache variables
 /// Access to loggedUser
 class AppState with ChangeNotifier {
   AppState() {
-    MyLog.log(_classString, 'Building ');
+    MyLog.log(_classString, 'Constructor');
   }
 
   /// attributes
@@ -23,8 +23,7 @@ class AppState with ChangeNotifier {
   final List<MyUser> _usersCache = [];
   MyUser _loggedUser = MyUser();
 
-  /// deleteALL: reset parameters attribute, loggedUser=none
-  /// remove all matches and users from memory
+  /// make loggedUser=none
   void resetLoggedUser() {
     MyLog.log(_classString, 'resetLoggedUser ');
     setLoggedUser(MyUser(), notify: false);
@@ -64,12 +63,18 @@ class AppState with ChangeNotifier {
   }
 
   void setLoggedUserById(String userId, {required bool notify}) {
-    MyLog.log(_classString, 'setLoggedUserById In', myCustomObject: userId);
+    MyLog.log(_classString, 'setLoggedUserById user=$userId');
 
-    MyUser loggedUser = getUserById(userId) ?? MyUser();
+    MyUser loggedUser = getUserById(userId) ??
+        () {
+          // lambda expression
+          MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', indent: true, level: Level.SEVERE);
+          return MyUser(id: userId);
+        }();
+
     setLoggedUser(loggedUser, notify: notify);
 
-    MyLog.log(_classString, 'setLoggedUserById Out', myCustomObject: loggedUser);
+    MyLog.log(_classString, 'setLoggedUserById loggedUser=$loggedUser', indent: true);
     if (notify) notifyListeners();
   }
 
@@ -86,7 +91,7 @@ class AppState with ChangeNotifier {
   bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
-    MyLog.log(_classString, 'setAllUsers #=${users.length}', myCustomObject: users, level: Level.INFO);
+    MyLog.log(_classString, 'setAllUsers users=$users', level: Level.INFO);
 
     _usersCache.clear();
     _usersCache.addAll(users);
@@ -108,22 +113,23 @@ class AppState with ChangeNotifier {
         level: Level.INFO);
 
     if (added.isNotEmpty) {
-      MyLog.log(_classString, 'setChangedUsers added $added ');
+      MyLog.log(_classString, 'setChangedUsers added $added ', indent: true);
       _usersCache.addAll(added);
     }
     if (modified.isNotEmpty) {
-      MyLog.log(_classString, 'setChangedUsers modified $modified ');
+      MyLog.log(_classString, 'setChangedUsers modified $modified ', indent: true);
       for (var newUser in modified) {
         bool correct = _updateCachedUser(newUser);
         if (!correct) {
-          MyLog.log(_classString, 'setChangedUsers user to modify not found $newUser ', level: Level.SEVERE);
+          MyLog.log(_classString, 'setChangedUsers user to modify not found $newUser ',
+              level: Level.SEVERE, indent: true);
         }
       }
     }
     if (removed.isNotEmpty) {
-      MyLog.log(_classString, 'setChangedUsers removed $removed ');
+      MyLog.log(_classString, 'setChangedUsers removed $removed ', indent: true);
       for (var newUser in removed) {
-        MyLog.log(_classString, 'setChangedUsers REMOVED!!!: $newUser');
+        MyLog.log(_classString, 'setChangedUsers REMOVED!!!: $newUser', indent: true);
         removeUserByIdBold(newUser.id);
       }
     }
@@ -146,56 +152,22 @@ class AppState with ChangeNotifier {
   /// if not found, return false
   /// if found copy all data from newUser to User
   bool _updateCachedUser(MyUser newUser) {
+    MyLog.log(_classString, '_updateCachedUser. user = $newUser ', level: Level.INFO);
     Set<MyUser> usersFound = _usersCache.where((user) => user.id == newUser.id).toSet();
     if (usersFound.isEmpty) {
-      MyLog.log(_classString, '_updateCachedUser. No users found = $newUser ', level: Level.SEVERE);
+      MyLog.log(_classString, '_updateCachedUser. No users found to update = $newUser ',
+          level: Level.SEVERE, indent: true);
       return false;
     }
     if (usersFound.length > 1) {
-      MyLog.log(_classString, '_updateCachedUser. More than 1 users found = $newUser ', level: Level.SEVERE);
+      MyLog.log(_classString, '_updateCachedUser. More than 1 users found = $usersFound ',
+          level: Level.SEVERE, indent: true);
     }
     for (var user in usersFound) {
-      MyLog.log(_classString, '_updateCachedUser. Updating: $newUser ');
+      MyLog.log(_classString, '_updateCachedUser. Updating: $newUser ', indent: true);
       user.copyFrom(newUser);
     }
     return true;
-  }
-
-  /// return null if exists or incorrect format
-  /// unique name, email and id
-  MyUser? createNewUserByEmail(String email) {
-    MyLog.log(_classString, 'createNewUserByEmail', myCustomObject: email);
-
-    MyUser? user = getUserByEmail(email);
-    if (user != null) return null; // already exists
-
-    // get name from email
-    List<String> items = email.split('@');
-    if (items.length != 2) return null; // incorrect format
-    String name = items[0];
-
-    user = MyUser(name: name, email: email, id: name, userType: UserType.basic);
-    // check name and userId don't already exist
-    MyUser? userExists = getUserByName(user.name);
-    if (userExists != null) {
-      int i = 0;
-      final String baseName = user.name;
-      do {
-        user.name = '$baseName${i++}'; // create new name
-        userExists = getUserByName(user.name);
-      } while (userExists != null);
-    }
-    userExists = getUserById(user.id);
-    if (userExists != null) {
-      int i = 0;
-      final String baseName = user.id;
-      do {
-        user.id = '$baseName${i++}'; // create new id
-        userExists = getUserById(user.id);
-      } while (userExists != null);
-    }
-    MyLog.log(_classString, 'createNewUserByEmail new User = $user', level: Level.INFO);
-    return user;
   }
 
   @override

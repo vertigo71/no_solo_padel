@@ -34,6 +34,8 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    MyLog.log(_classString, 'Building');
+
     return PopScope(
       canPop: false, // Important: Initially set to false
       onPopInvokedWithResult: (didPop, result) async {
@@ -70,12 +72,12 @@ class _MainPageState extends State<MainPage> {
             ),
             IconButton(
               onPressed: () async {
-                MyLog.log(_classString, 'Icon SignOut begin');
+                MyLog.log(_classString, 'Icon SignOut begin', indent: true);
 
                 bool response = await _onBackPressed();
                 if (!response) return;
 
-                MyLog.log(_classString, 'Icon SignOut before pop');
+                MyLog.log(_classString, 'Icon SignOut before pop', indent: true);
                 if (context.mounted) {
                   if (context.canPop()) {
                     context.pop();
@@ -115,12 +117,12 @@ class _MainPageState extends State<MainPage> {
     const String noOption = 'NO';
     String response = await myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
     if (response.isEmpty || response == noOption) return false;
-    MyLog.log(_classString, '_onBackPressed response = $response');
+    MyLog.log(_classString, '_onBackPressed response = $response', indent: true );
     if (mounted) {
       await AuthenticationHelper.signOut();
       if (mounted) context.read<AppState>().resetLoggedUser();
     }
-    MyLog.log(_classString, '_onBackPressed before exiting');
+    MyLog.log(_classString, '_onBackPressed before exiting', indent: true);
     return true;
   }
 }
