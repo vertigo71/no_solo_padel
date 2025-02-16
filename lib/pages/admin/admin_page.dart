@@ -4,7 +4,6 @@ import '../../models/debug.dart';
 import 'parameters_panel.dart';
 import 'user_admin_panel.dart';
 
-
 final String _classString = 'AdminPage'.toUpperCase();
 
 class AdminPage extends StatelessWidget {
@@ -19,10 +18,10 @@ class AdminPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Configuración'),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              _TabBarText('Usuarios'),
-              _TabBarText('Parámetros'),
+              _tabBarText('Usuarios'),
+              _tabBarText('Parámetros'),
             ],
           ),
         ),
@@ -35,22 +34,13 @@ class AdminPage extends StatelessWidget {
       ),
     );
   }
-}
 
-class _TabBarText extends StatelessWidget {
-  const _TabBarText(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _tabBarText(String text) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 15,
-        ),
+        style: const TextStyle(fontSize: 15),
       ),
     );
   }

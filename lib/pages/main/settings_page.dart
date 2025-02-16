@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:logging/logging.dart';
@@ -149,19 +148,18 @@ class SettingsPageState extends State<SettingsPage> {
       final formValues = _formKey.currentState?.value;
 
       final newName = formValues?[_FormFieldsEnum.name.toString()] ?? '';
-      MyLog.log(_classString, '_formValidate $newName', indent: true);
       final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.toString()] ?? '';
-      MyLog.log(_classString, '_formValidate $newEmergencyInfo', indent: true);
       final newEmail = formValues?[_FormFieldsEnum.user.toString()]?.toLowerCase() + MyUser.emailSuffix ?? '';
-      MyLog.log(_classString, '_formValidate $newEmail', indent: true);
       final actualPwd = formValues?[_FormFieldsEnum.actualPwd.toString()] ?? '';
-      MyLog.log(_classString, '_formValidate $actualPwd', indent: true);
       final newPwd = formValues?[_FormFieldsEnum.newPwd.toString()] ?? '';
-      MyLog.log(_classString, '_formValidate $newPwd', indent: true);
       final checkPwd = formValues?[_FormFieldsEnum.checkPwd.toString()] ?? '';
-      MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
 
-      MyLog.log(_classString, '_formValidate');
+      MyLog.log(_classString, '_formValidate $newName', indent: true);
+      MyLog.log(_classString, '_formValidate $newEmergencyInfo', indent: true);
+      MyLog.log(_classString, '_formValidate $newEmail', indent: true);
+      MyLog.log(_classString, '_formValidate $actualPwd', indent: true);
+      MyLog.log(_classString, '_formValidate $newPwd', indent: true);
+      MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
 
 
       // Validation and Update Logic

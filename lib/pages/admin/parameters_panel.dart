@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firestore_helpers.dart';
@@ -8,6 +9,8 @@ import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
 import '../../utilities/transformation.dart';
+
+final String _classString = 'ParametersPanel'.toUpperCase();
 
 class _FormFields {
   static List<String> text = [
@@ -42,30 +45,7 @@ class _FormFields {
     // not a textFormField // showLog
     ''
   ];
-
-  static List<bool> isTextField = [
-    true, // matchDaysToView
-    true, // matchDaysKeeping
-    true, // registerDaysAgoToView
-    true, // registerDaysKeeping
-    true, // fromDaysAgoToTelegram
-    true, // defaultCommentText
-    true, // minDebugLevel
-    true, // weekDaysMatch
-    false, // showLog
-  ];
-
-  List<String> initialValues(AppState appState) {
-    List<String> values = [];
-    assert(ParametersEnum.values.length == text.length);
-    for (ParametersEnum parameter in ParametersEnum.values) {
-      values.add(appState.getParameterValue(parameter));
-    }
-    return values;
-  }
 }
-
-final String _classString = 'ParametersPanel'.toUpperCase();
 
 class ParametersPanel extends StatefulWidget {
   const ParametersPanel({super.key});
@@ -75,43 +55,18 @@ class ParametersPanel extends StatefulWidget {
 }
 
 class ParametersPanelState extends State<ParametersPanel> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  //
-  // Note: This is a GlobalKey<FormState>,
-  // not a GlobalKey<ParametersPageState>.
-  final _formKey = GlobalKey<FormState>();
-  List<TextEditingController?> listControllers = List.generate(_FormFields.isTextField.length,
-      (index) => _FormFields.isTextField[index] ? TextEditingController() : null);
+  final _formKey = GlobalKey<FormBuilderState>();
 
-  late AppState appState;
-  late FsHelpers fsHelpers;
-  bool showLog = false;
+  late AppState _appState;
+  late FsHelpers _fsHelpers;
 
   @override
   void initState() {
+    super.initState();
     MyLog.log(_classString, 'initState');
 
-    appState = context.read<AppState>();
-    fsHelpers = context.read<Director>().fsHelpers;
-
-    showLog = appState.showLog;
-    List<String> initialValues = _FormFields().initialValues(appState);
-    for (int i = 0; i < listControllers.length; i++) {
-      listControllers[i]?.text = initialValues[i];
-    }
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    MyLog.log(_classString, 'dispose');
-
-    for (var controller in listControllers) {
-      controller?.dispose();
-    }
-    super.dispose();
+    _appState = context.read<AppState>();
+    _fsHelpers = context.read<Director>().fsHelpers;
   }
 
   @override
@@ -121,40 +76,45 @@ class ParametersPanelState extends State<ParametersPanel> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(18.0),
-        child: Form(
+        child: FormBuilder(
           key: _formKey,
           child: ListView(
             children: [
+              // parameter widgets except showLog
               for (var value in ParametersEnum.values)
-                if (listControllers[value.index] != null)
-                  _FormFieldWidget(
-                    _FormFields.text[value.index],
-                    _FormFields.listAllowedChars[value.index],
-                    listControllers[value.index]!,
-                    _formValidate,
-                  ),
+                if (value != ParametersEnum.showLog) _buildTextField(value),
+
+              // show log
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  myCheckBox(
-                    context: context,
-                    value: showLog,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        showLog = value!;
-                      });
+                  FormBuilderField<bool>(
+                    name: ParametersEnum.showLog.name,
+                    initialValue: _appState.showLog,
+                    builder: (FormFieldState<bool> field) {
+                      return myCheckBox(
+                        context: context,
+                        value: field.value ?? false,
+                        onChanged: (bool? value) {
+                          field.didChange(value); // Updates FormBuilder's state
+                        },
+                      );
                     },
                   ),
                   const SizedBox(width: 10),
                   const Text('¿Mostrar log a todos los usuarios?'),
                 ],
               ),
+
+              // divider
               const Divider(),
+
+              // Accept button
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  // crossAxisAlignment: CrossAxisAlignment.center,
+                  // mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
                       child: const Text('Actualizar'),
@@ -170,71 +130,51 @@ class ParametersPanelState extends State<ParametersPanel> {
     );
   }
 
+  Widget _buildTextField(ParametersEnum parameter) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderTextField(
+        name: parameter.name,
+        initialValue: _appState.getParameterValue(parameter),
+        decoration: InputDecoration(
+          labelText: _FormFields.text[parameter.index],
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.text,
+        inputFormatters: _FormFields.listAllowedChars[parameter.index].isNotEmpty
+            ? [UpperCaseTextFormatter(RegExp(r'' + _FormFields.listAllowedChars[parameter.index]), allow: true)]
+            : [],
+        validator: (value) => (value == null || value.isEmpty) ? 'No puede estar vacío' : null,
+      ),
+    );
+  }
+
   Future<void> _formValidate() async {
+    MyLog.log(_classString, '_formValidate');
+
     // Validate returns true if the form is valid, or false otherwise.
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.saveAndValidate()) {
       MyParameters myParameters = MyParameters();
+      final formValues = _formKey.currentState!.value;
+
       for (var value in ParametersEnum.values) {
         if (value == ParametersEnum.showLog) {
-          myParameters.setValue(value, boolToStr(showLog));
+          myParameters.setValue(value, boolToStr(formValues[value.name] ?? false));
         } else if (value == ParametersEnum.weekDaysMatch) {
-          // delete repeated chars in weekDaysMatch
-          myParameters.setValue(value,
-              listControllers[value.index]!.text.split('').toSet().fold('', (a, b) => '$a$b'));
-        } else if (listControllers[value.index] != null) {
-          myParameters.setValue(value, listControllers[value.index]!.text);
+          myParameters.setValue(value, formValues[value.name].split('').toSet().join());
+        } else {
+          myParameters.setValue(value, formValues[value.name]);
         }
       }
 
       try {
-        await fsHelpers.updateParameters(myParameters);
+        await _fsHelpers.updateParameters(myParameters);
         if (mounted) {
-          showMessage(
-              context,
-              'Los parámetros han sido actualizados. \n'
-              'Volver a entrar en la app para que se tengan en cuenta');
+          showMessage(context, 'Los parámetros han sido actualizados. \n');
         }
       } catch (e) {
         if (mounted) showMessage(context, 'Error actualizando parámetros ');
       }
     }
-  }
-}
-
-class _FormFieldWidget extends StatelessWidget {
-  const _FormFieldWidget(this.fieldName, this.allowedChars, this.textController, this.validate);
-
-  final TextEditingController textController;
-  final String fieldName;
-  final String allowedChars;
-  final Future<void> Function() validate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        onFieldSubmitted: (String str) async => await validate(),
-        keyboardType: TextInputType.text,
-        decoration: InputDecoration(
-          labelText: fieldName,
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(4.0)),
-          ),
-        ),
-        inputFormatters: [
-          if (allowedChars.isNotEmpty)
-            UpperCaseTextFormatter(RegExp(r'' + allowedChars), allow: true),
-        ],
-        controller: textController,
-        // The validator receives the text that the user has entered.
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'No puede estar vacío';
-          }
-          return null;
-        },
-      ),
-    );
   }
 }
