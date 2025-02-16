@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
@@ -110,7 +111,7 @@ class SettingsPageState extends State<SettingsPage> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderTextField(
-        name: formFieldEnum.toString(),
+        name: formFieldEnum.name,
         initialValue: _getInitialValue(formFieldEnum),
         decoration: InputDecoration(
           labelText: fieldName,
@@ -119,11 +120,9 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
         obscureText: isPassword,
-        validator: (value) {
-          if (isOptional) return null;
-          if (value == null || value.isEmpty) return 'No puede estar vacío';
-          return null;
-        },
+        validator: FormBuilderValidators.compose([
+          if (!isOptional) FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+        ]),
       ),
     );
   }
@@ -147,12 +146,12 @@ class SettingsPageState extends State<SettingsPage> {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formValues = _formKey.currentState?.value;
 
-      final newName = formValues?[_FormFieldsEnum.name.toString()] ?? '';
-      final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.toString()] ?? '';
-      final newEmail = formValues?[_FormFieldsEnum.user.toString()]?.toLowerCase() + MyUser.emailSuffix ?? '';
-      final actualPwd = formValues?[_FormFieldsEnum.actualPwd.toString()] ?? '';
-      final newPwd = formValues?[_FormFieldsEnum.newPwd.toString()] ?? '';
-      final checkPwd = formValues?[_FormFieldsEnum.checkPwd.toString()] ?? '';
+      final newName = formValues?[_FormFieldsEnum.name.name] ?? '';
+      final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.name] ?? '';
+      final newEmail = formValues?[_FormFieldsEnum.user.name]?.toLowerCase() + MyUser.emailSuffix ?? '';
+      final actualPwd = formValues?[_FormFieldsEnum.actualPwd.name] ?? '';
+      final newPwd = formValues?[_FormFieldsEnum.newPwd.name] ?? '';
+      final checkPwd = formValues?[_FormFieldsEnum.checkPwd.name] ?? '';
 
       MyLog.log(_classString, '_formValidate $newName', indent: true);
       MyLog.log(_classString, '_formValidate $newEmergencyInfo', indent: true);
@@ -160,7 +159,6 @@ class SettingsPageState extends State<SettingsPage> {
       MyLog.log(_classString, '_formValidate $actualPwd', indent: true);
       MyLog.log(_classString, '_formValidate $newPwd', indent: true);
       MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
-
 
       // Validation and Update Logic
       bool isValid = checkName(newName);
