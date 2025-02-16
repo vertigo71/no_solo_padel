@@ -28,16 +28,16 @@ class LoginPage extends StatefulWidget {
 class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isLoading = true; // Initially loading
-  String version = '';
+  String _version = '';
   static const String userId = 'username';
   static const String pwdId = 'password';
 
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
-      setState(() => version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(() => _version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
-      setState(() => version = '${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(() => _version = '${packageInfo.version}+${packageInfo.buildNumber}');
     }
   }
 
@@ -63,13 +63,17 @@ class LoginPageState extends State<LoginPage> {
       parametersFunction: appState.setAllParametersAndNotify,
       usersFunction: appState.setChangedUsersAndNotify,
     );
-    await fsHelpers.dataLoaded; //  Completer: future completed when initial data is loaded
+    // Wait for the initial data to be loaded from Firestore.
+    await fsHelpers.dataLoaded;
 
+    // Once data is loaded, update the state to indicate loading is complete.
     setState(() {
       _isLoading = false;
     });
+    MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=false', indent: true);
   }
 
+  /// dispose the listeners when the widget is removed
   @override
   void dispose() {
     Director director = context.read<Director>();
@@ -79,6 +83,7 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// build the widget tree
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
@@ -94,7 +99,7 @@ class LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  version,
+                  _version,
                   textAlign: TextAlign.end,
                 ),
               ),
