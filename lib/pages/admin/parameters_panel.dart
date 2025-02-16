@@ -10,9 +10,12 @@ import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
 import '../../utilities/transformation.dart';
 
+/// Class name identifier for logging
 final String _classString = 'ParametersPanel'.toUpperCase();
 
+/// Helper class to define form fields and their properties
 class _FormFields {
+  /// Labels for the form fields
   static List<String> text = [
     'Partidos: ver número de días', // matchDaysToView
     'Partidos: histórico de días a conservar', // matchDaysKeeping
@@ -22,31 +25,24 @@ class _FormFields {
     'Texto por defecto del comentario', // defaultCommentText
     'Debug: nivel mínimo (0 - ${MyLog.levels.length - 1})', // minDebugLevel
     'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
-    '', // not a textFormField // showLog
+    '', // Not a text field (showLog)
   ];
 
+  /// Allowed characters for input fields (regex)
   static List<String> listAllowedChars = [
-    // matchDaysToView
-    '[0-9]',
-    // matchDaysKeeping
-    '[0-9]',
-    // registerDaysAgoToView
-    '[0-9]',
-    // registerDaysKeeping
-    '[0-9]',
-    // fromDaysAgoToTelegram
-    '[0-9]',
-    // defaultCommentText free text
-    '',
-    // minDebugLevel
-    '[0-${MyLog.levels.length - 1}]',
-    // weekDaysMatch
-    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
-    // not a textFormField // showLog
-    ''
+    '[0-9]', // matchDaysToView
+    '[0-9]', // matchDaysKeeping
+    '[0-9]', // registerDaysAgoToView
+    '[0-9]', // registerDaysKeeping
+    '[0-9]', // fromDaysAgoToTelegram
+    '', // defaultCommentText (free text)
+    '[0-${MyLog.levels.length - 1}]', // minDebugLevel
+    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]', // weekDaysMatch
+    '' // Not a text field (showLog)
   ];
 }
 
+/// The main widget for the parameters panel
 class ParametersPanel extends StatefulWidget {
   const ParametersPanel({super.key});
 
@@ -54,8 +50,9 @@ class ParametersPanel extends StatefulWidget {
   ParametersPanelState createState() => ParametersPanelState();
 }
 
+/// State for ParametersPanel
 class ParametersPanelState extends State<ParametersPanel> {
-  final _formKey = GlobalKey<FormBuilderState>();
+  final _formKey = GlobalKey<FormBuilderState>(); // Form key
 
   late AppState _appState;
   late FsHelpers _fsHelpers;
@@ -65,6 +62,7 @@ class ParametersPanelState extends State<ParametersPanel> {
     super.initState();
     MyLog.log(_classString, 'initState');
 
+    // Retrieve instances from Provider
     _appState = context.read<AppState>();
     _fsHelpers = context.read<Director>().fsHelpers;
   }
@@ -80,41 +78,19 @@ class ParametersPanelState extends State<ParametersPanel> {
           key: _formKey,
           child: ListView(
             children: [
-              // parameter widgets except showLog
+              // Generate text fields dynamically (excluding showLog)
               for (var value in ParametersEnum.values)
                 if (value != ParametersEnum.showLog) _buildTextField(value),
 
-              // show log
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  FormBuilderField<bool>(
-                    name: ParametersEnum.showLog.name,
-                    initialValue: _appState.showLog,
-                    builder: (FormFieldState<bool> field) {
-                      return myCheckBox(
-                        context: context,
-                        value: field.value ?? false,
-                        onChanged: (bool? value) {
-                          field.didChange(value); // Updates FormBuilder's state
-                        },
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('¿Mostrar log a todos los usuarios?'),
-                ],
-              ),
+              // Show Log Checkbox
+              _buildShowLogCheckbox(),
 
-              // divider
-              const Divider(),
+              const Divider(), // Divider for UI separation
 
-              // Accept button
+              // Update Button
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(
-                  // crossAxisAlignment: CrossAxisAlignment.center,
-                  // mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
                       child: const Text('Actualizar'),
@@ -130,6 +106,7 @@ class ParametersPanelState extends State<ParametersPanel> {
     );
   }
 
+  /// Builds a FormBuilderTextField for a given parameter
   Widget _buildTextField(ParametersEnum parameter) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -141,26 +118,57 @@ class ParametersPanelState extends State<ParametersPanel> {
           border: const OutlineInputBorder(),
         ),
         keyboardType: TextInputType.text,
+
+        // Apply input formatters if allowed characters are specified
         inputFormatters: _FormFields.listAllowedChars[parameter.index].isNotEmpty
-            ? [UpperCaseTextFormatter(RegExp(r'' + _FormFields.listAllowedChars[parameter.index]), allow: true)]
+            ? [UpperCaseTextFormatter(RegExp(_FormFields.listAllowedChars[parameter.index]), allow: true)]
             : [],
+
+        // Validation logic
         validator: (value) => (value == null || value.isEmpty) ? 'No puede estar vacío' : null,
       ),
     );
   }
 
+  /// Builds the Show Log checkbox with FormBuilderField
+  Widget _buildShowLogCheckbox() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        FormBuilderField<bool>(
+          name: ParametersEnum.showLog.name,
+          initialValue: _appState.showLog,
+          builder: (FormFieldState<bool> field) {
+            return myCheckBox(
+              context: context,
+              value: field.value ?? false,
+              onChanged: (bool? value) {
+                field.didChange(value); // Updates FormBuilder's state
+              },
+            );
+          },
+        ),
+        const SizedBox(width: 10),
+        const Text('¿Mostrar log a todos los usuarios?'),
+      ],
+    );
+  }
+
+  /// Validates and submits the form
   Future<void> _formValidate() async {
     MyLog.log(_classString, '_formValidate');
 
-    // Validate returns true if the form is valid, or false otherwise.
+    // Check if the form is valid before proceeding
     if (_formKey.currentState!.saveAndValidate()) {
       MyParameters myParameters = MyParameters();
       final formValues = _formKey.currentState!.value;
 
       for (var value in ParametersEnum.values) {
         if (value == ParametersEnum.showLog) {
+          // Convert bool to string before saving
           myParameters.setValue(value, boolToStr(formValues[value.name] ?? false));
         } else if (value == ParametersEnum.weekDaysMatch) {
+          // Remove duplicate characters from weekDaysMatch
           myParameters.setValue(value, formValues[value.name].split('').toSet().join());
         } else {
           myParameters.setValue(value, formValues[value.name]);
@@ -170,10 +178,12 @@ class ParametersPanelState extends State<ParametersPanel> {
       try {
         await _fsHelpers.updateParameters(myParameters);
         if (mounted) {
-          showMessage(context, 'Los parámetros han sido actualizados. \n');
+          showMessage(context, 'Los parámetros han sido actualizados.');
         }
       } catch (e) {
-        if (mounted) showMessage(context, 'Error actualizando parámetros ');
+        if (mounted) {
+          showMessage(context, 'Error actualizando parámetros.');
+        }
       }
     }
   }
