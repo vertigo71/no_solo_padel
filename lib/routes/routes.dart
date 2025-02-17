@@ -12,7 +12,7 @@ final String _classString = 'Routes'.toUpperCase();
 
 // Define route names (recommended):
 class AppRoutes {
-  static const String loginPath = '/login';
+  static const String loginPath = '/';
   static const String login = 'login';
   static const String loadingPath = '/loading';
   static const String loading = 'loading';
