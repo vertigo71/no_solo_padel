@@ -11,6 +11,8 @@
 !.gitignore
 !README.md
 !LICENSE.md
+!deploy.bat
+!deploy.sh
 
 # Blacklist secret values
 /lib/firebase_options.dart

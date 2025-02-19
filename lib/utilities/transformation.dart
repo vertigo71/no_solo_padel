@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diacritic/diacritic.dart';
-import 'package:no_solo_padel_dev/interface/app_state.dart';
+
+import '../interface/app_state.dart';
 
 StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> transformer<T>(
     T Function(Map<String, dynamic> json) fromJson) =>

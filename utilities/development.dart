@@ -28,8 +28,10 @@ void errorPrint(dynamic error) {
 
 Future<void> copyPubspecToDevAndProd() async {
   final File fileIn = File(filePubSpecName);
-  final File fileProd = File(fileProdName);
-  final File fileDev = File(fileDevName);
+  // final File fileProd = File(fileProdName);
+  // final File fileDev = File(fileDevName);
+  final File fileProd = File(filePubSpecName);
+  final File fileDev = File(filePubSpecName);
   RegExp exp = RegExp(r"^name:");
   try {
     if (await fileIn.exists()) {

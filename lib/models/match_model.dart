@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
-import 'package:no_solo_padel_dev/models/user_model.dart';
 
 import '../database/fields.dart';
 import '../interface/app_state.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
 import 'debug.dart';
+import 'user_model.dart';
 
 final String _classString = '<md> MyMatch'.toLowerCase();
 

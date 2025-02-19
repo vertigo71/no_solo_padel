@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
-import 'package:no_solo_padel_dev/interface/app_state.dart';
 
+import '../interface/app_state.dart';
 import '../models/debug.dart';
 import '../models/register_model.dart';
 import '../models/match_model.dart';

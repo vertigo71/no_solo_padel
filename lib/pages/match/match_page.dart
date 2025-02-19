@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel_dev/interface/director.dart';
-import 'package:no_solo_padel_dev/interface/match_notifier.dart';
-import 'package:no_solo_padel_dev/models/match_model.dart';
 import 'package:provider/provider.dart';
 
+import '../../interface/director.dart';
+import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
+import '../../models/match_model.dart';
 import 'players_panel.dart';
 import 'config_panel.dart';
 import 'sorting_panel.dart';

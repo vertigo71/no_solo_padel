@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel_dev/interface/director.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../database/firestore_helpers.dart';
 import '../interface/app_state.dart';
+import '../interface/director.dart';
 import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../routes/routes.dart';

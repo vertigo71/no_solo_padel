@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
-import 'package:no_solo_padel_dev/utilities/environment.dart';
 import 'package:provider/provider.dart';
 
 import '../database/authentication.dart';
@@ -14,6 +13,7 @@ import '../models/debug.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/date.dart';
+import '../utilities/environment.dart';
 import '../utilities/misc.dart';
 import '../routes/routes.dart';
 
