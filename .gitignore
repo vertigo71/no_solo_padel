@@ -5,17 +5,15 @@
 # Whitelist directory
 !/lib
 !/assets
-!/utilities
 
 # Whitelist files
 !.gitignore
-!pubspec_dev.yaml
-!pubspec_prod.yaml
 !README.md
 !LICENSE.md
-!script.bat
 
-# secret values
+# Blacklist secret values
 /lib/firebase_options.dart
+/lib/firebase_options_dev.dart
+/lib/firebase_options_prod.dart
 /lib/secret.dart
 

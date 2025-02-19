@@ -15,15 +15,13 @@ class Environment {
   bool _isProduction = false;
   bool _initialized = false;
   PackageInfo? _packageInfo;
-  String _appName = '';
 
-  Future<void> initialize() async {
+  Future<void> initialize({required String flavor}) async {
     if (!_initialized) {
       _packageInfo = await PackageInfo.fromPlatform();
       _initialized = true;
       assert(_packageInfo != null);
-      _appName = _packageInfo!.appName;
-      if (_appName.contains('_dev')) {
+      if (flavor == 'dev') {
         _isProduction = false;
         MyLog.log(_classString, 'Development environment initialized', level: Level.INFO);
       } else {

@@ -1,10 +1,14 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'firebase_options.dart';
+import 'firebase_options_dev.dart';
+import 'firebase_options_prod.dart';
+
 import 'interface/director.dart';
 import 'models/debug.dart';
 import 'routes/routes.dart';
@@ -18,12 +22,34 @@ final String _classString = 'main'.toUpperCase();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // use flavors to choose between dev and prod
+  String flavor = const String.fromEnvironment('FLAVOR');
+  FirebaseOptions firebaseOptions;
+  if (flavor == 'dev') {
+    firebaseOptions = firebaseOptionsDev;
+  } else if (flavor == 'prod') {
+    firebaseOptions = firebaseOptionsProd;
+  } else {
+    runApp(MaterialApp(
+      // Display an error message
+      home: Scaffold(
+        body: Center(
+          child: Text('Error: Entorno $flavor no reconocido. Póngase en contacto con el administrador.'),
+        ),
+      ),
+    ));
+    return;
+  }
+
+  await Firebase.initializeApp(options: firebaseOptions);
   await initializeDateFormatting('es_ES', null); // Spanish
-  await Environment().initialize();
+  await Environment().initialize(flavor: flavor);
   await FlutterBugfender.init(getBugFenderAppId(),
       enableAndroidLogcatLogging: false, version: "1", build: "1", printToConsole: false);
   MyLog.initialize();
-  runApp(const MyApp());
+  MyLog.log(_classString, 'Environment = $flavor', level: Level.INFO);
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

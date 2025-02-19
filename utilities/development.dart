@@ -11,8 +11,8 @@ import 'dart:async';
 
 const String fileIndexWeb = 'web/index.html';
 const String filePubSpecName = 'pubspec.yaml';
-const String fileProdName = 'pubspec_prod.yaml';
-const String fileDevName = 'pubspec_dev.yaml';
+// const String fileProdName = 'pubspec_prod.yaml';
+// const String fileDevName = 'pubspec_dev.yaml';
 const String devString = 'name: no_solo_padel_dev';
 const String prodString = 'name: no_solo_padel';
 
