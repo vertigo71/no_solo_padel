@@ -35,7 +35,8 @@ class LoginPageState extends State<LoginPage> {
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
     if (Environment().isDevelopment) {
-      setState(() => _version = '${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
+      setState(
+          () => _version = 'DEVELOPMENT: ${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
     } else {
       setState(() => _version = '${packageInfo.version}+${packageInfo.buildNumber}');
     }

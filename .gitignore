@@ -13,6 +13,7 @@
 !LICENSE.md
 !deploy.bat
 !deploy.sh
+!pubspec.yaml
 
 # Blacklist secret values
 /lib/firebase_options.dart
