@@ -5,6 +5,7 @@
 # Whitelist directory
 !/lib
 !/assets
+!/config
 
 # Whitelist files
 !.gitignore
