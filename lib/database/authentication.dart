@@ -5,7 +5,6 @@ import '../models/debug.dart';
 
 final String _classString = '<db> AuthenticationHelper'.toLowerCase();
 
-// TODO: it could be static
 class AuthenticationHelper {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -124,9 +123,9 @@ class AuthenticationHelper {
       email: user.email ?? '',
       password: actualPwd,
     );
-    MyLog.log(_classString, '_getUserCredential authcred', myCustomObject: authCredential, indent: true );
+    MyLog.log(_classString, '_getUserCredential authcred', myCustomObject: authCredential, indent: true);
     UserCredential userCredential = await user.reauthenticateWithCredential(authCredential);
-    MyLog.log(_classString, '_getUserCredential usercred', myCustomObject: userCredential, indent: true );
+    MyLog.log(_classString, '_getUserCredential usercred', myCustomObject: userCredential, indent: true);
 
     return userCredential;
   }

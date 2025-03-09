@@ -5,7 +5,6 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'firebase_options.dart';
 import 'firebase_options_dev.dart';
 import 'firebase_options_prod.dart';
 
@@ -21,7 +20,6 @@ final String _classString = 'main'.toUpperCase();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // use flavors to choose between dev and prod
   String flavor = const String.fromEnvironment('FLAVOR');
