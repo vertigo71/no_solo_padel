@@ -11,8 +11,6 @@ import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'UserDeletePanel'.toUpperCase();
 
-// TODO: verify cant delete logged user
-
 class UserDeletePanel extends StatefulWidget {
   const UserDeletePanel({super.key});
 
