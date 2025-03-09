@@ -4,6 +4,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../models/debug.dart';
 
 final String _classString = 'Environment'.toUpperCase();
+const String devEnvironment = 'dev';
+const String prodEnvironment = 'prod';
 
 class Environment {
   static final Environment _singleton = Environment._internal();
@@ -21,7 +23,7 @@ class Environment {
       _packageInfo = await PackageInfo.fromPlatform();
       _initialized = true;
       assert(_packageInfo != null);
-      if (flavor == 'dev') {
+      if (flavor == devEnvironment) {
         _isProduction = false;
         MyLog.log(_classString, 'Development environment initialized', level: Level.INFO);
       } else {

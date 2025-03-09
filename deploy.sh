@@ -21,7 +21,7 @@ elif [ "$FLAVOR" == "prod" ]; then
     exit 1  # Or handle the error differently
   fi
 else
-  echo "Invalid flavor: $FLAVOR"
+  echo "Invalid flavor (dev/prod): $FLAVOR"
   exit 1
 fi
 

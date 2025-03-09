@@ -26,16 +26,17 @@ Future<void> main() async {
   // use flavors to choose between dev and prod
   String flavor = const String.fromEnvironment('FLAVOR');
   FirebaseOptions firebaseOptions;
-  if (flavor == 'dev') {
+  if (flavor == devEnvironment) {
     firebaseOptions = firebaseOptionsDev;
-  } else if (flavor == 'prod') {
+  } else if (flavor == prodEnvironment) {
     firebaseOptions = firebaseOptionsProd;
   } else {
     runApp(MaterialApp(
       // Display an error message
       home: Scaffold(
         body: Center(
-          child: Text('Error: Entorno $flavor no reconocido. Póngase en contacto con el administrador.'),
+          child: Text('Error: Entorno $flavor no reconocido. Póngase en contacto con el administrador. \n'
+              'Hay que definir la variable FLAVOR como dev o prod. Mirar el archivo deploy.sh'),
         ),
       ),
     ));
@@ -45,8 +46,18 @@ Future<void> main() async {
   await Firebase.initializeApp(options: firebaseOptions);
   await initializeDateFormatting('es_ES', null); // Spanish
   await Environment().initialize(flavor: flavor);
-  await FlutterBugfender.init(getBugFenderAppId(),
-      enableAndroidLogcatLogging: false, version: "1", build: "1", printToConsole: false);
+
+  await FlutterBugfender.init(
+    getBugFenderAppId(),
+    enableCrashReporting: true,
+    enableUIEventLogging: true,
+    enableAndroidLogcatLogging: false,
+    printToConsole: false,
+    version: "1",
+    build: "1",
+  );
+  FlutterBugfender.log("Executing: ${DateTime.now()}");
+
   MyLog.initialize();
   MyLog.log(_classString, 'Environment = $flavor', level: Level.INFO);
   runApp(MyApp());

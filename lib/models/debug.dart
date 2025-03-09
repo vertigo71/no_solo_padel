@@ -84,15 +84,16 @@ class MyLog {
     }
 
     // show in BugFender
-    Future<void> Function(String) logFunction = FlutterBugfender.info;
+    Future<void> Function(String) logFunction;
     if (level == Level.SEVERE) {
       logFunction = FlutterBugfender.error;
-    } else if (level == Level.INFO) {
+    } else if (level == Level.WARNING) {
       logFunction = FlutterBugfender.warn;
+    } else {
+      logFunction = FlutterBugfender.info;
     }
     logFunction('[$heading] $message'
         '${myCustomObject == null ? "" : "\nOBJECT: ${myCustomObject.toString()}"}'
         '${exception == null ? "" : "\nERROR: ${exception.toString()}"}');
   }
-
 }
