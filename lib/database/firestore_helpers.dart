@@ -360,7 +360,34 @@ class FsHelpers {
           collection: strDB(DBFields.parameters), doc: strDB(DBFields.parameters), fromJson: MyParameters.fromJson) ??
       MyParameters();
 
-  // TODO: not used
+  /// Retrieves a user from Firestore based on their email address.
+  /// Not used in the project
+  ///
+  /// This function queries the 'users' collection for a document where the 'email'
+  /// field matches the provided [email].
+  ///
+  /// If a single matching user is found, it returns a `MyUser` object created from
+  /// the document's data.
+  ///
+  /// If no users are found or if multiple users with the same email exist, it
+  /// returns `null`.
+  ///
+  /// Logs information and errors using the `MyLog` service.
+  ///
+  /// Parameters:
+  ///   - [email]: The email address of the user to retrieve.
+  ///
+  /// Returns:
+  ///   - A `Future` that resolves to a `MyUser` object if a single user is found,
+  ///     or `null` if no user is found or if an error occurs.
+  ///
+  /// Logs:
+  ///   - INFO: Logs the start of the retrieval process and when a user is not found.
+  ///   - SEVERE: Logs errors, multiple users with the same email, or when the
+  ///             retrieved document's data is empty or null.
+  ///
+  /// Throws:
+  ///   - Catches and logs any exceptions that occur during the Firestore query.
   Future<MyUser?> getUserByEmail(String email) async {
     MyLog.log(_classString, 'getUserByEmail $email', level: Level.INFO);
 
@@ -369,7 +396,7 @@ class FsHelpers {
           await _instance.collection(strDB(DBFields.users)).where('email', isEqualTo: email).get();
 
       if (querySnapshot.size > 1) {
-        MyLog.log(_classString, 'getUserByEmail $email number = ${querySnapshot.size}', level: Level.SEVERE);
+        MyLog.log(_classString, 'getUserByEmail $email incorrect number = ${querySnapshot.size}', level: Level.SEVERE);
         return null;
       }
       if (querySnapshot.size == 0) {

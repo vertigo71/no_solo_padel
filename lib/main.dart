@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'firebase_options_dev.dart';
+import 'firebase_options_stage.dart';
 import 'firebase_options_prod.dart';
 
 import 'interface/director.dart';
@@ -21,11 +22,13 @@ final String _classString = 'main'.toUpperCase();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // use flavors to choose between dev and prod
+  // use flavors to choose between dev, stage and prod
   String flavor = const String.fromEnvironment('FLAVOR');
   FirebaseOptions firebaseOptions;
   if (flavor == devEnvironment) {
     firebaseOptions = firebaseOptionsDev;
+  } else if (flavor == stageEnvironment) {
+    firebaseOptions = firebaseOptionsStage;
   } else if (flavor == prodEnvironment) {
     firebaseOptions = firebaseOptionsProd;
   } else {

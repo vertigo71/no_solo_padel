@@ -4,7 +4,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../models/debug.dart';
 
 final String _classString = 'Environment'.toUpperCase();
+// these variables must identical to the ones defined in deploy.sh
 const String devEnvironment = 'dev';
+const String stageEnvironment = 'stage';
 const String prodEnvironment = 'prod';
 
 class Environment {
@@ -14,7 +16,7 @@ class Environment {
 
   factory Environment() => _singleton;
 
-  bool _isProduction = false;
+  String _flavor = '';
   bool _initialized = false;
   PackageInfo? _packageInfo;
 
@@ -23,12 +25,15 @@ class Environment {
       _packageInfo = await PackageInfo.fromPlatform();
       _initialized = true;
       assert(_packageInfo != null);
-      if (flavor == devEnvironment) {
-        _isProduction = false;
+      _flavor = flavor;
+      if (flavor == prodEnvironment) {
+        MyLog.log(_classString, 'Production environment initialized', level: Level.INFO);
+      } else if (flavor == stageEnvironment) {
+        MyLog.log(_classString, 'Staging environment initialized', level: Level.INFO);
+      } else if (flavor == devEnvironment) {
         MyLog.log(_classString, 'Development environment initialized', level: Level.INFO);
       } else {
-        _isProduction = true;
-        MyLog.log(_classString, 'Production environment initialized', level: Level.INFO);
+        MyLog.log(_classString, 'CRUCIAL ERROR: Unknown environment initialized', level: Level.SEVERE);
       }
     }
   }
@@ -40,12 +45,17 @@ class Environment {
 
   bool get isProduction {
     assert(_initialized);
-    return _isProduction;
+    return _flavor == prodEnvironment;
   }
 
   bool get isDevelopment {
     assert(_initialized);
-    return !_isProduction;
+    return _flavor == devEnvironment;
+  }
+
+  bool get isStaging {
+    assert(_initialized);
+    return _flavor == stageEnvironment;
   }
 
   bool get isInitialized => _initialized;
