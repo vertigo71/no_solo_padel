@@ -46,6 +46,7 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: firebaseOptions);
   await initializeDateFormatting('es_ES', null); // Spanish
+  MyLog.initialize();
   await Environment().initialize(flavor: flavor);
 
   await FlutterBugfender.init(
@@ -58,9 +59,8 @@ Future<void> main() async {
     build: "1",
   );
   FlutterBugfender.log("Executing: ${DateTime.now()}");
-
-  MyLog.initialize();
   MyLog.log(_classString, 'Environment = $flavor', level: Level.INFO);
+
   runApp(MyApp());
 }
 

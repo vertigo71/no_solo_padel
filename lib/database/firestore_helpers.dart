@@ -81,6 +81,7 @@ class FsHelpers {
 
     // update parameters
     try {
+      MyLog.log(_classString, 'creating LISTENER for parameters ', indent: true );
       _paramListener = _instance
           .collection(strDB(DBFields.parameters))
           .doc(strDB(DBFields.parameters))
@@ -104,6 +105,7 @@ class FsHelpers {
 
     // update users
     try {
+      MyLog.log(_classString, 'creating LISTENER for users ', indent: true );
       _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen((snapshot) {
         MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
