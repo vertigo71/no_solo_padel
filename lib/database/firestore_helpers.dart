@@ -20,9 +20,8 @@ class FsHelpers {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
-  bool _usersDataLoaded = false;
-  bool _parametersDataLoaded = false;
-  final Completer<void> _dataLoadedCompleter = Completer<void>(); // completed after initial download
+  bool _usersLoaded = false;
+  bool _parametersLoaded = false;
 
   FsHelpers() {
     MyLog.log(_classString, 'Constructor');
@@ -81,23 +80,29 @@ class FsHelpers {
 
     // update parameters
     try {
-      MyLog.log(_classString, 'creating LISTENER for parameters ', indent: true );
-      _paramListener = _instance
-          .collection(strDB(DBFields.parameters))
-          .doc(strDB(DBFields.parameters))
-          .snapshots()
-          .listen((snapshot) {
-        MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
-        MyParameters? myParameters;
-        if (snapshot.exists && snapshot.data() != null) {
-          myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
-        }
-        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
-            level: Level.INFO, indent: true);
-        parametersFunction(myParameters ?? MyParameters());
-        _parametersDataLoaded = true;
-        _checkDataLoaded();
-      });
+      MyLog.log(_classString, 'creating LISTENER for parameters ', indent: true);
+      _paramListener =
+          _instance.collection(strDB(DBFields.parameters)).doc(strDB(DBFields.parameters)).snapshots().listen(
+        (snapshot) {
+          MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
+          MyParameters? myParameters;
+          if (snapshot.exists && snapshot.data() != null) {
+            myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
+          }
+          MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
+              level: Level.INFO, indent: true);
+          parametersFunction(myParameters ?? MyParameters());
+          MyLog.log(_classString, 'createListeners parameters loaded', level: Level.INFO, indent: true);
+          _parametersLoaded = true;
+        },
+        onError: (error) {
+          MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
+              level: Level.SEVERE, indent: true);
+        },
+        onDone: () {
+          MyLog.log(_classString, 'createListeners onDone loading parameters', level: Level.INFO, indent: true);
+        },
+      );
     } catch (e) {
       MyLog.log(_classString, 'createListeners parameters',
           myCustomObject: _paramListener, exception: e, level: Level.SEVERE, indent: true);
@@ -105,46 +110,54 @@ class FsHelpers {
 
     // update users
     try {
-      MyLog.log(_classString, 'creating LISTENER for users ', indent: true );
-      _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen((snapshot) {
-        MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
+      MyLog.log(_classString, 'creating LISTENER for users ', indent: true);
+      _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen(
+        (snapshot) {
+          MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
-        List<MyUser> addedUsers = [];
-        List<MyUser> modifiedUsers = [];
-        List<MyUser> removedUsers = [];
-        _downloadChangedUsers(
-          snapshot: snapshot,
-          addedUsers: addedUsers,
-          modifiedUsers: modifiedUsers,
-          removedUsers: removedUsers,
-        );
-        MyLog.log(
-            _classString,
-            'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
-            'removed=${removedUsers.length}',
-            level: Level.INFO,
-            indent: true);
-        usersFunction(addedUsers, modifiedUsers, removedUsers);
-        _usersDataLoaded = true;
-        _checkDataLoaded();
-      });
+          List<MyUser> addedUsers = [];
+          List<MyUser> modifiedUsers = [];
+          List<MyUser> removedUsers = [];
+          _downloadChangedUsers(
+            snapshot: snapshot,
+            addedUsers: addedUsers,
+            modifiedUsers: modifiedUsers,
+            removedUsers: removedUsers,
+          );
+          MyLog.log(
+              _classString,
+              'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
+              'removed=${removedUsers.length}',
+              level: Level.INFO,
+              indent: true);
+          usersFunction(addedUsers, modifiedUsers, removedUsers);
+          MyLog.log(_classString, 'createListeners users loaded', level: Level.INFO, indent: true);
+          _usersLoaded = true;
+        },
+        onError: (error) {
+          MyLog.log(_classString, 'createListeners onError loading users. Error: $error',
+              level: Level.SEVERE, indent: true);
+        },
+        onDone: () {
+          MyLog.log(_classString, 'createListeners onDone loading users', level: Level.INFO, indent: true);
+        },
+      );
     } catch (e) {
       MyLog.log(_classString, 'createListeners createListeners Error loading users',
           myCustomObject: _usersListener, exception: e, level: Level.SEVERE, indent: true);
     }
   }
 
-  void _checkDataLoaded() {
-    if (_usersDataLoaded && _parametersDataLoaded && !_dataLoadedCompleter.isCompleted) {
-      MyLog.log(_classString, '_checkDataLoaded Loading Completer completed...  ', level: Level.INFO);
-      _dataLoadedCompleter.complete();
-    }
-  }
+  Future<void> dataLoaded() async {
+    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...', level: Level.INFO);
 
-  /// completed when the completer _dataLoadedCompleter is complete
-  Future<void> get dataLoaded {
-    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...  ', level: Level.INFO);
-    return _dataLoadedCompleter.future;
+    int i = 1;
+    while (!(_usersLoaded && _parametersLoaded)) {
+      MyLog.log(_classString, '_dataLoaded waiting for data to load... iteration=${i++}', level: Level.INFO);
+      await Future.delayed(Duration(milliseconds: 200)); // Small delay to prevent blocking.
+    }
+
+    MyLog.log(_classString, 'dataLoaded: Loading users and parameters completed...', level: Level.INFO);
   }
 
   Future<void> disposeListeners() async {

@@ -66,6 +66,7 @@ class MyLog {
 
     // show in console
     _logger.log(level, "[$heading]$indentation$message", exception);
+
     if (myCustomObject != null) {
       try {
         if (myCustomObject is Map) {

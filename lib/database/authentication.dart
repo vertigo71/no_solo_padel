@@ -31,9 +31,12 @@ class AuthenticationHelper {
     MyLog.log(_classString, 'signIn $email', level: Level.INFO);
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      // Successful sign-in
       return null;
     } on FirebaseAuthException catch (e) {
       return _toSpanish(e);
+    } catch (e) {
+      return 'Error de autenticación: \n $e';
     }
   }
 

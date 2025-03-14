@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
@@ -60,18 +61,24 @@ class LoginPageState extends State<LoginPage> {
     // create listeners for users and parameters
     // any changes to those classes will change appState
     MyLog.log(_classString, '_initializeData createListeners for users and parameters. To be called only ONCE');
-    await fsHelpers.createListeners(
+    fsHelpers.createListeners(
       parametersFunction: appState.setAllParametersAndNotify,
       usersFunction: appState.setChangedUsersAndNotify,
     );
     // Wait for the initial data to be loaded from Firestore.
-    await fsHelpers.dataLoaded;
+    try {
+      MyLog.log(_classString, '_initializeData waiting for users and parameters to load', indent: true);
+      await fsHelpers.dataLoaded();
+    } catch (error) {
+      MyLog.log(_classString, 'ERROR _initializeData fsHelpers.dataLoaded. Error: $error',
+          level: Level.SEVERE, indent: true);
+    }
 
     // Once data is loaded, update the state to indicate loading is complete.
     setState(() {
       _isLoading = false;
     });
-    MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=false', indent: true);
+    MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=$_isLoading', indent: true);
   }
 
   /// dispose the listeners when the widget is removed
