@@ -29,12 +29,7 @@ class LoginPageState extends State<LoginPage> {
 
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
-    if (Environment().isDevelopment) {
-      setState(
-          () => _version = 'DEVELOPMENT: ${packageInfo.appName} ${packageInfo.version}+${packageInfo.buildNumber}');
-    } else {
-      setState(() => _version = '${packageInfo.version}+${packageInfo.buildNumber}');
-    }
+    setState(() => _version = 'v. ${packageInfo.version}');
   }
 
   @override
@@ -77,7 +72,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildListView() {
-    const String image = 'assets/images/no_solo_padel.jpg';
+    const String image = 'assets/images/beer_padel2.png';
     return ListView(
       padding: const EdgeInsets.all(30.0),
       children: [
@@ -85,7 +80,7 @@ class LoginPageState extends State<LoginPage> {
           image,
           height: 300,
         ),
-        const SizedBox(height: 20.0),
+        const SizedBox(height: 40.0),
         FormBuilder(
           key: _formKey,
           child: Column(
