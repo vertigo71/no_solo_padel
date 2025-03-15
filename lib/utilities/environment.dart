@@ -38,6 +38,8 @@ class Environment {
     }
   }
 
+  String get flavor => _flavor;
+
   PackageInfo get packageInfo {
     assert(_initialized);
     return _packageInfo!;

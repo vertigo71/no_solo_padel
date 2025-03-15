@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../database/authentication.dart';
@@ -41,7 +42,7 @@ class Director {
     MyLog.log(_classString, 'SignOut');
     _appState.resetLoggedUser();
     _fsHelpers.disposeListeners();
-    AuthenticationHelper.signOut();
+    if (FirebaseAuth.instance.currentUser != null) AuthenticationHelper.signOut();
   }
 
   /// delete old logs and matches
@@ -56,7 +57,7 @@ class Director {
     MyLog.log(_classString, 'createTestData');
 
     if (_appState.numUsers == 0) {
-      MyLog.log(_classString, 'createTestData: creating users', indent: true );
+      MyLog.log(_classString, 'createTestData: creating users', indent: true);
 
       // users
       const List<String> users = [
@@ -85,11 +86,11 @@ class Director {
         // update/create user in the Firestore database
         await fsHelpers.updateUser(myUser);
         // listener will update appState
-        MyLog.log(_classString, '>>> createTestData: new user = $myUser', indent: true );
+        MyLog.log(_classString, '>>> createTestData: new user = $myUser', indent: true);
       }
     }
 
-    MyLog.log(_classString, 'createTestData: creating matches', indent: true );
+    MyLog.log(_classString, 'createTestData: creating matches', indent: true);
     // wait until there are users in the appState
     while (_appState.numUsers == 0) {
       await Future.delayed(const Duration(milliseconds: 5));
@@ -108,7 +109,7 @@ class Director {
         match.isOpen = randomInts.first.isEven;
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
         match.players.addAll(randomInts.map((e) => users[e % users.length]).toSet());
-        MyLog.log(_classString, 'createTestData: update match = $match', indent: true );
+        MyLog.log(_classString, 'createTestData: update match = $match', indent: true);
         await fsHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
+import '../interface/director.dart';
 import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../secret.dart';
@@ -38,15 +40,19 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    MyLog.log(_classString, 'initState');
     getVersion();
+
+    // this page must only be presented when user is not logged in
+    // in some cases, back button comes to this page with a logged user
+    // this must be prevented
+    context.read<Director>().signOut();
   }
 
   /// build the widget tree
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
-
-    const String image = 'assets/images/no_solo_padel.jpg';
 
     return Scaffold(
       bottomNavigationBar: BottomAppBar(
@@ -60,64 +66,75 @@ class LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(30.0),
-        children: [
-          Image.asset(
-            image,
-            height: 300,
+      body: (Environment().isDevelopment || Environment().isStaging)
+          ? Banner(
+              message: Environment().flavor,
+              location: BannerLocation.topEnd,
+              child: _buildListView(), // Use the function
+            )
+          : _buildListView(),
+    );
+  }
+
+  Widget _buildListView() {
+    const String image = 'assets/images/no_solo_padel.jpg';
+    return ListView(
+      padding: const EdgeInsets.all(30.0),
+      children: [
+        Image.asset(
+          image,
+          height: 300,
+        ),
+        const SizedBox(height: 20.0),
+        FormBuilder(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // username
+              FormBuilderTextField(
+                name: userId,
+                autofillHints: const [AutofillHints.username],
+                initialValue: getInitialUserName(),
+                onSubmitted: (String? str) => _formValidate(),
+                inputFormatters: [
+                  LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
+                ],
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(labelText: 'Usuario'),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                ]),
+              ),
+
+              const SizedBox(height: 20.0),
+
+              // password
+              FormBuilderTextField(
+                name: pwdId,
+                autofillHints: const [AutofillHints.password],
+                initialValue: getInitialPwd(),
+                onSubmitted: (String? str) => _formValidate(),
+                keyboardType: TextInputType.text,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Contraseña'),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                ]),
+              ),
+
+              const SizedBox(height: 30.0),
+
+              // Validar
+              ElevatedButton(
+                onPressed: () => _formValidate(),
+                child: const Text('Entrar'),
+              ),
+              const SizedBox(height: 50.0),
+            ],
           ),
-          const SizedBox(height: 20.0),
-          FormBuilder(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // username
-                FormBuilderTextField(
-                  name: userId,
-                  autofillHints: const [AutofillHints.username],
-                  initialValue: getInitialUserName(),
-                  onSubmitted: (String? str) => _formValidate(),
-                  inputFormatters: [
-                    LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
-                  ],
-                  keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(labelText: 'Usuario'),
-                  validator: FormBuilderValidators.compose([
-                    FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-                  ]),
-                ),
-
-                const SizedBox(height: 20.0),
-
-                // password
-                FormBuilderTextField(
-                  name: pwdId,
-                  autofillHints: const [AutofillHints.password],
-                  initialValue: getInitialPwd(),
-                  onSubmitted: (String? str) => _formValidate(),
-                  keyboardType: TextInputType.text,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Contraseña'),
-                  validator: FormBuilderValidators.compose([
-                    FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-                  ]),
-                ),
-
-                const SizedBox(height: 30.0),
-
-                // Validar
-                ElevatedButton(
-                  onPressed: () => _formValidate(),
-                  child: const Text('Entrar'),
-                ),
-                const SizedBox(height: 50.0),
-              ],
-            ),
-          )
-        ],
-      ),
+        )
+      ],
     );
   }
 

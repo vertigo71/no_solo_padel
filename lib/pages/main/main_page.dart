@@ -47,16 +47,16 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    super.initState();
-
-    _director = context.read<Director>();
     MyLog.log(_classString, 'initState');
+    super.initState();
+    _director = context.read<Director>();
     _initializeData();
   }
 
   /// dispose the listeners when the widget is removed
   @override
   void dispose() {
+    MyLog.log(_classString, 'dispose');
     _director.fsHelpers.disposeListeners();
     super.dispose();
   }
