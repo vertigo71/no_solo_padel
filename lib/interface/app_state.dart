@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../utilities/date.dart';
 import '../models/debug.dart';

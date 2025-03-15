@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firestore_helpers.dart';

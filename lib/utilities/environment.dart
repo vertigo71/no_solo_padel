@@ -1,4 +1,4 @@
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/debug.dart';

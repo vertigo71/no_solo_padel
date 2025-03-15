@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
 

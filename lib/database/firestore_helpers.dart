@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/app_state.dart';
 import '../models/debug.dart';

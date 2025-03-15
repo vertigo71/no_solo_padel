@@ -1,4 +1,4 @@
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../database/fields.dart';
 import '../utilities/date.dart';

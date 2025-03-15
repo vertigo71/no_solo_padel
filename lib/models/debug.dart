@@ -1,62 +1,68 @@
 import 'dart:async';
-
 import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
-
+import 'package:simple_logger/simple_logger.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
+
 import '../utilities/http_helper.dart';
 
 class MyLog {
-  static final Logger _logger = Logger.root;
+  static final SimpleLogger _simpleLogger = SimpleLogger();
 
   /// initialize the logger
   static void initialize() {
-    _logger.level = Level.ALL;
-    _logger.onRecord.listen((LogRecord rec) {
-      var timeFormat = DateFormat('HH:mm:ss'); // Format: Hour:Minute:Second
-      String formattedTime = timeFormat.format(rec.time);
+    _simpleLogger.setLevel(Level.INFO);
+    _simpleLogger.formatter = (info) {
+      final formattedTime = DateFormat('HH:mm:ss.SSS').format(info.time);
+      final String levelString =
+          (info.level.name.length <= 5) ? info.level.name.padRight(5) : info.level.name.substring(0, 5);
 
-      print('[$formattedTime ${rec.level.name}]: ${rec.message}');
-      if (rec.error != null) {
-        print('  Error: ${rec.error}');
-        if (rec.stackTrace != null) {
-          print('${rec.stackTrace}');
-        }
-      }
-    });
+      return '$levelString $formattedTime ${info.message}';
+    };
   }
 
   static String loggedUserId = '';
 
-  // Level: ALL < FINEST < FINER < FINE < CONFIG < INFO < WARNING < SEVERE < SHOUT < OFF
-  static List<Level> levels = [Level.ALL, Level.FINE, Level.INFO, Level.SEVERE];
+  // list of values
+  // Level.LEVELS = [
+  //   ALL,
+  //   FINEST,
+  //   FINER,
+  //   FINE,
+  //   CONFIG,
+  //   INFO,
+  //   WARNING,
+  //   SEVERE,
+  //   SHOUT,
+  //   OFF
+  // ];
 
   /// convert an integer Debug level value into a Level variable
   /// if the int level is not valid, return Level.ALL
   static Level int2level(int level) {
-    if (level >= 0 && level < levels.length) {
-      return levels[level];
+    if (level >= 0 && level < Level.LEVELS.length) {
+      return Level.LEVELS[level];
     } else {
-      return Level.ALL;
+      return Level.INFO; // Default to INFO if invalid
     }
   }
 
   /// convert a level value into a int variable
   /// return -1 if not valid
-  static int level2int(Level level) => levels.indexOf(level);
+  static int level2int(Level level) => Level.LEVELS.indexOf(level);
 
-  static void setDebugLevel(Level level) => _logger.level = level;
+  static void setDebugLevel(Level level) => _simpleLogger.setLevel(level);
 
   static void log(String heading, Object message,
       {Object? myCustomObject, Object? exception, Level level = Level.FINE, bool indent = false}) {
-    String indentation = indent ? '     >> ' : ' ';
+    final String indentation = indent ? '     >> ' : ' ';
+    final String logMessage = "[$heading]$indentation$message";
 
     // show in Telegram
-    if (level == Level.SEVERE) {
+    if (level >= Level.SEVERE) {
       String errorMsg = '\n******************'
-          '\n****         *****'
-          '\n****  ERROR  *****'
-          '\n****         *****'
+          '\n**** *****'
+          '\n**** ERROR  *****'
+          '\n**** *****'
           '\n******************';
       errorMsg += '\n$message';
       if (myCustomObject != null) errorMsg += '\nOBJECT\n$myCustomObject';
@@ -65,7 +71,7 @@ class MyLog {
     }
 
     // show in console
-    _logger.log(level, "[$heading]$indentation$message", exception);
+    _simpleLogger.log(level, logMessage, error: exception);
 
     if (myCustomObject != null) {
       try {
@@ -77,16 +83,16 @@ class MyLog {
             if (num++ % 5 == 0) data += '\n\t';
           });
           data += "\n}";
-          _logger.log(level, '$indentation$indentation$data');
+          _simpleLogger.log(level, '$indentation$indentation$data');
         } else {
-          _logger.log(level, '$indentation$indentation$myCustomObject');
+          _simpleLogger.log(level, '$indentation$indentation$myCustomObject');
         }
       } catch (_) {}
     }
 
     // show in BugFender
     Future<void> Function(String) logFunction;
-    if (level == Level.SEVERE) {
+    if (level >= Level.SEVERE) {
       logFunction = FlutterBugfender.error;
     } else if (level == Level.WARNING) {
       logFunction = FlutterBugfender.warn;

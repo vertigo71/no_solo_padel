@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
+import 'package:collection/collection.dart';
 
 import '../../database/firestore_helpers.dart';
 import '../../interface/app_state.dart';
@@ -24,10 +26,17 @@ class _FormFields {
     'Registro: histórico de días a conservar', // registerDaysKeeping
     'Enviar telegram si partido es antes de (días)', // fromDaysAgoToTelegram
     'Texto por defecto del comentario', // defaultCommentText
-    'Debug: nivel mínimo (0 - ${MyLog.levels.length - 1})', // minDebugLevel
+    'Debug (${_generateDebugLevelsText()})', // minDebugLevel
     'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
     '', // Not a text field (showLog)
   ];
+
+  static String _generateDebugLevelsText() {
+    return Level.LEVELS
+        .mapIndexed(
+            (index, level) => level.name.length <= 5 ? '$index-${level.name}' : '$index-${level.name.substring(0, 5)}')
+        .join(',');
+  }
 
   /// Allowed characters for input fields (regex)
   static List<String> listAllowedChars = [
@@ -37,7 +46,7 @@ class _FormFields {
     '[0-9]', // registerDaysKeeping
     '[0-9]', // fromDaysAgoToTelegram
     '', // defaultCommentText (free text)
-    '[0-${MyLog.levels.length - 1}]', // minDebugLevel
+    '[0-${Level.LEVELS.length - 1}]', // minDebugLevel
     '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]', // weekDaysMatch
     '' // Not a text field (showLog)
   ];

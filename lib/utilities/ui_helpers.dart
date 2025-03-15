@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 import '../models/debug.dart';
 import '../models/user_model.dart';
 import 'app_colors.dart';

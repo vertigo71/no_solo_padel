@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:logging/logging.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../database/fields.dart';
 import '../interface/app_state.dart';
