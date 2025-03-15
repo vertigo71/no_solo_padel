@@ -75,13 +75,13 @@ class FsHelpers {
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
     MyLog.log(_classString, 'createListeners ');
-    assert(_paramListener == null);
-    assert(_usersListener == null);
 
     // update parameters
     try {
-      MyLog.log(_classString, 'creating LISTENER for parameters ', indent: true);
-      _paramListener =
+      MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
+          indent: true);
+      // only if null then create a new listener
+      _paramListener ??=
           _instance.collection(strDB(DBFields.parameters)).doc(strDB(DBFields.parameters)).snapshots().listen(
         (snapshot) {
           MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
@@ -110,8 +110,9 @@ class FsHelpers {
 
     // update users
     try {
-      MyLog.log(_classString, 'creating LISTENER for users ', indent: true);
-      _usersListener = _instance.collection(strDB(DBFields.users)).snapshots().listen(
+      MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
+      // only if null then create a new listener
+      _usersListener ??= _instance.collection(strDB(DBFields.users)).snapshots().listen(
         (snapshot) {
           MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
@@ -165,6 +166,8 @@ class FsHelpers {
     try {
       await _usersListener?.cancel();
       await _paramListener?.cancel();
+      _usersListener = null;
+      _paramListener = null;
     } catch (e) {
       MyLog.log(_classString, 'disposeListeners', exception: e, level: Level.SEVERE, indent: true);
     }

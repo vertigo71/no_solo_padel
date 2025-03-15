@@ -9,23 +9,28 @@ import '../models/debug.dart';
 
 final String _classString = 'Miscellaneous'.toUpperCase();
 
-void myAlertDialog(BuildContext context, String text) {
+void myAlertDialog(BuildContext context, String text, {Function? onDialogClosed}) {
   if (context.mounted) {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => AlertDialog(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              title: const Text('¡Atención!'),
-              content: Text(text),
-              actions: <Widget>[
-                ElevatedButton(
-                    child: const Text('Cerrar'),
-                    onPressed: () {
-                      context.pop();
-                    })
-              ],
-            ));
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('¡Atención!'),
+        content: Text(text),
+        actions: <Widget>[
+          ElevatedButton(
+            child: const Text('Cerrar'),
+            onPressed: () {
+              context.pop();
+              if (onDialogClosed != null) {
+                onDialogClosed(); // Call the optional callback function
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -117,7 +122,7 @@ List<int> getRandomList(int num, DateTime date) {
   MyLog.log(_classString, 'getRandomList', level: Level.ALL);
   int baseNum = date.millisecondsSinceEpoch;
   List<int> base = List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num).toSet().toList();
-  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.ALL );
+  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.ALL);
 
   List<int> all = List<int>.generate(num, (int index) => num - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();

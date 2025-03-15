@@ -36,6 +36,14 @@ class Director {
 
   FsHelpers get fsHelpers => _fsHelpers;
 
+  /// signOut from all systems
+  Future signOut() async {
+    MyLog.log(_classString, 'SignOut');
+    _appState.resetLoggedUser();
+    _fsHelpers.disposeListeners();
+    AuthenticationHelper.signOut();
+  }
+
   /// delete old logs and matches
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firestore
