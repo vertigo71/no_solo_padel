@@ -1,24 +1,21 @@
-
 #
-#
-# no_solo_padel
-#
+# No solo Pádel
 #
 Organising padel matches
 
-#version
+# version
 to modify version edit pubspec.yaml
 
-# development to production
-execute:
-    dart run utilities\development.dart
-    git push origin master
+# Flavors
+There 3 flavors: dev, stage and prod
+to deploy each flavor execute
+deploy.bat <FLAVOR>
 
+# Firestore rules
+Executing deploy.bat will overwrite firestore.rules
+Then deploy this firestore.rules into Firestore project
+It can be checked in the Firebase console
 
-# production to development
-execute:
-    git pull origin master
-    dart run utilities\production.dart
-
-
+# Firebase storage rules
+these rules are not overwritten. They are defined in Firebase console
 
