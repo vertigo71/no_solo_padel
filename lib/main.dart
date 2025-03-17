@@ -9,7 +9,6 @@ import 'firebase_options_dev.dart';
 import 'firebase_options_stage.dart';
 import 'firebase_options_prod.dart';
 
-import 'interface/authentication_service.dart';
 import 'interface/director.dart';
 import 'models/debug.dart';
 import 'routes/routes.dart';
@@ -71,9 +70,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building MyApp');
-
-    // Redirects initial page depending on user authentication
-    AuthenticationService(AppRouter.router);
 
     return MultiProvider(
       providers: [

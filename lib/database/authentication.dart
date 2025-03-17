@@ -29,6 +29,7 @@ class AuthenticationHelper {
   /// else return Error message
   static Future signIn({required String email, required String password}) async {
     MyLog.log(_classString, 'signIn $email', level: Level.INFO);
+
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       // Successful sign-in

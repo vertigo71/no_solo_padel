@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../database/authentication.dart';
@@ -42,7 +41,7 @@ class Director {
     MyLog.log(_classString, 'SignOut');
     _appState.resetLoggedUser();
     _fsHelpers.disposeListeners();
-    if (FirebaseAuth.instance.currentUser != null) AuthenticationHelper.signOut();
+    AuthenticationHelper.signOut();
   }
 
   /// delete old logs and matches

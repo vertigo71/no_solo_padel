@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../models/debug.dart';
 import '../pages/admin/admin_page.dart';
-import '../pages/initial.dart';
 import '../pages/main/main_page.dart';
 import '../pages/login.dart';
 import '../pages/match/match_page.dart';
@@ -12,8 +11,6 @@ final String _classString = 'Routes'.toUpperCase();
 
 // Define route names (recommended):
 class AppRoutes {
-  static const String initialPath = '/';
-  static const String initial = 'initial';
   static const String loginPath = '/login';
   static const String login = 'login';
   static const String mainPath = '/main';
@@ -26,13 +23,8 @@ class AppRoutes {
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.initialPath,
+    initialLocation: AppRoutes.loginPath,
     routes: <RouteBase>[
-      GoRoute(
-          path: AppRoutes.initialPath,
-          builder: (BuildContext context, GoRouterState state) => const InitialPage(),
-          name: AppRoutes.initial // Optional: give the route a name
-          ),
       GoRoute(
           path: AppRoutes.loginPath,
           builder: (BuildContext context, GoRouterState state) => const LoginPage(),

@@ -50,6 +50,7 @@ class _MainPageState extends State<MainPage> {
     MyLog.log(_classString, 'initState');
     super.initState();
     _director = context.read<Director>();
+    // initialize data
     _initializeData();
   }
 
@@ -65,34 +66,51 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
-    if (_errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (_isLoading) {
+      if (_errorMessage != null) {
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
-        myAlertDialog(context, _errorMessage!, onDialogClosed: () {
-          // user will be signedOut
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () async {
+                  MyLog.log(_classString, 'build error message button pressed', indent: true);
+                  await _director.signOut();
+                  // _errorMessage = null;
+                  MyLog.log(_classString, 'back to login', indent: true);
+                  AppRouter.router.goNamed(AppRoutes.login);
+                },
+                child: const Text('Volver al inicio'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        return _buildLoadingIndicator(); // Still loading, no error
+      }
+    } else {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          // if back is pressed, user will be signedOut
           // authStateChanges in initialPage will show loginPage
-          _director.signOut();
-          _errorMessage = null;
-        });
-      });
+          await _onBackPressed();
+        },
+        child: Scaffold(
+          appBar: _buildAppBar(context),
+          body: _widgetOptions.elementAt(_selectedIndex),
+          bottomNavigationBar: _buildBottomNavigationBar(),
+        ),
+      );
     }
-
-    return _isLoading
-        ? _buildLoadingIndicator()
-        : PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, result) async {
-              if (didPop) return;
-              // if back is pressed, user will be signedOut
-              // authStateChanges in initialPage will show loginPage
-              await _onBackPressed();
-            },
-            child: Scaffold(
-              appBar: _buildAppBar(context),
-              body: _widgetOptions.elementAt(_selectedIndex),
-              bottomNavigationBar: _buildBottomNavigationBar(),
-            ),
-          );
   }
 
   Widget _buildLoadingIndicator() {
@@ -204,7 +222,8 @@ class _MainPageState extends State<MainPage> {
     if (response.isEmpty || response == noOption) return;
     MyLog.log(_classString, '_onBackPressed response = $response', indent: true);
     await _director.signOut();
-    MyLog.log(_classString, '_onBackPressed before exiting', indent: true);
+    MyLog.log(_classString, 'back to login', indent: true);
+    AppRouter.router.goNamed(AppRoutes.login);
   }
 
   Future<void> _initializeData() async {

@@ -24,10 +24,7 @@ class AppState with ChangeNotifier {
   MyUser _loggedUser = MyUser();
 
   /// make loggedUser=none
-  void resetLoggedUser() {
-    MyLog.log(_classString, 'resetLoggedUser ');
-    setLoggedUser(MyUser(), notify: false);
-  }
+  void resetLoggedUser() => setLoggedUser(MyUser(), notify: false);
 
   /// parameter methods
   String getParameterValue(ParametersEnum parameter) => _parametersCache.getStrValue(parameter);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:no_solo_padel/routes/routes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
@@ -143,7 +144,7 @@ class LoginPageState extends State<LoginPage> {
       AuthenticationHelper.signIn(email: email, password: formData[pwdId]).then((result) async {
         if (result == null) {
           // user has signed in
-          // initialPage: authStateChanges will reroute to main page
+          AppRouter.router.goNamed(AppRoutes.main);
           MyLog.log(_classString, '_formValidate Back to login', indent: true);
           _formKey.currentState?.fields[pwdId]?.didChange('');
         } else {
