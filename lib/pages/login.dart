@@ -72,7 +72,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildListView() {
-    const String image = 'assets/images/beer_padel2.png';
+    const String image = 'assets/images/no_solo_padel_2025.png';
     return ListView(
       padding: const EdgeInsets.all(30.0),
       children: [

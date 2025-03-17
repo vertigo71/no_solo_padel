@@ -13,6 +13,7 @@ enum DBFields {
   userType,
   lastLogin,
   loginCount,
+  avatarUrl,
   matches, // matches
   comment,
   isOpen,
@@ -30,5 +31,5 @@ enum DBFields {
   showLog,
   register, // register
   date,
-  registerMessage
+  registerMessage,
 }

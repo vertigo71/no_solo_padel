@@ -1,0 +1,10 @@
+[
+  {
+    "origin": [
+      "https://flutter-no-solo-padel.web.app"
+    ],
+    "method": ["GET"],
+    "responseHeaders": ["*"],
+    "maxAgeSeconds": 3600
+  }
+]

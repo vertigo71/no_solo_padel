@@ -1,6 +1,8 @@
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +14,9 @@ import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
 
-// fields of the form
+final String _classString = 'SettingsPage'.toUpperCase();
+
+// fields of the form. avatarUrl field is taken care of individually
 enum _FormFieldsEnum { name, emergencyInfo, user, actualPwd, newPwd, checkPwd }
 
 class _FormFields {
@@ -34,8 +38,6 @@ class _FormFields {
   static const List<bool> mayBeEmpty = [false, true, false, true, true, true];
 }
 
-final String _classString = 'SettingsPage'.toUpperCase();
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -53,6 +55,8 @@ class SettingsPageState extends State<SettingsPage> {
   // not a GlobalKey<SettingsPageState>.
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
+  XFile? _imageFile; // To store the selected image
+
   late AppState appState;
   late FsHelpers fsHelpers;
 
@@ -69,6 +73,19 @@ class SettingsPageState extends State<SettingsPage> {
     // Build a Form widget using the _formKey created above.
     MyLog.log(_classString, 'Building');
 
+    NetworkImage? networkImage;
+    try {
+      networkImage = _imageFile != null
+          ? NetworkImage(_imageFile!.path)
+          : appState.getLoggedUser().avatarUrl != null
+              ? NetworkImage(appState.getLoggedUser().avatarUrl!)
+              : null;
+    } catch (e) {
+      MyLog.log(_classString, 'Error building image', level: Level.SEVERE, indent: true);
+      showMessage(context, 'Error obteniendo la imagen de perfil');
+      networkImage = null;
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -77,14 +94,43 @@ class SettingsPageState extends State<SettingsPage> {
           child: ListView(
             // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildFormField(_FormFieldsEnum.name),
-              _buildFormField(_FormFieldsEnum.emergencyInfo),
-              _buildFormField(_FormFieldsEnum.user),
-              _buildFormField(_FormFieldsEnum.actualPwd),
-              _buildFormField(_FormFieldsEnum.newPwd),
-              _buildFormField(_FormFieldsEnum.checkPwd),
+              ..._FormFieldsEnum.values.map((field) => _buildFormField(field)),
+              // Add this section for image upload
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.all(8.0),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black87, // Border color
+                      width: 0.5, // Border width
+                    ),
+                    borderRadius: BorderRadius.circular(6.0), // Rounded corners
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        // Show image if picked or uploaded
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.blueAccent,
+                          backgroundImage: networkImage,
+                          child: networkImage == null
+                              ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
+                              : null,
+                        ),
+                        const SizedBox(width: 40),
+                        ElevatedButton(
+                          onPressed: _pickImage,
+                          child: const Text('Seleccionar Avatar'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 26.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -101,6 +147,17 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  // Add the _pickImage function
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
   }
 
   Widget _buildFormField(_FormFieldsEnum formFieldEnum) {
@@ -161,13 +218,13 @@ class SettingsPageState extends State<SettingsPage> {
       MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
 
       // Validation and Update Logic
-      bool isValid = checkName(newName);
+      bool isValid = _checkName(newName);
       if (!isValid) return;
 
-      isValid = checkEmail(newEmail, actualPwd);
+      isValid = _checkEmail(newEmail, actualPwd);
       if (!isValid) return;
 
-      isValid = checkAllPwd(actualPwd, newPwd, checkPwd);
+      isValid = _checkAllPwd(actualPwd, newPwd, checkPwd);
       if (!isValid) return;
 
       const String yesOption = 'SI';
@@ -175,45 +232,52 @@ class SettingsPageState extends State<SettingsPage> {
       String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
 
-      bool anyUpdatedField = false;
+      List<String> updatedFields = [];
 
       // Handle name update
       if (newName != appState.getLoggedUser().name) {
-        isValid = await updateName(newName);
-        anyUpdatedField = true;
+        isValid = await _updateName(newName);
         if (!isValid) return;
+        updatedFields.add('Nombre');
       }
 
       // Handle emergency info update
       if (newEmergencyInfo != appState.getLoggedUser().emergencyInfo) {
-        isValid = await updateEmergencyInfo(newEmergencyInfo);
-        anyUpdatedField = true;
+        isValid = await _updateEmergencyInfo(newEmergencyInfo, updatedFields);
         if (!isValid) return;
+        updatedFields.add('Información de emergencia');
       }
 
       // Handle email update
       if (newEmail != appState.getLoggedUser().email) {
-        isValid = await updateEmail(newEmail, actualPwd);
-        anyUpdatedField = true;
+        isValid = await _updateEmail(newEmail, actualPwd, updatedFields);
         if (!isValid) return;
+        updatedFields.add('Correo');
       }
 
-// Handle password update
+      // Handle password update
       if (newPwd.isNotEmpty) {
-        isValid = await updatePwd(actualPwd, newPwd);
-        anyUpdatedField = true;
+        isValid = await _updatePwd(actualPwd, newPwd);
         if (!isValid) return;
+        updatedFields.add('Contraseña');
       }
 
-      if (anyUpdatedField) {
-        if (mounted) showMessage(context, 'Los datos han sido actualizados');
+      // Handle avatar upload
+      if (_imageFile != null) {
+        isValid = await _updateAvatar(updatedFields);
+        if (!isValid) return;
+        updatedFields.add('Avatar');
+      }
+
+      if (updatedFields.isNotEmpty) {
+        if (mounted) showMessage(context, 'Los campos: ${updatedFields.join(', ')}\nhan sido actualizados');
       } else {
         if (mounted) showMessage(context, 'Ningún dato para actualizar');
       }
     }
   }
 
-  bool checkName(String newName) {
+  bool _checkName(String newName) {
     // newName is not somebody else's
 
     MyLog.log(_classString, 'checkName $newName');
@@ -229,7 +293,7 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<bool> updateName(String newName) async {
+  Future<bool> _updateName(String newName) async {
     MyLog.log(_classString, 'updateName $newName');
 
     MyUser user = appState.getLoggedUser();
@@ -238,7 +302,6 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await fsHelpers.updateUser(user);
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al actualizar el nombre del usuario');
       MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario',
           level: Level.SEVERE, indent: true);
       return false;
@@ -247,7 +310,25 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  bool checkEmail(String newEmail, String actualPwd) {
+  Future<bool> _updateEmergencyInfo(String newEmergencyInfo, final List<String> updatedFields) async {
+    MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
+
+    MyUser user = appState.getLoggedUser();
+    user.emergencyInfo = newEmergencyInfo;
+
+    try {
+      await fsHelpers.updateUser(user);
+    } catch (e) {
+      _showErrorMessage('Error al actualizar la información de emergencia del usuario', updatedFields);
+      MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
+          level: Level.SEVERE, indent: true);
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _checkEmail(String newEmail, String actualPwd) {
     // newEmail is not somebody else's
     MyLog.log(_classString, 'checkEmail $newEmail');
 
@@ -265,7 +346,7 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<bool> updateEmail(String newEmail, String actualPwd) async {
+  Future<bool> _updateEmail(String newEmail, String actualPwd, final List<String> updatedFields) async {
     MyLog.log(_classString, 'updateEmail $newEmail');
 
     String response = await AuthenticationHelper.updateEmail(newEmail: newEmail, actualPwd: actualPwd);
@@ -281,7 +362,7 @@ class SettingsPageState extends State<SettingsPage> {
     try {
       await fsHelpers.updateUser(loggedUser);
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al actualizar el correo del usuario en la base de datos');
+      _showErrorMessage('Error al actualizar el correo del usuario en la base de datos', updatedFields);
       MyLog.log(_classString, 'updateEmail Error al actualizar el correo del usuario en la base de datos',
           level: Level.SEVERE, indent: true);
       return false;
@@ -290,7 +371,7 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  bool checkAllPwd(String actualPwd, String newPwd, String checkPwd) {
+  bool _checkAllPwd(String actualPwd, String newPwd, String checkPwd) {
     MyLog.log(_classString, 'checkAllPwd');
 
     if (newPwd != checkPwd) {
@@ -304,7 +385,7 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<bool> updatePwd(String actualPwd, String newPwd) async {
+  Future<bool> _updatePwd(String actualPwd, String newPwd) async {
     MyLog.log(_classString, 'updatePwd');
 
     String response = await AuthenticationHelper.updatePwd(actualPwd: actualPwd, newPwd: newPwd);
@@ -316,21 +397,33 @@ class SettingsPageState extends State<SettingsPage> {
     return true;
   }
 
-  Future<bool> updateEmergencyInfo(String newEmergencyInfo) async {
-    MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
-
-    MyUser user = appState.getLoggedUser();
-    user.emergencyInfo = newEmergencyInfo;
+  Future<bool> _updateAvatar(final List<String> updatedFields) async {
+    MyLog.log(_classString, 'Uploading new avatar', indent: true);
+    final String fileName = appState.getLoggedUser().id;
+    final firebase_storage.Reference storageRef =
+        firebase_storage.FirebaseStorage.instance.ref().child('avatars/$fileName');
+    final firebase_storage.UploadTask uploadTask = storageRef.putData(await _imageFile!.readAsBytes());
 
     try {
-      await fsHelpers.updateUser(user);
+      final firebase_storage.TaskSnapshot snapshot = await uploadTask;
+
+      if (snapshot.state == firebase_storage.TaskState.success) {
+        appState.getLoggedUser().avatarUrl = await snapshot.ref.getDownloadURL();
+        return true; // Return true on success
+      } else {
+        MyLog.log(_classString, 'Avatar upload failed: ${snapshot.state}', level: Level.SEVERE);
+        _showErrorMessage('Error al subir el avatar\n${snapshot.state.name}', updatedFields);
+        return false;
+      }
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al actualizar la información de emergencia del usuario');
-      MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
-          level: Level.SEVERE, indent: true);
+      MyLog.log(_classString, 'Error al subir el avatar: $e', level: Level.SEVERE);
+      _showErrorMessage('Error al subir el avatar\n$e', updatedFields);
       return false;
     }
+  }
 
-    return true;
+  void _showErrorMessage(String message, final List<String> updatedFields) {
+    if (updatedFields.isNotEmpty) message += '\n\n(se ha actualizado los campos: ${updatedFields.join(', ')})';
+    showMessage(context, message);
   }
 }

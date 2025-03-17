@@ -18,6 +18,7 @@ class MyUser {
   UserType userType;
   Date? lastLogin;
   int loginCount;
+  String? avatarUrl;
 
   MyUser({
     this.id = '',
@@ -27,6 +28,7 @@ class MyUser {
     this.userType = UserType.basic,
     this.lastLogin,
     this.loginCount = 0,
+    this.avatarUrl,
   }) : _email = email.toLowerCase();
 
   MyUser copyWith({
@@ -37,6 +39,7 @@ class MyUser {
     UserType? userType,
     Date? lastLogin,
     int? loginCount,
+    String? avatarUrl,
   }) {
     return MyUser(
       id: id ?? this.id,
@@ -46,6 +49,7 @@ class MyUser {
       userType: userType ?? this.userType,
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 
@@ -58,6 +62,7 @@ class MyUser {
       userType: user.userType,
       lastLogin: user.lastLogin,
       loginCount: user.loginCount,
+      avatarUrl: user.avatarUrl,
     );
   }
 
@@ -94,6 +99,7 @@ class MyUser {
       userType: intToUserType(json[DBFields.userType.name]),
       lastLogin: Date.parse(json[DBFields.lastLogin.name]),
       loginCount: json[DBFields.loginCount.name] ?? 0,
+      avatarUrl: json[DBFields.avatarUrl.name],
     );
   }
 
@@ -109,6 +115,7 @@ class MyUser {
       DBFields.userType.name: userType.index, // int
       DBFields.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '', // String
       DBFields.loginCount.name: loginCount, // int
+      DBFields.avatarUrl.name: avatarUrl,
     };
   }
 
@@ -116,23 +123,14 @@ class MyUser {
   bool operator ==(Object other) {
     if (identical(this, other)) return true; // Check for identity first
     if (other is! MyUser) return false; // Check for type
-    return id == other.id &&
-        name == other.name &&
-        emergencyInfo == other.emergencyInfo &&
-        email == other.email &&
-        userType == other.userType &&
-        lastLogin == other.lastLogin &&
-        loginCount == other.loginCount;
+    return id == other.id && name == other.name && email == other.email && userType == other.userType;
   }
 
   @override
   int get hashCode => Object.hash(
         id,
         name,
-        emergencyInfo,
         email,
         userType,
-        lastLogin,
-        loginCount,
       );
 }
