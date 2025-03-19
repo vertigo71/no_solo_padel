@@ -111,22 +111,32 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Row(
+                    child: Column(
                       children: [
-                        // Show image if picked or uploaded
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.blueAccent,
-                          backgroundImage: imageProvider,
-                          child: imageProvider == null
-                              ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
-                              : null,
+                        Row(
+                          children: [
+                            // Show image if picked or uploaded
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.blueAccent,
+                              backgroundImage: imageProvider,
+                              child: imageProvider == null
+                                  ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
+                                  : null,
+                            ),
+                            const SizedBox(width: 40),
+                            ElevatedButton(
+                              onPressed: _pickImage,
+                              child: const Text('Seleccionar Avatar'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 40),
-                        ElevatedButton(
-                          onPressed: _pickImage,
-                          child: const Text('Seleccionar Avatar'),
-                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                            '¡Atención! puede tardar un poco en cargar la imagen, '
+                            'en caso que esta tenga mucha resolución.'
+                            'Un poco de paciencia.',
+                            style: TextStyle(fontStyle: FontStyle.italic)),
                       ],
                     ),
                   ),
@@ -162,6 +172,9 @@ class SettingsPageState extends State<SettingsPage> {
           setState(() {
             _compressedImageData = compressedBytes;
           });
+        } else {
+          MyLog.log(_classString, 'Error loading avatar', level: Level.SEVERE, indent: true);
+          if (mounted) showMessage(context, 'Error al cargar la imagen');
         }
       }).catchError((e) {
         MyLog.log(_classString, 'Error shrinking avatar: $e', level: Level.SEVERE, indent: true);
@@ -171,32 +184,26 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<Uint8List?> _shrinkAvatar(XFile imageFile, {required int maxWidth, required int maxHeight}) async {
-    try {
-      MyLog.log('_classString', 'Shrinking avatar');
-      MyLog.log('_classString', 'Shrinking avatar: ${imageFile.path}');
+    MyLog.log('_classString', 'Shrinking avatar: ${imageFile.path}');
 
-      Uint8List imageBytes = await imageFile.readAsBytes();
-      img.Image? image = img.decodeImage(imageBytes);
+    Uint8List imageBytes = await imageFile.readAsBytes();
+    img.Image? image = img.decodeImage(imageBytes);
 
-      if (image == null) {
-        MyLog.log('_classString', 'Error decoding image', indent: true, level: Level.SEVERE);
-        return null;
-      }
-
-      MyLog.log('_classString', 'Avatar original: ${image.width}x${image.height} size: ${await imageFile.length()}');
-      img.Image resizedImage = img.copyResize(image, width: maxWidth, height: maxHeight, maintainAspect: true);
-      MyLog.log('_classString',
-          'Avatar resized: ${resizedImage.width}x${resizedImage.height} size: ${resizedImage.lengthInBytes}');
-
-      int quality = 90;
-      Uint8List compressedBytes = img.encodeJpg(resizedImage, quality: quality);
-      MyLog.log('_classString', 'Compressed avatar: size: ${compressedBytes.lengthInBytes}');
-
-      return compressedBytes;
-    } catch (e) {
-      MyLog.log('_classString', 'Error shrinking avatar: $e', level: Level.SEVERE);
+    if (image == null) {
+      MyLog.log('_classString', 'Error decoding image', indent: true, level: Level.SEVERE);
       return null;
     }
+
+    MyLog.log('_classString', 'Avatar original: ${image.width}x${image.height} size: ${await imageFile.length()}');
+    img.Image resizedImage = img.copyResize(image, width: maxWidth, height: maxHeight, maintainAspect: true);
+    MyLog.log('_classString',
+        'Avatar resized: ${resizedImage.width}x${resizedImage.height} size: ${resizedImage.lengthInBytes}');
+
+    int quality = 90;
+    Uint8List compressedBytes = img.encodeJpg(resizedImage, quality: quality);
+    MyLog.log('_classString', 'Compressed avatar: size: ${compressedBytes.lengthInBytes}');
+
+    return compressedBytes;
   }
 
   Widget _buildFormField(_FormFieldsEnum formFieldEnum) {
