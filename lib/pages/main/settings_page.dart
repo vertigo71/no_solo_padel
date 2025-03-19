@@ -185,8 +185,8 @@ class SettingsPageState extends State<SettingsPage> {
       quality: 95,
     );
 
-    MyLog.log('_classString', 'Avatar original (kB): ${imageBytes.length/1000}');
-    MyLog.log('_classString', 'Avatar compressed (kB): ${compressedImage.length/1000}');
+    MyLog.log('_classString', 'Avatar original (kB): ${imageBytes.length / 1000}');
+    MyLog.log('_classString', 'Avatar compressed (kB): ${compressedImage.length / 1000}');
 
     return compressedImage;
   }
