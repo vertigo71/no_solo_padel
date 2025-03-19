@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/app_state.dart';
@@ -16,14 +18,14 @@ import 'fields.dart';
 final String _classString = '<db> FsHelper'.toLowerCase();
 
 /// Firestore helpers
-class FsHelpers {
+class FbHelpers {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
   bool _usersLoaded = false;
   bool _parametersLoaded = false;
 
-  FsHelpers() {
+  FbHelpers() {
     MyLog.log(_classString, 'Constructor');
   }
 
@@ -179,7 +181,7 @@ class FsHelpers {
     required List<MyUser> modifiedUsers,
     required List<MyUser> removedUsers,
   }) {
-    MyLog.log(_classString, '_downloadChangedUsers update #users = ${snapshot.docs.length}', level: Level.INFO);
+    MyLog.log(_classString, '_downloadChangedUsers update #users = ${snapshot.docChanges.length}', level: Level.INFO);
 
     addedUsers.clear();
     modifiedUsers.clear();
@@ -563,6 +565,7 @@ class FsHelpers {
   }
 
   Future<void> updateUser(MyUser myUser) async {
+    MyLog.log(_classString, 'updateUser = $myUser');
     if (myUser.id == '') {
       MyLog.log(_classString, 'updateUser ', myCustomObject: myUser, level: Level.SEVERE);
     }
@@ -684,5 +687,55 @@ class FsHelpers {
       throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
           'Error = $onError');
     });
+  }
+
+  /// Uploads raw data (Uint8List) to Firebase Storage.
+  ///
+  /// This function takes a filename and raw data as input, uploads the data to
+  /// Firebase Storage under the specified filename, and returns the download URL
+  /// of the uploaded file if the upload is successful.
+  ///
+  /// Parameters:
+  ///   filename: The name of the file to be uploaded (including path if needed).
+  ///   data: The raw data (Uint8List) to be uploaded.
+  ///
+  /// Returns:
+  ///   A Future that completes with the download URL of the uploaded file (String)
+  ///   if the upload is successful, or null if the upload fails.
+  ///
+  /// Throws:
+  ///   An Exception if the upload fails, containing the error message
+  Future<String?> uploadDataToStorage(final String filename, final Uint8List data) async {
+    MyLog.log(_classString, 'Uploading new file', indent: true);
+
+    // Create a reference to the storage location where the file will be uploaded.
+    final Reference storageRef = FirebaseStorage.instance.ref().child(filename);
+
+    // Start the upload task by putting the raw data to the storage reference.
+    final UploadTask uploadTask = storageRef.putData(data);
+
+    try {
+      // Wait for the upload task to complete and get the task snapshot.
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Check if the upload was successful.
+      if (snapshot.state == TaskState.success) {
+        // Get the download URL of the uploaded file.
+        String fileUrl = await snapshot.ref.getDownloadURL();
+
+        MyLog.log(_classString, 'File uploaded successfully: $fileUrl', indent: true);
+
+        // Return the download URL.
+        return fileUrl;
+      } else {
+        // If the upload failed, log the error and throw an exception.
+        MyLog.log(_classString, 'File upload failed: ${snapshot.state}', level: Level.SEVERE);
+        throw Exception('(Estado=${snapshot.state})');
+      }
+    } catch (e) {
+      // If an exception occurred during the upload, log the error and throw an exception.
+      MyLog.log(_classString, 'File upload failed: $e', level: Level.SEVERE);
+      throw Exception('Error al subir el archivo $filename\nError: $e');
+    }
   }
 }

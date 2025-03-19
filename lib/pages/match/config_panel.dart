@@ -3,7 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
@@ -199,7 +199,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       String message = 'Los datos han sido actualizados';
       try {
         MyMatch oldMatch = context.read<MatchNotifier>().match;
-        FsHelpers fsHelpers = context.read<Director>().fsHelpers;
+        FbHelpers fsHelpers = context.read<Director>().fsHelpers;
         AppState appState = context.read<AppState>();
 
         // upload firebase

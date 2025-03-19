@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -24,7 +24,7 @@ class _InformationPageState extends State<InformationPage> {
   List<MyMatch>? _allLoggedUserMatches;
   late MyUser _loggedUser;
   late AppState appState;
-  late FsHelpers fsHelpers;
+  late FbHelpers fsHelpers;
 
   @override
   void initState() {

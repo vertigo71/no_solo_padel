@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:collection/collection.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -65,7 +65,7 @@ class ParametersPanelState extends State<ParametersPanel> {
   final _formKey = GlobalKey<FormBuilderState>(); // Form key
 
   late AppState _appState;
-  late FsHelpers _fsHelpers;
+  late FbHelpers _fsHelpers;
 
   @override
   void initState() {

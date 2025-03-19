@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../database/authentication.dart';
 import '../database/fields.dart';
-import '../database/firestore_helpers.dart';
+import '../database/firebase_helpers.dart';
 import '../secret.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
@@ -18,7 +18,7 @@ final String _classString = '<st> Director'.toLowerCase();
 /// knows about all processes
 class Director {
   final AppState _appState;
-  final FsHelpers _fsHelpers = FsHelpers();
+  final FbHelpers _fsHelpers = FbHelpers();
 
   Director({required AppState appState}) : _appState = appState {
     MyLog.log(_classString, 'Constructor');
@@ -34,7 +34,7 @@ class Director {
 
   AppState get appState => _appState;
 
-  FsHelpers get fsHelpers => _fsHelpers;
+  FbHelpers get fsHelpers => _fsHelpers;
 
   /// signOut from all systems
   Future signOut() async {

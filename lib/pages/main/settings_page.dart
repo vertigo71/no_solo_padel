@@ -1,4 +1,5 @@
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -7,7 +8,7 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -55,10 +56,10 @@ class SettingsPageState extends State<SettingsPage> {
   // not a GlobalKey<SettingsPageState>.
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
-  XFile? _imageFile; // To store the selected image
+  Uint8List? _compressedImageData; // Store the compressed image disk file in memory
 
   late AppState appState;
-  late FsHelpers fsHelpers;
+  late FbHelpers fsHelpers;
 
   @override
   void initState() {
@@ -73,17 +74,19 @@ class SettingsPageState extends State<SettingsPage> {
     // Build a Form widget using the _formKey created above.
     MyLog.log(_classString, 'Building');
 
-    NetworkImage? networkImage;
+    ImageProvider<Object>? imageProvider;
     try {
-      networkImage = _imageFile != null
-          ? NetworkImage(_imageFile!.path)
-          : appState.getLoggedUser().avatarUrl != null
-              ? NetworkImage(appState.getLoggedUser().avatarUrl!)
-              : null;
+      if (_compressedImageData != null) {
+        // if user has picked an image, use it
+        imageProvider = MemoryImage(_compressedImageData!);
+      } else if (appState.getLoggedUser().avatarUrl != null) {
+        // else, if there is an image in firebase storage
+        imageProvider = NetworkImage(appState.getLoggedUser().avatarUrl!);
+      }
     } catch (e) {
       MyLog.log(_classString, 'Error building image', level: Level.SEVERE, indent: true);
       showMessage(context, 'Error obteniendo la imagen de perfil');
-      networkImage = null;
+      imageProvider = null;
     }
 
     return Scaffold(
@@ -114,8 +117,8 @@ class SettingsPageState extends State<SettingsPage> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.blueAccent,
-                          backgroundImage: networkImage,
-                          child: networkImage == null
+                          backgroundImage: imageProvider,
+                          child: imageProvider == null
                               ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
                               : null,
                         ),
@@ -154,9 +157,45 @@ class SettingsPageState extends State<SettingsPage> {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _imageFile = pickedFile;
+      _shrinkAvatar(pickedFile, maxHeight: 256, maxWidth: 256).then((Uint8List? compressedBytes) {
+        if (compressedBytes != null) {
+          setState(() {
+            _compressedImageData = compressedBytes;
+          });
+        }
+      }).catchError((e) {
+        MyLog.log(_classString, 'Error shrinking avatar: $e', level: Level.SEVERE, indent: true);
+        if (mounted) showMessage(context, 'Error al comprimir la imagen\n$e');
       });
+    }
+  }
+
+  Future<Uint8List?> _shrinkAvatar(XFile imageFile, {required int maxWidth, required int maxHeight}) async {
+    try {
+      MyLog.log('_classString', 'Shrinking avatar');
+      MyLog.log('_classString', 'Shrinking avatar: ${imageFile.path}');
+
+      Uint8List imageBytes = await imageFile.readAsBytes();
+      img.Image? image = img.decodeImage(imageBytes);
+
+      if (image == null) {
+        MyLog.log('_classString', 'Error decoding image', indent: true, level: Level.SEVERE);
+        return null;
+      }
+
+      MyLog.log('_classString', 'Avatar original: ${image.width}x${image.height} size: ${await imageFile.length()}');
+      img.Image resizedImage = img.copyResize(image, width: maxWidth, height: maxHeight, maintainAspect: true);
+      MyLog.log('_classString',
+          'Avatar resized: ${resizedImage.width}x${resizedImage.height} size: ${resizedImage.lengthInBytes}');
+
+      int quality = 90;
+      Uint8List compressedBytes = img.encodeJpg(resizedImage, quality: quality);
+      MyLog.log('_classString', 'Compressed avatar: size: ${compressedBytes.lengthInBytes}');
+
+      return compressedBytes;
+    } catch (e) {
+      MyLog.log('_classString', 'Error shrinking avatar: $e', level: Level.SEVERE);
+      return null;
     }
   }
 
@@ -263,7 +302,7 @@ class SettingsPageState extends State<SettingsPage> {
       }
 
       // Handle avatar upload
-      if (_imageFile != null) {
+      if (_compressedImageData != null) {
         isValid = await _updateAvatar(updatedFields);
         if (!isValid) return;
         updatedFields.add('Avatar');
@@ -400,21 +439,11 @@ class SettingsPageState extends State<SettingsPage> {
   Future<bool> _updateAvatar(final List<String> updatedFields) async {
     MyLog.log(_classString, 'Uploading new avatar', indent: true);
     final String fileName = appState.getLoggedUser().id;
-    final firebase_storage.Reference storageRef =
-        firebase_storage.FirebaseStorage.instance.ref().child('avatars/$fileName');
-    final firebase_storage.UploadTask uploadTask = storageRef.putData(await _imageFile!.readAsBytes());
-
     try {
-      final firebase_storage.TaskSnapshot snapshot = await uploadTask;
-
-      if (snapshot.state == firebase_storage.TaskState.success) {
-        appState.getLoggedUser().avatarUrl = await snapshot.ref.getDownloadURL();
-        return true; // Return true on success
-      } else {
-        MyLog.log(_classString, 'Avatar upload failed: ${snapshot.state}', level: Level.SEVERE);
-        _showErrorMessage('Error al subir el avatar\n${snapshot.state.name}', updatedFields);
-        return false;
-      }
+      appState.getLoggedUser().avatarUrl =
+          await fsHelpers.uploadDataToStorage('avatars/$fileName', _compressedImageData!);
+      await fsHelpers.updateUser(appState.getLoggedUser());
+      return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: $e', level: Level.SEVERE);
       _showErrorMessage('Error al subir el avatar\n$e', updatedFields);

@@ -6,7 +6,7 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/authentication.dart';
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -229,7 +229,7 @@ class _MainPageState extends State<MainPage> {
   Future<void> _initializeData() async {
     MyLog.log(_classString, '_initializeData begin');
     AppState appState = _director.appState;
-    FsHelpers fsHelpers = _director.fsHelpers;
+    FbHelpers fsHelpers = _director.fsHelpers;
 
     MyLog.log(_classString, '_initializeData signIn LoggedUser = ${AuthenticationHelper.user?.email}', indent: true);
     MyLog.log(_classString, '_initializeData appState LoggedUser = ${appState.getLoggedUser().email}', indent: true);

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -21,7 +21,7 @@ class UserDeletePanel extends StatefulWidget {
 class UserDeletePanelState extends State<UserDeletePanel> {
   String dropdownValue = '';
 
-  late FsHelpers fsHelpers;
+  late FbHelpers fsHelpers;
 
   @override
   void initState() {

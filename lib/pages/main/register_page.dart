@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -18,7 +18,7 @@ class RegisterPage extends StatelessWidget {
     MyLog.log(_classString, 'Building');
 
     AppState appState = context.read<AppState>();
-    FsHelpers fsHelpers = context.read<Director>().fsHelpers;
+    FbHelpers fsHelpers = context.read<Director>().fsHelpers;
 
     return Scaffold(
       body: Column(

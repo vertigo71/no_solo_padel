@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
@@ -213,7 +213,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     required bool adminManagingUser,
   }) async {
     MyLog.log(_classString, 'validate');
-    FsHelpers fsHelpers = context.read<Director>().fsHelpers;
+    FbHelpers fsHelpers = context.read<Director>().fsHelpers;
     AppState appState = context.read<AppState>();
     MatchNotifier matchNotifier = context.read<MatchNotifier>();
 

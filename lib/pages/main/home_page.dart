@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../database/firestore_helpers.dart';
+import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
@@ -24,7 +24,7 @@ class HomePage extends StatelessWidget {
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
-        FsHelpers fsHelpers = context.read<Director>().fsHelpers;
+        FbHelpers fsHelpers = context.read<Director>().fsHelpers;
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
