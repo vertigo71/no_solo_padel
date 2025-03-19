@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:image/image.dart' as img;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -111,32 +111,22 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            // Show image if picked or uploaded
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.blueAccent,
-                              backgroundImage: imageProvider,
-                              child: imageProvider == null
-                                  ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
-                                  : null,
-                            ),
-                            const SizedBox(width: 40),
-                            ElevatedButton(
-                              onPressed: _pickImage,
-                              child: const Text('Seleccionar Avatar'),
-                            ),
-                          ],
+                        // Show image if picked or uploaded
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.blueAccent,
+                          backgroundImage: imageProvider,
+                          child: imageProvider == null
+                              ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
+                              : null,
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                            '¡Atención! puede tardar un poco en cargar la imagen, '
-                            'en caso que esta tenga mucha resolución.'
-                            'Un poco de paciencia.',
-                            style: TextStyle(fontStyle: FontStyle.italic)),
+                        const SizedBox(width: 40),
+                        ElevatedButton(
+                          onPressed: _pickImage,
+                          child: const Text('Seleccionar Avatar'),
+                        ),
                       ],
                     ),
                   ),
@@ -187,23 +177,18 @@ class SettingsPageState extends State<SettingsPage> {
     MyLog.log('_classString', 'Shrinking avatar: ${imageFile.path}');
 
     Uint8List imageBytes = await imageFile.readAsBytes();
-    img.Image? image = img.decodeImage(imageBytes);
 
-    if (image == null) {
-      MyLog.log('_classString', 'Error decoding image', indent: true, level: Level.SEVERE);
-      return null;
-    }
+    Uint8List compressedImage = await FlutterImageCompress.compressWithList(
+      imageBytes,
+      minHeight: 512,
+      minWidth: 512,
+      quality: 95,
+    );
 
-    MyLog.log('_classString', 'Avatar original: ${image.width}x${image.height} size: ${await imageFile.length()}');
-    img.Image resizedImage = img.copyResize(image, width: maxWidth, height: maxHeight, maintainAspect: true);
-    MyLog.log('_classString',
-        'Avatar resized: ${resizedImage.width}x${resizedImage.height} size: ${resizedImage.lengthInBytes}');
+    MyLog.log('_classString', 'Avatar original (kB): ${imageBytes.length/1000}');
+    MyLog.log('_classString', 'Avatar compressed (kB): ${compressedImage.length/1000}');
 
-    int quality = 90;
-    Uint8List compressedBytes = img.encodeJpg(resizedImage, quality: quality);
-    MyLog.log('_classString', 'Compressed avatar: size: ${compressedBytes.lengthInBytes}');
-
-    return compressedBytes;
+    return compressedImage;
   }
 
   Widget _buildFormField(_FormFieldsEnum formFieldEnum) {
