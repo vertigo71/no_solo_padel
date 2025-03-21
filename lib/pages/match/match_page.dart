@@ -13,6 +13,12 @@ import '../../interface/app_state.dart';
 final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
+  // argument matchJson vs matchId
+  // matchJson: initialValue for FormBuilder will work
+  //   If another user changes any field, the form will not update
+  //   Good for configuration panel
+  // matchId: _formKey.currentState?.fields[commentId]?.didChange(match.comment); should be implemented
+  //   If any user changes any field, the form will update. Or if any rebuild is made, changes would be lost.
   final Map<String, dynamic> matchJson;
 
   const MatchPage({super.key, required this.matchJson});
