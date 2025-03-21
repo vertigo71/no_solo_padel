@@ -39,9 +39,9 @@ class AppRouter {
           builder: (BuildContext context, GoRouterState state) {
             // never use a complex object as an argument
             // back button will not work
-            final matchId = state.extra as String; // Retrieve the argument
-            MyLog.log(_classString, 'going to MatchPAge: match=$matchId');
-            return MatchPage(matchIdStr: matchId); // Pass it to the widget
+            final matchJson = state.extra as Map<String, dynamic>; // Retrieve the argument
+            MyLog.log(_classString, 'going to MatchPAge: match=$matchJson');
+            return MatchPage(matchJson: matchJson); // Pass it to the widget
           },
           name: AppRoutes.match),
       GoRoute(

@@ -16,7 +16,7 @@ import '../../utilities/date.dart';
 import '../../utilities/environment.dart';
 import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
-import 'home_page.dart';
+import 'games_page.dart';
 import 'information_page.dart';
 import 'register_page.dart';
 import 'settings_page.dart';
@@ -38,7 +38,7 @@ class _MainPageState extends State<MainPage> {
   late Director _director;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    HomePage(),
+    GamesPage(),
     RegisterPage(),
     InformationPage(),
     SettingsPage(),
@@ -291,6 +291,9 @@ class _MainPageState extends State<MainPage> {
         MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=$_isLoading', indent: true);
       }
     } catch (e) {
+      MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=$_isLoading',
+          level: Level.SEVERE, indent: true);
+
       setState(() {
         _errorMessage = e.toString();
       });

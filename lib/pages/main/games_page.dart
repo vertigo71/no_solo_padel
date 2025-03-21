@@ -14,10 +14,10 @@ import '../../routes/routes.dart';
 import '../../utilities/date.dart';
 import '../../utilities/ui_helpers.dart';
 
-final String _classString = 'HomePage'.toUpperCase();
+final String _classString = 'GamesPage'.toUpperCase();
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class GamesPage extends StatelessWidget {
+  const GamesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +95,7 @@ class HomePage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.id.toYyyyMMdd() );
+                          context.pushNamed(AppRoutes.match, extra: match.toJson() );
                         },
                       ),
                     );

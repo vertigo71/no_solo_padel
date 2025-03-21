@@ -51,23 +51,18 @@ class FbHelpers {
   }) {
     MyLog.log(_classString, 'listenToMatch creating LISTENER for match=$matchId');
     StreamSubscription? streamSubscription;
-    try {
-      streamSubscription =
-          _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
-        if (snapshot.exists && snapshot.data() != null) {
-          MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-          MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', level: Level.INFO, indent: true);
-          matchFunction(newMatch);
-        } else {
-          MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.',
-              level: Level.INFO, indent: true);
-          matchFunction(MyMatch(id: matchId));
-        }
-      });
-    } catch (e) {
-      MyLog.log(_classString, 'listenToMatch ERROR listening to match $matchId',
-          exception: e, level: Level.SEVERE, indent: true);
-    }
+    streamSubscription =
+        _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+        MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', level: Level.INFO, indent: true);
+        matchFunction(newMatch);
+      } else {
+        MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.',
+            level: Level.INFO, indent: true);
+        matchFunction(MyMatch(id: matchId));
+      }
+    });
 
     return streamSubscription;
   }
@@ -79,76 +74,68 @@ class FbHelpers {
     MyLog.log(_classString, 'createListeners ');
 
     // update parameters
-    try {
-      MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
-          indent: true);
-      // only if null then create a new listener
-      _paramListener ??=
-          _instance.collection(strDB(DBFields.parameters)).doc(strDB(DBFields.parameters)).snapshots().listen(
-        (snapshot) {
-          MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
-          MyParameters? myParameters;
-          if (snapshot.exists && snapshot.data() != null) {
-            myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
-          }
-          MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
-              level: Level.INFO, indent: true);
-          parametersFunction(myParameters ?? MyParameters());
-          MyLog.log(_classString, 'createListeners parameters loaded', level: Level.INFO, indent: true);
-          _parametersLoaded = true;
-        },
-        onError: (error) {
-          MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
-              level: Level.SEVERE, indent: true);
-        },
-        onDone: () {
-          MyLog.log(_classString, 'createListeners onDone loading parameters', level: Level.INFO, indent: true);
-        },
-      );
-    } catch (e) {
-      MyLog.log(_classString, 'createListeners parameters',
-          myCustomObject: _paramListener, exception: e, level: Level.SEVERE, indent: true);
-    }
+    MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
+        indent: true);
+    // only if null then create a new listener
+    _paramListener ??=
+        _instance.collection(strDB(DBFields.parameters)).doc(strDB(DBFields.parameters)).snapshots().listen(
+      (snapshot) {
+        MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
+        MyParameters? myParameters;
+        if (snapshot.exists && snapshot.data() != null) {
+          myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
+        }
+        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
+            level: Level.INFO, indent: true);
+        parametersFunction(myParameters ?? MyParameters());
+        MyLog.log(_classString, 'createListeners parameters loaded', level: Level.INFO, indent: true);
+        _parametersLoaded = true;
+      },
+      onError: (error) {
+        MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
+            level: Level.SEVERE, indent: true);
+        throw Exception('Error al crear el listener de parametros. No se han podido cargar.\n$error');
+      },
+      onDone: () {
+        MyLog.log(_classString, 'createListeners onDone loading parameters', level: Level.INFO, indent: true);
+      },
+    );
 
     // update users
-    try {
-      MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
-      // only if null then create a new listener
-      _usersListener ??= _instance.collection(strDB(DBFields.users)).snapshots().listen(
-        (snapshot) {
-          MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
+    MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
+    // only if null then create a new listener
+    _usersListener ??= _instance.collection(strDB(DBFields.users)).snapshots().listen(
+      (snapshot) {
+        MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
-          List<MyUser> addedUsers = [];
-          List<MyUser> modifiedUsers = [];
-          List<MyUser> removedUsers = [];
-          _downloadChangedUsers(
-            snapshot: snapshot,
-            addedUsers: addedUsers,
-            modifiedUsers: modifiedUsers,
-            removedUsers: removedUsers,
-          );
-          MyLog.log(
-              _classString,
-              'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
-              'removed=${removedUsers.length}',
-              level: Level.INFO,
-              indent: true);
-          usersFunction(addedUsers, modifiedUsers, removedUsers);
-          MyLog.log(_classString, 'createListeners users loaded', level: Level.INFO, indent: true);
-          _usersLoaded = true;
-        },
-        onError: (error) {
-          MyLog.log(_classString, 'createListeners onError loading users. Error: $error',
-              level: Level.SEVERE, indent: true);
-        },
-        onDone: () {
-          MyLog.log(_classString, 'createListeners onDone loading users', level: Level.INFO, indent: true);
-        },
-      );
-    } catch (e) {
-      MyLog.log(_classString, 'createListeners createListeners Error loading users',
-          myCustomObject: _usersListener, exception: e, level: Level.SEVERE, indent: true);
-    }
+        List<MyUser> addedUsers = [];
+        List<MyUser> modifiedUsers = [];
+        List<MyUser> removedUsers = [];
+        _downloadChangedUsers(
+          snapshot: snapshot,
+          addedUsers: addedUsers,
+          modifiedUsers: modifiedUsers,
+          removedUsers: removedUsers,
+        );
+        MyLog.log(
+            _classString,
+            'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
+            'removed=${removedUsers.length}',
+            level: Level.INFO,
+            indent: true);
+        usersFunction(addedUsers, modifiedUsers, removedUsers);
+        MyLog.log(_classString, 'createListeners users loaded', level: Level.INFO, indent: true);
+        _usersLoaded = true;
+      },
+      onError: (error) {
+        MyLog.log(_classString, 'createListeners onError loading users. Error: $error',
+            level: Level.SEVERE, indent: true);
+        throw Exception('Error al crear el listener de usuarios. No se han podido cargar.\n$error');
+      },
+      onDone: () {
+        MyLog.log(_classString, 'createListeners onDone loading users', level: Level.INFO, indent: true);
+      },
+    );
   }
 
   Future<void> dataLoaded() async {
@@ -165,14 +152,10 @@ class FbHelpers {
 
   Future<void> disposeListeners() async {
     MyLog.log(_classString, 'disposeListeners');
-    try {
-      await _usersListener?.cancel();
-      await _paramListener?.cancel();
-      _usersListener = null;
-      _paramListener = null;
-    } catch (e) {
-      MyLog.log(_classString, 'disposeListeners', exception: e, level: Level.SEVERE, indent: true);
-    }
+    await _usersListener?.cancel();
+    await _paramListener?.cancel();
+    _usersListener = null;
+    _paramListener = null;
   }
 
   void _downloadChangedUsers({
@@ -213,6 +196,7 @@ class FbHelpers {
       } catch (e) {
         MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
             myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
+        throw Exception('Error en la base de datos de usuarios. \nError: $e');
       }
     }
   }
@@ -265,12 +249,12 @@ class FbHelpers {
       } else if (fromJsonWithState != null && appState != null) {
         return query.snapshots().transform(transformerWithState(fromJsonWithState, appState));
       } else {
-        throw ArgumentError("Error transforming matches");
+        throw ArgumentError("Error leyendo datos de Firestore. Error de transformación.");
       }
     } catch (e) {
       MyLog.log(_classString, '_getStream ERROR collection=$collection',
           exception: e, level: Level.SEVERE, indent: true);
-      return null;
+      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: $e');
     }
   }
 
@@ -364,7 +348,8 @@ class FbHelpers {
         MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.SEVERE, indent: true);
       }
     } catch (e) {
-      MyLog.log(_classString, 'getObject ', exception: e, level: Level.SEVERE, indent: true);
+      MyLog.log(_classString, 'getObject $collection $doc', exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener el objeto $collection $doc. \nError: $e');
     }
     return null;
   }
@@ -432,7 +417,7 @@ class FbHelpers {
       }
     } catch (e) {
       MyLog.log(_classString, 'getUserByEmail ', exception: e, level: Level.SEVERE);
-      return null;
+      throw Exception('Error al obtener el usuario $email. \nError: $e');
     }
     return null;
   }
@@ -480,6 +465,7 @@ class FbHelpers {
       }
     } catch (e) {
       MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener los objetos $collection. \nError: $e');
     }
     MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', level: Level.INFO, indent: true);
     return items;
@@ -546,21 +532,16 @@ class FbHelpers {
     required Map<String, dynamic> map,
     required String collection,
     required String doc,
-    bool forceSet = false, // replaces the old object if exists
+    bool forceSet = false, // true: replaces the old object if exists
   }) async {
-    MyLog.log(_classString, 'updateObject  $collection $doc', level: Level.INFO);
-    if (forceSet) {
-      return _instance.collection(collection).doc(doc).set(map).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR setting:', exception: onError, level: Level.SEVERE, indent: true);
-      });
-    } else {
-      return _instance.collection(collection).doc(doc).update(map).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR updating:', exception: onError, level: Level.WARNING, indent: true);
-        MyLog.log(_classString, 'updateObject try creating:', level: Level.INFO, indent: true);
-        _instance.collection(collection).doc(doc).set(map);
-      }).catchError((onError) {
-        MyLog.log(_classString, 'updateObject ERROR:', exception: onError, level: Level.SEVERE, indent: true);
-      });
+    MyLog.log(_classString, 'updateObject $collection/$doc, forceSet: $forceSet', indent: true);
+
+    try {
+      await _instance.collection(collection).doc(doc).set(map, SetOptions(merge: !forceSet));
+      MyLog.log(_classString, 'updateObject $collection/$doc, success', indent: true);
+    } catch (onError) {
+      MyLog.log(_classString, 'updateObject $collection/$doc error:', exception: onError, level: Level.SEVERE);
+      throw Exception('Error al actualizar $collection/$doc. \nError: $onError');
     }
   }
 
@@ -613,6 +594,7 @@ class FbHelpers {
     } catch (e) {
       MyLog.log(_classString, 'deleteUser error when deleting',
           myCustomObject: myUser, level: Level.SEVERE, indent: true);
+      throw Exception('Error al eliminar el usuario $myUser. \nError: $e');
     }
   }
 
@@ -626,7 +608,7 @@ class FbHelpers {
     MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
     DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd());
 
-    return _instance.runTransaction((transaction) async {
+    return await _instance.runTransaction((transaction) async {
       // get snapshot
       DocumentSnapshot snapshot = await transaction.get(documentReference);
 
@@ -643,21 +625,22 @@ class FbHelpers {
 
       // add player in memory match
       int posInserted = myMatch.insertPlayer(player, position: position);
-      // The Exception 'Error: el jugador ya estaba en el partido.'
-      // is thrown inside of the transaction's async callback.
-      // This means that the transaction itself will handle the exception,
-      // and the catchError surrounding the transaction will not.
+      // exception caught by catchError
       if (posInserted == -1) throw Exception('Error: el jugador ya estaba en el partido.');
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
-      // add match to firebase
-      transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
+      // add/update match to firebase
+      transaction.set(
+        documentReference,
+        myMatch.toJson(core: false, matchPlayers: true),
+        SetOptions(merge: true),
+      );
 
       // Return the map with MyMatch and player position
       return {myMatch: posInserted};
     }).catchError((e) {
       MyLog.log(_classString, 'addPlayerToMatch error adding $player to match $matchId',
-          level: Level.SEVERE, indent: true);
+          exception: e, level: Level.WARNING, indent: true);
       throw Exception('Error al añadir jugador $player al partido $matchId\n'
           'Error = $e');
     });
@@ -672,7 +655,7 @@ class FbHelpers {
     MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $matchId');
     DocumentReference documentReference = _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd());
 
-    return _instance.runTransaction((transaction) async {
+    return await _instance.runTransaction((transaction) async {
       // get match
       DocumentSnapshot snapshot = await transaction.get(documentReference);
 
@@ -689,19 +672,21 @@ class FbHelpers {
 
       // delete player in match
       bool removed = myMatch.removePlayer(user);
-      // The Exception 'Error: el jugador no estaba en el partido.'
-      // is thrown inside of the transaction's async callback.
-      // This means that the transaction itself will handle the exception,
-      // and the catchError surrounding the transaction will not.
+      // exception caught by catchError
       if (!removed) throw Exception('Error: el jugador no estaba en el partido.');
       MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
 
       // add match to firebase
-      transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
+      transaction.set(
+        documentReference,
+        myMatch.toJson(core: false, matchPlayers: true),
+        SetOptions(merge: true),
+      );
+
       return myMatch;
     }).catchError((onError) {
       MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $matchId',
-          level: Level.SEVERE, indent: true);
+          exception: onError, level: Level.SEVERE, indent: true);
       throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
           'Error = $onError');
     });

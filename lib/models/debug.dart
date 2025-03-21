@@ -53,7 +53,7 @@ class MyLog {
   static void setDebugLevel(Level level) => _simpleLogger.setLevel(level);
 
   static void log(String heading, Object message,
-      {Object? myCustomObject, Object? exception, Level level = Level.FINE, bool indent = false}) {
+      {Object? myCustomObject, Object? exception, Level level = Level.INFO, bool indent = false}) {
     final String indentation = indent ? '     >> ' : ' ';
     final String logMessage = "[$heading]$indentation$message";
 
@@ -72,6 +72,9 @@ class MyLog {
 
     // show in console
     _simpleLogger.log(level, logMessage, error: exception);
+    if (exception != null) {
+      _simpleLogger.log(level, '**************** $exception');
+    }
 
     if (myCustomObject != null) {
       try {

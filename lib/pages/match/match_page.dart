@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel/models/match_model.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
-import '../../utilities/date.dart';
 import 'players_panel.dart';
 import 'config_panel.dart';
 import 'sorting_panel.dart';
@@ -13,27 +13,28 @@ import '../../interface/app_state.dart';
 final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
-  final String matchIdStr;
+  final Map<String, dynamic> matchJson;
 
-  const MatchPage({super.key, required this.matchIdStr});
+  const MatchPage({super.key, required this.matchJson});
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building match $matchIdStr');
+    MyLog.log(_classString, 'Building match $matchJson');
 
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
 
-    Date? matchId = Date.parse(matchIdStr);
-    MyLog.log(_classString, 'Parsed date = $matchId', indent: true);
-
-    if (matchId == null) {
-      return Center(child: Text('No se ha podido acceder al partido $matchIdStr'));
+    late MyMatch match;
+    try {
+      match = MyMatch.fromJson(matchJson, context.read<AppState>());
+      MyLog.log(_classString, 'match = $match', indent: true);
+    } catch (e) {
+      return Center(child: Text('No se ha podido acceder al partido'));
     }
 
     try {
       return ChangeNotifierProvider<MatchNotifier>(
         // create and dispose of MatchNotifier
-        create: (context) => MatchNotifier(matchId, context.read<Director>()),
+        create: (context) => MatchNotifier(match, context.read<Director>()),
         child: Consumer<MatchNotifier>(builder: (context, matchNotifier, _) {
           return DefaultTabController(
             length: isLoggedUserAdmin ? 3 : 2,

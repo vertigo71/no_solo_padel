@@ -4,7 +4,6 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
 import '../models/match_model.dart';
-import '../utilities/date.dart';
 import 'director.dart';
 
 final String _classString = '<st> MatchNotifier'.toLowerCase();
@@ -24,7 +23,7 @@ class MatchNotifier with ChangeNotifier {
 
   /// Constructs a [MatchNotifier] with the given [MyMatch] and [Director].
   /// Initializes the Firestore listener.
-  MatchNotifier(Date matchId, this._director) : _match = MyMatch(id: matchId) {
+  MatchNotifier(this._match, this._director)  {
     MyLog.log(_classString, 'Constructor match = $_match');
     _createListener();
   }
@@ -38,18 +37,26 @@ class MatchNotifier with ChangeNotifier {
     MyLog.log(_classString, '_createListener: create _matchSubscription for match=$_match', level: Level.INFO);
 
     _matchSubscription?.cancel();
-    _matchSubscription = _director.fbHelpers.listenToMatch(
-      matchId: _match.id,
-      appState: _director.appState,
-      matchFunction: _notifyIfChanged,
-    );
+
+    try {
+      _matchSubscription = _director.fbHelpers.listenToMatch(
+            matchId: _match.id,
+            appState: _director.appState,
+            matchFunction: _notifyIfChanged,
+          );
+    } catch (e) {
+      MyLog.log(_classString, '_createListener ERROR listening to match ${_match.id}',
+          exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error: No se ha podido crear el listener. '
+          'Es posible que los partidos no se refresquen bien.\n$e');
+    }
   }
 
   /// Callback function called when the Firestore document for the associated match changes.
   /// Compares the new match data with the current [_match] and updates it if there are changes.
   /// Notifies listeners if the match has been updated from Firestore.
   void _notifyIfChanged(MyMatch newMatch) {
-    MyLog.log(_classString, '_notifyIfChanged: create _matchSubscription for match=${_match.id}', level: Level.INFO);
+    MyLog.log(_classString, '_notifyIfChanged for match=${_match.id}');
     if (_match != newMatch) {
       MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', indent: true);
       _match = newMatch;

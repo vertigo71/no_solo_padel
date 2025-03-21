@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -41,6 +42,18 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     // Build a Form widget using the _formKey created above.
     MyMatch match = context.read<MatchNotifier>().match;
     MyLog.log(_classString, 'Building Form for match=$match');
+
+    // // initial values for all fields
+    // // FormBuilder initial values do not work in case another user updates any field
+    // _formKey.currentState?.fields[commentId]?.didChange(match.comment);
+    // _formKey.currentState?.fields[isOpenId]?.didChange(match.isOpen);
+    // for (int i = 0; i < maxNumberOfCourts; i++) {
+    //   if (i < match.courtNames.length) {
+    //     _formKey.currentState?.fields['$courtId$i']?.didChange(match.courtNames[i]);
+    //   } else {
+    //     _formKey.currentState?.fields['$courtId$i']?.didChange('');
+    //   }
+    // }
 
     return FormBuilder(
       key: _formKey,
@@ -88,7 +101,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             Row(
               children: <Widget>[
                 const SizedBox(width: 10),
-                 Text('Abrir convocatoria ${match.isOpen ? 'SI' : 'NO'}'),
+                Text('Abrir convocatoria ${match.isOpen ? 'SI' : 'NO'}'),
                 const SizedBox(width: 10),
                 FormBuilderField<bool>(
                   name: isOpenId,
