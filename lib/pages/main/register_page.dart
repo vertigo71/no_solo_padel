@@ -18,14 +18,14 @@ class RegisterPage extends StatelessWidget {
     MyLog.log(_classString, 'Building');
 
     AppState appState = context.read<AppState>();
-    FbHelpers fsHelpers = context.read<Director>().fsHelpers;
+    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
     return Scaffold(
       body: Column(
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: fsHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView)),
+              stream: fbHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView)),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error al acceder al registro: ${snapshot.error}'));

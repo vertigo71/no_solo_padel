@@ -24,7 +24,7 @@ class _InformationPageState extends State<InformationPage> {
   List<MyMatch>? _allLoggedUserMatches;
   late MyUser _loggedUser;
   late AppState appState;
-  late FbHelpers fsHelpers;
+  late FbHelpers fbHelpers;
 
   @override
   void initState() {
@@ -32,14 +32,14 @@ class _InformationPageState extends State<InformationPage> {
 
     MyLog.log(_classString, 'initState');
     appState = context.read<AppState>();
-    fsHelpers = context.read<Director>().fsHelpers;
+    fbHelpers = context.read<Director>().fbHelpers;
     _loggedUser = appState.getLoggedUser();
     _getAllLoggedUserMatches();
   }
 
   Future<void> _getAllLoggedUserMatches() async {
     List<MyMatch> allLoggedUserMatches =
-        await fsHelpers.getAllPlayerMatches(playerId: _loggedUser.id, appState: appState);
+        await fbHelpers.getAllPlayerMatches(playerId: _loggedUser.id, appState: appState);
     MyLog.log(_classString, 'initState num of matches = ${allLoggedUserMatches.length}', indent: true);
 
     setState(() {

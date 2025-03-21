@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -24,21 +25,15 @@ class HomePage extends StatelessWidget {
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
-        FbHelpers fsHelpers = context.read<Director>().fsHelpers;
+        FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
         MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', level: Level.INFO, indent: true);
 
-        // create matches if missing: from now to now+matchDaysToView
-        for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
-          Date date = Date.now().add(Duration(days: days));
-          fsHelpers.createMatchIfNotExists(matchId: date);
-        }
-
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>
-          stream: fsHelpers.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
+          stream: fbHelpers.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Error al obtener los partidos: ${snapshot.error}'));
@@ -49,9 +44,24 @@ class HomePage extends StatelessWidget {
             }
 
             // snapshot.data is now a List<MyMatch> (or null if there's an error)
-            final List<MyMatch> matches = snapshot.data ?? []; // Handle the null case
+            final List<MyMatch> fetchedMatches = snapshot.data ?? []; // Handle the null case
 
-            final List<MyMatch> playableMatches = matches.where((match) => appState.isDayPlayable(match.id)).toList();
+            // build playableMatches list
+            List<MyMatch> playableMatches = [];
+
+            // Create missing matches or get the ones in fetchedMatches if they exist
+            for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
+              Date date = Date.now().add(Duration(days: days));
+              if (appState.isDayPlayable(date)) {
+                MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
+                if (foundMatch != null) {
+                  playableMatches.add(foundMatch);
+                } else {
+                  // Create a new MyMatch in memory
+                  playableMatches.add(MyMatch(id: date));
+                }
+              }
+            }
 
             return ListView(
               children: [
@@ -85,7 +95,7 @@ class HomePage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.toJsonString());
+                          context.pushNamed(AppRoutes.match, extra: match.id.toYyyyMMdd() );
                         },
                       ),
                     );

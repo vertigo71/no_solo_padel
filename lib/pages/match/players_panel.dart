@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,40 +47,48 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building for $_loggedUser');
+    MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match');
 
     return ListView(
       children: [
-        actualState(),
+        heading(),
         const Divider(thickness: 5),
-        signUpForm(),
+        joinMatchToggle(),
         const Divider(thickness: 5),
         listOfPlayers(),
         const SizedBox(height: 20),
         if (context.read<AppState>().isLoggedUserAdmin) const Divider(thickness: 5),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdmin) signUpAdminForm(),
+        if (context.read<AppState>().isLoggedUserAdmin) roulette(),
         const SizedBox(height: 50),
       ],
     );
   }
 
-  Widget actualState() => Padding(
+  Widget heading() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Builder(
           builder: (context) {
             String returnText = '';
             MyMatch initialMatch = context.read<MatchNotifier>().match;
 
-            if (initialMatch.isInTheMatch(_loggedUser)) {
-              if (initialMatch.isPlaying(_loggedUser)) {
+            PlayingState playingState = initialMatch.getPlayingState(_loggedUser);
+            switch (playingState) {
+              case PlayingState.playing:
                 returnText = 'Juegas!!!';
-              } else {
+                break;
+              case PlayingState.signedNotPlaying:
                 returnText = 'Apuntado\n(pendiente de completar pista)';
-              }
-            } else {
-              returnText = 'No apuntado';
+                break;
+              case PlayingState.reserve:
+                returnText = 'Apuntado\n(en reserva)';
+                break;
+              case PlayingState.unsigned:
+                returnText = 'No apuntado';
+                break;
             }
+
             return Text(
               returnText,
               textAlign: TextAlign.center,
@@ -91,7 +98,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         ),
       );
 
-  Widget signUpForm() => Padding(
+  Widget joinMatchToggle() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -109,12 +116,11 @@ class PlayersPanelState extends State<PlayersPanel> {
                     setState(() {
                       isLoggedUserInMatch = newValue!;
                     });
-                    bool ok = await validate(
+                    await _validate(
                       user: _loggedUser,
                       toAdd: isLoggedUserInMatch, // isLoggedUserInMatch? add Player : delete Player
                       adminManagingUser: false,
                     );
-                    if (!ok) setState(() {}); // user was not deleted or added
                   },
                 );
               },
@@ -197,155 +203,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         },
       );
 
-  /// Validates the form and updates the match in Firestore.
-  ///
-  /// Parameters:
-  ///   - [user]: The user to add or remove from the match.
-  ///   - [toAdd]: `true` to add the user, `false` to remove.
-  ///   - [adminManagingUser]: `true` if an administrator is performing the action, `false` otherwise.
-  ///
-  /// Returns:
-  ///   `true` if the operation was successful, `false` otherwise.
-  Future<bool> validate({
-    /// add/remove user from Match in Firestore
-    required MyUser user,
-    required bool toAdd, // add/remove user to match
-    required bool adminManagingUser,
-  }) async {
-    MyLog.log(_classString, 'validate');
-    FbHelpers fsHelpers = context.read<Director>().fsHelpers;
-    AppState appState = context.read<AppState>();
-    MatchNotifier matchNotifier = context.read<MatchNotifier>();
-
-    MyMatch? newMatchFromFirestore;
-    String registerText = ''; // text to be added to the register
-    // add/remove from Firestore
-    try {
-      if (toAdd) {
-        // add user to match
-        if (matchNotifier.match.isInTheMatch(user)) {
-          MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE, indent: true);
-          return false;
-        }
-        int listPosition = -1;
-        if (adminManagingUser) {
-          // get position from the controller (position = controllerText -1)
-          listPosition = int.tryParse(_userPositionController.text) ?? -1;
-          if (listPosition > 0) listPosition--;
-        }
-
-        newMatchFromFirestore = await fsHelpers.addPlayerToMatch(
-            appState: appState, matchId: matchNotifier.match.id, player: user, position: listPosition);
-
-        if (newMatchFromFirestore == null) {
-          MyLog.log(_classString, 'validate2 player $user already was in match', level: Level.SEVERE, indent: true);
-          if (mounted) showMessage(context, 'El jugador ya estaba en el partido');
-          return false;
-        } else {
-          listPosition = newMatchFromFirestore.getPlayerPosition(user);
-          if (listPosition == -1) {
-            MyLog.log(_classString, 'validate3 player $user not in match $newMatchFromFirestore', level: Level.SEVERE, indent: true);
-          }
-          if (adminManagingUser) {
-            registerText = '${_loggedUser.name} ha apuntado a ${user.name} (${listPosition + 1})';
-          } else {
-            registerText = '${user.name} se ha apuntado  (${listPosition + 1})';
-          }
-        }
-      } else {
-        // removing user
-        if (!matchNotifier.match.isInTheMatch(user)) {
-          MyLog.log(_classString, 'validate4 removing: player $user is not in match', level: Level.SEVERE, indent: true);
-          return false;
-        }
-        if (adminManagingUser) {
-          registerText = '${_loggedUser.name} ha desapuntado a ${user.name}';
-        } else {
-          // if not admin mode, certify loggedUser wants to signOff from the match
-          bool delete = await _confirmLoggedUserOutOfMatch();
-          if (!delete) {
-            // abort deletion
-            // setState(() { // will be done after the call of validate
-            //   // loggedUser is still in the match
-            //   // refresh
-            // });
-            if (mounted) showMessage(context, 'Operación anulada');
-            return false;
-          }
-          registerText = '${user.name} se ha desapuntado';
-        }
-
-        newMatchFromFirestore =
-            await fsHelpers.deletePlayerFromMatch(appState: appState, matchId: matchNotifier.match.id, user: user);
-        if (newMatchFromFirestore == null) {
-          MyLog.log(_classString, 'validate5 player $user not in the match ${matchNotifier.match}',
-              level: Level.SEVERE, indent: true);
-          if (mounted) showMessage(context, 'El jugador no estaba en el partido');
-          return false;
-        }
-      }
-    } on FirebaseException catch (e) {
-      if (mounted) myAlertDialog(context, 'Error!!! Comprueba que estás apuntado/desapuntado\n $e');
-      return false;
-    } catch (e) {
-      if (mounted) {
-        myAlertDialog(
-            context,
-            'Ha habido una incidencia! \n'
-            'Comprobar que la operación se ha realizado correctamente\n $e');
-      }
-    }
-
-    MyLog.log(_classString, 'validate firebase done: Match=$newMatchFromFirestore Register=$registerText',
-        level: Level.INFO, indent: true);
-
-    if (newMatchFromFirestore == null) {
-      MyLog.log(_classString, 'validate6 ERROR newMatchFromFirestore=null', level: Level.SEVERE, indent: true);
-      return false;
-    } else {
-      //  state updated via consumers
-      // telegram and register
-      try {
-        MyLog.log(_classString, 'validate $user update register', level: Level.INFO, indent: true);
-
-        await fsHelpers.updateRegister(RegisterModel(
-          date: matchNotifier.match.id,
-          message: registerText,
-        ));
-
-        MyLog.log(_classString, 'validate $user send telegram', level: Level.INFO, indent: true);
-
-        sendDatedMessageToTelegram(
-            message: '$registerText\n'
-                'APUNTADOS: ${newMatchFromFirestore.players.length} de ${newMatchFromFirestore.getNumberOfCourts() * 4}',
-            matchDate: matchNotifier.match.id,
-            fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
-      } catch (e) {
-        MyLog.log(_classString, 'ERROR sending message to telegram or register', exception: e, level: Level.SEVERE, indent: true);
-        if (mounted) {
-          myAlertDialog(
-              context,
-              'Ha habido una incidencia al enviar el mensaje de confirmación\n'
-              'Comprueba que se ha enviado el mensaje al registro y al telegram\n'
-              'Error = $e');
-        }
-
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  Future<bool> _confirmLoggedUserOutOfMatch() async {
-    const String option1 = 'Confirmar';
-    const String option2 = 'Anular';
-    String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
-    MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
-    return response == option1;
-  }
-
-  Widget signUpAdminForm() {
+  Widget roulette() {
     List<MyUser> users = context.read<AppState>().users;
 
     return Padding(
@@ -413,7 +271,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        onPressed: () => validate(
+                        onPressed: () => _validate(
                           user: _selectedUser,
                           toAdd: !isSelectedUserInTheMatch,
                           adminManagingUser: true,
@@ -431,7 +289,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                               borderRadius: BorderRadius.all(Radius.circular(4.0)),
                             ),
                           ),
-                          onFieldSubmitted: (String str) async => validate(
+                          onFieldSubmitted: (String str) async => _validate(
                             user: _selectedUser,
                             toAdd: true,
                             adminManagingUser: true,
@@ -452,4 +310,169 @@ class PlayersPanelState extends State<PlayersPanel> {
       ),
     );
   }
+
+  /// Validates the form and updates the match in Firestore.
+  ///
+  /// Parameters:
+  ///   - [user]: The user to add or remove from the match.
+  ///   - [toAdd]: `true` to add the user, `false` to remove.
+  ///   - [adminManagingUser]: `true` if an administrator is performing the action, `false` otherwise.
+  Future<void> _validate({
+    /// add/remove user from Match in Firestore
+    required MyUser user,
+    required bool toAdd, // add/remove user to match
+    required bool adminManagingUser,
+  }) async {
+    MyLog.log(_classString, '_validate');
+
+    // add or delete a player from the match
+    late Map<MyMatch, String>? result;
+    try {
+      if (toAdd) {
+        result = await _addUserToMatch(user: user, adminManagingUser: adminManagingUser);
+      } else {
+        result = await _removeUserFromMatch(user: user, adminManagingUser: adminManagingUser);
+      }
+
+      if (result == null) {
+        // only possible for cancelling deleting a user
+        if (mounted) showMessage(context, 'Operación anulada');
+        _refresh();
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        myAlertDialog(
+            context,
+            'Ha habido una incidencia! \n'
+            'Comprobar que la operación se ha realizado correctamente\n $e');
+      }
+      _refresh();
+      return;
+    }
+
+    // notify to telegram and register
+    try {
+      _sendToRegister(result.keys.first, result.values.first);
+    } catch (e) {
+      MyLog.log(_classString, 'ERROR sending message to telegram or register',
+          exception: e, level: Level.SEVERE, indent: true);
+      if (mounted) {
+        myAlertDialog(
+            context,
+            'Ha habido una incidencia al enviar el mensaje de confirmación\n'
+            'Es posible que no se haya enviado el mensaje al registro y al telegram\n'
+            'Error = $e');
+      }
+    }
+  }
+
+  // add user to match
+  Future<Map<MyMatch, String>> _addUserToMatch({required MyUser user, required bool adminManagingUser}) async {
+    MyLog.log(_classString, '_addUserToMatch');
+    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    AppState appState = context.read<AppState>();
+    MyMatch match = context.read<MatchNotifier>().match;
+
+    // check if user is already in the match. If so abort
+    if (match.isInTheMatch(user)) {
+      MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE, indent: true);
+      throw Exception('El jugador ya estaba en el partido');
+    }
+
+    // if administrator, get position in which the player will be be added from the controller text
+    int playerPosition = -1;
+    if (adminManagingUser) {
+      // get position from the controller (position = controllerText -1)
+      // if there is nothing in the controller text, the player will be added at the end
+      playerPosition = int.tryParse(_userPositionController.text) ?? -1;
+      if (playerPosition > 0) playerPosition--;
+    }
+
+    // add player to match and upload the match to firestore database
+    // newMatchFromFirestore is the match with the new player
+    // null otherwise
+    Map<MyMatch, int> result =
+        await fbHelpers.addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
+    MyMatch updatedMatch = result.keys.first; // Get the MyMatch object (key)
+    playerPosition = result.values.first; // Get the updated player position (value)
+
+    // text to be added to the register
+    late String registerText;
+    if (adminManagingUser) {
+      registerText = '${_loggedUser.name} ha apuntado a ${user.name} (${playerPosition + 1})';
+    } else {
+      registerText = '${user.name} se ha apuntado  (${playerPosition + 1})';
+    }
+
+    return {updatedMatch: registerText};
+  }
+
+  // delete user from match
+  // return null if no action was done
+  Future<Map<MyMatch, String>?> _removeUserFromMatch({required MyUser user, required bool adminManagingUser}) async {
+    // removing user
+    MyLog.log(_classString, '_removeUserFromMatch');
+    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    AppState appState = context.read<AppState>();
+    MyMatch match = context.read<MatchNotifier>().match;
+
+    // check if user is not in the match. If so abort
+    if (!match.isInTheMatch(user)) {
+      MyLog.log(_classString, 'removing: player $user is not in match', level: Level.SEVERE, indent: true);
+      throw Exception('El jugador no estaba en el partido');
+    }
+
+    // confirm that user wants to remove himself from the match
+    if (!adminManagingUser) {
+      // if not admin mode, certify loggedUser wants to signOff from the match
+      bool delete = await _confirmQuitMatch();
+      if (!delete) {
+        // abort deletion
+        return null; // abort deletion
+      }
+    }
+
+    // delete player from the match and upload the match to firestore database
+    // newMatchFromFirestore is the match with the new player
+    // null otherwise
+    MyMatch updatedMatch = await fbHelpers.deletePlayerFromMatch(appState: appState, matchId: match.id, user: user);
+
+    // text to be added to the register
+    late String registerText;
+    if (adminManagingUser) {
+      registerText = '${_loggedUser.name} ha desapuntado a ${user.name}';
+    } else {
+      registerText = '${user.name} se ha desapuntado';
+    }
+
+    return {updatedMatch: registerText};
+  }
+
+  // send to register and telegram
+  Future<void> _sendToRegister(MyMatch updatedMatch, String registerText) async {
+    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    AppState appState = context.read<AppState>();
+    MyMatch match = context.read<MatchNotifier>().match;
+
+    MyLog.log(_classString, '_sendToRegister send to register', level: Level.INFO);
+    await fbHelpers.updateRegister(RegisterModel(date: match.id, message: registerText));
+
+    MyLog.log(_classString, '_sendToRegister send to telegram', level: Level.INFO);
+    sendDatedMessageToTelegram(
+        message: '$registerText\n'
+            'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
+        matchDate: match.id,
+        fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+  }
+
+  Future<bool> _confirmQuitMatch() async {
+    const String option1 = 'Confirmar';
+    const String option2 = 'Anular';
+    String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+    MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
+    return response == option1;
+  }
+
+  void _refresh() => setState(() {});
 }

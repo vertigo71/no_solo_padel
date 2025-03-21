@@ -18,7 +18,7 @@ final String _classString = '<st> Director'.toLowerCase();
 /// knows about all processes
 class Director {
   final AppState _appState;
-  final FbHelpers _fsHelpers = FbHelpers();
+  final FbHelpers _fbHelpers = FbHelpers();
 
   Director({required AppState appState}) : _appState = appState {
     MyLog.log(_classString, 'Constructor');
@@ -34,13 +34,13 @@ class Director {
 
   AppState get appState => _appState;
 
-  FbHelpers get fsHelpers => _fsHelpers;
+  FbHelpers get fbHelpers => _fbHelpers;
 
   /// signOut from all systems
   Future signOut() async {
     MyLog.log(_classString, 'SignOut');
     _appState.resetLoggedUser();
-    _fsHelpers.disposeListeners();
+    _fbHelpers.disposeListeners();
     AuthenticationHelper.signOut();
   }
 
@@ -48,8 +48,8 @@ class Director {
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    fsHelpers.deleteOldData(DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping));
-    fsHelpers.deleteOldData(DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping));
+    fbHelpers.deleteOldData(DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping));
+    fbHelpers.deleteOldData(DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping));
   }
 
   Future<void> createTestData() async {
@@ -83,7 +83,7 @@ class Director {
         // create users in Firestore Authentication
         await AuthenticationHelper.createUserWithEmailAndPwd(email: myUser.email, pwd: getInitialPwd());
         // update/create user in the Firestore database
-        await fsHelpers.updateUser(myUser);
+        await fbHelpers.updateUser(myUser);
         // listener will update appState
         MyLog.log(_classString, '>>> createTestData: new user = $myUser', indent: true);
       }
@@ -97,10 +97,10 @@ class Director {
     const int numMatches = 10;
     const int maxUsers = 10;
     final users = _appState.users;
-    for (int d = 0; d < numMatches; d++) {
+    for (int d = 0; d < numMatches; d+=2 ) {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match
-      MyMatch? match = await _fsHelpers.getMatch(date.toYyyyMMdd(), _appState);
+      MyMatch? match = await _fbHelpers.getMatch(date.toYyyyMMdd(), _appState);
       if (match == null || match.players.isEmpty) {
         List<int> randomInts = getRandomList(maxUsers, date);
         MyMatch match = MyMatch(id: date);
@@ -109,7 +109,7 @@ class Director {
         match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
         match.players.addAll(randomInts.map((e) => users[e % users.length]).toSet());
         MyLog.log(_classString, 'createTestData: update match = $match', indent: true);
-        await fsHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
+        await fbHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }
   }

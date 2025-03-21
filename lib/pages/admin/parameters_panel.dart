@@ -65,7 +65,7 @@ class ParametersPanelState extends State<ParametersPanel> {
   final _formKey = GlobalKey<FormBuilderState>(); // Form key
 
   late AppState _appState;
-  late FbHelpers _fsHelpers;
+  late FbHelpers _fbHelpers;
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
     // Retrieve instances from Provider
     _appState = context.read<AppState>();
-    _fsHelpers = context.read<Director>().fsHelpers;
+    _fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -188,7 +188,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       }
 
       try {
-        await _fsHelpers.updateParameters(myParameters);
+        await _fbHelpers.updateParameters(myParameters);
         if (mounted) {
           showMessage(context, 'Los parámetros han sido actualizados.');
         }

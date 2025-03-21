@@ -10,7 +10,6 @@ import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
-import '../../models/parameter_model.dart';
 import '../../models/user_model.dart';
 import '../../routes/routes.dart';
 import '../../utilities/date.dart';
@@ -58,7 +57,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void dispose() {
     MyLog.log(_classString, 'dispose');
-    _director.fsHelpers.disposeListeners();
+    _director.fbHelpers.disposeListeners();
     super.dispose();
   }
 
@@ -229,7 +228,7 @@ class _MainPageState extends State<MainPage> {
   Future<void> _initializeData() async {
     MyLog.log(_classString, '_initializeData begin');
     AppState appState = _director.appState;
-    FbHelpers fsHelpers = _director.fsHelpers;
+    FbHelpers fbHelpers = _director.fbHelpers;
 
     MyLog.log(_classString, '_initializeData signIn LoggedUser = ${AuthenticationHelper.user?.email}', indent: true);
     MyLog.log(_classString, '_initializeData appState LoggedUser = ${appState.getLoggedUser().email}', indent: true);
@@ -246,7 +245,7 @@ class _MainPageState extends State<MainPage> {
       // create listeners for users and parameters
       // any changes to those classes will change appState
       MyLog.log(_classString, '_initializeData createListeners for users and parameters.');
-      fsHelpers.createListeners(
+      fbHelpers.createListeners(
         parametersFunction: appState.setAllParametersAndNotify,
         usersFunction: appState.setChangedUsersAndNotify,
       );
@@ -254,9 +253,9 @@ class _MainPageState extends State<MainPage> {
       // Wait for users and parameters data to be loaded from Firestore.
       try {
         MyLog.log(_classString, '_initializeData waiting for users and parameters to load', indent: true);
-        await fsHelpers.dataLoaded();
+        await fbHelpers.dataLoaded();
       } catch (error) {
-        MyLog.log(_classString, 'ERROR _initializeData fsHelpers.dataLoaded. Error: $error',
+        MyLog.log(_classString, 'ERROR _initializeData fbHelpers.dataLoaded. Error: $error',
             level: Level.SEVERE, indent: true);
         rethrow;
       }
@@ -275,18 +274,11 @@ class _MainPageState extends State<MainPage> {
         appState.setLoggedUser(appUser, notify: false);
         appUser.lastLogin = Date.now();
         appUser.loginCount++;
-        await fsHelpers.updateUser(appUser);
-
-        // Create matches for the next matchDaysToView days.
-        MyLog.log(_classString, '_initializeData creating matches ...', indent: true);
-        for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
-          Date date = Date.now().add(Duration(days: days));
-          fsHelpers.createMatchIfNotExists(matchId: date);
-        }
+        await fbHelpers.updateUser(appUser);
 
         // Delete old logs and matches.
         MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
-        _director.deleteOldData();
+        _director.deleteOldData(); // TODO: create a cloud function
 
         // Create test data in development mode.
         MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);

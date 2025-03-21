@@ -59,14 +59,14 @@ class SettingsPageState extends State<SettingsPage> {
   Uint8List? _compressedImageData; // Store the compressed image disk file in memory
 
   late AppState appState;
-  late FbHelpers fsHelpers;
+  late FbHelpers fbHelpers;
 
   @override
   void initState() {
     super.initState();
 
     appState = context.read<AppState>();
-    fsHelpers = context.read<Director>().fsHelpers;
+    fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -331,7 +331,7 @@ class SettingsPageState extends State<SettingsPage> {
     user.name = newName;
 
     try {
-      await fsHelpers.updateUser(user);
+      await fbHelpers.updateUser(user);
     } catch (e) {
       MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario',
           level: Level.SEVERE, indent: true);
@@ -348,7 +348,7 @@ class SettingsPageState extends State<SettingsPage> {
     user.emergencyInfo = newEmergencyInfo;
 
     try {
-      await fsHelpers.updateUser(user);
+      await fbHelpers.updateUser(user);
     } catch (e) {
       _showErrorMessage('Error al actualizar la información de emergencia del usuario', updatedFields);
       MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
@@ -391,7 +391,7 @@ class SettingsPageState extends State<SettingsPage> {
     loggedUser.email = newEmail;
 
     try {
-      await fsHelpers.updateUser(loggedUser);
+      await fbHelpers.updateUser(loggedUser);
     } catch (e) {
       _showErrorMessage('Error al actualizar el correo del usuario en la base de datos', updatedFields);
       MyLog.log(_classString, 'updateEmail Error al actualizar el correo del usuario en la base de datos',
@@ -433,8 +433,8 @@ class SettingsPageState extends State<SettingsPage> {
     final String fileName = appState.getLoggedUser().id;
     try {
       appState.getLoggedUser().avatarUrl =
-          await fsHelpers.uploadDataToStorage('avatars/$fileName', _compressedImageData!);
-      await fsHelpers.updateUser(appState.getLoggedUser());
+          await fbHelpers.uploadDataToStorage('avatars/$fileName', _compressedImageData!);
+      await fbHelpers.updateUser(appState.getLoggedUser());
       return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: $e', level: Level.SEVERE);

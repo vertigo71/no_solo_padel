@@ -41,7 +41,7 @@ class UserAddPanelState extends State<UserAddPanel> {
   bool _isCreatingUser = false; // Track creation state
 
   late AppState appState;
-  late FbHelpers fsHelpers;
+  late FbHelpers fbHelpers;
 
   @override
   void initState() {
@@ -49,7 +49,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyLog.log(_classString, 'initState');
 
     appState = context.read<AppState>();
-    fsHelpers = context.read<Director>().fsHelpers;
+    fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -269,7 +269,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyLog.log(_classString, 'createNewUser user created=$myUser', indent: true);
 
     try {
-      fsHelpers.updateUser(myUser);
+      fbHelpers.updateUser(myUser);
     } catch (e) {
       if (mounted) showMessage(context, 'Error al crear localmente el usuario');
       MyLog.log(_classString, 'Error creating user in Firestore', level: Level.SEVERE, indent: true);

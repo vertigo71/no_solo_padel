@@ -121,16 +121,27 @@ class MyUser {
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true; // Check for identity first
-    if (other is! MyUser) return false; // Check for type
-    return id == other.id && name == other.name && email == other.email && userType == other.userType;
+    if (identical(this, other)) return true;
+    if (other is! MyUser) return false;
+    return id == other.id &&
+        name == other.name &&
+        emergencyInfo == other.emergencyInfo &&
+        _email == other._email &&
+        userType == other.userType &&
+        lastLogin == other.lastLogin &&
+        loginCount == other.loginCount &&
+        avatarUrl == other.avatarUrl;
   }
 
   @override
   int get hashCode => Object.hash(
         id,
         name,
-        email,
+        emergencyInfo,
+        _email,
         userType,
+        lastLogin,
+        loginCount,
+        avatarUrl,
       );
 }

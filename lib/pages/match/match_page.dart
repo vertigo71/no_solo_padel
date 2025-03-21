@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
-import '../../models/match_model.dart';
+import '../../utilities/date.dart';
 import 'players_panel.dart';
 import 'config_panel.dart';
 import 'sorting_panel.dart';
@@ -13,22 +13,27 @@ import '../../interface/app_state.dart';
 final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
-  final String matchJson;
+  final String matchIdStr;
 
-  const MatchPage({super.key, required this.matchJson});
+  const MatchPage({super.key, required this.matchIdStr});
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building match $matchIdStr');
 
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
 
-    try {
-      final match = MyMatch.fromJsonString(matchJson, context.read<AppState>());
+    Date? matchId = Date.parse(matchIdStr);
+    MyLog.log(_classString, 'Parsed date = $matchId', indent: true);
 
+    if (matchId == null) {
+      return Center(child: Text('No se ha podido acceder al partido $matchIdStr'));
+    }
+
+    try {
       return ChangeNotifierProvider<MatchNotifier>(
         // create and dispose of MatchNotifier
-        create: (context) => MatchNotifier(match, context.read<Director>()),
+        create: (context) => MatchNotifier(matchId, context.read<Director>()),
         child: Consumer<MatchNotifier>(builder: (context, matchNotifier, _) {
           return DefaultTabController(
             length: isLoggedUserAdmin ? 3 : 2,
@@ -47,7 +52,7 @@ class MatchPage extends StatelessWidget {
                 children: [
                   if (isLoggedUserAdmin) ConfigurationPanel(),
                   PlayersPanel(),
-                  SortingPanel(matchNotifier.match),
+                  SortingPanel(),
                 ],
               ),
             ),

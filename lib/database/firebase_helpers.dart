@@ -60,7 +60,7 @@ class FbHelpers {
           matchFunction(newMatch);
         } else {
           MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.',
-              level: Level.WARNING, indent: true);
+              level: Level.INFO, indent: true);
           matchFunction(MyMatch(id: matchId));
         }
       });
@@ -617,7 +617,7 @@ class FbHelpers {
   }
 
   /// return match if user was inserted. null otherwise
-  Future<MyMatch?> addPlayerToMatch({
+  Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
     required MyUser player,
     required AppState appState,
@@ -629,32 +629,42 @@ class FbHelpers {
     return _instance.runTransaction((transaction) async {
       // get snapshot
       DocumentSnapshot snapshot = await transaction.get(documentReference);
-      if (!snapshot.exists) {
-        throw Exception('No existe el partido asociado a la fecha $matchId');
-      }
 
-      // get match
-      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-      MyLog.log(_classString, 'addPlayerToMatch match = ', myCustomObject: myMatch, indent: true);
+      late MyMatch myMatch;
+      if (snapshot.exists && snapshot.data() != null) {
+        // get match
+        myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+        MyLog.log(_classString, 'addPlayerToMatch match found ', myCustomObject: myMatch, indent: true);
+      } else {
+        // get match
+        myMatch = MyMatch(id: matchId);
+        MyLog.log(_classString, 'addPlayerToMatch NEW match ', indent: true);
+      }
 
       // add player in memory match
       int posInserted = myMatch.insertPlayer(player, position: position);
-      if (posInserted == -1) return null;
+      // The Exception 'Error: el jugador ya estaba en el partido.'
+      // is thrown inside of the transaction's async callback.
+      // This means that the transaction itself will handle the exception,
+      // and the catchError surrounding the transaction will not.
+      if (posInserted == -1) throw Exception('Error: el jugador ya estaba en el partido.');
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
       // add match to firebase
       transaction.update(documentReference, myMatch.toJson(core: false, matchPlayers: true));
-      return myMatch;
-    }).catchError((onError) {
+
+      // Return the map with MyMatch and player position
+      return {myMatch: posInserted};
+    }).catchError((e) {
       MyLog.log(_classString, 'addPlayerToMatch error adding $player to match $matchId',
           level: Level.SEVERE, indent: true);
       throw Exception('Error al añadir jugador $player al partido $matchId\n'
-          'Error = $onError');
+          'Error = $e');
     });
   }
 
   /// return match if user was deleted. null otherwise
-  Future<MyMatch?> deletePlayerFromMatch({
+  Future<MyMatch> deletePlayerFromMatch({
     required Date matchId,
     required MyUser user,
     required AppState appState,
@@ -665,17 +675,25 @@ class FbHelpers {
     return _instance.runTransaction((transaction) async {
       // get match
       DocumentSnapshot snapshot = await transaction.get(documentReference);
-      if (!snapshot.exists) {
-        throw Exception('No existe el partido asociado a la fecha $matchId');
-      }
 
-      // get match
-      MyMatch myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-      MyLog.log(_classString, 'deletePlayerFromMatch match = ', myCustomObject: myMatch, indent: true);
+      late MyMatch myMatch;
+      if (snapshot.exists && snapshot.data() != null) {
+        // get match
+        myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+        MyLog.log(_classString, 'deletePlayerFromMatch match found ', myCustomObject: myMatch, indent: true);
+      } else {
+        // get match
+        myMatch = MyMatch(id: matchId);
+        MyLog.log(_classString, 'deletePlayerFromMatch NEW match ', indent: true);
+      }
 
       // delete player in match
       bool removed = myMatch.removePlayer(user);
-      if (!removed) return null;
+      // The Exception 'Error: el jugador no estaba en el partido.'
+      // is thrown inside of the transaction's async callback.
+      // This means that the transaction itself will handle the exception,
+      // and the catchError surrounding the transaction will not.
+      if (!removed) throw Exception('Error: el jugador no estaba en el partido.');
       MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
 
       // add match to firebase

@@ -21,14 +21,14 @@ class UserDeletePanel extends StatefulWidget {
 class UserDeletePanelState extends State<UserDeletePanel> {
   String dropdownValue = '';
 
-  late FbHelpers fsHelpers;
+  late FbHelpers fbHelpers;
 
   @override
   void initState() {
     super.initState();
 
     MyLog.log(_classString, 'initState');
-    fsHelpers = context.read<Director>().fsHelpers;
+    fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -71,7 +71,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                         // Delete user
                         try {
                           MyLog.log(_classString, 'Elminando usuario  $user', level: Level.INFO);
-                          await fsHelpers.deleteUser(user);
+                          await fbHelpers.deleteUser(user);
                         } catch (e) {
                           if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
                           MyLog.log(_classString, 'eliminar usuario', exception: e, level: Level.SEVERE);

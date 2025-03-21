@@ -195,6 +195,8 @@ class MyMatch {
 
   String toJsonString() => jsonEncode(toJson());
 
+  // must compare all fields
+  // match_notifier requires that in _notifyIfChanged method
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

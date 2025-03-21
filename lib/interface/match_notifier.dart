@@ -4,60 +4,52 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
 import '../models/match_model.dart';
+import '../utilities/date.dart';
 import 'director.dart';
 
 final String _classString = '<st> MatchNotifier'.toLowerCase();
 
-/// holds a Match. If a change is made propagates to anyone who is listening
-/// listens to firebase if the match changes
+/// Holds a [MyMatch] object and provides change notifications.
+/// Listens to Firestore for changes to the associated match.
 class MatchNotifier with ChangeNotifier {
+  /// The [MyMatch] object being managed by this notifier.
   MyMatch _match;
+
+  /// A reference to the [Director] object, providing access to Firebase helpers and application state.
   final Director _director;
+
+  /// A subscription to the Firestore stream for the associated match.
+  /// Used to listen for real-time updates from Firestore.
   StreamSubscription? _matchSubscription;
 
-  MatchNotifier(this._match, this._director) {
+  /// Constructs a [MatchNotifier] with the given [MyMatch] and [Director].
+  /// Initializes the Firestore listener.
+  MatchNotifier(Date matchId, this._director) : _match = MyMatch(id: matchId) {
     MyLog.log(_classString, 'Constructor match = $_match');
-    _init();
+    _createListener();
   }
 
+  /// Returns the current [MyMatch] object.
   MyMatch get match => _match;
 
-  /// ONLY to use if the match is updated with a new one
-  /// which matchId is different
-  /// update the match in the notifier
-  /// notify any listener that match has changed
-  ///
-  /// Not to call if the match has been updated
-  /// with the same matchId
-  /// to the Firestore
-  /// in this case, _notifyIfChanged will do the updating
-  ///
-  void updateMatch(MyMatch newMatch) {
-    MyLog.log(_classString, 'updateMatch: $newMatch');
-    if (_match.id != newMatch.id) {
-      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO, indent: true);
-      _match = newMatch;
-      // redo the listener
-      _matchSubscription?.cancel();
-      _init();
-    } else {
-      _match = newMatch;
-    }
-    notifyListeners(); // Notify listeners about the change
-  }
+  /// Initializes the Firestore listener for the associated match.
+  /// Listens for changes to the match document in Firestore.
+  void _createListener() {
+    MyLog.log(_classString, '_createListener: create _matchSubscription for match=$_match', level: Level.INFO);
 
-  void _init() {
-    MyLog.log(_classString, '_init: create _matchSubscription for match=$_match', level: Level.INFO);
-
-    _matchSubscription = _director.fsHelpers.listenToMatch(
+    _matchSubscription?.cancel();
+    _matchSubscription = _director.fbHelpers.listenToMatch(
       matchId: _match.id,
       appState: _director.appState,
       matchFunction: _notifyIfChanged,
     );
   }
 
+  /// Callback function called when the Firestore document for the associated match changes.
+  /// Compares the new match data with the current [_match] and updates it if there are changes.
+  /// Notifies listeners if the match has been updated from Firestore.
   void _notifyIfChanged(MyMatch newMatch) {
-    MyLog.log(_classString, '_notifyIfChanged: create _matchSubscription for match=$_match', level: Level.INFO);
+    MyLog.log(_classString, '_notifyIfChanged: create _matchSubscription for match=${_match.id}', level: Level.INFO);
     if (_match != newMatch) {
       MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', indent: true);
       _match = newMatch;
@@ -65,6 +57,26 @@ class MatchNotifier with ChangeNotifier {
     }
   }
 
+
+  /// Updates the [MyMatch] object with a new [MyMatch].
+  /// If the new match has a different ID, it cancels the existing Firestore listener and creates a new one.
+  /// Primarily intended for cases where the match ID changes (e.g., when replacing the match with a different one).
+  /// Should not be used for updates from Firestore, as those are handled by [_notifyIfChanged].
+  void updateMatch(MyMatch newMatch) {
+    MyLog.log(_classString, 'updateMatch: $newMatch');
+    if (_match.id != newMatch.id) {
+      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO, indent: true);
+      _match = newMatch;
+      // Redo the listener
+      _createListener();
+    } else {
+      _match = newMatch;
+    }
+    notifyListeners(); // Notify listeners about the change
+  }
+
+  /// Disposes of the [MatchNotifier].
+  /// Cancels the Firestore listener to prevent memory leaks.
   @override
   void dispose() {
     MyLog.log(_classString, 'Disposed = $_match');

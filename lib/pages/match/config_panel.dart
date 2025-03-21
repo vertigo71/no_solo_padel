@@ -28,7 +28,6 @@ class ConfigurationPanel extends StatefulWidget {
 class ConfigurationPanelState extends State<ConfigurationPanel> {
   // Create a global key that uniquely identifies the Form widget
   // and allows validation of the form.
-  //
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<SettingsPageState>.
   final _formKey = GlobalKey<FormBuilderState>();
@@ -40,9 +39,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    MyLog.log(_classString, 'Building Form');
-
     MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building Form for match=$match');
 
     return FormBuilder(
       key: _formKey,
@@ -90,7 +88,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             Row(
               children: <Widget>[
                 const SizedBox(width: 10),
-                const Text('Abrir convocatoria'),
+                 Text('Abrir convocatoria ${match.isOpen ? 'SI' : 'NO'}'),
                 const SizedBox(width: 10),
                 FormBuilderField<bool>(
                   name: isOpenId,
@@ -199,13 +197,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       String message = 'Los datos han sido actualizados';
       try {
         MyMatch oldMatch = context.read<MatchNotifier>().match;
-        FbHelpers fsHelpers = context.read<Director>().fsHelpers;
+        FbHelpers fbHelpers = context.read<Director>().fbHelpers;
         AppState appState = context.read<AppState>();
 
         // upload firebase
-        await fsHelpers.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
-        // do not update notifier as the listener will do it
-        // if (mounted) context.read<MatchNotifier>().updateMatch(newMatch);
+        await fbHelpers.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        // do not update notifier as the listener match_notifier will do it
 
         String registerText = '';
         MyUser loggedUser = appState.getLoggedUser();
@@ -226,7 +223,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
 
         if (registerText.isNotEmpty) {
-          fsHelpers.updateRegister(RegisterModel(date: newMatch.id, message: registerText));
+          fbHelpers.updateRegister(RegisterModel(date: newMatch.id, message: registerText));
           sendDatedMessageToTelegram(
             message: registerText,
             matchDate: newMatch.id,
