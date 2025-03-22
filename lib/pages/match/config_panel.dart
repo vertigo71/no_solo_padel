@@ -35,7 +35,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    MyMatch match = context.read<MatchNotifier>().match;
+    MyMatch match = context
+        .read<MatchNotifier>()
+        .match;
     MyLog.log(_classString, 'Building Form for match=$match');
 
     // // initial values for all fields
@@ -56,10 +58,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[commentId]?.value, match.comment);
     fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[isOpenId]?.value, match.isOpen);
     fieldsChanged = fieldsChanged ||
-        List.generate(maxNumberOfCourts, (i) {
-          return areFieldsDifferent(_formKey.currentState?.fields['$courtId$i']?.value,
-              i < match.courtNames.length ? match.courtNames[i] : '');
-        }).any((changed) => changed);
+        List.generate(maxNumberOfCourts, (i) =>
+            areFieldsDifferent(_formKey.currentState?.fields['$courtId$i']?.value,
+                i < match.courtNames.length ? match.courtNames[i] : '');
+        ).any((changed) => changed);
 
     if (fieldsChanged) {
       // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
@@ -185,7 +187,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
 
     // repeated courts
-    if (courts.length != Set.from(courts).length) {
+    if (courts.length != Set
+        .from(courts)
+        .length) {
       return 'Pistas repetidas';
     }
 
@@ -213,7 +217,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
 
       // all is correct or match is not open
-      MyMatch newMatch = MyMatch(id: context.read<MatchNotifier>().match.id);
+      MyMatch newMatch = MyMatch(id: context
+          .read<MatchNotifier>()
+          .match
+          .id);
       // add courts available
       for (int i = 0; i < maxNumberOfCourts; i++) {
         if (state.value['$courtId$i'].isNotEmpty) {
@@ -226,8 +233,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // Update to Firestore
       String message = 'Los datos han sido actualizados';
       try {
-        MyMatch oldMatch = context.read<MatchNotifier>().match;
-        FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+        MyMatch oldMatch = context
+            .read<MatchNotifier>()
+            .match;
+        FbHelpers fbHelpers = context
+            .read<Director>()
+            .fbHelpers;
         AppState appState = context.read<AppState>();
 
         // upload firebase
@@ -243,13 +254,14 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         if (newMatch.isOpen != oldMatch.isOpen) {
           if (newMatch.isOpen) {
             registerText =
-                'Nueva convocatoria\n${loggedUser.name} ha abierto ${singularOrPlural(newNumCourts, 'pista')}';
+            'Nueva convocatoria\n${loggedUser.name} ha abierto ${singularOrPlural(newNumCourts, 'pista')}';
           } else {
             registerText = '${loggedUser.name} ha cerrado la convocatoria';
           }
         } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
           registerText =
-              '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles')}';
+          '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(
+              newNumCourts, 'pista disponible', 'pistas disponibles')}';
         }
 
         if (registerText.isNotEmpty) {

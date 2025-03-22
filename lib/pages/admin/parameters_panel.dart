@@ -81,6 +81,21 @@ class ParametersPanelState extends State<ParametersPanel> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
+    // compare fields in case other user has changed any fields
+    bool areFieldsDifferent(dynamic formValue, dynamic realValue) => formValue != null && formValue != realValue;
+    // Use ParametersEnum to iterate through fields and compare
+    bool fieldsChanged = ParametersEnum.values
+        .map((parameter) => areFieldsDifferent(
+            _formKey.currentState?.fields[parameter.name]?.value, _appState.getParameterValue(parameter)))
+        .any((changed) => changed);
+
+    if (fieldsChanged) {
+      MyLog.log(_classString, 'Fields have changed', indent: true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
+      });
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(18.0),

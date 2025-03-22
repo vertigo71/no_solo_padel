@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/debug.dart';
 import '../../utilities/ui_helpers.dart';
 import 'user_add_panel.dart';
-import 'user_delete.dart';
+import 'user_delete_panel.dart';
 import 'user_modify_panel.dart';
 
 final String _classString = 'UserAdminPanel'.toUpperCase();
