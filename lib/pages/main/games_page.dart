@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase_helpers.dart';
@@ -29,7 +28,7 @@ class GamesPage extends StatelessWidget {
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
-        MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', indent: true);
 
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>

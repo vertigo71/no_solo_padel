@@ -80,13 +80,7 @@ Future<String> myReturnValueDialog(BuildContext context, String text, String opt
 }
 
 void showMessage(BuildContext context, String text) {
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-      text,
-      style: const TextStyle(fontSize: 16),
-    )));
-  }
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text, style: const TextStyle(fontSize: 16))));
 }
 
 /// TextFormField uppercase formatter: allow = false => deny list

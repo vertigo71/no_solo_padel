@@ -70,7 +70,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
 
                         // Delete user
                         try {
-                          MyLog.log(_classString, 'Elminando usuario  $user', level: Level.INFO);
+                          MyLog.log(_classString, 'Elminando usuario  $user');
                           await fbHelpers.deleteUser(user);
                         } catch (e) {
                           if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');

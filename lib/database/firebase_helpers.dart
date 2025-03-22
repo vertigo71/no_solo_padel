@@ -33,7 +33,7 @@ class FbHelpers {
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
     bool exists = await doesDocExist(collection: strDB(DBFields.matches), doc: matchId.toYyyyMMdd());
     if (exists) return false;
-    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId', level: Level.INFO);
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId');
     await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
     return true;
   }
@@ -55,11 +55,10 @@ class FbHelpers {
         _instance.collection(strDB(DBFields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
       if (snapshot.exists && snapshot.data() != null) {
         MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
-        MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', indent: true);
         matchFunction(newMatch);
       } else {
-        MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.',
-            level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.', indent: true);
         matchFunction(MyMatch(id: matchId));
       }
     });
@@ -85,10 +84,9 @@ class FbHelpers {
         if (snapshot.exists && snapshot.data() != null) {
           myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
         }
-        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters',
-            level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters', indent: true);
         parametersFunction(myParameters ?? MyParameters());
-        MyLog.log(_classString, 'createListeners parameters loaded', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'createListeners parameters loaded', indent: true);
         _parametersLoaded = true;
       },
       onError: (error) {
@@ -97,7 +95,7 @@ class FbHelpers {
         throw Exception('Error al crear el listener de parametros. No se han podido cargar.\n$error');
       },
       onDone: () {
-        MyLog.log(_classString, 'createListeners onDone loading parameters', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'createListeners onDone loading parameters', indent: true);
       },
     );
 
@@ -121,10 +119,9 @@ class FbHelpers {
             _classString,
             'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
             'removed=${removedUsers.length}',
-            level: Level.INFO,
             indent: true);
         usersFunction(addedUsers, modifiedUsers, removedUsers);
-        MyLog.log(_classString, 'createListeners users loaded', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'createListeners users loaded', indent: true);
         _usersLoaded = true;
       },
       onError: (error) {
@@ -133,21 +130,21 @@ class FbHelpers {
         throw Exception('Error al crear el listener de usuarios. No se han podido cargar.\n$error');
       },
       onDone: () {
-        MyLog.log(_classString, 'createListeners onDone loading users', level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'createListeners onDone loading users', indent: true);
       },
     );
   }
 
   Future<void> dataLoaded() async {
-    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...', level: Level.INFO);
+    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...');
 
     int i = 1;
     while (!(_usersLoaded && _parametersLoaded)) {
-      MyLog.log(_classString, '_dataLoaded waiting for data to load... iteration=${i++}', level: Level.INFO);
+      MyLog.log(_classString, '_dataLoaded waiting for data to load... iteration=${i++}');
       await Future.delayed(Duration(milliseconds: 200)); // Small delay to prevent blocking.
     }
 
-    MyLog.log(_classString, 'dataLoaded: Loading users and parameters completed...', level: Level.INFO);
+    MyLog.log(_classString, 'dataLoaded: Loading users and parameters completed...');
   }
 
   Future<void> disposeListeners() async {
@@ -164,7 +161,7 @@ class FbHelpers {
     required List<MyUser> modifiedUsers,
     required List<MyUser> removedUsers,
   }) {
-    MyLog.log(_classString, '_downloadChangedUsers update #users = ${snapshot.docChanges.length}', level: Level.INFO);
+    MyLog.log(_classString, '_downloadChangedUsers update #users = ${snapshot.docChanges.length}');
 
     addedUsers.clear();
     modifiedUsers.clear();
@@ -202,7 +199,7 @@ class FbHelpers {
   }
 
   Future<void> deleteOldData(DBFields collection, int daysAgo) async {
-    MyLog.log(_classString, '_deleteOldData collection=${collection.name} days=$daysAgo', level: Level.INFO);
+    MyLog.log(_classString, '_deleteOldData collection=${collection.name} days=$daysAgo');
 
     if (daysAgo <= 0) return;
 
@@ -212,8 +209,7 @@ class FbHelpers {
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name} id=${ds.id}',
-            level: Level.INFO, indent: true);
+        MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name} id=${ds.id}', indent: true);
         ds.reference.delete();
       }
     }).catchError((onError) {
@@ -230,7 +226,7 @@ class FbHelpers {
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
     AppState? appState,
   }) {
-    MyLog.log(_classString, '_getStream collection=$collection', level: Level.INFO);
+    MyLog.log(_classString, '_getStream collection=$collection');
     Query query = _instance.collection(collection);
 
     // Order by documentId FIRST
@@ -264,7 +260,7 @@ class FbHelpers {
     Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
   }) {
-    MyLog.log(_classString, 'getStream collection=$collection', level: Level.INFO);
+    MyLog.log(_classString, 'getStream collection=$collection');
     return _getStream(collection: collection, fromJson: fromJson, fromDate: fromDate, maxDate: maxDate);
   }
 
@@ -275,7 +271,7 @@ class FbHelpers {
     Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
     required AppState appState,
   }) {
-    MyLog.log(_classString, 'getStream collection=$collection', level: Level.INFO);
+    MyLog.log(_classString, 'getStream collection=$collection');
     return _getStream(
         collection: collection,
         fromJsonWithState: fromJsonWithState,
@@ -394,7 +390,7 @@ class FbHelpers {
   /// Throws:
   ///   - Catches and logs any exceptions that occur during the Firestore query.
   Future<MyUser?> getUserByEmail(String email) async {
-    MyLog.log(_classString, 'getUserByEmail $email', level: Level.INFO);
+    MyLog.log(_classString, 'getUserByEmail $email');
 
     try {
       QuerySnapshot querySnapshot =
@@ -405,7 +401,7 @@ class FbHelpers {
         return null;
       }
       if (querySnapshot.size == 0) {
-        MyLog.log(_classString, 'getUserByEmail $email doesn\'t exist', level: Level.INFO);
+        MyLog.log(_classString, 'getUserByEmail $email doesn\'t exist');
         return null;
       }
 
@@ -467,7 +463,7 @@ class FbHelpers {
       MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error al obtener los objetos $collection. \nError: $e');
     }
-    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', level: Level.INFO, indent: true);
+    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', indent: true);
     return items;
   }
 

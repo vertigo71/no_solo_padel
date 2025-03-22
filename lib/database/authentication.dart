@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+// ignore: unused_import
 import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
@@ -12,7 +13,7 @@ class AuthenticationHelper {
 
   //SIGN UP METHOD
   static Future signUp({required String email, required String password}) async {
-    MyLog.log(_classString, 'signUp $email', level: Level.INFO);
+    MyLog.log(_classString, 'signUp $email');
     try {
       await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -28,7 +29,7 @@ class AuthenticationHelper {
   /// Return null if signedIn
   /// else return Error message
   static Future signIn({required String email, required String password}) async {
-    MyLog.log(_classString, 'signIn $email', level: Level.INFO);
+    MyLog.log(_classString, 'signIn $email');
 
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -61,7 +62,7 @@ class AuthenticationHelper {
   ///   - An empty string (`''`) if user creation is successful.
   ///
   static Future<String> createUserWithEmailAndPwd({required String email, required String pwd}) async {
-    MyLog.log(_classString, 'createUserWithEmailAndPwd $email', level: Level.INFO);
+    MyLog.log(_classString, 'createUserWithEmailAndPwd $email');
 
     try {
       await _auth.createUserWithEmailAndPassword(email: email, password: pwd);
@@ -89,7 +90,7 @@ class AuthenticationHelper {
   }
 
   static Future<String> _updateEmailOrPwd({required String actualPwd, String newEmail = '', String newPwd = ''}) async {
-    MyLog.log(_classString, '_updateEmailOrPwd $newEmail', level: Level.INFO);
+    MyLog.log(_classString, '_updateEmailOrPwd $newEmail');
 
     final String errorField = newPwd.isEmpty ? 'el correo' : 'la contraseña';
 
@@ -121,7 +122,7 @@ class AuthenticationHelper {
   }
 
   static Future<UserCredential> _getUserCredential({required User user, required String actualPwd}) async {
-    MyLog.log(_classString, '_getUserCredential $user', level: Level.INFO);
+    MyLog.log(_classString, '_getUserCredential $user');
 
     AuthCredential authCredential = EmailAuthProvider.credential(
       email: user.email ?? '',

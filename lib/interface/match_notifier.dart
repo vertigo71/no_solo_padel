@@ -34,7 +34,7 @@ class MatchNotifier with ChangeNotifier {
   /// Initializes the Firestore listener for the associated match.
   /// Listens for changes to the match document in Firestore.
   void _createListener() {
-    MyLog.log(_classString, '_createListener: create _matchSubscription for match=$_match', level: Level.INFO);
+    MyLog.log(_classString, '_createListener: create _matchSubscription for match=$_match');
 
     _matchSubscription?.cancel();
 
@@ -72,7 +72,7 @@ class MatchNotifier with ChangeNotifier {
   void updateMatch(MyMatch newMatch) {
     MyLog.log(_classString, 'updateMatch: $newMatch');
     if (_match.id != newMatch.id) {
-      MyLog.log(_classString, 'updateMatch: different ids old=$_match', level: Level.INFO, indent: true);
+      MyLog.log(_classString, 'updateMatch: different ids old=$_match', indent: true);
       _match = newMatch;
       // Redo the listener
       _createListener();

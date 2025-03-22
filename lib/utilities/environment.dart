@@ -27,11 +27,11 @@ class Environment {
       assert(_packageInfo != null);
       _flavor = flavor;
       if (flavor == prodEnvironment) {
-        MyLog.log(_classString, 'Production environment initialized', level: Level.INFO);
+        MyLog.log(_classString, 'Production environment initialized');
       } else if (flavor == stageEnvironment) {
-        MyLog.log(_classString, 'Staging environment initialized', level: Level.INFO);
+        MyLog.log(_classString, 'Staging environment initialized');
       } else if (flavor == devEnvironment) {
-        MyLog.log(_classString, 'Development environment initialized', level: Level.INFO);
+        MyLog.log(_classString, 'Development environment initialized');
       } else {
         MyLog.log(_classString, 'CRUCIAL ERROR: Unknown environment initialized', level: Level.SEVERE);
       }

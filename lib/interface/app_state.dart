@@ -41,7 +41,7 @@ class AppState with ChangeNotifier {
   void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {
-    MyLog.log(_classString, 'setAllParameters $myParameters', level: Level.INFO);
+    MyLog.log(_classString, 'setAllParameters $myParameters');
     _parametersCache = myParameters ?? MyParameters();
     MyLog.setDebugLevel(_parametersCache.minDebugLevel); // new level of debugging
 
@@ -52,7 +52,7 @@ class AppState with ChangeNotifier {
   MyUser getLoggedUser() => _loggedUser;
 
   void setLoggedUser(MyUser user, {required bool notify}) {
-    MyLog.log(_classString, 'setLoggedUser $user', level: Level.INFO);
+    MyLog.log(_classString, 'setLoggedUser $user');
     _loggedUser = user;
     // update MyLog name and email
     MyLog.loggedUserId = _loggedUser.id;
@@ -89,7 +89,7 @@ class AppState with ChangeNotifier {
   bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
-    MyLog.log(_classString, 'setAllUsers users=$users', level: Level.INFO);
+    MyLog.log(_classString, 'setAllUsers users=$users');
 
     _usersCache.clear();
     _usersCache.addAll(users);
@@ -107,8 +107,7 @@ class AppState with ChangeNotifier {
       setChangedUsers(added, modified, removed, notify: true);
 
   void setChangedUsers(List<MyUser> added, List<MyUser> modified, List<MyUser> removed, {required bool notify}) {
-    MyLog.log(_classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ',
-        level: Level.INFO);
+    MyLog.log(_classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ');
 
     if (added.isNotEmpty) {
       MyLog.log(_classString, 'setChangedUsers added $added ', indent: true);
@@ -150,7 +149,7 @@ class AppState with ChangeNotifier {
   /// if not found, return false
   /// if found copy all data from newUser to User
   bool _updateCachedUser(MyUser newUser) {
-    MyLog.log(_classString, '_updateCachedUser. user = $newUser ', level: Level.INFO);
+    MyLog.log(_classString, '_updateCachedUser. user = $newUser ');
     Set<MyUser> usersFound = _usersCache.where((user) => user.id == newUser.id).toSet();
     if (usersFound.isEmpty) {
       MyLog.log(_classString, '_updateCachedUser. No users found to update = $newUser ',

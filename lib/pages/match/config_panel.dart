@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -27,10 +26,6 @@ class ConfigurationPanel extends StatefulWidget {
 }
 
 class ConfigurationPanelState extends State<ConfigurationPanel> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  // Note: This is a GlobalKey<FormState>,
-  // not a GlobalKey<SettingsPageState>.
   final _formKey = GlobalKey<FormBuilderState>();
   static const int maxNumberOfCourts = 6;
   static const String commentId = 'comment';
@@ -54,6 +49,28 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     //     _formKey.currentState?.fields['$courtId$i']?.didChange('');
     //   }
     // }
+
+    // compare fields in case other user has changed any fields
+    bool fieldsChanged = false;
+    bool areFieldsDifferent(dynamic formValue, dynamic matchValue) => formValue != null && formValue != matchValue;
+    fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[commentId]?.value, match.comment);
+    fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[isOpenId]?.value, match.isOpen);
+    fieldsChanged = fieldsChanged ||
+        List.generate(maxNumberOfCourts, (i) {
+          return areFieldsDifferent(_formKey.currentState?.fields['$courtId$i']?.value,
+              i < match.courtNames.length ? match.courtNames[i] : '');
+        }).any((changed) => changed);
+
+    if (fieldsChanged) {
+      // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
+      // immediately after a rebuild, particularly within the build method.
+      // If you're showing SnackBars in response to user interactions or asynchronous operations,
+      // this overhead is unnecessary.
+      MyLog.log(_classString, 'Fields have changed', indent: true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
+      });
+    }
 
     return FormBuilder(
       key: _formKey,
@@ -185,7 +202,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // save all values
       state!.save();
 
-      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', level: Level.INFO, indent: true);
+      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', indent: true);
       if (state.value[isOpenId]) {
         // if opening a match, check all fields
         String errorString = _checkForm();
@@ -205,7 +222,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
       newMatch.comment = state.value[commentId];
       newMatch.isOpen = state.value[isOpenId];
-      MyLog.log(_classString, '_formValidate: update match = $newMatch', level: Level.INFO, indent: true);
+      MyLog.log(_classString, '_formValidate: update match = $newMatch', indent: true);
       // Update to Firestore
       String message = 'Los datos han sido actualizados';
       try {

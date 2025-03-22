@@ -14,8 +14,9 @@ final String _classString = 'MatchPage'.toUpperCase();
 
 class MatchPage extends StatelessWidget {
   // argument matchJson vs matchId
-  // matchJson: initialValue for FormBuilder will work
+  // matchJson: initialValue for FormBuilder will hold the correct initial values
   //   If another user changes any field, the form will not update
+  //   A new matchJson will be received. But Form fields won't be updated.
   //   Good for configuration panel
   // matchId: _formKey.currentState?.fields[commentId]?.didChange(match.comment); should be implemented
   //   If any user changes any field, the form will update. Or if any rebuild is made, changes would be lost.

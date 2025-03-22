@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
@@ -59,7 +61,7 @@ Future<void> main() async {
     build: "1",
   );
   FlutterBugfender.log("Executing: ${DateTime.now()}");
-  MyLog.log(_classString, 'Environment = $flavor', level: Level.INFO);
+  MyLog.log(_classString, 'Environment = $flavor');
 
   runApp(MyApp());
 }

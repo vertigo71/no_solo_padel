@@ -455,10 +455,10 @@ class PlayersPanelState extends State<PlayersPanel> {
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
-    MyLog.log(_classString, '_sendToRegister send to register', level: Level.INFO);
+    MyLog.log(_classString, '_sendToRegister send to register');
     await fbHelpers.updateRegister(RegisterModel(date: match.id, message: registerText));
 
-    MyLog.log(_classString, '_sendToRegister send to telegram', level: Level.INFO);
+    MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
         message: '$registerText\n'
             'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
