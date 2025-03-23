@@ -14,12 +14,13 @@ import '../../utilities/misc.dart';
 
 final String _classString = 'UserAddPanel'.toUpperCase();
 
-enum _FormFieldsEnum { name, email, pwd, checkPwd, admin, superUser }
+// the uniqueness of an user is checked by its email = username+MyUser.emailSuffix and id = username
+enum _FormFieldsEnum { name, username, pwd, checkPwd, admin, superUser }
 
 class _FormFields {
   static const List<String> text = [
     'Nombre',
-    'Correo (@nsp.com)',
+    'Usuario',
     'Contraseña',
     'Verificar contraseña',
     'Administrador',
@@ -118,8 +119,12 @@ class UserAddPanelState extends State<UserAddPanel> {
         obscureText: _FormFields.obscuredText[field.index],
         validator: FormBuilderValidators.compose([
           FormBuilderValidators.required(errorText: 'Este campo es obligatorio'),
-          if (field == _FormFieldsEnum.email)
-            FormBuilderValidators.email(errorText: 'La dirección de correo tiene que ser válida'), // Email validation
+          if (field == _FormFieldsEnum.username)
+            FormBuilderValidators.username(
+                allowDash: true,
+                allowUnderscore: true,
+                allowNumbers: true,
+                errorText: 'Utilizar letras, números, guiones y guiones bajos'),
           if (field == _FormFieldsEnum.pwd)
             FormBuilderValidators.minLength(6,
                 errorText: 'La longitud tiene que ser superior a 6 caracteres'), // Password length
@@ -154,22 +159,22 @@ class UserAddPanelState extends State<UserAddPanel> {
       final formData = _formKey.currentState!.value;
 
       String name = formData[_FormFieldsEnum.name.name];
-      String email = formData[_FormFieldsEnum.email.name];
+      String username = formData[_FormFieldsEnum.username.name];
       String pwd = formData[_FormFieldsEnum.pwd.name];
       String checkPwd = formData[_FormFieldsEnum.checkPwd.name];
       bool isAdmin = formData[_FormFieldsEnum.admin.name] ?? false;
       bool isSuperuser = formData[_FormFieldsEnum.superUser.name] ?? false;
 
       // check name
-      bool ok = checkName(name);
+      bool ok = _checkName(name);
       if (!ok) return;
 
-      // check email
-      ok = checkEmail(email);
+      // check username
+      ok = _checkUsername(username);
       if (!ok) return;
 
       // check passwords
-      ok = checkAllPwd(pwd, checkPwd);
+      ok = _checkAllPwd(pwd, checkPwd);
       if (!ok) return;
 
       // confirmation dialog
@@ -185,7 +190,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       });
 
       try {
-        bool ok = await createNewUser(name, email, pwd, isAdmin, isSuperuser);
+        bool ok = await _createNewUser(name, username, pwd, isAdmin, isSuperuser);
         if (ok) {
           if (mounted) showMessage(context, 'El usuario ha sido creado');
           _formKey.currentState!.reset();
@@ -200,7 +205,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     }
   }
 
-  bool checkName(String name) {
+  bool _checkName(String name) {
     // newName is not somebody else's
 
     MyLog.log(_classString, 'checkName $name');
@@ -214,19 +219,18 @@ class UserAddPanelState extends State<UserAddPanel> {
     return true;
   }
 
-  bool checkEmail(String email) {
-    // newEmail is not somebody else's
-    MyLog.log(_classString, 'checkEmail $email');
+  bool _checkUsername(String username) {
+    // newEmail or newId is not somebody else's
+    MyLog.log(_classString, 'checkUsername $username');
 
-    MyUser? user = appState.getUserByEmail(email);
-    if (user != null) {
-      showMessage(context, 'Ya hay un usuario con ese correo');
+    if (appState.getUserByEmail(username + MyUser.emailSuffix) != null || appState.getUserById(username) != null) {
+      showMessage(context, 'Ya hay un jugador con ese nombre de usuario');
       return false;
     }
     return true;
   }
 
-  bool checkAllPwd(String pwd, String checkPwd) {
+  bool _checkAllPwd(String pwd, String checkPwd) {
     MyLog.log(_classString, 'checkAllPwd');
 
     if (pwd != checkPwd) {
@@ -236,31 +240,26 @@ class UserAddPanelState extends State<UserAddPanel> {
     return true;
   }
 
-  Future<bool> createNewUser(name, email, pwd, isAdmin, isSuperuser) async {
-    MyLog.log(_classString, 'createNewUser $name $email $isAdmin $isSuperuser');
+  Future<bool> _createNewUser(name, username, pwd, isAdmin, isSuperuser) async {
+    MyLog.log(_classString, 'createNewUser $name $username $isAdmin $isSuperuser');
 
-    MyUser? existingUser = appState.getUserByEmail(email);
-    if (existingUser != null) {
-      MyLog.log(_classString, 'createNewUser user already exists', level: Level.WARNING, indent: true);
-      myAlertDialog(context, 'El correo del usuario ya existe');
-      return false;
-    }
-
-    String response = await AuthenticationHelper.createUserWithEmailAndPwd(email: email, pwd: pwd);
-    if (response.isNotEmpty && mounted) {
+    // add user to Firebase Authentication
+    String response =
+        await AuthenticationHelper.createUserWithEmailAndPwd(email: username + MyUser.emailSuffix, pwd: pwd);
+    if (response.isNotEmpty) {
       // error creating new user
       MyLog.log(_classString, 'createNewUser ERROR creating user', level: Level.SEVERE, indent: true);
-      myAlertDialog(context, response);
+      if (mounted) myAlertDialog(context, response);
       return false;
     }
 
     // create a user
     MyUser myUser = MyUser(
-      id: email.split('@')[0],
+      id: username,
       name: name,
-      email: email,
+      email: username + MyUser.emailSuffix,
       userType: isSuperuser
-          ? isSuperuser
+          ? UserType.superuser
           : isAdmin
               ? isAdmin
               : UserType.basic,
@@ -271,7 +270,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     try {
       fbHelpers.updateUser(myUser);
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al crear localmente el usuario');
+      if (mounted) showMessage(context, 'Error al crear el usuario en la base de datos');
       MyLog.log(_classString, 'Error creating user in Firestore', level: Level.SEVERE, indent: true);
       return false;
     }
