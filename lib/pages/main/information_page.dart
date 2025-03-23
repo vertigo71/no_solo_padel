@@ -1,99 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
-import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
-import '../../models/match_model.dart';
-import '../../models/user_model.dart';
-import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
 
-class InformationPage extends StatefulWidget {
+class InformationPage extends StatelessWidget {
   const InformationPage({super.key});
-
-  @override
-  State<InformationPage> createState() => _InformationPageState();
-}
-
-class _InformationPageState extends State<InformationPage> {
-  List<MyMatch>? _allLoggedUserMatches;
-  late MyUser _loggedUser;
-  late AppState appState;
-  late FbHelpers fbHelpers;
-
-  @override
-  void initState() {
-    super.initState();
-
-    MyLog.log(_classString, 'initState');
-    appState = context.read<AppState>();
-    fbHelpers = context.read<Director>().fbHelpers;
-    _loggedUser = appState.getLoggedUser();
-    _getAllLoggedUserMatches();
-  }
-
-  Future<void> _getAllLoggedUserMatches() async {
-    List<MyMatch> allLoggedUserMatches =
-        await fbHelpers.getAllPlayerMatches(playerId: _loggedUser.id, appState: appState);
-    MyLog.log(_classString, 'initState num of matches = ${allLoggedUserMatches.length}', indent: true);
-
-    setState(() {
-      _allLoggedUserMatches = allLoggedUserMatches;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
-    if (_allLoggedUserMatches == null) {
-      return SpinKitFadingCube(color: Colors.blue, size: 50.0);
-    }
-
-    int matchesPlayed = 0;
-    int matchesSigned = 0;
-    for (MyMatch match in _allLoggedUserMatches ?? []) {
-      if (match.isInTheMatch(_loggedUser)) matchesSigned++;
-      if (match.isPlaying(_loggedUser)) matchesPlayed++;
-    }
-
     return Scaffold(
       body: ListView(
         children: [
-          Card(
-            elevation: 6,
-            margin: const EdgeInsets.all(10),
-            child: ListTile(
-              title: Text(
-                'En el último año\n'
-                '  Has jugado ${singularOrPlural(matchesPlayed, 'partido')}\n'
-                '  y apuntado a ${singularOrPlural(matchesSigned, 'partido')}',
-              ),
-            ),
-          ),
           ...ListTile.divideTiles(
               context: context,
-              tiles: appState.users.map(((user) {
-                int numberOfMatchesTogether = 0;
-                for (MyMatch match in _allLoggedUserMatches ?? []) {
-                  if (match.arePlayingTogether(user, _loggedUser)) {
-                    numberOfMatchesTogether++;
+              tiles: context.read<AppState>().users.map(((user) {
+                final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
+
+                ImageProvider<Object>? imageProvider;
+                try {
+                  if (user.avatarUrl != null) {
+                    imageProvider = NetworkImage(user.avatarUrl!);
                   }
+                } catch (e) {
+                  MyLog.log(_classString, 'Error building image for user $user', level: Level.WARNING, indent: true);
+                  imageProvider = null;
                 }
-                final String startTimes =
-                    'Habéis empezado juntos: ${singularOrPlural(numberOfMatchesTogether, 'vez', 'veces')}';
-                final String sosInfo = user.emergencyInfo.isNotEmpty ? '\nSOS: ${user.emergencyInfo}' : '';
 
                 return ListTile(
                   leading: CircleAvatar(
-                      backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
-                  title: Text(user.name + sosInfo),
-                  subtitle: Text('$startTimes\n${user.email.split('@')[0]}'),
+                    radius: 25,
+                    backgroundColor: Colors.blueAccent,
+                    backgroundImage: imageProvider,
+                    child:
+                        imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
+                  ),
+                  title: Text(user.name),
+                  subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}'),
+                  trailing: Text(user.userType.displayName),
                 );
               }))),
         ],

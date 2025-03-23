@@ -6,7 +6,15 @@ import 'debug.dart';
 
 final String _classString = '<md> MyUser'.toLowerCase();
 
-enum UserType { basic, admin, superuser }
+enum UserType {
+  basic('Básico'),
+  admin('Administrador'),
+  superuser('Super usuario');
+
+  final String displayName;
+
+  const UserType(this.displayName);
+}
 
 class MyUser {
   static const String emailSuffix = '@nsp.com';
