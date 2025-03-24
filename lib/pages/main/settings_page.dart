@@ -18,25 +18,47 @@ import '../../utilities/misc.dart';
 final String _classString = 'SettingsPage'.toUpperCase();
 
 // fields of the form. avatarUrl field is taken care of individually
-enum _FormFieldsEnum { name, emergencyInfo, user, actualPwd, newPwd, checkPwd }
+enum _FormFieldsEnum {
+  name(
+    label: 'Nombre (por este te conocerán los demás)',
+    obscuredText: false,
+    mayBeEmpty: false,
+  ),
+  emergencyInfo(
+    label: 'Información de emergencia',
+    obscuredText: false,
+    mayBeEmpty: true,
+  ),
+  user(
+    label: 'Usuario (para conectarte a la aplicación)',
+    obscuredText: false,
+    mayBeEmpty: false,
+  ),
+  actualPwd(
+    label: 'Contraseña Actual',
+    obscuredText: true,
+    mayBeEmpty: true,
+  ),
+  newPwd(
+    label: 'Nueva Contraseña',
+    obscuredText: true,
+    mayBeEmpty: true,
+  ),
+  checkPwd(
+    label: 'Repetir contraseña',
+    obscuredText: true,
+    mayBeEmpty: true,
+  );
 
-class _FormFields {
-  _FormFields() {
-    assert(text.length == _FormFieldsEnum.values.length);
-    assert(obscuredText.length == _FormFieldsEnum.values.length);
-  }
+  final String label;
+  final bool obscuredText;
+  final bool mayBeEmpty;
 
-  static const List<String> text = [
-    'Nombre (por este te conocerán los demás)',
-    'Información de emergencia',
-    'Usuario (para conectarte a la aplicación)',
-    'Contraseña Actual',
-    'Nueva Contraseña',
-    'Repetir contraseña'
-  ];
-
-  static const List<bool> obscuredText = [false, false, false, true, true, true];
-  static const List<bool> mayBeEmpty = [false, true, false, true, true, true];
+  const _FormFieldsEnum({
+    required this.label,
+    required this.obscuredText,
+    required this.mayBeEmpty,
+  });
 }
 
 class SettingsPage extends StatefulWidget {
@@ -49,11 +71,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class SettingsPageState extends State<SettingsPage> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  //
-  // Note: This is a GlobalKey<FormState>,
-  // not a GlobalKey<SettingsPageState>.
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
   Uint8List? _compressedImageData; // Store the compressed image disk file in memory
@@ -192,24 +209,20 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildFormField(_FormFieldsEnum formFieldEnum) {
-    final fieldName = _FormFields.text[formFieldEnum.index];
-    final isPassword = _FormFields.obscuredText[formFieldEnum.index];
-    final isOptional = _FormFields.mayBeEmpty[formFieldEnum.index];
-
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderTextField(
         name: formFieldEnum.name,
         initialValue: _getInitialValue(formFieldEnum),
         decoration: InputDecoration(
-          labelText: fieldName,
+          labelText: formFieldEnum.label,
           border: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(4.0)),
           ),
         ),
-        obscureText: isPassword,
+        obscureText: formFieldEnum.obscuredText,
         validator: FormBuilderValidators.compose([
-          if (!isOptional) FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+          if (!formFieldEnum.mayBeEmpty) FormBuilderValidators.required(errorText: 'No puede estar vacío'),
         ]),
       ),
     );
