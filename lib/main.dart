@@ -1,5 +1,6 @@
 // ignore_for_file: unused_import
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bugfender/flutter_bugfender.dart';
@@ -47,6 +48,9 @@ Future<void> main() async {
   }
 
   await Firebase.initializeApp(options: firebaseOptions);
+  // The user remains signed in even after closing and reopening the app.
+  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+
   await initializeDateFormatting('es_ES', null); // Spanish
   MyLog.initialize();
   await Environment().initialize(flavor: flavor);

@@ -1,6 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-// ignore: unused_import
-import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
 
@@ -12,7 +10,7 @@ class AuthenticationHelper {
   static User? get user => _auth.currentUser;
 
   //SIGN UP METHOD
-  static Future signUp({required String email, required String password}) async {
+  static Future<String?> signUp({required String email, required String password}) async {
     MyLog.log(_classString, 'signUp $email');
     try {
       await _auth.createUserWithEmailAndPassword(
@@ -28,8 +26,9 @@ class AuthenticationHelper {
   /// SIGN IN METHOD
   /// Return null if signedIn
   /// else return Error message
-  static Future signIn({required String email, required String password}) async {
+  static Future<String?> signIn({required String email, required String password}) async {
     MyLog.log(_classString, 'signIn $email');
+    MyLog.log(_classString, 'signIn ${_auth.languageCode}');
 
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -43,7 +42,7 @@ class AuthenticationHelper {
   }
 
   //SIGN OUT METHOD
-  static Future signOut() async {
+  static Future<void> signOut() async {
     MyLog.log(_classString, 'SignOut');
     await _auth.signOut();
   }
