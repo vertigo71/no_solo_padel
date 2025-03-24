@@ -18,18 +18,17 @@ final String _classString = 'ParametersPanel'.toUpperCase();
 
 /// Helper class to define form fields and their properties
 class _FormFields {
-  /// Labels for the form fields
-  static List<String> text = [
-    'Partidos: ver número de días', // matchDaysToView
-    'Partidos: histórico de días a conservar', // matchDaysKeeping
-    'Registro: ver número de días atrás', // registerDaysAgoToView
-    'Registro: histórico de días a conservar', // registerDaysKeeping
-    'Enviar telegram si partido es antes de (días)', // fromDaysAgoToTelegram
-    'Texto por defecto del comentario', // defaultCommentText
-    'Debug (${_generateDebugLevelsText()})', // minDebugLevel
-    'Días que se pueden jugar (${MyParameters.daysOfWeek})', // weekDaysMatch
-    '', // Not a text field (showLog)
-  ];
+  static Map<ParametersEnum, String> label = {
+    ParametersEnum.matchDaysToView: 'Partidos: ver número de días',
+    ParametersEnum.matchDaysKeeping: 'Partidos: histórico de días a conservar',
+    ParametersEnum.registerDaysAgoToView: 'Registro: ver número de días atrás',
+    ParametersEnum.registerDaysKeeping: 'Registro: histórico de días a conservar',
+    ParametersEnum.fromDaysAgoToTelegram: 'Enviar telegram si partido es antes de (días)',
+    ParametersEnum.defaultCommentText: 'Texto por defecto del comentario',
+    ParametersEnum.minDebugLevel: 'Debug (${_generateDebugLevelsText()})',
+    ParametersEnum.weekDaysMatch: 'Días que se pueden jugar (${MyParameters.daysOfWeek})',
+    ParametersEnum.showLog: '', // Not a text field (showLog)
+  };
 
   static String _generateDebugLevelsText() {
     return Level.LEVELS
@@ -38,18 +37,17 @@ class _FormFields {
         .join(',');
   }
 
-  /// Allowed characters for input fields (regex)
-  static List<String> listAllowedChars = [
-    '[0-9]', // matchDaysToView
-    '[0-9]', // matchDaysKeeping
-    '[0-9]', // registerDaysAgoToView
-    '[0-9]', // registerDaysKeeping
-    '[0-9]', // fromDaysAgoToTelegram
-    '', // defaultCommentText (free text)
-    '[0-${Level.LEVELS.length - 1}]', // minDebugLevel
-    '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]', // weekDaysMatch
-    '' // Not a text field (showLog)
-  ];
+  static Map<ParametersEnum, String> listAllowedChars = {
+    ParametersEnum.matchDaysToView: '[0-9]',
+    ParametersEnum.matchDaysKeeping: '[0-9]',
+    ParametersEnum.registerDaysAgoToView: '[0-9]',
+    ParametersEnum.registerDaysKeeping: '[0-9]',
+    ParametersEnum.fromDaysAgoToTelegram: '[0-9]',
+    ParametersEnum.defaultCommentText: '', // free text
+    ParametersEnum.minDebugLevel: '[0-${Level.LEVELS.length - 1}]',
+    ParametersEnum.weekDaysMatch: '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
+    ParametersEnum.showLog: '', // Not a text field (showLog)
+  };
 }
 
 /// The main widget for the parameters panel
@@ -139,22 +137,53 @@ class ParametersPanelState extends State<ParametersPanel> {
         name: parameter.name,
         initialValue: _appState.getParameterValue(parameter),
         decoration: InputDecoration(
-          labelText: _FormFields.text[parameter.index],
+          labelText: _FormFields.label[parameter] ?? '',
           border: const OutlineInputBorder(),
         ),
         keyboardType: TextInputType.text,
 
         // Apply input formatters if allowed characters are specified
-        inputFormatters: _FormFields.listAllowedChars[parameter.index].isNotEmpty
-            ? [UpperCaseTextFormatter(RegExp(_FormFields.listAllowedChars[parameter.index]), allow: true)]
+        inputFormatters: (_FormFields.listAllowedChars[parameter] ?? '').isNotEmpty
+            ? [UpperCaseTextFormatter(RegExp(_FormFields.listAllowedChars[parameter]!), allow: true)]
             : [],
 
         // Validation logic
         validator: FormBuilderValidators.compose([
           FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+          if (parameter == ParametersEnum.weekDaysMatch) _noDuplicateCharsValidator,
+          if (parameter == ParametersEnum.minDebugLevel) _minDebugLevelValidator,
         ]),
       ),
     );
+  }
+
+  // Custom validator to prevent duplicate characters
+  String? _noDuplicateCharsValidator(String? value) {
+    if (value == null || value.isEmpty) return null; // Allow empty input
+
+    final chars = value.split('');
+    final uniqueChars = chars.toSet();
+
+    if (chars.length != uniqueChars.length) {
+      return 'No se permiten caracteres duplicados.';
+    }
+    return null; // Validation passed
+  }
+
+  // Custom validator for minDebugLevel
+  String? _minDebugLevelValidator(String? value) {
+    if (value == null || value.isEmpty) return null; // Allow empty input
+
+    final int? intValue = int.tryParse(value);
+    if (intValue == null) {
+      return 'Debe ser un número entero.';
+    }
+
+    if (intValue < 0 || intValue > Level.LEVELS.length - 1) {
+      return 'Debe estar entre 0 y ${Level.LEVELS.length - 1}.';
+    }
+
+    return null; // Validation passed
   }
 
   /// Builds the Show Log checkbox with FormBuilderField

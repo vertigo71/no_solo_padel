@@ -4,7 +4,6 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../../interface/app_state.dart';
 import '../../models/debug.dart';
-import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
 

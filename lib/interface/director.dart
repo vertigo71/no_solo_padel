@@ -48,8 +48,9 @@ class Director {
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    fbHelpers.deleteOldData(DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping));
-    fbHelpers.deleteOldData(DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping));
+    fbHelpers.deleteOldData(
+        DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
+    fbHelpers.deleteOldData(DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
   Future<void> createTestData() async {
@@ -97,7 +98,7 @@ class Director {
     const int numMatches = 10;
     const int maxUsers = 10;
     final users = _appState.users;
-    for (int d = 0; d < numMatches; d+=2 ) {
+    for (int d = 0; d < numMatches; d += 2) {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match
       MyMatch? match = await _fbHelpers.getMatch(date.toYyyyMMdd(), _appState);

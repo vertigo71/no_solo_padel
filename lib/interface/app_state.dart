@@ -29,14 +29,14 @@ class AppState with ChangeNotifier {
   /// parameter methods
   String getParameterValue(ParametersEnum parameter) => _parametersCache.getStrValue(parameter);
 
-  int getIntParameterValue(ParametersEnum parameter) => _parametersCache.getIntValue(parameter);
+  int? getIntParameterValue(ParametersEnum parameter) => _parametersCache.getIntValue(parameter);
 
   bool getBoolParameterValue(ParametersEnum parameter) => _parametersCache.getBoolValue(parameter);
 
   bool isDayPlayable(Date date) => _parametersCache.isDayPlayable(date);
 
   Date get maxDateOfMatchesToView =>
-      Date.now().add(Duration(days: getIntParameterValue(ParametersEnum.matchDaysToView)));
+      Date.now().add(Duration(days: getIntParameterValue(ParametersEnum.matchDaysToView) ?? 0));
 
   void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 

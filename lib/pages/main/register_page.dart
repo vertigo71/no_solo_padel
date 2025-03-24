@@ -25,7 +25,8 @@ class RegisterPage extends StatelessWidget {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: fbHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView)),
+              stream:
+                  fbHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView) ?? 0),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error al acceder al registro: ${snapshot.error}'));

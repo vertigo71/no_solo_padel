@@ -49,7 +49,7 @@ class GamesPage extends StatelessWidget {
             List<MyMatch> playableMatches = [];
 
             // Create missing matches or get the ones in fetchedMatches if they exist
-            for (int days = 0; days < appState.getIntParameterValue(ParametersEnum.matchDaysToView); days++) {
+            for (int days = 0; days < (appState.getIntParameterValue(ParametersEnum.matchDaysToView) ?? -1); days++) {
               Date date = Date.now().add(Duration(days: days));
               if (appState.isDayPlayable(date)) {
                 MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
@@ -94,7 +94,7 @@ class GamesPage extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdmin,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.toJson() );
+                          context.pushNamed(AppRoutes.match, extra: match.toJson());
                         },
                       ),
                     );
