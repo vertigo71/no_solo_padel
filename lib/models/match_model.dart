@@ -12,14 +12,16 @@ import 'user_model.dart';
 
 final String _classString = '<md> MyMatch'.toLowerCase();
 
-enum PlayingState { playing, signedNotPlaying, reserve, unsigned }
+enum PlayingState {
+  playing('¡¡¡Juegas!!!'),
+  signedNotPlaying('Apuntado'),
+  reserve('Reserva'),
+  unsigned('No apuntado');
 
-const Map playingStateMap = {
-  PlayingState.playing: '¡¡¡Juegas!!!',
-  PlayingState.signedNotPlaying: 'Apuntado',
-  PlayingState.reserve: 'Reserva',
-  PlayingState.unsigned: 'No apuntado',
-};
+  final String displayText;
+
+  const PlayingState(this.displayText);
+}
 
 class MyMatch {
   Date id;
@@ -127,7 +129,7 @@ class MyMatch {
     }
   }
 
-  String getPlayingStateString(MyUser player) => playingStateMap[getPlayingState(player)];
+  String getPlayingStateString(MyUser player) => getPlayingState(player).displayText;
 
   Map<MyUser, PlayingState> getAllPlayingStates() {
     Map<MyUser, PlayingState> map = {};

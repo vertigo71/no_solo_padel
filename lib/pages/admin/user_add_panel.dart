@@ -14,20 +14,19 @@ import '../../utilities/misc.dart';
 
 final String _classString = 'UserAddPanel'.toUpperCase();
 
-// the uniqueness of an user is checked by its email = username+MyUser.emailSuffix and id = username
-enum _FormFieldsEnum { name, username, pwd, checkPwd, admin, superUser }
+// The uniqueness of a user is checked by its email = username+MyUser.emailSuffix and id = username
+enum _FormFieldsEnum {
+  name(label: 'Nombre', obscuredText: false),
+  username(label: 'Usuario', obscuredText: false),
+  pwd(label: 'Contraseña', obscuredText: true),
+  checkPwd(label: 'Verificar contraseña', obscuredText: true),
+  admin(label: 'Administrador', obscuredText: false),
+  superUser(label: 'Super Usuario', obscuredText: false);
 
-class _FormFields {
-  static const List<String> text = [
-    'Nombre',
-    'Usuario',
-    'Contraseña',
-    'Verificar contraseña',
-    'Administrador',
-    'Super Usuario',
-  ];
+  final String label;
+  final bool obscuredText;
 
-  static const List<bool> obscuredText = [false, false, true, true, true, true];
+  const _FormFieldsEnum({required this.label, required this.obscuredText});
 }
 
 class UserAddPanel extends StatefulWidget {
@@ -73,12 +72,11 @@ class UserAddPanelState extends State<UserAddPanel> {
               Row(
                 children: <Widget>[
                   const SizedBox(width: 10), //SizedBox
-                  Text(_FormFields.text[_FormFieldsEnum.admin.index]), //Text
+                  Text(_FormFieldsEnum.admin.label), //Text
                   const SizedBox(width: 10), //SizedBox
                   _buildCheckBoxField(_FormFieldsEnum.admin),
-
                   const SizedBox(width: 10),
-                  Text(_FormFields.text[_FormFieldsEnum.superUser.index]), //Text
+                  Text(_FormFieldsEnum.superUser.label), //Text
                   const SizedBox(width: 10),
                   _buildCheckBoxField(_FormFieldsEnum.superUser),
                 ],
@@ -113,10 +111,10 @@ class UserAddPanelState extends State<UserAddPanel> {
       child: FormBuilderTextField(
         name: field.name,
         decoration: InputDecoration(
-          labelText: _FormFields.text[field.index],
+          labelText: field.label,
           border: const OutlineInputBorder(),
         ),
-        obscureText: _FormFields.obscuredText[field.index],
+        obscureText: field.obscuredText,
         validator: FormBuilderValidators.compose([
           FormBuilderValidators.required(errorText: 'Este campo es obligatorio'),
           if (field == _FormFieldsEnum.username)
