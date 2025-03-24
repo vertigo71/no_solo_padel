@@ -19,36 +19,13 @@ final String _classString = 'SettingsPage'.toUpperCase();
 
 // fields of the form. avatarUrl field is taken care of individually
 enum _FormFieldsEnum {
-  name(
-    label: 'Nombre (por este te conocerán los demás)',
-    obscuredText: false,
-    mayBeEmpty: false,
-  ),
-  emergencyInfo(
-    label: 'Información de emergencia',
-    obscuredText: false,
-    mayBeEmpty: true,
-  ),
-  user(
-    label: 'Usuario (para conectarte a la aplicación)',
-    obscuredText: false,
-    mayBeEmpty: false,
-  ),
-  actualPwd(
-    label: 'Contraseña Actual',
-    obscuredText: true,
-    mayBeEmpty: true,
-  ),
-  newPwd(
-    label: 'Nueva Contraseña',
-    obscuredText: true,
-    mayBeEmpty: true,
-  ),
-  checkPwd(
-    label: 'Repetir contraseña',
-    obscuredText: true,
-    mayBeEmpty: true,
-  );
+  name(label: 'Nombre (por este te conocerán los demás)', obscuredText: false, mayBeEmpty: false),
+  emergencyInfo(label: 'Información de emergencia', obscuredText: false, mayBeEmpty: true),
+  user(label: 'Usuario (para conectarte a la aplicación)', obscuredText: false, mayBeEmpty: false),
+  actualPwd(label: 'Contraseña Actual', obscuredText: true, mayBeEmpty: true),
+  newPwd(label: 'Nueva Contraseña', obscuredText: true, mayBeEmpty: true),
+  checkPwd(label: 'Repetir contraseña', obscuredText: true, mayBeEmpty: true),
+  ;
 
   final String label;
   final bool obscuredText;
