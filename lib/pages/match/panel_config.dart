@@ -59,7 +59,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         List.generate(
             maxNumberOfCourts,
             (i) => areFieldsDifferent(_formKey.currentState?.fields['$courtId$i']?.value,
-                i < match.courtNames.length ? match.courtNames[i] : '')).any((changed) => changed);
+                i < match.courtNamesReference.length ? match.courtNamesReference[i] : '')).any((changed) => changed);
 
     if (fieldsChanged) {
       // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
@@ -102,7 +102,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                             borderRadius: BorderRadius.all(Radius.circular(4.0)),
                           ),
                         ),
-                        initialValue: i < match.courtNames.length ? match.courtNames[i] : '',
+                        initialValue: i < match.courtNamesReference.length ? match.courtNamesReference[i] : '',
                         inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
                         keyboardType: TextInputType.text,
                         textAlign: TextAlign.center, // Center the text
@@ -217,7 +217,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // add courts available
       for (int i = 0; i < maxNumberOfCourts; i++) {
         if (state.value['$courtId$i'].isNotEmpty) {
-          newMatch.courtNames.add(state.value['$courtId$i']);
+          newMatch.courtNamesReference.add(state.value['$courtId$i']);
         }
       }
       newMatch.comment = state.value[commentId];

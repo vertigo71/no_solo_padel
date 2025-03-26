@@ -166,11 +166,8 @@ class PlayersPanelState extends State<PlayersPanel> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ...usersPlaying.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name} '
-                          '(${rankingSortedUsers.indexOf(player) + 1})')),
-                      ...usersSigned.map((player) => Text(
-                          '${(++playerNumber).toString().padLeft(3)} - ${player.name} '
-                          '(${rankingSortedUsers.indexOf(player) + 1})',
+                      ...usersPlaying.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
+                      ...usersSigned.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers),
                           style: const TextStyle(color: Colors.red))),
                       ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
                     ],
@@ -196,9 +193,7 @@ class PlayersPanelState extends State<PlayersPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        ...usersReserve
-                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name} '
-                            '(${rankingSortedUsers.indexOf(player) + 1})')),
+                        ...usersReserve.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
                       ],
                     ),
                   ),
@@ -207,6 +202,11 @@ class PlayersPanelState extends State<PlayersPanel> {
           );
         },
       );
+
+  String _playerText(int playerNumber, MyUser player, List<MyUser> rankingSortedUsers) {
+    return '${playerNumber.toString().padLeft(3)} - ${player.name} '
+        '<${rankingSortedUsers.indexOf(player) + 1}>';
+  }
 
   Widget roulette() {
     List<MyUser> users = context.read<AppState>().users;
@@ -466,7 +466,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
         message: '$registerText\n'
-            'APUNTADOS: ${match.players.length} de ${match.getNumberOfCourts() * 4}',
+            'APUNTADOS: ${match.playersReference.length} de ${match.getNumberOfCourts() * 4}',
         matchDate: match.id,
         fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
   }

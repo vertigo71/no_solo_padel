@@ -7,7 +7,7 @@ import '../../interface/match_notifier.dart';
 import '../../models/debug.dart';
 import 'panel_players.dart';
 import 'panel_config.dart';
-import 'sorting/panel_sorting.dart';
+import 'panel_sorting.dart';
 import '../../interface/app_state.dart';
 
 final String _classString = 'MatchPage'.toUpperCase();

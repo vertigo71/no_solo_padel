@@ -114,13 +114,13 @@ class Director {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match
       MyMatch? match = await _fbHelpers.getMatch(date.toYyyyMMdd(), _appState);
-      if (match == null || match.players.isEmpty) {
+      if (match == null || match.playersReference.isEmpty) {
         List<int> randomInts = getRandomList(maxUsers, date);
         MyMatch match = MyMatch(id: date);
         match.comment = 'Las Tablas a las 10h30';
         match.isOpen = randomInts.first.isEven;
-        match.courtNames.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
-        match.players.addAll(randomInts.map((e) => users[e % users.length]).toSet());
+        match.courtNamesReference.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
+        match.playersReference.addAll(randomInts.map((e) => users[e % users.length]).toSet());
         MyLog.log(_classString, 'createTestData: update match = $match', indent: true);
         await fbHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
       }

@@ -25,15 +25,23 @@ enum PlayingState {
 
 class MyMatch {
   Date id;
-  final List<MyUser> players = [];
-  final List<String> courtNames = [];
+  final List<MyUser> _players = [];
+  final List<String> _courtNames = [];
   String comment;
   bool isOpen;
 
   MyMatch({required this.id, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
-    this.players.addAll(players ?? {});
-    this.courtNames.addAll(courtNames ?? {});
+    _players.addAll(players ?? {});
+    _courtNames.addAll(courtNames ?? {});
   }
+
+  List<MyUser> get playersReference => _players;
+
+  List<String> get courtNamesReference => _courtNames;
+
+  List<MyUser> get playersCopy => List.from(_players);
+
+  List<String> get courtNamesCopy => List.from(_courtNames);
 
   factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
     final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
@@ -74,50 +82,71 @@ class MyMatch {
   }) {
     return MyMatch(
       id: id ?? this.id,
-      players: players ?? List.from(this.players),
-      courtNames: courtNames ?? List.from(this.courtNames),
+      players: players ?? List.from(_players),
+      courtNames: courtNames ?? List.from(_courtNames),
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
     );
   }
 
-  bool isCourtInMatch(String court) => courtNames.contains(court);
+  bool isCourtInMatch(String court) => _courtNames.contains(court);
 
-  int getNumberOfFilledCourts() => min((players.length / 4).floor(), courtNames.length);
+  int getNumberOfFilledCourts() => min((_players.length / 4).floor(), _courtNames.length);
 
-  int getNumberOfCourts() => courtNames.length;
+  int getNumberOfCourts() => _courtNames.length;
 
-  // null for all
+  /// Retrieves a list of players, optionally filtered by their playing state.
+  ///
+  /// If [state] is null, this function returns all players. Otherwise, it returns
+  /// a list of players whose playing state matches the provided [state].
+  ///
+  /// The playing states are retrieved from the [getAllPlayingStates] map, which
+  /// associates each player ([MyUser]) with their corresponding [PlayingState].
+  ///
+  /// [state]: The playing state to filter by. If null, all players are returned.
+  ///
+  /// Returns: A list of [MyUser] objects, either all players or those matching the
+  ///          specified playing state.
   List<MyUser> getPlayers({PlayingState? state}) {
-    if (state == null) return players;
-    Map<MyUser, PlayingState> map = getAllPlayingStates();
-    List<MyUser> list = [];
-    map.forEach((player, playerState) => playerState == state ? list.add(player) : null);
-    return list;
+    if (state == null) return List.from(_players);
+    return getAllPlayingStates()
+        .entries
+        .where((entry) => entry.value == state) // Filter by playing state
+        .map((entry) => entry.key) // Extract the player
+        .toList(); // Convert to list
   }
 
   /// return -1 if not found
-  int getPlayerPosition(MyUser user) => players.toList().indexOf(user);
+  int getPlayerPosition(MyUser user) => _players.indexOf(user);
 
-  bool isInTheMatch(MyUser player) => players.contains(player);
+  bool isInTheMatch(MyUser player) => _players.contains(player);
 
   bool isPlaying(MyUser player) => getPlayingState(player) == PlayingState.playing;
 
-  /// return position it was inserted [0 .. length-1]. -1 if already existed
+  /// Inserts a player into the player list at the specified position.
+  ///
+  /// If the player already exists in the list, it returns -1.
+  /// If the [position] is invalid (less than 0 or greater than or equal to the
+  /// list's length), the player is added to the end of the list.
+  ///
+  /// Returns: The index at which the player was inserted, or -1 if the player
+  ///          already exists.
   int insertPlayer(MyUser player, {int position = -1}) {
-    if (players.contains(player)) return -1;
-    if (position < 0 || position >= players.length) {
-      players.add(player);
-      return players.length - 1;
+    if (_players.contains(player)) {
+      return -1;
     }
-    List<MyUser> allPlayers = players.toList()..insert(position, player);
-    players.clear();
-    players.addAll(allPlayers);
+
+    if (position < 0 || position >= _players.length) {
+      _players.add(player);
+      return _players.length - 1;
+    }
+
+    _players.insert(position, player); // Directly insert into _players.
     return position;
   }
 
   /// Returns `true` if [player] was in the list, and `false` if not.
-  bool removePlayer(MyUser player) => players.remove(player);
+  bool removePlayer(MyUser player) => _players.remove(player);
 
   PlayingState getPlayingState(MyUser player) {
     Map<MyUser, PlayingState> map = getAllPlayingStates();
@@ -131,22 +160,36 @@ class MyMatch {
 
   String getPlayingStateString(MyUser player) => getPlayingState(player).displayText;
 
+  /// Generates a map that associates each player ([MyUser]) in the [_players] list with their corresponding
+  /// [PlayingState]. The state is determined based on the player's position in the list relative to the number
+  /// of filled courts and the total number of available court slots.
+  ///
+  /// - Players within the first [getNumberOfFilledCourts() * 4] positions are assigned [PlayingState.playing].
+  /// - Players within the next [_courtNames.length * 4] positions are assigned [PlayingState.signedNotPlaying].
+  /// - Remaining players are assigned [PlayingState.reserve].
+  ///
+  /// This function relies on the [getNumberOfFilledCourts()] and [_courtNames] properties to determine the
+  /// appropriate playing states.
+  ///
+  /// Returns: A [Map<MyUser, PlayingState>] containing the playing state of each player.
   Map<MyUser, PlayingState> getAllPlayingStates() {
-    Map<MyUser, PlayingState> map = {};
-    int numberOfFilledCourts = getNumberOfFilledCourts();
-    for (int i = 0; i < players.length; i++) {
-      if (i < numberOfFilledCourts * 4) {
-        // the player is playing
-        map[players[i]] = PlayingState.playing;
-      } else if (i < courtNames.length * 4) {
-        // the player is waiting for the court to fill
-        map[players[i]] = PlayingState.signedNotPlaying;
+    final int numberOfFilledCourts = getNumberOfFilledCourts();
+    final int numberOfPlayingPlayers = numberOfFilledCourts * 4;
+    final int numberOfSignedPlayers = _courtNames.length * 4;
+
+    final Map<MyUser, PlayingState> playerStates = {};
+
+    for (int i = 0; i < _players.length; i++) {
+      if (i < numberOfPlayingPlayers) {
+        playerStates[_players[i]] = PlayingState.playing;
+      } else if (i < numberOfSignedPlayers) {
+        playerStates[_players[i]] = PlayingState.signedNotPlaying;
       } else {
-        // all available courts are full
-        map[players[i]] = PlayingState.reserve;
+        playerStates[_players[i]] = PlayingState.reserve;
       }
     }
-    return map;
+
+    return playerStates;
   }
 
   /// Generates a map representing player positions to courts for the match.
@@ -184,13 +227,76 @@ class MyMatch {
     return courtPlayers;
   }
 
+  Map<int, List<int>> getRankingPlayerPairs() {
+    int numFilledCourts = getNumberOfFilledCourts();
+    // use cascade (..) operator as sort returns void
+    List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
+      ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
+    MyLog.log(
+        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
+    Map<int, List<int>> courtPlayers = {};
+
+    for (int i = 0; i < numFilledCourts; i++) {
+      courtPlayers[i] = [
+        _players.indexOf(sortedMatchPlayers[i * 4]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 3]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 1]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 2]),
+      ];
+    }
+
+    return courtPlayers;
+  }
+
+  Map<int, List<int>> getUpsideDownPlayerPairs() {
+    int numFilledCourts = getNumberOfFilledCourts();
+    // use cascade (..) operator as sort returns void
+    List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
+      ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
+    MyLog.log(
+        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
+    Map<int, List<int>> courtPlayers = {};
+
+    for (int i = numFilledCourts - 1; i >= 0; i--) {
+      courtPlayers[numFilledCourts - i - 1] = [
+        _players.indexOf(sortedMatchPlayers[i * 4]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 3]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 1]),
+        _players.indexOf(sortedMatchPlayers[i * 4 + 2]),
+      ];
+    }
+
+    return courtPlayers;
+  }
+
+  Map<int, List<int>> getPalindromicPlayerPairs() {
+    int numFilledCourts = getNumberOfFilledCourts();
+    // use cascade (..) operator as sort returns void
+    List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
+      ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
+    MyLog.log(
+        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
+    Map<int, List<int>> courtPlayers = {};
+
+    for (int i = 0; i < numFilledCourts; i++) {
+      courtPlayers[i] = [
+        _players.indexOf(sortedMatchPlayers[i * 2]),
+        _players.indexOf(sortedMatchPlayers[4 * numFilledCourts - 1 - i * 2]),
+        _players.indexOf(sortedMatchPlayers[i * 2 + 1]),
+        _players.indexOf(sortedMatchPlayers[4 * numFilledCourts - 2 - i * 2]),
+      ];
+    }
+
+    return courtPlayers;
+  }
+
   @override
-  String toString() => ('($id,open=$isOpen,courts=$courtNames,names=$players)');
+  String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players)');
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         DBFields.date.name: id.toYyyyMMdd(),
-        if (matchPlayers) DBFields.players.name: players.map((user) => user.id).toList(),
-        if (core) DBFields.courtNames.name: courtNames.toList(),
+        if (matchPlayers) DBFields.players.name: _players.map((user) => user.id).toList(),
+        if (core) DBFields.courtNames.name: _courtNames.toList(),
         if (core) DBFields.comment.name: comment,
         if (core) DBFields.isOpen.name: isOpen, // bool
       };
@@ -205,8 +311,8 @@ class MyMatch {
     final listEquals = const DeepCollectionEquality().equals; // Use collection package
     return other is MyMatch &&
         id == other.id &&
-        listEquals(players, other.players) && // Compare lists using collection package
-        listEquals(courtNames, other.courtNames) && // Compare lists using collection package
+        listEquals(_players, other._players) && // Compare lists using collection package
+        listEquals(_courtNames, other._courtNames) && // Compare lists using collection package
         comment == other.comment &&
         isOpen == other.isOpen;
   }
@@ -214,8 +320,8 @@ class MyMatch {
   @override
   int get hashCode => Object.hash(
         id,
-        const DeepCollectionEquality().hash(players), // Hash lists using collection package
-        const DeepCollectionEquality().hash(courtNames), // Hash lists using collection package
+        const DeepCollectionEquality().hash(_players), // Hash lists using collection package
+        const DeepCollectionEquality().hash(_courtNames), // Hash lists using collection package
         comment,
         isOpen,
       );
