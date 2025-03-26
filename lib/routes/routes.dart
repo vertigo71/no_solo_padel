@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:no_solo_padel/pages/misc/page_register.dart';
 
 import '../models/debug.dart';
-import '../pages/admin/admin_page.dart';
-import '../pages/main/main_page.dart';
-import '../pages/login.dart';
-import '../pages/match/match_page.dart';
+import '../pages/admin/page_admin.dart';
+import '../pages/main/page_main.dart';
+import '../pages/page_login.dart';
+import '../pages/match/page_match.dart';
 
 final String _classString = 'Routes'.toUpperCase();
 
@@ -19,6 +20,8 @@ class AppRoutes {
   static const String match = 'match';
   static const String adminPath = '/admin';
   static const String admin = 'admin';
+  static const String registerPath = '/register';
+  static const String register = 'register';
 }
 
 class AppRouter {
@@ -48,6 +51,10 @@ class AppRouter {
           path: AppRoutes.adminPath,
           builder: (BuildContext context, GoRouterState state) => const AdminPage(),
           name: AppRoutes.admin),
+      GoRoute(
+          path: AppRoutes.registerPath,
+          builder: (BuildContext context, GoRouterState state) => const RegisterPage(),
+          name: AppRoutes.register),
     ],
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('Page Not Found')),

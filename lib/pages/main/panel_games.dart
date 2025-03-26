@@ -15,8 +15,8 @@ import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'GamesPage'.toUpperCase();
 
-class GamesPage extends StatelessWidget {
-  const GamesPage({super.key});
+class GamesPanel extends StatelessWidget {
+  const GamesPanel({super.key});
 
   @override
   Widget build(BuildContext context) {

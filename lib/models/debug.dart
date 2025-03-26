@@ -22,20 +22,6 @@ class MyLog {
 
   static String loggedUserId = '';
 
-  // list of values
-  // Level.LEVELS = [
-  //   ALL,
-  //   FINEST,
-  //   FINER,
-  //   FINE,
-  //   CONFIG,
-  //   INFO,
-  //   WARNING,
-  //   SEVERE,
-  //   SHOUT,
-  //   OFF
-  // ];
-
   /// convert an integer Debug level value into a Level variable
   /// if the int level is not valid, return Level.ALL
   static Level int2level(int level) {

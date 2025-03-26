@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import '../database/authentication.dart';
@@ -56,6 +58,7 @@ class Director {
   Future<void> createTestData() async {
     MyLog.log(_classString, 'createTestData');
 
+    // create users if there are none
     if (_appState.numUsers == 0) {
       MyLog.log(_classString, 'createTestData: creating users', indent: true);
 
@@ -90,14 +93,23 @@ class Director {
       }
     }
 
+    // update ranking position for every user
+    final users = _appState.users;
+    final random = Random();
+    for (MyUser user in users) {
+      if (user.rankingPos == 0) {
+        user.rankingPos = random.nextInt(10000);
+        await fbHelpers.updateUser(user);
+      }
+    }
+
     MyLog.log(_classString, 'createTestData: creating matches', indent: true);
     // wait until there are users in the appState
     while (_appState.numUsers == 0) {
-      await Future.delayed(const Duration(milliseconds: 5));
+      await Future.delayed(const Duration(milliseconds: 200));
     }
     const int numMatches = 10;
     const int maxUsers = 10;
-    final users = _appState.users;
     for (int d = 0; d < numMatches; d += 2) {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match

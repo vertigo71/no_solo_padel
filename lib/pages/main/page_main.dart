@@ -16,10 +16,10 @@ import '../../utilities/date.dart';
 import '../../utilities/environment.dart';
 import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
-import 'games_page.dart';
-import 'information_page.dart';
-import 'register_page.dart';
-import 'settings_page.dart';
+import 'panel_games.dart';
+import 'panel_information.dart';
+import '../misc/page_register.dart';
+import 'panel_settings.dart';
 
 final String _classString = 'MainPage'.toUpperCase();
 
@@ -38,10 +38,10 @@ class _MainPageState extends State<MainPage> {
   late Director _director;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    GamesPage(),
+    GamesPanel(),
     RegisterPage(),
-    InformationPage(),
-    SettingsPage(),
+    InformationPanel(),
+    SettingsPanel(),
   ];
 
   @override
@@ -138,7 +138,14 @@ class _MainPageState extends State<MainPage> {
         builder: (context, appState, _) => Text(appState.getLoggedUser().name),
       ),
       actions: [
-        Consumer<AppState>(
+        IconButton( // Register
+          onPressed: () async {
+            context.pushNamed(AppRoutes.register);
+          },
+          icon: ImageIcon(AssetImage('assets/images/list.png')),
+          tooltip: 'Registro',
+        ),
+        Consumer<AppState>( // Admin
           builder: (context, appState, _) {
             if (appState.isLoggedUserSuper) {
               return IconButton(
@@ -153,7 +160,7 @@ class _MainPageState extends State<MainPage> {
             }
           },
         ),
-        IconButton(
+        IconButton( // Exit
           onPressed: () async {
             MyLog.log(_classString, 'Icon SignOut begin', indent: true);
             // if back is pressed, user will be signedOut

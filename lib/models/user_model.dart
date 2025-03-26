@@ -27,6 +27,7 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
+  int rankingPos;
 
   MyUser({
     this.id = '',
@@ -37,6 +38,7 @@ class MyUser {
     this.lastLogin,
     this.loginCount = 0,
     this.avatarUrl,
+    this.rankingPos = 0,
   }) : _email = email.toLowerCase();
 
   MyUser copyWith({
@@ -48,6 +50,7 @@ class MyUser {
     Date? lastLogin,
     int? loginCount,
     String? avatarUrl,
+    int? rankingPos,
   }) {
     return MyUser(
       id: id ?? this.id,
@@ -58,6 +61,7 @@ class MyUser {
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      rankingPos: rankingPos ?? this.rankingPos,
     );
   }
 
@@ -71,6 +75,7 @@ class MyUser {
       lastLogin: user.lastLogin,
       loginCount: user.loginCount,
       avatarUrl: user.avatarUrl,
+      rankingPos: user.rankingPos,
     );
   }
 
@@ -108,6 +113,7 @@ class MyUser {
       lastLogin: Date.parse(json[DBFields.lastLogin.name]),
       loginCount: json[DBFields.loginCount.name] ?? 0,
       avatarUrl: json[DBFields.avatarUrl.name],
+      rankingPos: json[DBFields.rankingPos.name] ?? 0,
     );
   }
 
@@ -124,6 +130,7 @@ class MyUser {
       DBFields.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '', // String
       DBFields.loginCount.name: loginCount, // int
       DBFields.avatarUrl.name: avatarUrl,
+      DBFields.rankingPos.name: rankingPos,
     };
   }
 
@@ -138,7 +145,8 @@ class MyUser {
         userType == other.userType &&
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
-        avatarUrl == other.avatarUrl;
+        avatarUrl == other.avatarUrl &&
+        rankingPos == other.rankingPos;
   }
 
   @override
@@ -151,5 +159,6 @@ class MyUser {
         lastLogin,
         loginCount,
         avatarUrl,
+        rankingPos,
       );
 }

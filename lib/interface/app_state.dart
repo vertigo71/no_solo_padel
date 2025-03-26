@@ -78,9 +78,25 @@ class AppState with ChangeNotifier {
 
   int get numUsers => _usersCache.length;
 
-  List<MyUser> get users => List.from(_usersCache);
+  // Modifies _usersCache in place
+  List<MyUser> get users {
+    _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
+    return List.from(_usersCache);
+  }
 
-  void _sortUsers() => _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
+  /// Sorts the users by their ranking position.
+  ///
+  /// Returns a new list of [MyUser] objects sorted by their [rankingPos] field.
+  ///
+  /// [descending]: If true, sorts the users in descending order (highest ranking first).
+  ///               If false, sorts the users in ascending order (lowest ranking first).
+  ///               Defaults to true.
+  /// Returns a new sorted list
+  List<MyUser> getUsersSortedByRanking({bool descending = true}) {
+    final List<MyUser> users = List.from(_usersCache);
+    users.sort((a, b) => descending ? b.rankingPos.compareTo(a.rankingPos) : a.rankingPos.compareTo(b.rankingPos));
+    return users;
+  }
 
   bool get isLoggedUserAdmin => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
 
@@ -96,9 +112,6 @@ class AppState with ChangeNotifier {
 
     // convert loggedUser
     setLoggedUserById(_loggedUser.id, notify: false);
-
-    // sort
-    _sortUsers();
 
     if (notify) notifyListeners();
   }
@@ -130,9 +143,6 @@ class AppState with ChangeNotifier {
         removeUserByIdBold(newUser.id);
       }
     }
-
-    // sort users
-    _sortUsers();
 
     if (notify) notifyListeners();
   }

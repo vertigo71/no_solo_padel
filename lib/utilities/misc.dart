@@ -111,14 +111,35 @@ class CaseTextFormatter extends FilteringTextInputFormatter {
   }
 }
 
-/// 'date random' list from 0 to num-1
-List<int> getRandomList(int num, DateTime date) {
+/// Generates a pseudo-random list of integers based on a given date and length.
+///
+/// This function produces a list of integers of length [numOfElements], where the order of
+/// elements is determined by a pseudo-random sequence derived from the
+/// milliseconds since epoch of the provided [dateSeed]. The generated sequence aims
+/// to distribute the numbers 0 to [numOfElements] - 1 in a seemingly random order.
+///
+/// The process involves:
+/// 1. Generating a base list using a sinusoidal function and the date's timestamp.
+/// 2. Identifying numbers within the range 0 to [numOfElements] - 1 that are missing from the base list.
+/// 3. Inserting the missing numbers into the base list at positions determined by
+///    the existing elements in the base list, or at the beginning if the position
+///    is out of bounds.
+///
+/// The use of the date's timestamp as a seed allows for reproducible sequences
+/// given the same date, while providing different sequences for different dates.
+///
+/// [num]: The desired length of the generated list.
+/// [date]: The date used to generate the pseudo-random sequence.
+///
+/// Returns: A list of integers of length [numOfElements] in a pseudo-random order.
+///
+List<int> getRandomList(int numOfElements, DateTime dateSeed) {
   MyLog.log(_classString, 'getRandomList', level: Level.ALL);
-  int baseNum = date.millisecondsSinceEpoch;
-  List<int> base = List<int>.generate(num, (index) => (baseNum * sin(baseNum + index)).floor() % num).toSet().toList();
+  int baseNum = dateSeed.millisecondsSinceEpoch;
+  List<int> base = List<int>.generate(numOfElements, (index) => (baseNum * sin(baseNum + index)).floor() % numOfElements).toSet().toList();
   MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.ALL);
 
-  List<int> all = List<int>.generate(num, (int index) => num - index - 1);
+  List<int> all = List<int>.generate(numOfElements, (int index) => numOfElements - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();
   MyLog.log(_classString, 'getRandomList Missing numbers list $diff', indent: true, level: Level.ALL);
 

@@ -21,6 +21,9 @@ class RegisterPage extends StatelessWidget {
     FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Registro'),
+      ),
       body: Column(
         children: [
           Expanded(

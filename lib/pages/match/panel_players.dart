@@ -144,6 +144,8 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.getNumberOfCourts(), 'pista')}';
+          List<MyUser> rankingSortedUsers = context.read<AppState>().getUsersSortedByRanking();
+          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$rankingSortedUsers');
 
           return Column(
             children: [
@@ -164,9 +166,11 @@ class PlayersPanelState extends State<PlayersPanel> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      ...usersPlaying
-                          .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
-                      ...usersSigned.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}',
+                      ...usersPlaying.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name} '
+                          '(${rankingSortedUsers.indexOf(player) + 1})')),
+                      ...usersSigned.map((player) => Text(
+                          '${(++playerNumber).toString().padLeft(3)} - ${player.name} '
+                          '(${rankingSortedUsers.indexOf(player) + 1})',
                           style: const TextStyle(color: Colors.red))),
                       ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
                     ],
@@ -193,7 +197,8 @@ class PlayersPanelState extends State<PlayersPanel> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         ...usersReserve
-                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name}')),
+                            .map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ${player.name} '
+                            '(${rankingSortedUsers.indexOf(player) + 1})')),
                       ],
                     ),
                   ),

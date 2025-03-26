@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/debug.dart';
-import 'parameters_panel.dart';
-import 'user_admin_panel.dart';
+import 'panel_parameters.dart';
+import 'panel_user_admin.dart';
 
 final String _classString = 'AdminPage'.toUpperCase();
 

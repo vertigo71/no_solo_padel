@@ -32,4 +32,5 @@ enum DBFields {
   register, // register
   date,
   registerMessage,
+  rankingPos,
 }

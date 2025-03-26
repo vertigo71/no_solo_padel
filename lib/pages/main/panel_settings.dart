@@ -38,16 +38,16 @@ enum _FormFieldsEnum {
   });
 }
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+class SettingsPanel extends StatefulWidget {
+  const SettingsPanel({super.key});
 
   @override
-  SettingsPageState createState() {
-    return SettingsPageState();
+  SettingsPanelState createState() {
+    return SettingsPanelState();
   }
 }
 
-class SettingsPageState extends State<SettingsPage> {
+class SettingsPanelState extends State<SettingsPanel> {
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
   Uint8List? _compressedImageData; // Store the compressed image disk file in memory

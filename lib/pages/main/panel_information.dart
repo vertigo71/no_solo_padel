@@ -7,8 +7,8 @@ import '../../models/debug.dart';
 
 final String _classString = 'InformationPage'.toUpperCase();
 
-class InformationPage extends StatelessWidget {
-  const InformationPage({super.key});
+class InformationPanel extends StatelessWidget {
+  const InformationPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
