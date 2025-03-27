@@ -2,9 +2,9 @@
 
 
 // get name of any Enum
-String strDB(DBFields s) => s.name;
+String fName(Fields s) => s.name;
 
-enum DBFields {
+enum Fields {
   users, // users
   userId,
   name,
@@ -33,4 +33,15 @@ enum DBFields {
   date,
   registerMessage,
   rankingPos,
+  resultId,
+  player1,
+  player2,
+  points,
+  preRanking1,
+  preRanking2,
+  score,
+  teamA,
+  teamB,
+  results,
+  matchId,
 }

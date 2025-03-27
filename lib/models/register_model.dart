@@ -45,12 +45,12 @@ class RegisterModel {
   }
 
   factory RegisterModel.fromJson(Map<String, dynamic> json) => RegisterModel.list(
-        date: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
-        timedMsgList: (json[DBFields.registerMessage.name] ?? []).cast<String>(),
+        date: Date.parse(json[Fields.date.name]) ?? Date.ymd(1971),
+        timedMsgList: (json[Fields.registerMessage.name] ?? []).cast<String>(),
       );
 
   Map<String, dynamic> toJson() => {
-        DBFields.date.name: date.toYyyyMMdd(),
-        DBFields.registerMessage.name: FieldValue.arrayUnion(_msgList),
+        Fields.date.name: date.toYyyyMMdd(),
+        Fields.registerMessage.name: FieldValue.arrayUnion(_msgList),
       };
 }

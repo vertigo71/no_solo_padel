@@ -27,7 +27,7 @@ class Director {
 
     // check Enums parameters in AppState are in FirebaseHelper
     if (kDebugMode) {
-      String fieldsValues = DBFields.values.join(';');
+      String fieldsValues = Fields.values.join(';');
       for (var value in ParametersEnum.values) {
         assert(fieldsValues.contains(value.name));
       }
@@ -51,8 +51,8 @@ class Director {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
     fbHelpers.deleteOldData(
-        DBFields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
-    fbHelpers.deleteOldData(DBFields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
+        Fields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
+    fbHelpers.deleteOldData(Fields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
   Future<void> createTestData() async {

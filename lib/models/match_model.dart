@@ -44,7 +44,7 @@ class MyMatch {
   List<String> get courtNamesCopy => List.from(_courtNames);
 
   factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-    final playerIds = List<String>.from(json[DBFields.players.name] ?? []);
+    final playerIds = List<String>.from(json[Fields.players.name] ?? []);
     final players = <MyUser>[];
 
     for (final playerId in playerIds) {
@@ -55,11 +55,11 @@ class MyMatch {
     }
 
     return MyMatch(
-      id: Date.parse(json[DBFields.date.name]) ?? Date.ymd(1971),
+      id: Date.parse(json[Fields.date.name]) ?? Date.ymd(1971),
       players: players,
-      courtNames: List<String>.from(json[DBFields.courtNames.name] ?? []),
-      comment: json[DBFields.comment.name] ?? '',
-      isOpen: json[DBFields.isOpen.name] ?? false,
+      courtNames: List<String>.from(json[Fields.courtNames.name] ?? []),
+      comment: json[Fields.comment.name] ?? '',
+      isOpen: json[Fields.isOpen.name] ?? false,
     );
   }
 
@@ -294,11 +294,11 @@ class MyMatch {
   String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players)');
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
-        DBFields.date.name: id.toYyyyMMdd(),
-        if (matchPlayers) DBFields.players.name: _players.map((user) => user.id).toList(),
-        if (core) DBFields.courtNames.name: _courtNames.toList(),
-        if (core) DBFields.comment.name: comment,
-        if (core) DBFields.isOpen.name: isOpen, // bool
+        Fields.date.name: id.toYyyyMMdd(),
+        if (matchPlayers) Fields.players.name: _players.map((user) => user.id).toList(),
+        if (core) Fields.courtNames.name: _courtNames.toList(),
+        if (core) Fields.comment.name: comment,
+        if (core) Fields.isOpen.name: isOpen, // bool
       };
 
   String toJsonString() => jsonEncode(toJson());
