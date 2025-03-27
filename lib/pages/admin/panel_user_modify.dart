@@ -9,7 +9,7 @@ import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
 
-final String _classString = 'ModifyUserPage'.toUpperCase();
+final String _classString = 'ModifyUserPanel'.toUpperCase();
 
 class UserModifyPanel extends StatelessWidget {
   const UserModifyPanel({super.key});

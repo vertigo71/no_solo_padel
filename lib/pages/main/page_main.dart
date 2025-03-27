@@ -18,8 +18,8 @@ import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
 import 'panel_games.dart';
 import 'panel_information.dart';
-import '../misc/page_register.dart';
-import 'panel_settings.dart';
+import 'panel_profile.dart';
+import 'panel_ranking.dart';
 
 final String _classString = 'MainPage'.toUpperCase();
 
@@ -39,9 +39,9 @@ class _MainPageState extends State<MainPage> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     GamesPanel(),
-    RegisterPage(),
+    RankingPanel(),
     InformationPanel(),
-    SettingsPanel(),
+    ProfilePanel(),
   ];
 
   @override
@@ -142,7 +142,7 @@ class _MainPageState extends State<MainPage> {
           onPressed: () async {
             context.pushNamed(AppRoutes.register);
           },
-          icon: ImageIcon(AssetImage('assets/images/list.png')),
+          icon: ImageIcon(AssetImage('assets/icons/list.png')),
           tooltip: 'Registro',
         ),
         Consumer<AppState>( // Admin
@@ -180,9 +180,9 @@ class _MainPageState extends State<MainPage> {
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
         UiHelpers.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
-        UiHelpers.buildNavItem(1, ImageIcon(AssetImage('assets/images/list.png')), 'Registro', _selectedIndex),
-        UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/images/padel.png')), 'Información', _selectedIndex),
-        UiHelpers.buildNavItem(3, Icon(Icons.settings), 'Ajustes', _selectedIndex),
+        UiHelpers.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Ranking', _selectedIndex),
+        UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
+        UiHelpers.buildNavItem(3, Icon(Icons.settings), 'Perfil', _selectedIndex),
       ],
       currentIndex: _selectedIndex,
       onTap: (index) {

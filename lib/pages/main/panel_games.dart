@@ -13,7 +13,7 @@ import '../../routes/routes.dart';
 import '../../utilities/date.dart';
 import '../../utilities/ui_helpers.dart';
 
-final String _classString = 'GamesPage'.toUpperCase();
+final String _classString = 'GamesPanel'.toUpperCase();
 
 class GamesPanel extends StatelessWidget {
   const GamesPanel({super.key});

@@ -5,7 +5,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../interface/app_state.dart';
 import '../../models/debug.dart';
 
-final String _classString = 'InformationPage'.toUpperCase();
+final String _classString = 'InformationPanel'.toUpperCase();
 
 class InformationPanel extends StatelessWidget {
   const InformationPanel({super.key});

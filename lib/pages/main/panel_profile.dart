@@ -15,7 +15,7 @@ import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
 
-final String _classString = 'SettingsPage'.toUpperCase();
+final String _classString = 'ProfilePanel'.toUpperCase();
 
 // fields of the form. avatarUrl field is taken care of individually
 enum _FormFieldsEnum {
@@ -38,16 +38,16 @@ enum _FormFieldsEnum {
   });
 }
 
-class SettingsPanel extends StatefulWidget {
-  const SettingsPanel({super.key});
+class ProfilePanel extends StatefulWidget {
+  const ProfilePanel({super.key});
 
   @override
-  SettingsPanelState createState() {
-    return SettingsPanelState();
+  ProfilePanelState createState() {
+    return ProfilePanelState();
   }
 }
 
-class SettingsPanelState extends State<SettingsPanel> {
+class ProfilePanelState extends State<ProfilePanel> {
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
 
   Uint8List? _compressedImageData; // Store the compressed image disk file in memory
