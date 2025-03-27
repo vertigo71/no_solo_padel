@@ -12,7 +12,6 @@ import '../models/match_model.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/date.dart';
-import '../utilities/transformation.dart';
 import 'fields.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
@@ -245,7 +244,7 @@ class FbHelpers {
     }
 
     try {
-      return query.snapshots().transform(transformer(fromJson, appState));
+      return query.snapshots().transform(_transformer(fromJson, appState));
     } catch (e) {
       MyLog.log(_classString, 'getStream ERROR collection=$collection',
           exception: e, level: Level.SEVERE, indent: true);
@@ -592,4 +591,32 @@ class FbHelpers {
       throw Exception('Error al subir el archivo $filename\nError: $e');
     }
   }
+
+// StreamTransformer.fromHandlers and handleData
+//
+// StreamTransformer.fromHandlers: This is a convenient factory constructor for creating a StreamTransformer.
+// It allows you to define the transformation logic using handler functions.
+//
+// handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink):
+// data: This is where the magic happens. The data parameter receives the QuerySnapshot<Map<String, dynamic>>
+// emitted by the input stream (query.snapshots()).
+// So, every time there is a change in the query result,
+// the new QuerySnapshot is passed to the handleData function.
+// sink: The EventSink<List<T>> is the output sink. You use it to send the transformed data (a List<T>)
+// to the output stream. It is how you add data to the transformed stream.
+// How data gets here: When query.snapshots().transform(transformer(fromJson, appState)) is executed,
+// the bind method of the stream transformer is called. The bind method then attaches the handleData function
+// to the input stream. So that every time a new event happens on the input stream,
+// the handleData function is triggered, and the event data is passed as the data parameter.
+  StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> _transformer<T>(
+          T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+          [AppState? appState]) =>
+      StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
+        handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink) {
+          final List<Map<String, dynamic>> snaps = data.docs.map((doc) => doc.data()).toList();
+          final List<T> items = snaps.map((json) => fromJson(json, appState)).toList();
+
+          sink.add(items);
+        },
+      );
 }

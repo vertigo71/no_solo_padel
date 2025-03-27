@@ -13,6 +13,7 @@ import '../../interface/app_state.dart';
 import '../../models/register_model.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'ConfigurationPanel'.toUpperCase();
 
@@ -68,7 +69,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // this overhead is unnecessary.
       MyLog.log(_classString, 'Fields have changed', indent: true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
+        UiHelper.showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
       });
     }
 
@@ -124,7 +125,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                   name: isOpenId,
                   initialValue: match.isOpen,
                   builder: (FormFieldState<bool> field) {
-                    return myCheckBox(
+                    return UiHelper.myCheckBox(
                       context: context,
                       value: field.value ?? false,
                       onChanged: (newValue) {
@@ -207,7 +208,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         // if opening a match, check all fields
         String errorString = _checkForm();
         if (errorString.isNotEmpty) {
-          myAlertDialog(context, errorString);
+          UiHelper.myAlertDialog(context, errorString);
           return;
         }
       }
@@ -265,7 +266,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             exception: e, level: Level.SEVERE, indent: true);
       }
 
-      if (mounted) showMessage(context, message);
+      if (mounted) UiHelper.showMessage(context, message);
     }
   }
 }

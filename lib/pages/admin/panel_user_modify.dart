@@ -36,7 +36,7 @@ class UserModifyPanel extends StatelessWidget {
                         const String option2 = 'Admin';
                         const String option3 = 'Super';
                         const String option4 = 'Cancelar';
-                        String response = await myReturnValueDialog(context, '¿Tipo de usuario?', option1, option2,
+                        String response = await UiHelper.myReturnValueDialog(context, '¿Tipo de usuario?', option1, option2,
                             option3: option3, option4: option4);
                         MyLog.log(_classString, 'build response = $response');
 
@@ -54,7 +54,7 @@ class UserModifyPanel extends StatelessWidget {
                           MyLog.log(_classString, 'usuario modificado con $response');
                         } catch (e) {
                           if (context.mounted) {
-                            showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
+                            UiHelper.showMessage(context, 'No se ha podido modificar al usuario ${user.name}');
                           }
                           MyLog.log(_classString, 'modificar usuario', exception: e, level: Level.SEVERE);
                         }

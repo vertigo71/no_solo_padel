@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:collection/collection.dart';
@@ -11,7 +12,6 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
-import '../../utilities/transformation.dart';
 
 /// Class name identifier for logging
 final String _classString = 'ParametersPanel'.toUpperCase();
@@ -90,7 +90,7 @@ class ParametersPanelState extends State<ParametersPanel> {
     if (fieldsChanged) {
       MyLog.log(_classString, 'Fields have changed', indent: true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
+        UiHelper.showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
       });
     }
 
@@ -195,7 +195,7 @@ class ParametersPanelState extends State<ParametersPanel> {
           name: ParametersEnum.showLog.name,
           initialValue: _appState.showLog,
           builder: (FormFieldState<bool> field) {
-            return myCheckBox(
+            return UiHelper.myCheckBox(
               context: context,
               value: field.value ?? false,
               onChanged: (bool? value) {
@@ -234,11 +234,11 @@ class ParametersPanelState extends State<ParametersPanel> {
       try {
         await _fbHelpers.updateParameters(myParameters);
         if (mounted) {
-          showMessage(context, 'Los parámetros han sido actualizados.');
+          UiHelper.showMessage(context, 'Los parámetros han sido actualizados.');
         }
       } catch (e) {
         if (mounted) {
-          showMessage(context, 'Error actualizando parámetros.');
+          UiHelper.showMessage(context, 'Error actualizando parámetros.');
         }
       }
     }

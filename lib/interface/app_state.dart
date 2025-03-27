@@ -6,7 +6,7 @@ import '../utilities/date.dart';
 import '../models/debug.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
-import '../utilities/transformation.dart';
+import '../utilities/misc.dart';
 
 final String _classString = '<st> AppState'.toLowerCase();
 

@@ -56,14 +56,14 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                           '${singularOrPlural(user.loginCount, 'vez', 'veces')}'),
                       onTap: () async {
                         if (user.id == appState.getLoggedUser().id) {
-                          showMessage(context, 'No se puede eliminar el usuario actual');
+                          UiHelper.showMessage(context, 'No se puede eliminar el usuario actual');
                           return;
                         }
 
                         const String option1 = 'Eliminar';
                         const String option2 = 'Cancelar';
                         String response =
-                            await myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', option1, option2);
+                            await UiHelper.myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', option1, option2);
                         MyLog.log(_classString, 'build response = $response');
 
                         if (response.isEmpty || response == option2) return;
@@ -73,7 +73,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                           MyLog.log(_classString, 'Elminando usuario  $user');
                           await fbHelpers.deleteUser(user);
                         } catch (e) {
-                          if (context.mounted) showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
+                          if (context.mounted) UiHelper.showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
                           MyLog.log(_classString, 'eliminar usuario', exception: e, level: Level.SEVERE);
                         }
                       },

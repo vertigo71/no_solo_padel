@@ -13,7 +13,7 @@ import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
-import '../../utilities/misc.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'ProfilePanel'.toUpperCase();
 
@@ -79,7 +79,7 @@ class ProfilePanelState extends State<ProfilePanel> {
       }
     } catch (e) {
       MyLog.log(_classString, 'Error building image', level: Level.SEVERE, indent: true);
-      showMessage(context, 'Error obteniendo la imagen de perfil');
+      UiHelper.showMessage(context, 'Error obteniendo la imagen de perfil');
       imageProvider = null;
     }
 
@@ -158,11 +158,11 @@ class ProfilePanelState extends State<ProfilePanel> {
           });
         } else {
           MyLog.log(_classString, 'Error loading avatar', level: Level.SEVERE, indent: true);
-          if (mounted) showMessage(context, 'Error al cargar la imagen');
+          if (mounted) UiHelper.showMessage(context, 'Error al cargar la imagen');
         }
       }).catchError((e) {
         MyLog.log(_classString, 'Error shrinking avatar: $e', level: Level.SEVERE, indent: true);
-        if (mounted) showMessage(context, 'Error al comprimir la imagen\n$e');
+        if (mounted) UiHelper.showMessage(context, 'Error al comprimir la imagen\n$e');
       });
     }
   }
@@ -250,7 +250,7 @@ class ProfilePanelState extends State<ProfilePanel> {
 
       const String yesOption = 'SI';
       const String noOption = 'NO';
-      String response = await myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
+      String response = await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
 
       List<String> updatedFields = [];
@@ -291,9 +291,9 @@ class ProfilePanelState extends State<ProfilePanel> {
       }
 
       if (updatedFields.isNotEmpty) {
-        if (mounted) showMessage(context, 'Los campos: ${updatedFields.join(', ')}\nhan sido actualizados');
+        if (mounted) UiHelper.showMessage(context, 'Los campos: ${updatedFields.join(', ')}\nhan sido actualizados');
       } else {
-        if (mounted) showMessage(context, 'Ningún dato para actualizar');
+        if (mounted) UiHelper.showMessage(context, 'Ningún dato para actualizar');
       }
     }
   }
@@ -306,7 +306,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     if (newName != appState.getLoggedUser().name) {
       MyUser? user = appState.getUserByName(newName);
       if (user != null) {
-        showMessage(context, 'Ya hay un usuario con ese nombre');
+        UiHelper.showMessage(context, 'Ya hay un usuario con ese nombre');
         return false;
       }
     }
@@ -356,11 +356,11 @@ class ProfilePanelState extends State<ProfilePanel> {
     if (newEmail != appState.getLoggedUser().email) {
       MyUser? user = appState.getUserByEmail(newEmail);
       if (user != null) {
-        showMessage(context, 'Ya hay un usuario con ese correo');
+        UiHelper.showMessage(context, 'Ya hay un usuario con ese correo');
         return false;
       }
       if (actualPwd.isEmpty) {
-        showMessage(context, 'Para cambiar el usuario, introduzca tambien la contraseña actual');
+        UiHelper.showMessage(context, 'Para cambiar el usuario, introduzca tambien la contraseña actual');
         return false;
       }
     }
@@ -373,7 +373,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     String response = await AuthenticationHelper.updateEmail(newEmail: newEmail, actualPwd: actualPwd);
 
     if (response.isNotEmpty) {
-      if (mounted) myAlertDialog(context, response);
+      if (mounted) UiHelper.myAlertDialog(context, response);
       return false;
     }
 
@@ -396,11 +396,11 @@ class ProfilePanelState extends State<ProfilePanel> {
     MyLog.log(_classString, 'checkAllPwd');
 
     if (newPwd != checkPwd) {
-      showMessage(context, 'Las dos contraseñas no coinciden');
+      UiHelper.showMessage(context, 'Las dos contraseñas no coinciden');
       return false;
     }
     if (newPwd.isNotEmpty && actualPwd.isEmpty) {
-      showMessage(context, 'Para cambiar la contraseña, introduzca tambien la contraseña actual');
+      UiHelper.showMessage(context, 'Para cambiar la contraseña, introduzca tambien la contraseña actual');
       return false;
     }
     return true;
@@ -412,7 +412,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     String response = await AuthenticationHelper.updatePwd(actualPwd: actualPwd, newPwd: newPwd);
 
     if (response.isNotEmpty) {
-      if (mounted) myAlertDialog(context, response);
+      if (mounted) UiHelper.myAlertDialog(context, response);
       return false;
     }
     return true;
@@ -435,6 +435,6 @@ class ProfilePanelState extends State<ProfilePanel> {
 
   void _showErrorMessage(String message, final List<String> updatedFields) {
     if (updatedFields.isNotEmpty) message += '\n\n(se ha actualizado los campos: ${updatedFields.join(', ')})';
-    showMessage(context, message);
+    UiHelper.showMessage(context, message);
   }
 }

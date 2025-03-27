@@ -15,6 +15,7 @@ import '../../models/register_model.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
 import '../../utilities/misc.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'PlayersPanel'.toUpperCase();
 
@@ -109,7 +110,7 @@ class PlayersPanelState extends State<PlayersPanel> {
               builder: (context) {
                 bool isLoggedUserInMatch = context.read<MatchNotifier>().match.isInTheMatch(_loggedUser);
 
-                return myCheckBox(
+                return UiHelper.myCheckBox(
                   context: context,
                   value: isLoggedUserInMatch,
                   onChanged: (bool? newValue) async {
@@ -341,13 +342,13 @@ class PlayersPanelState extends State<PlayersPanel> {
 
       if (result == null) {
         // only possible for cancelling deleting a user
-        if (mounted) showMessage(context, 'Operación anulada');
+        if (mounted) UiHelper.showMessage(context, 'Operación anulada');
         _refresh();
         return;
       }
     } catch (e) {
       if (mounted) {
-        myAlertDialog(
+        UiHelper.myAlertDialog(
             context,
             'Ha habido una incidencia! \n'
             'Comprobar que la operación se ha realizado correctamente\n $e');
@@ -363,7 +364,7 @@ class PlayersPanelState extends State<PlayersPanel> {
       MyLog.log(_classString, 'ERROR sending message to telegram or register',
           exception: e, level: Level.SEVERE, indent: true);
       if (mounted) {
-        myAlertDialog(
+        UiHelper.myAlertDialog(
             context,
             'Ha habido una incidencia al enviar el mensaje de confirmación\n'
             'Es posible que no se haya enviado el mensaje al registro y al telegram\n'
@@ -474,7 +475,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   Future<bool> _confirmQuitMatch() async {
     const String option1 = 'Confirmar';
     const String option2 = 'Anular';
-    String response = await myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+    String response = await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
     MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == option1;
   }

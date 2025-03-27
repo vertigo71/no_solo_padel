@@ -10,7 +10,7 @@ import '../../interface/app_state.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
-import '../../utilities/misc.dart';
+import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'UserAddPanel'.toUpperCase();
 
@@ -139,7 +139,7 @@ class UserAddPanelState extends State<UserAddPanel> {
         name: field.name,
         initialValue: false,
         builder: (FormFieldState<bool> field) {
-          return myCheckBox(
+          return UiHelper.myCheckBox(
             context: context,
             value: field.value ?? false,
             onChanged: (newValue) {
@@ -179,7 +179,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       const String yesOption = 'SI';
       const String noOption = 'NO';
       String response =
-          await myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
+          await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
       MyLog.log(_classString, 'build response = $response', indent: true);
 
@@ -190,7 +190,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       try {
         bool ok = await _createNewUser(name, username, pwd, isAdmin, isSuperuser);
         if (ok) {
-          if (mounted) showMessage(context, 'El usuario ha sido creado');
+          if (mounted) UiHelper.showMessage(context, 'El usuario ha sido creado');
           _formKey.currentState!.reset();
         }
       } finally {
@@ -199,7 +199,7 @@ class UserAddPanelState extends State<UserAddPanel> {
         });
       }
 
-      if (mounted) showMessage(context, 'El usuario ha sido creado');
+      if (mounted) UiHelper.showMessage(context, 'El usuario ha sido creado');
     }
   }
 
@@ -210,7 +210,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
     MyUser? myUser = appState.getUserByName(name);
     if (myUser != null) {
-      showMessage(context, 'Ya hay un usuario con ese nombre');
+      UiHelper.showMessage(context, 'Ya hay un usuario con ese nombre');
       return false;
     }
 
@@ -222,7 +222,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyLog.log(_classString, 'checkUsername $username');
 
     if (appState.getUserByEmail(username + MyUser.emailSuffix) != null || appState.getUserById(username) != null) {
-      showMessage(context, 'Ya hay un jugador con ese nombre de usuario');
+      UiHelper.showMessage(context, 'Ya hay un jugador con ese nombre de usuario');
       return false;
     }
     return true;
@@ -232,7 +232,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyLog.log(_classString, 'checkAllPwd');
 
     if (pwd != checkPwd) {
-      showMessage(context, 'Las dos contraseñas no coinciden');
+      UiHelper.showMessage(context, 'Las dos contraseñas no coinciden');
       return false;
     }
     return true;
@@ -247,7 +247,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     if (response.isNotEmpty) {
       // error creating new user
       MyLog.log(_classString, 'createNewUser ERROR creating user', level: Level.SEVERE, indent: true);
-      if (mounted) myAlertDialog(context, response);
+      if (mounted) UiHelper.myAlertDialog(context, response);
       return false;
     }
 
@@ -268,7 +268,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     try {
       fbHelpers.updateUser(myUser);
     } catch (e) {
-      if (mounted) showMessage(context, 'Error al crear el usuario en la base de datos');
+      if (mounted) UiHelper.showMessage(context, 'Error al crear el usuario en la base de datos');
       MyLog.log(_classString, 'Error creating user in Firestore', level: Level.SEVERE, indent: true);
       return false;
     }

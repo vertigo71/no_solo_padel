@@ -33,9 +33,9 @@ class UserAdminPanelState extends State<UserAdminPanel> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: <BottomNavigationBarItem>[
-          UiHelpers.buildNavItem(0, Icon(Icons.person_add_sharp), 'Añadir', _selectedIndex),
-          UiHelpers.buildNavItem(1, Icon(Icons.person), 'Modificar', _selectedIndex),
-          UiHelpers.buildNavItem(2, Icon(Icons.person_remove_sharp), 'Eliminar', _selectedIndex),
+          UiHelper.buildNavItem(0, Icon(Icons.person_add_sharp), 'Añadir', _selectedIndex),
+          UiHelper.buildNavItem(1, Icon(Icons.person), 'Modificar', _selectedIndex),
+          UiHelper.buildNavItem(2, Icon(Icons.person_remove_sharp), 'Eliminar', _selectedIndex),
         ],
         currentIndex: _selectedIndex,
         onTap: (int index) {

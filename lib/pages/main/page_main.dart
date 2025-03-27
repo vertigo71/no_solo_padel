@@ -14,7 +14,6 @@ import '../../models/user_model.dart';
 import '../../routes/routes.dart';
 import '../../utilities/date.dart';
 import '../../utilities/environment.dart';
-import '../../utilities/misc.dart';
 import '../../utilities/ui_helpers.dart';
 import 'panel_games.dart';
 import 'panel_information.dart';
@@ -179,10 +178,10 @@ class _MainPageState extends State<MainPage> {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
-        UiHelpers.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
-        UiHelpers.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Ranking', _selectedIndex),
-        UiHelpers.buildNavItem(2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
-        UiHelpers.buildNavItem(3, Icon(Icons.settings), 'Perfil', _selectedIndex),
+        UiHelper.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
+        UiHelper.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Ranking', _selectedIndex),
+        UiHelper.buildNavItem(2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
+        UiHelper.buildNavItem(3, Icon(Icons.settings), 'Perfil', _selectedIndex),
       ],
       currentIndex: _selectedIndex,
       onTap: (index) {
@@ -224,7 +223,7 @@ class _MainPageState extends State<MainPage> {
     MyLog.log(_classString, '_onBackPressed begin');
     const String yesOption = 'SI';
     const String noOption = 'NO';
-    String response = await myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
+    String response = await UiHelper.myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
     if (response.isEmpty || response == noOption) return;
     MyLog.log(_classString, '_onBackPressed response = $response', indent: true);
     await _director.signOut();

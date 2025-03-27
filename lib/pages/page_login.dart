@@ -10,8 +10,8 @@ import '../models/debug.dart';
 import '../models/user_model.dart';
 import '../secret.dart';
 import '../utilities/environment.dart';
-import '../utilities/misc.dart';
 import '../database/authentication.dart';
+import '../utilities/ui_helpers.dart';
 
 final String _classString = 'Login'.toUpperCase();
 
@@ -148,7 +148,7 @@ class LoginPageState extends State<LoginPage> {
           MyLog.log(_classString, '_formValidate Back to login', indent: true);
           _formKey.currentState?.fields[pwdId]?.didChange('');
         } else {
-          if (mounted) showMessage(context, result);
+          if (mounted) UiHelper.showMessage(context, result);
         }
       });
     }
