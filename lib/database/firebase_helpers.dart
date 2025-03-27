@@ -76,8 +76,7 @@ class FbHelpers {
     MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
         indent: true);
     // only if null then create a new listener
-    _paramListener ??=
-        _instance.collection(fName(Fields.parameters)).doc(fName(Fields.parameters)).snapshots().listen(
+    _paramListener ??= _instance.collection(fName(Fields.parameters)).doc(fName(Fields.parameters)).snapshots().listen(
       (snapshot) {
         MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
         MyParameters? myParameters;
@@ -138,11 +137,18 @@ class FbHelpers {
   Future<void> dataLoaded() async {
     MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...');
 
-    int i = 1;
-    while (!(_usersLoaded && _parametersLoaded)) {
-      MyLog.log(_classString, '_dataLoaded waiting for data to load... iteration=${i++}');
-      await Future.delayed(Duration(milliseconds: 200)); // Small delay to prevent blocking.
-    }
+    await Future.wait([
+      Future(() async {
+        while (!_usersLoaded) {
+          await Future.delayed(Duration(milliseconds: 200));
+        }
+      }),
+      Future(() async {
+        while (!_parametersLoaded) {
+          await Future.delayed(Duration(milliseconds: 200));
+        }
+      }),
+    ]);
 
     MyLog.log(_classString, 'dataLoaded: Loading users and parameters completed...');
   }
@@ -219,19 +225,17 @@ class FbHelpers {
     });
   }
 
-  Stream<List<T>>? _getStream<T>({
+  Stream<List<T>>? getStream<T>({
     required String collection,
-    T Function(Map<String, dynamic>)? fromJson,
-    T Function(Map<String, dynamic>, AppState)? fromJsonWithState,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+    Date? fromDate,
+    Date? maxDate,
     AppState? appState,
   }) {
-    MyLog.log(_classString, '_getStream collection=$collection');
-    Query query = _instance.collection(collection);
+    MyLog.log(_classString, 'getStream collection=$collection');
+    Query query = FirebaseFirestore.instance.collection(collection);
 
-    // Order by documentId FIRST
-    query = query.orderBy(FieldPath.documentId); // Add this line FIRST
+    query = query.orderBy(FieldPath.documentId);
 
     if (fromDate != null) {
       query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
@@ -241,108 +245,52 @@ class FbHelpers {
     }
 
     try {
-      if (fromJson != null) {
-        return query.snapshots().transform(transformer(fromJson));
-      } else if (fromJsonWithState != null && appState != null) {
-        return query.snapshots().transform(transformerWithState(fromJsonWithState, appState));
-      } else {
-        throw ArgumentError("Error leyendo datos de Firestore. Error de transformación.");
-      }
+      return query.snapshots().transform(transformer(fromJson, appState));
     } catch (e) {
-      MyLog.log(_classString, '_getStream ERROR collection=$collection',
+      MyLog.log(_classString, 'getStream ERROR collection=$collection',
           exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: $e');
     }
   }
 
-  Stream<List<T>>? getStreamNoState<T>({
-    required String collection,
-    required T Function(Map<String, dynamic>) fromJson,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
-  }) {
-    MyLog.log(_classString, 'getStream collection=$collection');
-    return _getStream(collection: collection, fromJson: fromJson, fromDate: fromDate, maxDate: maxDate);
-  }
-
-  Stream<List<T>>? getStreamWithState<T>({
-    required String collection,
-    required T Function(Map<String, dynamic>, AppState) fromJsonWithState,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
-    required AppState appState,
-  }) {
-    MyLog.log(_classString, 'getStream collection=$collection');
-    return _getStream(
-        collection: collection,
-        fromJsonWithState: fromJsonWithState,
-        fromDate: fromDate,
-        maxDate: maxDate,
-        appState: appState);
-  }
-
   // stream of messages registered
-  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStreamNoState(
+  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
         collection: fName(Fields.register),
-        fromJson: RegisterModel.fromJson,
+        fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
         fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
       );
 
-  // stream of users
-  Stream<List<MyUser>>? getUsersStream() => getStreamNoState(
+// stream of users
+  Stream<List<MyUser>>? getUsersStream() => getStream(
         collection: fName(Fields.users),
-        fromJson: MyUser.fromJson,
+        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
-  // stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({required AppState appState, Date? fromDate, Date? maxDate}) =>
-      getStreamWithState(
+// stream of matches
+  Stream<List<MyMatch>>? getMatchesStream({required AppState appState, Date? fromDate, Date? maxDate}) => getStream(
         collection: fName(Fields.matches),
-        fromJsonWithState: MyMatch.fromJson,
+        fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
         fromDate: fromDate,
         maxDate: maxDate,
         appState: appState,
       );
 
-  Future<T?> getObjectWithState<T>({
+  Future<T?> getObject<T>({
     required String collection,
     required String doc,
-    required T Function(Map<String, dynamic>, AppState) fromJson,
-    required AppState appState,
-  }) async =>
-      _getObject(collection: collection, doc: doc, fromJsonAppState: fromJson, appState: appState);
-
-  Future<T?> getObjectNoState<T>({
-    required String collection,
-    required String doc,
-    required T Function(Map<String, dynamic> json) fromJson,
-  }) async =>
-      _getObject(collection: collection, doc: doc, fromJson: fromJson);
-
-  Future<T?> _getObject<T>({
-    required String collection,
-    required String doc,
-    T Function(Map<String, dynamic> json)? fromJson,
-    T Function(Map<String, dynamic> json, AppState appState)? fromJsonAppState,
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     AppState? appState,
   }) async {
     try {
-      DocumentSnapshot documentSnapshot = await _instance.collection(collection).doc(doc).get();
+      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance.collection(collection).doc(doc).get();
 
       Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
       if (data != null && data.isNotEmpty) {
-        T item;
-        if (appState == null && fromJson != null) {
-          item = fromJson(data);
-        } else if (appState != null && fromJsonAppState != null) {
-          item = fromJsonAppState(data, appState);
-        } else {
-          throw ArgumentError("Argument error for _getObject.");
-        }
+        T item = fromJson(data, appState);
 
         return item;
       } else {
-        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.SEVERE, indent: true);
+        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.WARNING, indent: true);
       }
     } catch (e) {
       MyLog.log(_classString, 'getObject $collection $doc', exception: e, level: Level.SEVERE, indent: true);
@@ -351,84 +299,31 @@ class FbHelpers {
     return null;
   }
 
-  Future<MyUser?> getUser(String userId) async =>
-      getObjectNoState(collection: fName(Fields.users), doc: userId, fromJson: MyUser.fromJson);
+  Future<MyUser?> getUser(String userId) async => getObject(
+      collection: fName(Fields.users), doc: userId, fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
 
-  Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObjectWithState(
-      collection: fName(Fields.matches), doc: matchId, fromJson: MyMatch.fromJson, appState: appState);
+  Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObject(
+      collection: fName(Fields.matches),
+      doc: matchId,
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      appState: appState);
 
   Future<MyParameters> getParameters() async =>
-      await getObjectNoState(
-          collection: fName(Fields.parameters), doc: fName(Fields.parameters), fromJson: MyParameters.fromJson) ??
+      await getObject(
+          collection: fName(Fields.parameters),
+          doc: fName(Fields.parameters),
+          fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
       MyParameters();
 
-  /// Retrieves a user from Firestore based on their email address.
-  /// Not used in the project
-  ///
-  /// This function queries the 'users' collection for a document where the 'email'
-  /// field matches the provided [email].
-  ///
-  /// If a single matching user is found, it returns a `MyUser` object created from
-  /// the document's data.
-  ///
-  /// If no users are found or if multiple users with the same email exist, it
-  /// returns `null`.
-  ///
-  /// Logs information and errors using the `MyLog` service.
-  ///
-  /// Parameters:
-  ///   - [email]: The email address of the user to retrieve.
-  ///
-  /// Returns:
-  ///   - A `Future` that resolves to a `MyUser` object if a single user is found,
-  ///     or `null` if no user is found or if an error occurs.
-  ///
-  /// Logs:
-  ///   - INFO: Logs the start of the retrieval process and when a user is not found.
-  ///   - SEVERE: Logs errors, multiple users with the same email, or when the
-  ///             retrieved document's data is empty or null.
-  ///
-  /// Throws:
-  ///   - Catches and logs any exceptions that occur during the Firestore query.
-  Future<MyUser?> getUserByEmail(String email) async {
-    MyLog.log(_classString, 'getUserByEmail $email');
-
-    try {
-      QuerySnapshot querySnapshot =
-          await _instance.collection(fName(Fields.users)).where('email', isEqualTo: email).get();
-
-      if (querySnapshot.size > 1) {
-        MyLog.log(_classString, 'getUserByEmail $email incorrect number = ${querySnapshot.size}', level: Level.SEVERE);
-        return null;
-      }
-      if (querySnapshot.size == 0) {
-        MyLog.log(_classString, 'getUserByEmail $email doesn\'t exist');
-        return null;
-      }
-
-      Map<String, dynamic>? data = querySnapshot.docs.first.data() as Map<String, dynamic>?;
-      if (data != null && data.isNotEmpty) {
-        return MyUser.fromJson(data);
-      } else {
-        MyLog.log(_classString, 'getUserByEmail $email not found or empty', level: Level.SEVERE);
-      }
-    } catch (e) {
-      MyLog.log(_classString, 'getUserByEmail ', exception: e, level: Level.SEVERE);
-      throw Exception('Error al obtener el usuario $email. \nError: $e');
-    }
-    return null;
-  }
-
-  Future<List<T>> _getAllObjects<T>({
+  Future<List<T>> getAllObjects<T>({
     required String collection,
-    T Function(Map<String, dynamic>, AppState appState)? fromJsonAppState,
-    T Function(Map<String, dynamic>)? fromJson,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson, // Unified signature
+    Date? fromDate,
+    Date? maxDate,
     AppState? appState,
-    Query Function(Query)? filter, // Optional filter function
+    Query Function(Query)? filter,
   }) async {
-    MyLog.log(_classString, '_getAllObjects');
+    MyLog.log(_classString, 'getAllObjects');
 
     List<T> items = [];
     Query query = _instance.collection(collection);
@@ -448,62 +343,22 @@ class FbHelpers {
       for (var doc in querySnapshot.docs) {
         if (doc.data() == null) throw 'Error en la base de datos $collection';
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        T item;
-        if (appState == null && fromJson != null) {
-          item = fromJson(data);
-        } else if (appState != null && fromJsonAppState != null) {
-          item = fromJsonAppState(data, appState);
-        } else {
-          throw ArgumentError("Argument error for _getAllObjects.");
-        }
+        T item = fromJson(data, appState);
 
-        MyLog.log(_classString, '_getAllObjects $collection = $item', indent: true);
+        MyLog.log(_classString, 'getAllObjects $collection = $item', indent: true);
         items.add(item);
       }
     } catch (e) {
-      MyLog.log(_classString, '_getAllObjects', exception: e, level: Level.SEVERE, indent: true);
+      MyLog.log(_classString, 'getAllObjects', exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error al obtener los objetos $collection. \nError: $e');
     }
-    MyLog.log(_classString, '_getAllObjects #$collection = ${items.length} ', indent: true);
+    MyLog.log(_classString, 'getAllObjects #$collection = ${items.length} ', indent: true);
     return items;
   }
 
-  /// Retrieves a list of objects from the specified Firestore collection.
-  ///
-  /// This function should be used when the [fromJson] function *does not* require
-  /// an [AppState] instance.
-  Future<List<T>> getAllObjectsNoAppState<T>({
-    required String collection,
-    required T Function(Map<String, dynamic>) fromJson,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
-  }) async =>
-      _getAllObjects(collection: collection, fromJson: fromJson, fromDate: fromDate, maxDate: maxDate);
-
-  /// Retrieves a list of objects from the specified Firestore collection.
-  ///
-  /// This function should be used when the [fromJson] function *requires*
-  /// an [AppState] instance.
-  Future<List<T>> getAllObjectsAppState<T>({
-    required String collection,
-    required T Function(Map<String, dynamic>, AppState) fromJson,
-    required AppState appState,
-    Date? fromDate, // FieldPath.documentId >= fromDate.toYyyyMMdd()
-    Date? maxDate, // FieldPath.documentId < maxDate.toYyyyMMdd()
-    Query Function(Query)? filter, // Optional filter function
-  }) async =>
-      _getAllObjects(
-        collection: collection,
-        fromJsonAppState: fromJson,
-        fromDate: fromDate,
-        maxDate: maxDate,
-        appState: appState,
-        filter: filter,
-      );
-
-  Future<List<MyUser>> getAllUsers() async => getAllObjectsNoAppState<MyUser>(
+  Future<List<MyUser>> getAllUsers() async => getAllObjects<MyUser>(
         collection: fName(Fields.users),
-        fromJson: MyUser.fromJson,
+        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
   /// returns all matches containing a player
@@ -513,16 +368,15 @@ class FbHelpers {
     Date? fromDate,
     Date? maxDate,
   }) async {
-    return getAllObjectsAppState(
+    return getAllObjects<MyMatch>(
       collection: fName(Fields.matches),
-      fromJson: MyMatch.fromJson,
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      // Unified call
       fromDate: fromDate,
       maxDate: maxDate,
       appState: appState,
       filter: (query) => query.where(fName(Fields.players), arrayContains: playerId),
     );
-
-    // query = query.where('players', arrayContains: playerId);
   }
 
   Future<void> updateObject({
