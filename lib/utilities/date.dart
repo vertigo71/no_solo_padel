@@ -41,6 +41,8 @@ class Date extends DateTime {
   String toMask({String mask = 'yyyyMMdd'}) {
     return DateFormat(mask, 'es_ES').format(this);
   }
+
+  String longFormat() => toMask(mask: 'EEEE, d \'de\' MMMM \'de\' yyyy');
 }
 
 String dateTimeToString(DateTime date, {String format = 'yyyy-MM-dd HH:mm:ss'}) {

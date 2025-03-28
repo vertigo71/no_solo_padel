@@ -1,9 +1,8 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:no_solo_padel/models/register_model.dart';
 
 import '../database/authentication.dart';
-import '../database/fields.dart';
 import '../database/firebase_helpers.dart';
 import '../secret.dart';
 import '../utilities/date.dart';
@@ -24,14 +23,6 @@ class Director {
 
   Director({required AppState appState}) : _appState = appState {
     MyLog.log(_classString, 'Constructor');
-
-    // check Enums parameters in AppState are in FirebaseHelper
-    if (kDebugMode) {
-      String fieldsValues = Fields.values.join(';');
-      for (var value in ParametersEnum.values) {
-        assert(fieldsValues.contains(value.name));
-      }
-    }
   }
 
   AppState get appState => _appState;
@@ -51,8 +42,9 @@ class Director {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
     fbHelpers.deleteOldData(
-        Fields.register, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
-    fbHelpers.deleteOldData(Fields.matches, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
+        RegisterFs.register.name, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
+    fbHelpers.deleteOldData(
+        MatchFs.matches.name, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
   Future<void> createTestData() async {

@@ -49,7 +49,7 @@ class UserDeletePanelState extends State<UserDeletePanel> {
                 context: context,
                 tiles: appState.users.map(((user) => ListTile(
                       leading: CircleAvatar(
-                          backgroundColor: getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
+                          backgroundColor: UiHelper.getUserColor(user), child: Text(user.userType.name[0].toUpperCase())),
                       title: Text(user.name),
                       subtitle: Text('${user.email}\nÚltima conexión: '
                           '${user.lastLogin ?? 'Nunca'}; '

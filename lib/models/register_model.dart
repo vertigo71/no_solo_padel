@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../database/fields.dart';
 import '../utilities/date.dart';
+
+// register fields in firestore
+enum RegisterFs { register, date, registerMessage }
 
 // add messages with timeStamp
 class RegisterModel {
@@ -45,12 +47,12 @@ class RegisterModel {
   }
 
   factory RegisterModel.fromJson(Map<String, dynamic> json) => RegisterModel.list(
-        date: Date.parse(json[Fields.date.name]) ?? Date.ymd(1971),
-        timedMsgList: (json[Fields.registerMessage.name] ?? []).cast<String>(),
+        date: Date.parse(json[RegisterFs.date.name]) ?? Date.ymd(1971),
+        timedMsgList: (json[RegisterFs.registerMessage.name] ?? []).cast<String>(),
       );
 
   Map<String, dynamic> toJson() => {
-        Fields.date.name: date.toYyyyMMdd(),
-        Fields.registerMessage.name: FieldValue.arrayUnion(_msgList),
+        RegisterFs.date.name: date.toYyyyMMdd(),
+        RegisterFs.registerMessage.name: FieldValue.arrayUnion(_msgList),
       };
 }

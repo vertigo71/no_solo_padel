@@ -77,3 +77,4 @@ bool strToBool(String value) {
 }
 
 String lowCaseNoDiacritics(String str) => removeDiacritics(str.toLowerCase());
+

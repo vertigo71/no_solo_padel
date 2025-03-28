@@ -78,11 +78,11 @@ class GamesPanel extends StatelessWidget {
                         tileColor:
                             // light red: closed, stateColor: open
                             match.isOpen
-                                ? getPlayingStateColor(context, playingState)
-                                : lighten(getMatchColor(match), 0.2),
+                                ? UiHelper.getPlayingStateColor(context, playingState)
+                                : UiHelper.lighten(UiHelper.getMatchColor(match), 0.2),
                         leading:
                             // red circle= closed, green circle=open
-                            CircleAvatar(backgroundColor: getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
+                            CircleAvatar(backgroundColor: UiHelper.getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
@@ -109,22 +109,3 @@ class GamesPanel extends StatelessWidget {
   }
 }
 
-Color getMatchColor(MyMatch match) {
-  switch (match.isOpen) {
-    case true:
-      return Colors.green;
-    default:
-      return Colors.red;
-  }
-}
-
-Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
-  switch (playingState) {
-    case PlayingState.unsigned:
-      return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
-    case PlayingState.playing:
-    case PlayingState.signedNotPlaying:
-    case PlayingState.reserve:
-      return darken(Theme.of(context).canvasColor, .2);
-  }
-}

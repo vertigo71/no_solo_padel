@@ -1,5 +1,4 @@
 import 'package:simple_logger/simple_logger.dart';
-import '../database/fields.dart';
 import '../utilities/date.dart';
 import 'debug.dart';
 
@@ -18,6 +17,9 @@ enum UserType {
   // Constructor for UserType enum.
   const UserType(this.displayName);
 }
+
+// user fields in Firestore
+enum UserFs { users, userId, name, emergencyInfo, email, userType, lastLogin, loginCount, avatarUrl ,rankingPos }
 
 /// Represents a user in the application.
 class MyUser {
@@ -134,7 +136,7 @@ class MyUser {
   /// Creates a MyUser object from a JSON map.
   factory MyUser.fromJson(Map<String, dynamic> json) {
     /// Checks if the userId is null or empty.
-    if (json[Fields.userId.name] == null || json[Fields.userId.name] == '') {
+    if (json[UserFs.userId.name] == null || json[UserFs.userId.name] == '') {
       MyLog.log(_classString, 'Missing userId in Firestore document', myCustomObject: json, level: Level.SEVERE);
       throw FormatException('Error de formato. Usuario sin identificador al leer de la base de datos.\n'
           'objeto: $json');
@@ -143,15 +145,15 @@ class MyUser {
     try {
       /// Creates a MyUser object from the provided data.
       return MyUser(
-        id: json[Fields.userId.name],
-        name: json[Fields.name.name] ?? '',
-        emergencyInfo: json[Fields.emergencyInfo.name] ?? '',
-        email: json[Fields.email.name] ?? '',
-        userType: intToUserType(json[Fields.userType.name]),
-        lastLogin: Date.parse(json[Fields.lastLogin.name]),
-        loginCount: json[Fields.loginCount.name] ?? 0,
-        avatarUrl: json[Fields.avatarUrl.name],
-        rankingPos: json[Fields.rankingPos.name] ?? 0,
+        id: json[UserFs.userId.name],
+        name: json[UserFs.name.name] ?? '',
+        emergencyInfo: json[UserFs.emergencyInfo.name] ?? '',
+        email: json[UserFs.email.name] ?? '',
+        userType: intToUserType(json[UserFs.userType.name]),
+        lastLogin: Date.parse(json[UserFs.lastLogin.name]),
+        loginCount: json[UserFs.loginCount.name] ?? 0,
+        avatarUrl: json[UserFs.avatarUrl.name],
+        rankingPos: json[UserFs.rankingPos.name] ?? 0,
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creating MyUser from Firestore: $e', myCustomObject: json, level: Level.SEVERE);
@@ -170,15 +172,15 @@ class MyUser {
 
     /// Returns a map containing all of the data, including the userId.
     return {
-      fName(Fields.userId): id,
-      Fields.name.name: name,
-      Fields.emergencyInfo.name: emergencyInfo,
-      Fields.email.name: email,
-      Fields.userType.name: userType.index,
-      Fields.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '',
-      Fields.loginCount.name: loginCount,
-      Fields.avatarUrl.name: avatarUrl,
-      Fields.rankingPos.name: rankingPos,
+      UserFs.userId.name: id,
+      UserFs.name.name: name,
+      UserFs.emergencyInfo.name: emergencyInfo,
+      UserFs.email.name: email,
+      UserFs.userType.name: userType.index,
+      UserFs.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '',
+      UserFs.loginCount.name: loginCount,
+      UserFs.avatarUrl.name: avatarUrl,
+      UserFs.rankingPos.name: rankingPos,
     };
   }
 

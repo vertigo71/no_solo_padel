@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:simple_logger/simple_logger.dart';
 
-import '../database/fields.dart';
 import '../interface/app_state.dart';
 import '../utilities/date.dart';
 import '../utilities/misc.dart';
@@ -22,6 +21,9 @@ enum PlayingState {
 
   const PlayingState(this.displayText);
 }
+
+// match fields in Firestore
+enum MatchFs { matches, date, comment, isOpen, courtNames, players }
 
 class MyMatch {
   Date id;
@@ -44,7 +46,7 @@ class MyMatch {
   List<String> get courtNamesCopy => List.from(_courtNames);
 
   factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-    final playerIds = List<String>.from(json[Fields.players.name] ?? []);
+    final playerIds = List<String>.from(json[MatchFs.players.name] ?? []);
     final players = <MyUser>[];
 
     for (final playerId in playerIds) {
@@ -55,11 +57,11 @@ class MyMatch {
     }
 
     return MyMatch(
-      id: Date.parse(json[Fields.date.name]) ?? Date.ymd(1971),
+      id: Date.parse(json[MatchFs.date.name]) ?? Date.ymd(1971),
       players: players,
-      courtNames: List<String>.from(json[Fields.courtNames.name] ?? []),
-      comment: json[Fields.comment.name] ?? '',
-      isOpen: json[Fields.isOpen.name] ?? false,
+      courtNames: List<String>.from(json[MatchFs.courtNames.name] ?? []),
+      comment: json[MatchFs.comment.name] ?? '',
+      isOpen: json[MatchFs.isOpen.name] ?? false,
     );
   }
 
@@ -294,11 +296,11 @@ class MyMatch {
   String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players)');
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
-        Fields.date.name: id.toYyyyMMdd(),
-        if (matchPlayers) Fields.players.name: _players.map((user) => user.id).toList(),
-        if (core) Fields.courtNames.name: _courtNames.toList(),
-        if (core) Fields.comment.name: comment,
-        if (core) Fields.isOpen.name: isOpen, // bool
+        MatchFs.date.name: id.toYyyyMMdd(),
+        if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
+        if (core) MatchFs.courtNames.name: _courtNames.toList(),
+        if (core) MatchFs.comment.name: comment,
+        if (core) MatchFs.isOpen.name: isOpen, // bool
       };
 
   String toJsonString() => jsonEncode(toJson());

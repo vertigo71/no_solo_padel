@@ -12,7 +12,6 @@ import '../models/match_model.dart';
 import '../models/parameter_model.dart';
 import '../models/user_model.dart';
 import '../utilities/date.dart';
-import 'fields.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
 
@@ -30,7 +29,7 @@ class FbHelpers {
 
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
-    bool exists = await doesDocExist(collection: fName(Fields.matches), doc: matchId.toYyyyMMdd());
+    bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: matchId.toYyyyMMdd());
     if (exists) return false;
     MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId');
     await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
@@ -51,7 +50,7 @@ class FbHelpers {
     MyLog.log(_classString, 'listenToMatch creating LISTENER for match=$matchId');
     StreamSubscription? streamSubscription;
     streamSubscription =
-        _instance.collection(fName(Fields.matches)).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
+        _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
       if (snapshot.exists && snapshot.data() != null) {
         MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
         MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', indent: true);
@@ -75,7 +74,8 @@ class FbHelpers {
     MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
         indent: true);
     // only if null then create a new listener
-    _paramListener ??= _instance.collection(fName(Fields.parameters)).doc(fName(Fields.parameters)).snapshots().listen(
+    _paramListener ??=
+        _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
       (snapshot) {
         MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
         MyParameters? myParameters;
@@ -100,7 +100,7 @@ class FbHelpers {
     // update users
     MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
     // only if null then create a new listener
-    _usersListener ??= _instance.collection(fName(Fields.users)).snapshots().listen(
+    _usersListener ??= _instance.collection(UserFs.users.name).snapshots().listen(
       (snapshot) {
         MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
 
@@ -204,22 +204,22 @@ class FbHelpers {
     }
   }
 
-  Future<void> deleteOldData(Fields collection, int daysAgo) async {
-    MyLog.log(_classString, '_deleteOldData collection=${collection.name} days=$daysAgo');
+  Future<void> deleteOldData(String collection, int daysAgo) async {
+    MyLog.log(_classString, '_deleteOldData collection=$collection days=$daysAgo');
 
     if (daysAgo <= 0) return;
 
     return _instance
-        .collection(fName(collection))
+        .collection(collection)
         .where(FieldPath.documentId, isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
         .get()
         .then((snapshot) {
       for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name} id=${ds.id}', indent: true);
+        MyLog.log(_classString, 'deleteOldData Delete collection=$collection id=${ds.id}', indent: true);
         ds.reference.delete();
       }
     }).catchError((onError) {
-      MyLog.log(_classString, 'deleteOldData Delete collection=${collection.name}',
+      MyLog.log(_classString, 'deleteOldData Delete collection=$collection',
           exception: onError, level: Level.SEVERE, indent: true);
     });
   }
@@ -230,8 +230,9 @@ class FbHelpers {
     Date? fromDate,
     Date? maxDate,
     AppState? appState,
+    Query Function(Query)? filter, // General Query Function Filter
   }) {
-    MyLog.log(_classString, 'getStream collection=$collection');
+    MyLog.log(_classString, 'getStream collection=$collection, filter=$filter');
     Query query = FirebaseFirestore.instance.collection(collection);
 
     query = query.orderBy(FieldPath.documentId);
@@ -241,6 +242,11 @@ class FbHelpers {
     }
     if (maxDate != null) {
       query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+    }
+
+    // Apply general Query Function Filter
+    if (filter != null) {
+      query = filter(query); // Apply the function to the query
     }
 
     try {
@@ -254,24 +260,30 @@ class FbHelpers {
 
   // stream of messages registered
   Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
-        collection: fName(Fields.register),
+        collection: RegisterFs.register.name,
         fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
         fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
       );
 
-// stream of users
+  // stream of users
   Stream<List<MyUser>>? getUsersStream() => getStream(
-        collection: fName(Fields.users),
+        collection: UserFs.users.name,
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
-// stream of matches
-  Stream<List<MyMatch>>? getMatchesStream({required AppState appState, Date? fromDate, Date? maxDate}) => getStream(
-        collection: fName(Fields.matches),
+  Stream<List<MyMatch>>? getMatchesStream({
+    required AppState appState,
+    Date? fromDate,
+    Date? maxDate,
+    bool onlyOpenMatches = false, // Added onlyOpenMatches
+  }) =>
+      getStream(
+        collection: MatchFs.matches.name,
         fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
         fromDate: fromDate,
         maxDate: maxDate,
         appState: appState,
+        filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
       );
 
   Future<T?> getObject<T>({
@@ -299,18 +311,18 @@ class FbHelpers {
   }
 
   Future<MyUser?> getUser(String userId) async => getObject(
-      collection: fName(Fields.users), doc: userId, fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
+      collection: UserFs.users.name, doc: userId, fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
 
   Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObject(
-      collection: fName(Fields.matches),
+      collection: MatchFs.matches.name,
       doc: matchId,
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       appState: appState);
 
   Future<MyParameters> getParameters() async =>
       await getObject(
-          collection: fName(Fields.parameters),
-          doc: fName(Fields.parameters),
+          collection: ParameterFs.parameters.name,
+          doc: ParameterFs.parameters.name,
           fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
       MyParameters();
 
@@ -356,7 +368,7 @@ class FbHelpers {
   }
 
   Future<List<MyUser>> getAllUsers() async => getAllObjects<MyUser>(
-        collection: fName(Fields.users),
+        collection: UserFs.users.name,
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
@@ -368,13 +380,13 @@ class FbHelpers {
     Date? maxDate,
   }) async {
     return getAllObjects<MyMatch>(
-      collection: fName(Fields.matches),
+      collection: MatchFs.matches.name,
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       // Unified call
       fromDate: fromDate,
       maxDate: maxDate,
       appState: appState,
-      filter: (query) => query.where(fName(Fields.players), arrayContains: playerId),
+      filter: (query) => query.where(MatchFs.players.name, arrayContains: playerId),
     );
   }
 
@@ -402,7 +414,7 @@ class FbHelpers {
     }
     return updateObject(
       fields: myUser.toJson(),
-      collection: fName(Fields.users),
+      collection: UserFs.users.name,
       doc: myUser.id,
       forceSet: false, // replaces the old object if exists
     );
@@ -412,22 +424,22 @@ class FbHelpers {
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       updateObject(
         fields: match.toJson(core: updateCore, matchPlayers: updatePlayers),
-        collection: fName(Fields.matches),
+        collection: MatchFs.matches.name,
         doc: match.id.toYyyyMMdd(),
         forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateRegister(RegisterModel registerModel) async => updateObject(
         fields: registerModel.toJson(),
-        collection: fName(Fields.register),
+        collection: RegisterFs.register.name,
         doc: registerModel.date.toYyyyMMdd(),
         forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateParameters(MyParameters myParameters) async => updateObject(
         fields: myParameters.toJson(),
-        collection: fName(Fields.parameters),
-        doc: fName(Fields.parameters),
+        collection: ParameterFs.parameters.name,
+        doc: ParameterFs.parameters.name,
         forceSet: true,
       );
 
@@ -440,7 +452,7 @@ class FbHelpers {
     // delete user
     try {
       MyLog.log(_classString, 'deleteUser user $myUser deleted');
-      await _instance.collection(fName(Fields.users)).doc(myUser.id).delete();
+      await _instance.collection(UserFs.users.name).doc(myUser.id).delete();
     } catch (e) {
       MyLog.log(_classString, 'deleteUser error when deleting',
           myCustomObject: myUser, level: Level.SEVERE, indent: true);
@@ -456,7 +468,7 @@ class FbHelpers {
     int position = -1,
   }) async {
     MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
-    DocumentReference documentReference = _instance.collection(fName(Fields.matches)).doc(matchId.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd());
 
     return await _instance.runTransaction((transaction) async {
       // get snapshot
@@ -503,7 +515,7 @@ class FbHelpers {
     required AppState appState,
   }) async {
     MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $matchId');
-    DocumentReference documentReference = _instance.collection(fName(Fields.matches)).doc(matchId.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd());
 
     return await _instance.runTransaction((transaction) async {
       // get match

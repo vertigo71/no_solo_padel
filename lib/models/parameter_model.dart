@@ -7,6 +7,9 @@ import 'debug.dart';
 /// constant to log the class name.
 final String _classString = '<md> Parameters'.toLowerCase();
 
+// parameter fields in Firestore
+enum ParameterFs { parameters }
+
 /// Enum representing available application parameters.
 enum ParametersEnum {
   matchDaysToView(defaultValue: '10'), // Number of days to view matches.

@@ -18,7 +18,7 @@ import '../../utilities/ui_helpers.dart';
 import 'panel_games.dart';
 import 'panel_information.dart';
 import 'panel_profile.dart';
-import 'panel_ranking.dart';
+import 'panel_results.dart';
 
 final String _classString = 'MainPage'.toUpperCase();
 
@@ -38,7 +38,7 @@ class _MainPageState extends State<MainPage> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     GamesPanel(),
-    RankingPanel(),
+    ResultsPanel(),
     InformationPanel(),
     ProfilePanel(),
   ];
@@ -283,8 +283,8 @@ class _MainPageState extends State<MainPage> {
         await fbHelpers.updateUser(appUser);
 
         // Delete old logs and matches.
-        MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
-        _director.deleteOldData(); // TODO: create a cloud function
+        // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
+        // _director.deleteOldData(); // TODO: create a cloud function
 
         // Create test data in development mode.
         MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);

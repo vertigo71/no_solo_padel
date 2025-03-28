@@ -1,6 +1,5 @@
 import 'package:simple_logger/simple_logger.dart';
 
-import '../database/fields.dart';
 import '../interface/app_state.dart';
 import '../utilities/date.dart';
 import 'debug.dart';
@@ -10,16 +9,19 @@ final String _classString = '<md> MyResult'.toLowerCase();
 
 const String fieldSeparator = '#';
 
-class GameResult {
-  ResultId id;
-  Date matchId;
-  TeamResult teamA;
-  TeamResult teamB;
+// result fields in Firestore
+enum ResultFs { resultId, matchId, player1, player2, points, preRanking1, preRanking2, score, teamA, teamB, results }
 
-  GameResult({required this.id, required this.matchId, required this.teamA, required this.teamB});
+class GameResult {
+  GameResultId id;
+  Date matchId;
+  TeamResult? teamA;
+  TeamResult? teamB;
+
+  GameResult({required this.id, required this.matchId, this.teamA, this.teamB});
 
   GameResult copyFrom({
-    ResultId? id,
+    GameResultId? id,
     Date? matchId,
     TeamResult? teamA,
     TeamResult? teamB,
@@ -33,23 +35,23 @@ class GameResult {
   }
 
   factory GameResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    if (json[fName(Fields.resultId)] == null || json[fName(Fields.matchId)] == null) {
+    if (json[ResultFs.resultId.name] == null || json[ResultFs.matchId.name] == null) {
       MyLog.log(
           _classString,
           'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[fName(Fields.resultId)]}, matchId: ${json[fName(Fields.matchId)]}',
+          'resultId: ${json[ResultFs.resultId.name]}, matchId: ${json[ResultFs.matchId.name]}',
           myCustomObject: json,
           level: Level.SEVERE);
       throw FormatException('Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[fName(Fields.resultId)]}, matchId: ${json[fName(Fields.matchId)]}, json: $json');
+          'resultId: ${json[ResultFs.resultId.name]}, matchId: ${json[ResultFs.matchId.name]}, json: $json');
     }
 
     try {
       return GameResult(
-        id: ResultId.fromString(json[fName(Fields.resultId)]),
-        matchId: Date.parse(json[fName(Fields.matchId)])!,
-        teamA: TeamResult.fromJson(json['teamA'], appState),
-        teamB: TeamResult.fromJson(json['teamB'], appState),
+        id: GameResultId.fromString(json[ResultFs.resultId.name]),
+        matchId: Date.parse(json[ResultFs.matchId.name])!,
+        teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
+        teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: $e');
@@ -68,10 +70,10 @@ class GameResult {
           'resultId: ${id.resultId}');
     }
     return {
-      fName(Fields.resultId): id.resultId,
-      fName(Fields.matchId): matchId.toYyyyMMdd(),
-      'teamA': teamA.toJson(),
-      'teamB': teamB.toJson(),
+      ResultFs.resultId.name: id.resultId,
+      ResultFs.matchId.name: matchId.toYyyyMMdd(),
+      'teamA': teamA!.toJson(),
+      'teamB': teamB!.toJson(),
     };
   }
 
@@ -130,8 +132,8 @@ class TeamResult {
   }
 
   factory TeamResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    MyUser? player1 = appState.getUserById(json[fName(Fields.player1)]);
-    MyUser? player2 = appState.getUserById(json[fName(Fields.player2)]);
+    MyUser? player1 = appState.getUserById(json[ResultFs.player1.name]);
+    MyUser? player2 = appState.getUserById(json[ResultFs.player2.name]);
     if (player1 == null || player2 == null) {
       MyLog.log(
           _classString,
@@ -147,21 +149,21 @@ class TeamResult {
     return TeamResult(
       player1: player1,
       player2: player2,
-      points: json[fName(Fields.points)],
-      preRanking1: json[fName(Fields.preRanking1)],
-      preRanking2: json[fName(Fields.preRanking2)],
-      score: json[fName(Fields.score)],
+      points: json[ResultFs.points.name],
+      preRanking1: json[ResultFs.preRanking1.name],
+      preRanking2: json[ResultFs.preRanking2.name],
+      score: json[ResultFs.score.name],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      fName(Fields.player1): player1.id,
-      fName(Fields.player2): player2.id,
-      fName(Fields.points): points,
-      fName(Fields.preRanking1): preRanking1,
-      fName(Fields.preRanking2): preRanking2,
-      fName(Fields.score): score,
+      ResultFs.player1.name: player1.id,
+      ResultFs.player2.name: player2.id,
+      ResultFs.points.name: points,
+      ResultFs.preRanking1.name: preRanking1,
+      ResultFs.preRanking2.name: preRanking2,
+      ResultFs.score.name: score,
     };
   }
 
@@ -192,18 +194,18 @@ class TeamResult {
       score.hashCode;
 }
 
-class ResultId {
+class GameResultId {
   final DateTime dateTime;
   final String userId;
 
-  ResultId(this.dateTime, this.userId);
+  GameResultId(this.dateTime, this.userId);
 
-  factory ResultId.fromString(String id) {
+  factory GameResultId.fromString(String id) {
     try {
       final parts = id.split(fieldSeparator);
       final dateTime = DateTime.parse(parts[0]);
       final userId = parts[1];
-      return ResultId(dateTime, userId);
+      return GameResultId(dateTime, userId);
     } catch (e) {
       MyLog.log(_classString, 'Invalid ResultId format: $id \nError: $e');
       throw FormatException('ResultId formato Invalido: $id \nError: $e');
@@ -218,7 +220,7 @@ class ResultId {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ResultId && runtimeType == other.runtimeType && dateTime == other.dateTime && userId == other.userId;
+      other is GameResultId && runtimeType == other.runtimeType && dateTime == other.dateTime && userId == other.userId;
 
   @override
   int get hashCode => dateTime.hashCode ^ userId.hashCode;

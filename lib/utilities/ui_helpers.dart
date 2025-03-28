@@ -5,6 +5,7 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
 
 import '../models/debug.dart';
+import '../models/match_model.dart';
 import '../models/user_model.dart';
 import 'app_colors.dart';
 
@@ -103,7 +104,8 @@ class UiHelper {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text, style: const TextStyle(fontSize: 16))));
   }
 
-  static Widget myCheckBox({required BuildContext context, required void Function(bool?) onChanged, required bool value}) {
+  static Widget myCheckBox(
+      {required BuildContext context, required void Function(bool?) onChanged, required bool value}) {
     return GFCheckbox(
       onChanged: onChanged,
       value: value,
@@ -113,35 +115,55 @@ class UiHelper {
       inactiveBgColor: Theme.of(context).colorScheme.surface,
     );
   }
-}
 
-Color getUserColor(MyUser user) {
-  switch (user.userType) {
-    case UserType.admin:
-      return Colors.green;
-    case UserType.superuser:
-      return Colors.blue;
-    default:
-      return Colors.red;
+  static Color getMatchColor(MyMatch match) {
+    switch (match.isOpen) {
+      case true:
+        return Colors.green;
+      default:
+        return Colors.red;
+    }
   }
-}
 
-Color darken(Color color, [double amount = .1]) {
-  assert(amount >= 0 && amount <= 1);
+  static Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
+    switch (playingState) {
+      case PlayingState.unsigned:
+        return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
+      case PlayingState.playing:
+      case PlayingState.signedNotPlaying:
+      case PlayingState.reserve:
+        return darken(Theme.of(context).canvasColor, .2);
+    }
+  }
 
-  final hsl = HSLColor.fromColor(color);
-  final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+  static Color getUserColor(MyUser user) {
+    switch (user.userType) {
+      case UserType.admin:
+        return Colors.green;
+      case UserType.superuser:
+        return Colors.blue;
+      default:
+        return Colors.red;
+    }
+  }
 
-  return hslDark.toColor();
-}
+  static Color darken(Color color, [double amount = .1]) {
+    assert(amount >= 0 && amount <= 1);
 
-Color lighten(Color color, [double amount = .1]) {
-  assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
 
-  final hsl = HSLColor.fromColor(color);
-  final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
 
-  return hslLight.toColor();
+  static Color lighten(Color color, [double amount = .1]) {
+    assert(amount >= 0 && amount <= 1);
+
+    final hsl = HSLColor.fromColor(color);
+    final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+
+    return hslLight.toColor();
+  }
 }
 
 /// TextFormField uppercase formatter: allow = false => deny list
