@@ -231,11 +231,12 @@ class FbHelpers {
     Date? maxDate,
     AppState? appState,
     Query Function(Query)? filter, // General Query Function Filter
+    bool descending = false,
   }) {
     MyLog.log(_classString, 'getStream collection=$collection, filter=$filter');
     Query query = FirebaseFirestore.instance.collection(collection);
 
-    query = query.orderBy(FieldPath.documentId);
+    query = query.orderBy(FieldPath.documentId, descending: descending);
 
     if (fromDate != null) {
       query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
@@ -275,7 +276,8 @@ class FbHelpers {
     required AppState appState,
     Date? fromDate,
     Date? maxDate,
-    bool onlyOpenMatches = false, // Added onlyOpenMatches
+    bool onlyOpenMatches = false,
+    bool descending = false,
   }) =>
       getStream(
         collection: MatchFs.matches.name,
@@ -284,6 +286,7 @@ class FbHelpers {
         maxDate: maxDate,
         appState: appState,
         filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
+        descending: descending,
       );
 
   Future<T?> getObject<T>({

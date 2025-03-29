@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase_helpers.dart';
@@ -8,6 +9,7 @@ import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/result_model.dart';
 import '../../models/match_model.dart';
+import '../../routes/routes.dart';
 import '../../utilities/date.dart';
 
 final String _classString = 'ResultsPanel'.toUpperCase();
@@ -27,7 +29,8 @@ class ResultsPanel extends StatelessWidget {
         MyLog.log(_classString, 'StreamBuilder  to:$maxDate', indent: true);
 
         return StreamBuilder<List<MyMatch>>(
-          stream: fbHelpers.getMatchesStream(appState: appState, maxDate: maxDate, onlyOpenMatches: true),
+          stream:
+              fbHelpers.getMatchesStream(appState: appState, maxDate: maxDate, onlyOpenMatches: true, descending: true),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final matches = snapshot.data!;
@@ -55,10 +58,7 @@ class ResultsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, match.id.longFormat(), () {
-          // Implement logic to add a new result for this match
-          _addNewResult(context, match);
-        }),
+        _buildHeader(context, match.id.longFormat(), () => _addNewResult(context, match)),
         // Display subcollection results
         FutureBuilder<QuerySnapshot>(
           future:
@@ -83,63 +83,37 @@ class ResultsPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String headerText, VoidCallback onAddResult) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            headerText,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  Widget _buildHeader(BuildContext context, String headerText, VoidCallback onAddResult) => Card(
+        elevation: 6,
+        margin: const EdgeInsets.all(10),
+        child: ListTile(
+          tileColor: Theme.of(context).appBarTheme.backgroundColor,
+          titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+          title: Text(headerText),
+          leading: GestureDetector(
+            onTap: onAddResult,
+            child: Tooltip(
+              message: 'Agregar nuevo resultado',
+              child: CircleAvatar(
+                child: Icon(Icons.add),
+              ),
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: onAddResult,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
 
   // Function to handle adding a new result
   void _addNewResult(BuildContext context, MyMatch match) {
-    // Implement your logic to add a new result for the match
-    // This could involve showing a dialog, navigating to a new screen, etc.
-    // For example:
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add New Result'),
-          content: Text('Implement your form here.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Save'),
-              onPressed: () {
-                // Save the new result to Firestore
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+    context.pushNamed(AppRoutes.addResult, extra: match.toJson());
   }
 
   Widget _buildResultCard(GameResult result) {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: const EdgeInsets.fromLTRB(30.0, 8.0, 8.0, 8.0),
       child: SizedBox(
         width: double.infinity, // Take up the full width of the Column
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
