@@ -103,7 +103,7 @@ class ResultsPanel extends StatelessWidget {
     }
   }
 
-  Widget _buildHeader(BuildContext context, String headerText, VoidCallback onAddResult) => Card(
+  Widget _buildHeader(BuildContext context, String headerText, VoidCallback onSetResult) => Card(
         elevation: 6,
         margin: const EdgeInsets.all(10),
         child: ListTile(
@@ -111,7 +111,7 @@ class ResultsPanel extends StatelessWidget {
           titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
           title: Text(headerText),
           leading: GestureDetector(
-            onTap: onAddResult,
+            onTap: onSetResult,
             child: Tooltip(
               message: 'Agregar nuevo resultado',
               child: CircleAvatar(
@@ -124,7 +124,7 @@ class ResultsPanel extends StatelessWidget {
 
   // Function to handle adding a new result
   void _addNewResult(BuildContext context, MyMatch match) {
-    context.pushNamed(AppRoutes.addResult, extra: match.toJson());
+    context.pushNamed(AppRoutes.setResult, extra: match.id.toYyyyMMdd() );
   }
 
   Widget _buildResultCard(GameResult result, BuildContext context) {

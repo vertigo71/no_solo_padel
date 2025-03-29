@@ -11,12 +11,12 @@ import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/result_model.dart';
 
-final String _classString = 'AddResultPage'.toUpperCase();
+final String _classString = 'SetResultPage'.toUpperCase();
 const int numPlayers = 4;
 const int maxGamesPerSet = 16;
 
-class AddResultPage extends StatefulWidget {
-  const AddResultPage({super.key, required this.matchJson});
+class SetResultPage extends StatefulWidget {
+  const SetResultPage({super.key, required this.matchId});
 
   // argument matchJson vs matchId
   // matchJson: initialValue for FormBuilder will hold the correct initial values
@@ -25,15 +25,15 @@ class AddResultPage extends StatefulWidget {
   //   Good for configuration panel
   // matchId: _formKey.currentState?.fields[commentId]?.didChange(match.comment); should be implemented
   //   If any user changes any field, the form will update. Or if any rebuild is made, changes would be lost.
-  final Map<String, dynamic> matchJson;
+  final String matchId;
 
   @override
-  State<AddResultPage> createState() => _AddResultPageState();
+  State<SetResultPage> createState() => _SetResultPageState();
 }
 
-class _AddResultPageState extends State<AddResultPage> {
-  late final MyMatch _match;
-  bool _initStateError = false;
+class _SetResultPageState extends State<SetResultPage> {
+  MyMatch? _match;
+  bool _matchLoaded = false;
   List<MyUser?> selectedPlayer = List.filled(numPlayers, null);
   List<int> results = [0, 0];
 
@@ -41,10 +41,9 @@ class _AddResultPageState extends State<AddResultPage> {
   void initState() {
     super.initState();
     try {
-      _match = MyMatch.fromJson(widget.matchJson, context.read<AppState>());
-      MyLog.log(_classString, 'match = $_match', indent: true);
+      _initialize();
     } catch (e) {
-      _initStateError = true;
+      MyLog.log(_classString, 'Error initializing resultPage: $e', level: Level.SEVERE, indent: true);
     }
   }
 
@@ -52,11 +51,26 @@ class _AddResultPageState extends State<AddResultPage> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building');
 
-    if (_initStateError) return Center(child: Text('No se ha podido acceder al partido'));
+    if (!_matchLoaded) {
+      return Center(
+        child: Expanded( // expand the column so it takes all page
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, // Center children vertically
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 40),
+              Text('Cargando el partido ...', style: TextStyle(fontSize: 24)),
+            ],
+          ),
+        ),
+      );
+    } else if (_match == null) {
+      return Center(child: Text('Error al cargar el partido ...'));
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_match.id.longFormat()),
+        title: Text(_match!.id.longFormat()),
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
@@ -127,7 +141,7 @@ class _AddResultPageState extends State<AddResultPage> {
           });
         },
         dropdownMenuEntries:
-            _match.getPlayers(state: PlayingState.playing).map<DropdownMenuEntry<MyUser>>((MyUser user) {
+            _match!.getPlayers(state: PlayingState.playing).map<DropdownMenuEntry<MyUser>>((MyUser user) {
           return DropdownMenuEntry<MyUser>(
             value: user,
             label: user.name,
@@ -222,7 +236,7 @@ class _AddResultPageState extends State<AddResultPage> {
     // create GameResult
     GameResult gameResult = GameResult(
       id: GameResultId(userId: context.read<AppState>().getLoggedUser().id),
-      matchId: _match.id,
+      matchId: _match!.id,
       teamA: teamA,
       teamB: teamB,
     );
@@ -230,7 +244,7 @@ class _AddResultPageState extends State<AddResultPage> {
     // save result
     try {
       MyLog.log(_classString, 'Saving result: $gameResult', indent: true);
-      await FbHelpers().updateResult(result: gameResult, matchId: _match.id.toYyyyMMdd());
+      await FbHelpers().updateResult(result: gameResult, matchId: _match!.id.toYyyyMMdd());
     } catch (e) {
       MyLog.log(_classString, 'Error saving result: $e', level: Level.WARNING, indent: true);
       throw 'Error al guardar el resultado.\n $e';
@@ -253,5 +267,14 @@ class _AddResultPageState extends State<AddResultPage> {
       throw ArgumentError('selectedPlayer must have 4 elements.');
     }
     return results[0] > results[1] ? 100 : -100;
+  }
+
+  void _initialize() async {
+    MyLog.log(_classString, 'Initializing');
+    _match = await FbHelpers().getMatch(widget.matchId, context.read<AppState>());
+    MyLog.log(_classString, 'match = $_match', indent: true);
+    setState(() {
+      _matchLoaded = true;
+    });
   }
 }
