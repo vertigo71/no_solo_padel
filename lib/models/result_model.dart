@@ -198,24 +198,24 @@ class GameResultId {
   final DateTime dateTime;
   final String userId;
 
-  GameResultId(this.dateTime, this.userId);
+  GameResultId({required this.userId, DateTime? dateTime}) : dateTime = DateTime.now();
 
   factory GameResultId.fromString(String id) {
     try {
       final parts = id.split(fieldSeparator);
       final dateTime = DateTime.parse(parts[0]);
       final userId = parts[1];
-      return GameResultId(dateTime, userId);
+      return GameResultId(dateTime: dateTime, userId: userId);
     } catch (e) {
       MyLog.log(_classString, 'Invalid ResultId format: $id \nError: $e');
       throw FormatException('ResultId formato Invalido: $id \nError: $e');
     }
   }
 
-  String get resultId => toString();
+  String get resultId => '${dateTime.toIso8601String()}$fieldSeparator$userId';
 
   @override
-  String toString() => '${dateTime.toIso8601String()}$fieldSeparator$userId';
+  String toString() => '{${dateTime.toIso8601String()},$userId}';
 
   @override
   bool operator ==(Object other) =>

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:no_solo_padel/models/result_model.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/app_state.dart';
@@ -225,35 +226,45 @@ class FbHelpers {
   }
 
   Stream<List<T>>? getStream<T>({
-    required String collection,
+    required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     Date? fromDate,
     Date? maxDate,
     AppState? appState,
-    Query Function(Query)? filter, // General Query Function Filter
+    Query Function(Query)? filter,
     bool descending = false,
   }) {
-    MyLog.log(_classString, 'getStream collection=$collection, filter=$filter');
-    Query query = FirebaseFirestore.instance.collection(collection);
-
-    query = query.orderBy(FieldPath.documentId, descending: descending);
-
-    if (fromDate != null) {
-      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
-    }
-    if (maxDate != null) {
-      query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
-    }
-
-    // Apply general Query Function Filter
-    if (filter != null) {
-      query = filter(query); // Apply the function to the query
-    }
+    MyLog.log(_classString, 'getStream pathSegments=${pathSegments.join('/')}, filter=$filter');
 
     try {
+      if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
+        throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
+      }
+
+      CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
+
+      for (int i = 1; i < pathSegments.length; i += 2) {
+        collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
+      }
+
+      Query query = collectionReference;
+
+      query = query.orderBy(FieldPath.documentId, descending: descending);
+
+      if (fromDate != null) {
+        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+      }
+      if (maxDate != null) {
+        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+      }
+
+      if (filter != null) {
+        query = filter(query);
+      }
+
       return query.snapshots().transform(_transformer(fromJson, appState));
     } catch (e) {
-      MyLog.log(_classString, 'getStream ERROR collection=$collection',
+      MyLog.log(_classString, 'getStream ERROR pathSegments=${pathSegments.join('/')}',
           exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: $e');
     }
@@ -261,14 +272,14 @@ class FbHelpers {
 
   // stream of messages registered
   Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
-        collection: RegisterFs.register.name,
+        pathSegments: [RegisterFs.register.name],
         fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
         fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
       );
 
   // stream of users
   Stream<List<MyUser>>? getUsersStream() => getStream(
-        collection: UserFs.users.name,
+        pathSegments: [UserFs.users.name],
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
@@ -280,7 +291,7 @@ class FbHelpers {
     bool descending = false,
   }) =>
       getStream(
-        collection: MatchFs.matches.name,
+        pathSegments: [MatchFs.matches.name],
         fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
         fromDate: fromDate,
         maxDate: maxDate,
@@ -289,49 +300,66 @@ class FbHelpers {
         descending: descending,
       );
 
+  Stream<List<GameResult>>? getResultsStream({
+    required AppState appState,
+    required String matchId,
+  }) =>
+      getStream(
+        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
+        fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+        appState: appState,
+      );
+
   Future<T?> getObject<T>({
-    required String collection,
-    required String doc,
+    required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     AppState? appState,
   }) async {
     try {
-      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance.collection(collection).doc(doc).get();
+      if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
+        throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
+      }
+
+      DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
+
+      for (int i = 2; i < pathSegments.length; i += 2) {
+        documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
+      }
+
+      DocumentSnapshot documentSnapshot = await documentReference.get();
 
       Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
       if (data != null && data.isNotEmpty) {
         T item = fromJson(data, appState);
-
         return item;
       } else {
-        MyLog.log(_classString, 'getObject $collection $doc not found or empty', level: Level.WARNING, indent: true);
+        MyLog.log(_classString, 'getObject ${pathSegments.join('/')} not found or empty',
+            level: Level.WARNING, indent: true);
       }
     } catch (e) {
-      MyLog.log(_classString, 'getObject $collection $doc', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener el objeto $collection $doc. \nError: $e');
+      MyLog.log(_classString, 'getObject ${pathSegments.join('/')}', exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: $e');
     }
     return null;
   }
 
   Future<MyUser?> getUser(String userId) async => getObject(
-      collection: UserFs.users.name, doc: userId, fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
+      pathSegments: [UserFs.users.name, userId], fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
 
   Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObject(
-      collection: MatchFs.matches.name,
-      doc: matchId,
+      pathSegments: [MatchFs.matches.name, matchId],
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       appState: appState);
 
   Future<MyParameters> getParameters() async =>
       await getObject(
-          collection: ParameterFs.parameters.name,
-          doc: ParameterFs.parameters.name,
+          pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
           fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
       MyParameters();
 
   Future<List<T>> getAllObjects<T>({
-    required String collection,
-    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson, // Unified signature
+    required List<String> pathSegments, // List of collection/doc identifiers
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     Date? fromDate,
     Date? maxDate,
     AppState? appState,
@@ -340,38 +368,49 @@ class FbHelpers {
     MyLog.log(_classString, 'getAllObjects');
 
     List<T> items = [];
-    Query query = _instance.collection(collection);
-    if (fromDate != null) {
-      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
-    }
-    if (maxDate != null) {
-      query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
-    }
-
-    if (filter != null) {
-      query = filter(query);
-    }
-
     try {
+      if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
+        throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
+      }
+
+      CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
+
+      for (int i = 1; i < pathSegments.length; i += 2) {
+        collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
+      }
+
+      Query query = collectionReference;
+
+      if (fromDate != null) {
+        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+      }
+      if (maxDate != null) {
+        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+      }
+
+      if (filter != null) {
+        query = filter(query);
+      }
+
       QuerySnapshot querySnapshot = await query.get();
       for (var doc in querySnapshot.docs) {
-        if (doc.data() == null) throw 'Error en la base de datos $collection';
+        if (doc.data() == null) throw 'Error en la base de datos ${pathSegments.join('/')}';
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         T item = fromJson(data, appState);
 
-        MyLog.log(_classString, 'getAllObjects $collection = $item', indent: true);
+        MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')} = $item', indent: true);
         items.add(item);
       }
     } catch (e) {
       MyLog.log(_classString, 'getAllObjects', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener los objetos $collection. \nError: $e');
+      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: $e');
     }
-    MyLog.log(_classString, 'getAllObjects #$collection = ${items.length} ', indent: true);
+    MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
     return items;
   }
 
   Future<List<MyUser>> getAllUsers() async => getAllObjects<MyUser>(
-        collection: UserFs.users.name,
+        pathSegments: [UserFs.users.name],
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
@@ -383,7 +422,7 @@ class FbHelpers {
     Date? maxDate,
   }) async {
     return getAllObjects<MyMatch>(
-      collection: MatchFs.matches.name,
+      pathSegments: [MatchFs.matches.name],
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       // Unified call
       fromDate: fromDate,
@@ -393,20 +432,42 @@ class FbHelpers {
     );
   }
 
+  /// returns all results from a match
+  Future<List<GameResult>> getAllResults({
+    required String matchId,
+    required AppState appState,
+  }) async {
+    return getAllObjects<GameResult>(
+      pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      appState: appState,
+    );
+  }
+
   Future<void> updateObject({
     required Map<String, dynamic> fields,
-    required String collection,
-    required String doc,
-    bool forceSet = false, // true: replaces the old object if exists
+    required List<String> pathSegments, // List of collection/doc identifiers
+    bool forceSet = false,
   }) async {
-    MyLog.log(_classString, 'updateObject $collection/$doc, forceSet: $forceSet', indent: true);
+    MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, forceSet: $forceSet', indent: true);
 
     try {
-      await _instance.collection(collection).doc(doc).set(fields, SetOptions(merge: !forceSet));
-      MyLog.log(_classString, 'updateObject $collection/$doc, success', indent: true);
+      if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
+        throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
+      }
+
+      DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
+
+      for (int i = 2; i < pathSegments.length; i += 2) {
+        documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
+      }
+
+      await documentReference.set(fields, SetOptions(merge: !forceSet));
+
+      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, success', indent: true);
     } catch (onError) {
-      MyLog.log(_classString, 'updateObject $collection/$doc error:', exception: onError, level: Level.SEVERE);
-      throw Exception('Error al actualizar $collection/$doc. \nError: $onError');
+      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
+      throw Exception('Error al actualizar ${pathSegments.join('/')}. \nError: $onError');
     }
   }
 
@@ -417,8 +478,7 @@ class FbHelpers {
     }
     return updateObject(
       fields: myUser.toJson(),
-      collection: UserFs.users.name,
-      doc: myUser.id,
+      pathSegments: [UserFs.users.name, myUser.id],
       forceSet: false, // replaces the old object if exists
     );
   }
@@ -427,22 +487,26 @@ class FbHelpers {
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       updateObject(
         fields: match.toJson(core: updateCore, matchPlayers: updatePlayers),
-        collection: MatchFs.matches.name,
-        doc: match.id.toYyyyMMdd(),
+        pathSegments: [MatchFs.matches.name, match.id.toYyyyMMdd()],
+        forceSet: false, // replaces the old object if exists
+      );
+
+  Future<void> updateResult({required GameResult result, required String matchId}) async =>
+      updateObject(
+        fields: result.toJson( ),
+        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId ],
         forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateRegister(RegisterModel registerModel) async => updateObject(
         fields: registerModel.toJson(),
-        collection: RegisterFs.register.name,
-        doc: registerModel.date.toYyyyMMdd(),
+        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMMdd()],
         forceSet: false, // replaces the old object if exists
       );
 
   Future<void> updateParameters(MyParameters myParameters) async => updateObject(
         fields: myParameters.toJson(),
-        collection: ParameterFs.parameters.name,
-        doc: ParameterFs.parameters.name,
+        pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
         forceSet: true,
       );
 
@@ -624,14 +688,17 @@ class FbHelpers {
 // to the input stream. So that every time a new event happens on the input stream,
 // the handleData function is triggered, and the event data is passed as the data parameter.
   StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> _transformer<T>(
-          T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
-          [AppState? appState]) =>
-      StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
-        handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink) {
-          final List<Map<String, dynamic>> snaps = data.docs.map((doc) => doc.data()).toList();
-          final List<T> items = snaps.map((json) => fromJson(json, appState)).toList();
-
-          sink.add(items);
-        },
-      );
+    T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+    AppState? appState,
+  ) {
+    return StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
+      handleData: (QuerySnapshot<Map<String, dynamic>> snapshot, EventSink<List<T>> sink) {
+        List<T> items = snapshot.docs.map((doc) => fromJson(doc.data(), appState)).toList();
+        sink.add(items);
+      },
+      handleError: (error, stackTrace, sink) {
+        sink.addError(error, stackTrace);
+      },
+    );
+  }
 }

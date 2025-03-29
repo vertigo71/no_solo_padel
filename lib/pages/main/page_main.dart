@@ -179,7 +179,7 @@ class _MainPageState extends State<MainPage> {
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
         UiHelper.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
-        UiHelper.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Ranking', _selectedIndex),
+        UiHelper.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Resultados', _selectedIndex),
         UiHelper.buildNavItem(2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
         UiHelper.buildNavItem(3, Icon(Icons.settings), 'Perfil', _selectedIndex),
       ],

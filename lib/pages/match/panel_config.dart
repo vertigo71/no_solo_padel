@@ -119,7 +119,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             Row(
               children: <Widget>[
                 const SizedBox(width: 10),
-                Text('Abrir convocatoria ${match.isOpen ? 'SI' : 'NO'}'),
+                Text('Abrir convocatoria'),
                 const SizedBox(width: 10),
                 FormBuilderField<bool>(
                   name: isOpenId,
