@@ -261,7 +261,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           );
         }
       } catch (e) {
-        message = 'ERROR en la actualización de los datos. \n\n $e';
+        message = 'ERROR en la actualización de los datos. \n\n ${e.toString()}';
         MyLog.log(_classString, '_formValidate ERROR en la actualización de los datos',
             exception: e, level: Level.SEVERE, indent: true);
       }

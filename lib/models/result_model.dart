@@ -54,8 +54,8 @@ class GameResult {
         teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
     } catch (e) {
-      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: $e');
-      throw Exception('Error creando el resultado de la base de datos: \nError: $e');
+      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}');
+      throw Exception('Error creando el resultado de la base de datos: \nError: ${e.toString()}');
     }
   }
 
@@ -100,16 +100,12 @@ class TeamResult {
   final MyUser player1;
   final MyUser player2;
   final int points; // positive if team has won, negative if team has lost
-  final int preRanking1; // ranking of player1 before the match
-  final int preRanking2; // ranking of player2 before the match
   final int score;
 
   TeamResult({
     required this.player1,
     required this.player2,
     required this.points,
-    required this.preRanking1,
-    required this.preRanking2,
     required this.score,
   });
 
@@ -117,16 +113,12 @@ class TeamResult {
     MyUser? player1,
     MyUser? player2,
     int? points,
-    int? preRanking1,
-    int? preRanking2,
     int? score,
   }) {
     return TeamResult(
       player1: player1 ?? this.player1,
       player2: player2 ?? this.player2,
       points: points ?? this.points,
-      preRanking1: preRanking1 ?? this.preRanking1,
-      preRanking2: preRanking2 ?? this.preRanking2,
       score: score ?? this.score,
     );
   }
@@ -150,8 +142,6 @@ class TeamResult {
       player1: player1,
       player2: player2,
       points: json[ResultFs.points.name],
-      preRanking1: json[ResultFs.preRanking1.name],
-      preRanking2: json[ResultFs.preRanking2.name],
       score: json[ResultFs.score.name],
     );
   }
@@ -161,15 +151,13 @@ class TeamResult {
       ResultFs.player1.name: player1.id,
       ResultFs.player2.name: player2.id,
       ResultFs.points.name: points,
-      ResultFs.preRanking1.name: preRanking1,
-      ResultFs.preRanking2.name: preRanking2,
       ResultFs.score.name: score,
     };
   }
 
   @override
   String toString() {
-    return 'TeamResult(player1: $player1, player2: $player2, points: $points, preRanking1: $preRanking1, preRanking2: $preRanking2, score: $score)';
+    return 'TeamResult(player1: $player1, player2: $player2, points: $points, score: $score)';
   }
 
   @override
@@ -180,25 +168,19 @@ class TeamResult {
           player1 == other.player1 &&
           player2 == other.player2 &&
           points == other.points &&
-          preRanking1 == other.preRanking1 &&
-          preRanking2 == other.preRanking2 &&
           score == other.score;
 
   @override
-  int get hashCode =>
-      player1.hashCode ^
-      player2.hashCode ^
-      points.hashCode ^
-      preRanking1.hashCode ^
-      preRanking2.hashCode ^
-      score.hashCode;
+  int get hashCode => player1.hashCode ^ player2.hashCode ^ points.hashCode ^ score.hashCode;
 }
 
 class GameResultId {
-  final DateTime dateTime;
-  final String userId;
+  final DateTime _dateTime;
+  final String _userId;
 
-  GameResultId({required this.userId, DateTime? dateTime}) : dateTime = DateTime.now();
+  GameResultId({required String userId, DateTime? dateTime})
+      : _userId = userId,
+        _dateTime = dateTime ?? DateTime.now();
 
   factory GameResultId.fromString(String id) {
     try {
@@ -207,21 +189,24 @@ class GameResultId {
       final userId = parts[1];
       return GameResultId(dateTime: dateTime, userId: userId);
     } catch (e) {
-      MyLog.log(_classString, 'Invalid ResultId format: $id \nError: $e');
-      throw FormatException('ResultId formato Invalido: $id \nError: $e');
+      MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}');
+      throw FormatException('ResultId formato Invalido: $id \nError: ${e.toString()}');
     }
   }
 
-  String get resultId => '${dateTime.toIso8601String()}$fieldSeparator$userId';
+  String get resultId => '${_dateTime.toIso8601String()}$fieldSeparator$_userId';
 
   @override
-  String toString() => '{${dateTime.toIso8601String()},$userId}';
+  String toString() => '{${_dateTime.toIso8601String()},$_userId}';
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GameResultId && runtimeType == other.runtimeType && dateTime == other.dateTime && userId == other.userId;
+      other is GameResultId &&
+          runtimeType == other.runtimeType &&
+          _dateTime == other._dateTime &&
+          _userId == other._userId;
 
   @override
-  int get hashCode => dateTime.hashCode ^ userId.hashCode;
+  int get hashCode => _dateTime.hashCode ^ _userId.hashCode;
 }

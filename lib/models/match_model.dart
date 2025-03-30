@@ -70,8 +70,8 @@ class MyMatch {
     try {
       return MyMatch.fromJson(jsonDecode(jsonString), appState);
     } catch (e) {
-      MyLog.log(_classString, 'fromJsonString: Error decoding JSON: $e', level: Level.SEVERE);
-      throw Exception('Error: no se ha podido acceder al partido\n$e');
+      MyLog.log(_classString, 'fromJsonString: Error decoding JSON: ${e.toString()}', level: Level.SEVERE);
+      throw Exception('Error: no se ha podido acceder al partido\n${e.toString()}');
     }
   }
 

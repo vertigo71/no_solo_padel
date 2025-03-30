@@ -122,7 +122,7 @@ class MyUser {
     try {
       return UserType.values[type!];
     } catch (e) {
-      MyLog.log(_classString, 'Invalid UserType index: $type, Error: $e', level: Level.WARNING);
+      MyLog.log(_classString, 'Invalid UserType index: $type, Error: ${e.toString()}', level: Level.WARNING);
       return UserType.basic;
     }
   }
@@ -156,8 +156,8 @@ class MyUser {
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
       );
     } catch (e) {
-      MyLog.log(_classString, 'Error creating MyUser from Firestore: $e', myCustomObject: json, level: Level.SEVERE);
-      throw Exception('Error creando un usuario desde la base de datos: $e');
+      MyLog.log(_classString, 'Error creating MyUser from Firestore: ${e.toString()}', myCustomObject: json, level: Level.SEVERE);
+      throw Exception('Error creando un usuario desde la base de datos: ${e.toString()}');
     }
   }
 

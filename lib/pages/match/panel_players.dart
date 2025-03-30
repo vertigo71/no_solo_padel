@@ -351,7 +351,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         UiHelper.myAlertDialog(
             context,
             'Ha habido una incidencia! \n'
-            'Comprobar que la operación se ha realizado correctamente\n $e');
+            'Comprobar que la operación se ha realizado correctamente\n ${e.toString()}');
       }
       _refresh();
       return;
@@ -368,7 +368,7 @@ class PlayersPanelState extends State<PlayersPanel> {
             context,
             'Ha habido una incidencia al enviar el mensaje de confirmación\n'
             'Es posible que no se haya enviado el mensaje al registro y al telegram\n'
-            'Error = $e');
+            'Error = ${e.toString()}');
       }
     }
   }

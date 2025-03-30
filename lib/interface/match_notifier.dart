@@ -48,7 +48,7 @@ class MatchNotifier with ChangeNotifier {
       MyLog.log(_classString, '_createListener ERROR listening to match ${_match.id}',
           exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error: No se ha podido crear el listener. '
-          'Es posible que los partidos no se refresquen bien.\n$e');
+          'Es posible que los partidos no se refresquen bien.\n${e.toString()}');
     }
   }
 

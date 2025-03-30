@@ -37,7 +37,7 @@ class AuthenticationHelper {
     } on FirebaseAuthException catch (e) {
       return _toSpanish(e);
     } catch (e) {
-      return 'Error de autenticación: \n $e';
+      return 'Error de autenticación: \n ${e.toString()}';
     }
   }
 
@@ -68,11 +68,11 @@ class AuthenticationHelper {
     } on FirebaseAuthException catch (e) {
       String message = _toSpanish(e);
       if (message.isEmpty) {
-        message = 'Error al crear usuario $email (error indefinido de la base de datos) \n $e';
+        message = 'Error al crear usuario $email (error indefinido de la base de datos) \n ${e.toString()}';
       }
       return message;
     } catch (e) {
-      return 'Error al crear usuario $email (error indefinido) \n $e';
+      return 'Error al crear usuario $email (error indefinido) \n ${e.toString()}';
     }
     return '';
   }
@@ -111,11 +111,11 @@ class AuthenticationHelper {
     } on FirebaseAuthException catch (e) {
       String message = _toSpanish(e);
       if (message.isEmpty) {
-        message = 'Error actualizando $errorField (error indefinido de la base de datos) \n $e';
+        message = 'Error actualizando $errorField (error indefinido de la base de datos) \n ${e.toString()}';
       }
       return message;
     } catch (e) {
-      return 'Error actualizando $errorField (error indefinido) \n $e';
+      return 'Error actualizando $errorField (error indefinido) \n ${e.toString()}';
     }
     return '';
   }
@@ -149,7 +149,7 @@ class AuthenticationHelper {
   ///   - A localized Spanish error message (`String`). If the error code is not
   ///     recognized, a generic message including the Firebase error code is returned.
   static String _toSpanish(FirebaseAuthException e) {
-    MyLog.log(_classString, '_toSpanish ${e.code} $e');
+    MyLog.log(_classString, '_toSpanish ${e.code} ${e.toString()}');
 
     switch (e.code) {
       case 'email-already-in-use':

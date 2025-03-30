@@ -161,8 +161,8 @@ class ProfilePanelState extends State<ProfilePanel> {
           if (mounted) UiHelper.showMessage(context, 'Error al cargar la imagen');
         }
       }).catchError((e) {
-        MyLog.log(_classString, 'Error shrinking avatar: $e', level: Level.SEVERE, indent: true);
-        if (mounted) UiHelper.showMessage(context, 'Error al comprimir la imagen\n$e');
+        MyLog.log(_classString, 'Error shrinking avatar: ${e.toString()}', level: Level.SEVERE, indent: true);
+        if (mounted) UiHelper.showMessage(context, 'Error al comprimir la imagen\n${e.toString()}');
       });
     }
   }
@@ -427,8 +427,8 @@ class ProfilePanelState extends State<ProfilePanel> {
       await fbHelpers.updateUser(appState.getLoggedUser());
       return true; // Return true on success
     } catch (e) {
-      MyLog.log(_classString, 'Error al subir el avatar: $e', level: Level.SEVERE);
-      _showErrorMessage('Error al subir el avatar\n$e', updatedFields);
+      MyLog.log(_classString, 'Error al subir el avatar: ${e.toString()}', level: Level.SEVERE);
+      _showErrorMessage('Error al subir el avatar\n${e.toString()}', updatedFields);
       return false;
     }
   }

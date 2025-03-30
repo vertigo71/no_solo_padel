@@ -200,7 +200,7 @@ class FbHelpers {
       } catch (e) {
         MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
             myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
-        throw Exception('Error en la base de datos de usuarios. \nError: $e');
+        throw Exception('Error en la base de datos de usuarios. \nError: ${e.toString()}');
       }
     }
   }
@@ -266,7 +266,7 @@ class FbHelpers {
     } catch (e) {
       MyLog.log(_classString, 'getStream ERROR pathSegments=${pathSegments.join('/')}',
           exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: $e');
+      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: ${e.toString()}');
     }
   }
 
@@ -338,7 +338,7 @@ class FbHelpers {
       }
     } catch (e) {
       MyLog.log(_classString, 'getObject ${pathSegments.join('/')}', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: $e');
+      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: ${e.toString()}');
     }
     return null;
   }
@@ -350,6 +350,12 @@ class FbHelpers {
       pathSegments: [MatchFs.matches.name, matchId],
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       appState: appState);
+
+  Future<GameResult?> getResult(
+          {required String matchId, required String resultId, required AppState appState}) async =>
+      await getObject(
+          pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, resultId],
+          fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));
 
   Future<MyParameters> getParameters() async =>
       await getObject(
@@ -403,7 +409,7 @@ class FbHelpers {
       }
     } catch (e) {
       MyLog.log(_classString, 'getAllObjects', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: $e');
+      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: ${e.toString()}');
     }
     MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
     return items;
@@ -491,10 +497,9 @@ class FbHelpers {
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateResult({required GameResult result, required String matchId}) async =>
-      updateObject(
-        fields: result.toJson( ),
-        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId ],
+  Future<void> updateResult({required GameResult result, required String matchId}) async => updateObject(
+        fields: result.toJson(),
+        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId],
         forceSet: false, // replaces the old object if exists
       );
 
@@ -523,7 +528,24 @@ class FbHelpers {
     } catch (e) {
       MyLog.log(_classString, 'deleteUser error when deleting',
           myCustomObject: myUser, level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el usuario $myUser. \nError: $e');
+      throw Exception('Error al eliminar el usuario $myUser. \nError: ${e.toString()}');
+    }
+  }
+
+  Future<void> deleteResult(GameResult result) async {
+    MyLog.log(_classString, 'deleteResult deleting result $result');
+
+    try {
+      await _instance
+          .collection(MatchFs.matches.name)
+          .doc(result.matchId.toYyyyMMdd())
+          .collection(ResultFs.results.name)
+          .doc(result.id.resultId)
+          .delete();
+    } catch (e) {
+      MyLog.log(_classString, 'deleteResult error when deleting',
+          myCustomObject: result, level: Level.SEVERE, indent: true);
+      rethrow;
     }
   }
 
@@ -571,7 +593,7 @@ class FbHelpers {
       MyLog.log(_classString, 'addPlayerToMatch error adding $player to match $matchId',
           exception: e, level: Level.WARNING, indent: true);
       throw Exception('Error al añadir jugador $player al partido $matchId\n'
-          'Error = $e');
+          'Error = ${e.toString()}');
     });
   }
 
@@ -666,8 +688,8 @@ class FbHelpers {
       }
     } catch (e) {
       // If an exception occurred during the upload, log the error and throw an exception.
-      MyLog.log(_classString, 'File upload failed: $e', level: Level.SEVERE);
-      throw Exception('Error al subir el archivo $filename\nError: $e');
+      MyLog.log(_classString, 'File upload failed: ${e.toString()}', level: Level.SEVERE);
+      throw Exception('Error al subir el archivo $filename\nError: ${e.toString()}');
     }
   }
 
