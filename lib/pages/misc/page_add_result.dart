@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel/database/firebase_helpers.dart';
@@ -16,7 +18,7 @@ const int numPlayers = 4;
 const int maxGamesPerSet = 16;
 
 class AddResultPage extends StatefulWidget {
-  const AddResultPage({super.key, required this.matchId });
+  const AddResultPage({super.key, required this.matchId});
 
   // argument matchJson vs matchId
   // matchJson: initialValue for FormBuilder will hold the correct initial values
@@ -238,11 +240,14 @@ class _AddResultPageState extends State<AddResultPage> {
       throw 'No se puede repetir un jugador';
     }
 
+    // calculate the point that each team will get
+    List<int> points = _calculatePoints();
+
     // create teamA
     TeamResult teamA = TeamResult(
       player1: _selectedPlayer[0]!,
       player2: _selectedPlayer[1]!,
-      points: _calculatePoints(true),
+      points: points[0],
       score: _scores[0],
       preRanking1: _selectedPlayer[0]!.rankingPos,
       preRanking2: _selectedPlayer[1]!.rankingPos,
@@ -252,7 +257,7 @@ class _AddResultPageState extends State<AddResultPage> {
     TeamResult teamB = TeamResult(
       player1: _selectedPlayer[2]!,
       player2: _selectedPlayer[3]!,
-      points: _calculatePoints(false),
+      points: points[1],
       score: _scores[1],
       preRanking1: _selectedPlayer[2]!.rankingPos,
       preRanking2: _selectedPlayer[3]!.rankingPos,
@@ -287,18 +292,6 @@ class _AddResultPageState extends State<AddResultPage> {
     }
   }
 
-  int _calculatePoints(bool teamA) {
-    MyLog.log(_classString, '_calculatePointsA', indent: true);
-    if (_selectedPlayer.length != 4) {
-      throw ArgumentError('selectedPlayer must have 4 elements.');
-    }
-    if (teamA) {
-      return _scores[0] > _scores[1] ? 100 : 0;
-    } else {
-      return _scores[1] > _scores[0] ? 100 : 0;
-    }
-  }
-
   void _initialize() async {
     MyLog.log(_classString, '_initialize: Initializing parameters: ${widget.matchId}');
     try {
@@ -316,5 +309,62 @@ class _AddResultPageState extends State<AddResultPage> {
         _errorMessage = 'Error al cargar el partido.\n${e.toString()}';
       });
     }
+  }
+
+  /// list of 2 ints with the points of each team A and B
+  List<int> _calculatePoints() {
+    MyLog.log(_classString, '_calculatePointsA', indent: true);
+
+    if (_selectedPlayer.length != 4) {
+      throw ArgumentError('No se ha podido obtener los cuatro jugadores');
+    }
+    if (_scores.length != 2) {
+      throw ArgumentError('No se ha podido obtener los dos resultados');
+    }
+
+    const double k = 1.0 / 3000;
+    const int step = 20;
+    const int range = 60;
+
+    final int scoreDiff = _scores[0] - _scores[1]; // teamA - teamB
+    final int rankingA = _selectedPlayer[0]!.rankingPos + _selectedPlayer[1]!.rankingPos;
+    final int rankingB = _selectedPlayer[2]!.rankingPos + _selectedPlayer[3]!.rankingPos;
+    final int rankingDiff = rankingA - rankingB; // teamA - teamB
+    final bool favoriteA = rankingDiff > 0;
+
+    if (scoreDiff > 0) {
+      // teamA wins
+      return [(scoreDiff * _pointsPerGame(step, range, k, rankingDiff, favoriteA)).round(), 0];
+    } else if (scoreDiff < 0) {
+      // teamB wins
+      return [0, (scoreDiff.abs() * _pointsPerGame(step, range, k, rankingDiff, !favoriteA)).round()];
+    } else {
+      // tie
+      if (rankingDiff == 0) {
+        // tie in ranking, tie in score
+        return [step, step];
+      } else if (favoriteA) {
+        // if favorite==A, teamB wins
+        return [0, step];
+      } else {
+        // if favorite==B, teamA wins
+        return [step, 0];
+      }
+    }
+  }
+
+  double _pointsPerGame(int step, int range, double k, int pointDiff, bool favoriteWins) {
+    MyLog.log(_classString, '_pointsPerGame s=$step r=$range k=$k d=$pointDiff favorite=$favoriteWins', indent: true);
+    // pointDiff = winner points team - loser points team
+    pointDiff = pointDiff.abs();
+    final double fraction = (1 + k * pointDiff.abs()) / (1 + exp(2 * k * pointDiff));
+    late double result;
+    if (favoriteWins) {
+      result = step + range * fraction;
+    } else {
+      result = step + range - range * fraction;
+    }
+    MyLog.log(_classString, '_pointsPerGame: fraction=$fraction, result=$result', indent: true);
+    return result;
   }
 }

@@ -40,8 +40,10 @@ class InformationPanel extends StatelessWidget {
                     child:
                         imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
                   ),
+                  isThreeLine: true,
                   title: Text(user.name),
-                  subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}'),
+                  subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}\n'
+                      'Ranking: ${user.rankingPos}'),
                   trailing: Text(user.userType.displayName),
                 );
               }))),

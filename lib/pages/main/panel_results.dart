@@ -66,6 +66,7 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 1.0,
         children: [
           _buildHeader(context, match.id.longFormat(),
               () => context.pushNamed(AppRoutes.addResult, extra: match.id.toYyyyMMdd())),
@@ -112,7 +113,7 @@ class ResultsPanel extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, String headerText, VoidCallback onAddResult) => Card(
         elevation: 6,
-        margin: const EdgeInsets.all(10),
+        margin: const EdgeInsets.all(1.0),
         child: ListTile(
           tileColor: Theme.of(context).appBarTheme.backgroundColor,
           titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
@@ -133,17 +134,17 @@ class ResultsPanel extends StatelessWidget {
     MyLog.log(_classString, 'Building result card: $result', indent: true);
     try {
       return Card(
-        margin: const EdgeInsets.fromLTRB(30.0, 2.0, 8.0, 2.0),
+        margin: const EdgeInsets.fromLTRB(1.0, 1.0, 1.0, 1.0),
         color: Theme.of(context).colorScheme.inversePrimary,
         elevation: 6.0,
         child: SizedBox(
           width: double.infinity, // Take up the full width of the Column
           child: Padding(
-            padding: EdgeInsets.all(2.0),
+            padding: EdgeInsets.all(1.0),
             child: Row(
               // crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 8.0,
+              spacing: 1.0,
               children: [
                 Spacer(),
                 _buildTeam(result.teamA!),
@@ -163,14 +164,15 @@ class ResultsPanel extends StatelessWidget {
                     }
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(5.0),
                     child: Icon(
                       Icons.delete,
-                      color: Colors.red,
+                      color: Colors.red[300],
                       size: 25.0, // Optional: Adjust the icon size
                     ),
                   ),
                 ),
+                Spacer(),
               ],
             ),
           ),
@@ -189,7 +191,7 @@ class ResultsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 4.0,
+      spacing: 1.0,
       children: [
         _buildPlayer(team.player1, team.preRanking1),
         _buildPlayer(team.player2, team.preRanking2),
