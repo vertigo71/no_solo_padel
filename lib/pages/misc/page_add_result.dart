@@ -244,6 +244,8 @@ class _AddResultPageState extends State<AddResultPage> {
       player2: _selectedPlayer[1]!,
       points: _calculatePoints(true),
       score: _scores[0],
+      preRanking1: _selectedPlayer[0]!.rankingPos,
+      preRanking2: _selectedPlayer[1]!.rankingPos,
     );
 
     // create teamB
@@ -252,6 +254,8 @@ class _AddResultPageState extends State<AddResultPage> {
       player2: _selectedPlayer[3]!,
       points: _calculatePoints(false),
       score: _scores[1],
+      preRanking1: _selectedPlayer[2]!.rankingPos,
+      preRanking2: _selectedPlayer[3]!.rankingPos,
     );
 
     // create GameResult

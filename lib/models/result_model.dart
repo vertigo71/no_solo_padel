@@ -101,12 +101,16 @@ class TeamResult {
   final MyUser player2;
   final int points; // positive if team has won, negative if team has lost
   final int score;
+  final int preRanking1; // ranking of player1 before the match
+  final int preRanking2; // ranking of player2 before the match
 
   TeamResult({
     required this.player1,
     required this.player2,
     required this.points,
     required this.score,
+    required this.preRanking1,
+    required this.preRanking2,
   });
 
   TeamResult copyFrom({
@@ -114,12 +118,16 @@ class TeamResult {
     MyUser? player2,
     int? points,
     int? score,
+    int? preRanking1,
+    int? preRanking2,
   }) {
     return TeamResult(
       player1: player1 ?? this.player1,
       player2: player2 ?? this.player2,
       points: points ?? this.points,
       score: score ?? this.score,
+      preRanking1: preRanking1 ?? this.preRanking1,
+      preRanking2: preRanking2 ?? this.preRanking2,
     );
   }
 
@@ -141,8 +149,10 @@ class TeamResult {
     return TeamResult(
       player1: player1,
       player2: player2,
-      points: json[ResultFs.points.name],
-      score: json[ResultFs.score.name],
+      points: json[ResultFs.points.name]??0,
+      score: json[ResultFs.score.name]??0,
+      preRanking1: json[ResultFs.preRanking1.name]??0,
+      preRanking2: json[ResultFs.preRanking2.name]??0,
     );
   }
 
@@ -152,12 +162,15 @@ class TeamResult {
       ResultFs.player2.name: player2.id,
       ResultFs.points.name: points,
       ResultFs.score.name: score,
+      ResultFs.preRanking1.name: preRanking1,
+      ResultFs.preRanking2.name: preRanking2,
     };
   }
 
   @override
   String toString() {
-    return 'TeamResult(player1: $player1, player2: $player2, points: $points, score: $score)';
+    return 'TeamResult(player1: $player1, player2: $player2, points: $points, '
+        'preRanking1: $preRanking1, preRanking2: $preRanking2, score: $score)';
   }
 
   @override
@@ -168,10 +181,18 @@ class TeamResult {
           player1 == other.player1 &&
           player2 == other.player2 &&
           points == other.points &&
-          score == other.score;
+          score == other.score &&
+          preRanking1 == other.preRanking1 &&
+          preRanking2 == other.preRanking2;
 
   @override
-  int get hashCode => player1.hashCode ^ player2.hashCode ^ points.hashCode ^ score.hashCode;
+  int get hashCode =>
+      player1.hashCode ^
+      player2.hashCode ^
+      points.hashCode ^
+      score.hashCode ^
+      preRanking1.hashCode ^
+      preRanking2.hashCode;
 }
 
 class GameResultId {

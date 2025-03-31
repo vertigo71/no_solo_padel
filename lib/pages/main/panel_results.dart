@@ -191,8 +191,8 @@ class ResultsPanel extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: 4.0,
       children: [
-        _buildPlayer(team.player1),
-        _buildPlayer(team.player2),
+        _buildPlayer(team.player1, team.preRanking1),
+        _buildPlayer(team.player2, team.preRanking2),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -205,7 +205,7 @@ class ResultsPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayer(MyUser player) {
+  Widget _buildPlayer(MyUser player, int preRanking) {
     MyLog.log(_classString, 'Building player: $player', indent: true);
     return IntrinsicWidth(
       child: ListTile(
@@ -214,6 +214,7 @@ class ResultsPanel extends StatelessWidget {
           backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
         ),
         title: Text(player.name),
+        subtitle: Text('$preRanking'),
       ),
     );
   }
