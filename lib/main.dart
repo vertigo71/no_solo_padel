@@ -75,7 +75,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building MyApp');
+    MyLog.log(_classString, 'Building MyApp', level:Level.FINE);
 
     return MultiProvider(
       providers: [

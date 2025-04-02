@@ -62,7 +62,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     if (_isLoading) {
       if (_errorMessage != null) {

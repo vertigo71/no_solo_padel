@@ -4,6 +4,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:no_solo_padel/routes/routes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/director.dart';
 import '../models/debug.dart';
@@ -48,7 +49,7 @@ class LoginPageState extends State<LoginPage> {
   /// build the widget tree
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     return Scaffold(
       bottomNavigationBar: BottomAppBar(

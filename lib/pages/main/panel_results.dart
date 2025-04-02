@@ -21,7 +21,7 @@ class ResultsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     try {
       return Consumer<AppState>(
@@ -152,26 +152,28 @@ class ResultsPanel extends StatelessWidget {
                 SizedBox(width: 10),
                 _buildTeam(result.teamB!),
                 Spacer(),
-                InkWell(
-                  onTap: () async {
-                    MyLog.log(_classString, '_buildResultCard. Result = $result');
-                    try {
-                      await _eraseResult(result, context);
-                    } catch (e) {
-                      if (context.mounted) {
-                        UiHelper.showMessage(context, 'Error al eliminar el resultado\nError: ${e.toString()}');
-                      }
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: Icon(
-                      Icons.delete,
-                      color: Colors.red[300],
-                      size: 25.0, // Optional: Adjust the icon size
-                    ),
-                  ),
-                ),
+                context.read<AppState>().isLoggedUserAdminOrSuper
+                    ? InkWell(
+                        onTap: () async {
+                          MyLog.log(_classString, '_buildResultCard. Result = $result');
+                          try {
+                            await _eraseResult(result, context);
+                          } catch (e) {
+                            if (context.mounted) {
+                              UiHelper.showMessage(context, 'Error al eliminar el resultado\nError: ${e.toString()}');
+                            }
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.red[300],
+                            size: 25.0, // Optional: Adjust the icon size
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
                 Spacer(),
               ],
             ),

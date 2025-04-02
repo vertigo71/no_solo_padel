@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../interface/app_state.dart';
 import '../../models/debug.dart';
+import '../../models/user_model.dart';
 
 final String _classString = 'InformationPanel'.toUpperCase();
 
@@ -12,7 +14,7 @@ class InformationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Scaffold(
       body: ListView(
@@ -20,35 +22,32 @@ class InformationPanel extends StatelessWidget {
           ...ListTile.divideTiles(
               context: context,
               tiles: context.read<AppState>().users.map(((user) {
-                final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
-
-                ImageProvider<Object>? imageProvider;
-                try {
-                  if (user.avatarUrl != null) {
-                    imageProvider = NetworkImage(user.avatarUrl!);
-                  }
-                } catch (e) {
-                  MyLog.log(_classString, 'Error building image for user $user', level: Level.WARNING, indent: true);
-                  imageProvider = null;
-                }
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blueAccent,
-                    backgroundImage: imageProvider,
-                    child:
-                        imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
-                  ),
-                  isThreeLine: true,
-                  title: Text(user.name),
-                  subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}\n'
-                      'Ranking: ${user.rankingPos}'),
-                  trailing: Text(user.userType.displayName),
-                );
+                return UiHelper.userInfoTile(user, () => _modifyUser(context, user));
               }))),
         ],
       ),
+    );
+  }
+
+  Future _modifyUser(BuildContext context, MyUser user) {
+    MyLog.log(_classString, '_modifyUser: $user', indent: true);
+    return showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('Overlapping Panel: user=$user'),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

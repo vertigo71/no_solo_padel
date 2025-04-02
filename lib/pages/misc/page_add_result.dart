@@ -54,7 +54,7 @@ class _AddResultPageState extends State<AddResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     if (!_matchLoaded) {
       MyLog.log(_classString, 'Building: match still not loaded', indent: true);

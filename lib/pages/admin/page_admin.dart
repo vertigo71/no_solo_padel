@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../models/debug.dart';
 import 'panel_parameters.dart';
@@ -11,7 +12,7 @@ class AdminPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     return DefaultTabController(
       length: 2,

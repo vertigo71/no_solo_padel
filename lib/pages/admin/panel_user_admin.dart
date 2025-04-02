@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../models/debug.dart';
 import '../../utilities/ui_helpers.dart';
 import 'panel_user_add.dart';
 import 'panel_user_delete.dart';
-import 'panel_user_modify.dart';
 
 final String _classString = 'UserAdminPanel'.toUpperCase();
 
@@ -19,13 +19,12 @@ class UserAdminPanelState extends State<UserAdminPanel> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     UserAddPanel(),
-    UserModifyPanel(),
     UserDeletePanel(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level: Level.FINE);
     return Scaffold(
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
@@ -34,8 +33,7 @@ class UserAdminPanelState extends State<UserAdminPanel> {
         type: BottomNavigationBarType.fixed,
         items: <BottomNavigationBarItem>[
           UiHelper.buildNavItem(0, Icon(Icons.person_add_sharp), 'Añadir', _selectedIndex),
-          UiHelper.buildNavItem(1, Icon(Icons.person), 'Modificar', _selectedIndex),
-          UiHelper.buildNavItem(2, Icon(Icons.person_remove_sharp), 'Eliminar', _selectedIndex),
+          UiHelper.buildNavItem(1, Icon(Icons.person_remove_sharp), 'Eliminar', _selectedIndex),
         ],
         currentIndex: _selectedIndex,
         onTap: (int index) {

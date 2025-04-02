@@ -54,7 +54,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     return Scaffold(
       body: Padding(

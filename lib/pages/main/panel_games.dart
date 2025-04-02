@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
@@ -20,7 +21,7 @@ class GamesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
@@ -92,7 +93,7 @@ class GamesPanel extends StatelessWidget {
                                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               )
                             : null,
-                        enabled: match.isOpen == true || appState.isLoggedUserAdmin,
+                        enabled: match.isOpen == true || appState.isLoggedUserAdminOrSuper,
                         onTap: () {
                           context.pushNamed(AppRoutes.match, extra: match.toJson());
                         },

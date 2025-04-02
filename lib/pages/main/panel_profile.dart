@@ -66,7 +66,7 @@ class ProfilePanelState extends State<ProfilePanel> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     ImageProvider<Object>? imageProvider;
     try {
@@ -92,7 +92,6 @@ class ProfilePanelState extends State<ProfilePanel> {
             // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ..._FormFieldsEnum.values.map((field) => _buildFormField(field)),
-              // Add this section for image upload
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: DecoratedBox(

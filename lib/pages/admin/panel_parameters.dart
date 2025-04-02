@@ -77,7 +77,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     // compare fields in case other user has changed any fields
     bool areFieldsDifferent(dynamic formValue, dynamic realValue) => formValue != null && formValue != realValue;

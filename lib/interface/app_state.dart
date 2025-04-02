@@ -98,7 +98,7 @@ class AppState with ChangeNotifier {
     return users;
   }
 
-  bool get isLoggedUserAdmin => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
+  bool get isLoggedUserAdminOrSuper => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
 
   bool get isLoggedUserSuper => _loggedUser.userType == UserType.superuser;
 

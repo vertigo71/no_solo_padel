@@ -30,6 +30,39 @@ class UiHelper {
     );
   }
 
+  static Widget userInfoTile(MyUser user, [Function? onPressed]) {
+    final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
+
+    ImageProvider<Object>? imageProvider;
+    try {
+      if (user.avatarUrl != null) {
+        imageProvider = NetworkImage(user.avatarUrl!);
+      }
+    } catch (e) {
+      MyLog.log(_classString, 'Error building image for user $user', level: Level.WARNING, indent: true);
+      imageProvider = null;
+    }
+
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 25,
+        backgroundColor: Colors.blueAccent,
+        backgroundImage: imageProvider,
+        child: imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
+      ),
+      isThreeLine: true,
+      title: Text(user.name),
+      subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}\n'
+          'Ranking: ${user.rankingPos}'),
+      trailing: Text('${user.userType.displayName}\n'
+          'Login: ${user.loginCount} veces\n'
+          '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
+      onTap: () {
+        if (onPressed != null) onPressed();
+      },
+    );
+  }
+
   static void myAlertDialog(BuildContext context, String text, {Function? onDialogClosed}) {
     if (context.mounted) {
       showDialog(

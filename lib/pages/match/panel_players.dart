@@ -49,7 +49,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match');
+    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match', level:Level.FINE);
 
     return ListView(
       children: [
@@ -59,9 +59,9 @@ class PlayersPanelState extends State<PlayersPanel> {
         const Divider(thickness: 5),
         listOfPlayers(),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdmin) const Divider(thickness: 5),
+        if (context.read<AppState>().isLoggedUserAdminOrSuper) const Divider(thickness: 5),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdmin) roulette(),
+        if (context.read<AppState>().isLoggedUserAdminOrSuper) roulette(),
         const SizedBox(height: 50),
       ],
     );
@@ -133,7 +133,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   Widget listOfPlayers() => Builder(
         builder: (context) {
           int playerNumber = 0;
-          MyLog.log(_classString, 'Building listOfPlayers');
+          MyLog.log(_classString, 'Building listOfPlayers', level:Level.FINE);
           MyMatch match = context.read<MatchNotifier>().match;
 
           List<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);

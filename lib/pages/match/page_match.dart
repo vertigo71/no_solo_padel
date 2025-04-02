@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:no_solo_padel/models/match_model.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
@@ -26,9 +27,9 @@ class MatchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building match $matchJson');
+    MyLog.log(_classString, 'Building match $matchJson', level:Level.FINE);
 
-    final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdmin;
+    final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdminOrSuper;
 
     late MyMatch match;
     try {

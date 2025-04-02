@@ -37,7 +37,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for match=$match');
+    MyLog.log(_classString, 'Building Form for match=$match', level:Level.FINE);
 
     // // initial values for all fields
     // // FormBuilder initial values do not work in case another user updates any field

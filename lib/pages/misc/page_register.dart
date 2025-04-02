@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
@@ -15,7 +16,7 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building');
+    MyLog.log(_classString, 'Building', level:Level.FINE);
 
     AppState appState = context.read<AppState>();
     FbHelpers fbHelpers = context.read<Director>().fbHelpers;
