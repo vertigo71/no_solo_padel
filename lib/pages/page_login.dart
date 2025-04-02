@@ -37,7 +37,7 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    MyLog.log(_classString, 'initState');
+    MyLog.log(_classString, 'initState', level: Level.FINE );
     getVersion();
 
     // this page must only be presented when user is not logged in

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../models/debug.dart';
 
@@ -149,7 +150,7 @@ class AuthenticationHelper {
   ///   - A localized Spanish error message (`String`). If the error code is not
   ///     recognized, a generic message including the Firebase error code is returned.
   static String _toSpanish(FirebaseAuthException e) {
-    MyLog.log(_classString, '_toSpanish ${e.code} ${e.toString()}');
+    MyLog.log(_classString, '_toSpanish ${e.code} ${e.toString()}', level:Level.FINE);
 
     switch (e.code) {
       case 'email-already-in-use':

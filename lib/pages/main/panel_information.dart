@@ -7,7 +7,6 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../misc/panel_avatar_selector.dart';
@@ -42,7 +41,6 @@ class InformationPanel extends StatelessWidget {
 
     Uint8List? selectedImageData;
     UserType selectedUserType = user.userType;
-    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
     return showModalBottomSheet(
       context: context,
@@ -80,7 +78,7 @@ class InformationPanel extends StatelessWidget {
                       children: [
                         ElevatedButton(
                           onPressed: () =>
-                              _acceptChanges(context, user, selectedUserType, selectedImageData, fbHelpers),
+                              _acceptChanges(context, user, selectedUserType, selectedImageData),
                           child: Text('Aceptar'),
                         ),
                         ElevatedButton(
@@ -107,7 +105,7 @@ class InformationPanel extends StatelessWidget {
   }
 
   Future<void> _acceptChanges(BuildContext context, MyUser user, UserType selectedUserType,
-      Uint8List? selectedImageData, FbHelpers fbHelpers) async {
+      Uint8List? selectedImageData ) async {
     MyLog.log(
         _classString, "Accept modal selected image=${selectedImageData != null}, type=${selectedUserType.displayName}",
         indent: true);
@@ -118,12 +116,12 @@ class InformationPanel extends StatelessWidget {
     String response =
         await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar los datos?', yesOption, noOption);
     if (response.isEmpty || response == noOption) return;
-    MyLog.log(_classString, 'build response = $response', indent: true);
+    MyLog.log(_classString, 'dialog response = $response', indent: true);
 
     // update user
     user.userType = selectedUserType;
     try {
-      await fbHelpers.updateUser(user, selectedImageData);
+      await FbHelpers().updateUser(user, selectedImageData);
       if (context.mounted) Navigator.pop(context);
     } catch (e) {
       MyLog.log(_classString, 'Error updating user: $user \n$e', level: Level.SEVERE, indent: true);

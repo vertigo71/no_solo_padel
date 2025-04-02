@@ -4,7 +4,6 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/firebase_helpers.dart';
-import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
@@ -174,7 +173,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   }
 
   String _checkForm() {
-    MyLog.log(_classString, '_checkForm check all courts');
+    MyLog.log(_classString, '_checkForm check all courts', level: Level.FINE );
 
     // empty courts
     List<String> courts = [];
@@ -194,7 +193,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   }
 
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate: validate the form');
+    MyLog.log(_classString, '_formValidate: validate the form', level: Level.FINE );
 
     var state = _formKey.currentState;
 
@@ -228,11 +227,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       String message = 'Los datos han sido actualizados';
       try {
         MyMatch oldMatch = context.read<MatchNotifier>().match;
-        FbHelpers fbHelpers = context.read<Director>().fbHelpers;
         AppState appState = context.read<AppState>();
 
         // upload firebase
-        await fbHelpers.updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        await FbHelpers().updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
         // do not update notifier as the listener match_notifier will do it
 
         String registerText = '';
@@ -254,7 +252,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
 
         if (registerText.isNotEmpty) {
-          fbHelpers.updateRegister(RegisterModel(date: newMatch.id, message: registerText));
+          FbHelpers().updateRegister(RegisterModel(date: newMatch.id, message: registerText));
           sendDatedMessageToTelegram(
             message: registerText,
             matchDate: newMatch.id,

@@ -19,7 +19,6 @@ final String _classString = '<st> Director'.toLowerCase();
 /// knows about all processes
 class Director {
   final AppState _appState;
-  final FbHelpers _fbHelpers = FbHelpers();
 
   Director({required AppState appState}) : _appState = appState {
     MyLog.log(_classString, 'Constructor');
@@ -27,23 +26,21 @@ class Director {
 
   AppState get appState => _appState;
 
-  FbHelpers get fbHelpers => _fbHelpers;
-
   /// signOut from all systems
   Future signOut() async {
     MyLog.log(_classString, 'SignOut');
-    _appState.resetLoggedUser();
-    _fbHelpers.disposeListeners();
-    AuthenticationHelper.signOut();
+    await FbHelpers().disposeListeners();
+    _appState.reset();
+    await AuthenticationHelper.signOut();
   }
 
   /// delete old logs and matches
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    fbHelpers.deleteOldData(
+    FbHelpers().deleteOldData(
         RegisterFs.register.name, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
-    fbHelpers.deleteOldData(
+    FbHelpers().deleteOldData(
         MatchFs.matches.name, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
@@ -79,7 +76,7 @@ class Director {
         // create users in Firestore Authentication
         await AuthenticationHelper.createUserWithEmailAndPwd(email: myUser.email, pwd: getInitialPwd());
         // update/create user in the Firestore database
-        await fbHelpers.updateUser(myUser);
+        await FbHelpers().updateUser(myUser);
         // listener will update appState
         MyLog.log(_classString, '>>> createTestData: new user = $myUser', indent: true);
       }
@@ -91,7 +88,7 @@ class Director {
     for (MyUser user in users) {
       if (user.rankingPos == 0) {
         user.rankingPos = random.nextInt(10000);
-        await fbHelpers.updateUser(user);
+        await FbHelpers().updateUser(user);
       }
     }
 
@@ -105,7 +102,7 @@ class Director {
     for (int d = 0; d < numMatches; d += 2) {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match
-      MyMatch? match = await _fbHelpers.getMatch(date.toYyyyMMdd(), _appState);
+      MyMatch? match = await FbHelpers().getMatch(date.toYyyyMMdd(), _appState);
       if (match == null || match.playersReference.isEmpty) {
         List<int> randomInts = getRandomList(maxUsers, date);
         MyMatch match = MyMatch(id: date);
@@ -114,7 +111,7 @@ class Director {
         match.courtNamesReference.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
         match.playersReference.addAll(randomInts.map((e) => users[e % users.length]).toSet());
         MyLog.log(_classString, 'createTestData: update match = $match', indent: true);
-        await fbHelpers.updateMatch(match: match, updateCore: true, updatePlayers: true);
+        await FbHelpers().updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }
   }

@@ -15,7 +15,7 @@ final String _classString = '<st> AppState'.toLowerCase();
 /// Access to loggedUser
 class AppState with ChangeNotifier {
   AppState() {
-    MyLog.log(_classString, 'Constructor');
+    MyLog.log(_classString, 'Constructor', level: Level.FINE);
   }
 
   /// attributes
@@ -25,6 +25,17 @@ class AppState with ChangeNotifier {
 
   /// make loggedUser=none
   void resetLoggedUser() => setLoggedUser(MyUser(), notify: false);
+
+  void resetParameters() => setAllParameters(MyParameters(), notify: false);
+
+  void resetUsers() => _usersCache.clear();
+
+  /// reset state
+  void reset() {
+    resetParameters();
+    resetUsers();
+    resetLoggedUser();
+  }
 
   /// parameter methods
   String getParameterValue(ParametersEnum parameter) => _parametersCache.getStrValue(parameter);
@@ -63,16 +74,15 @@ class AppState with ChangeNotifier {
   void setLoggedUserById(String userId, {required bool notify}) {
     MyLog.log(_classString, 'setLoggedUserById user=$userId');
 
-    MyUser loggedUser = getUserById(userId) ??
-        () {
-          // lambda expression
-          MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', indent: true, level: Level.SEVERE);
-          return MyUser(id: userId);
-        }();
+    MyUser? loggedUser = getUserById(userId);
+
+    if (loggedUser == null) {
+      MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', level: Level.SEVERE);
+      throw Exception('User not found. User=$userId');
+    }
 
     setLoggedUser(loggedUser, notify: notify);
 
-    MyLog.log(_classString, 'setLoggedUserById loggedUser=$loggedUser', indent: true);
     if (notify) notifyListeners();
   }
 
@@ -140,7 +150,7 @@ class AppState with ChangeNotifier {
       MyLog.log(_classString, 'setChangedUsers removed $removed ', indent: true);
       for (var newUser in removed) {
         MyLog.log(_classString, 'setChangedUsers REMOVED!!!: $newUser', indent: true);
-        removeUserByIdBold(newUser.id);
+        _usersCache.removeWhere((user) => user.id == newUser.id);
       }
     }
 
@@ -152,8 +162,6 @@ class AppState with ChangeNotifier {
   MyUser? getUserById(String id) => _usersCache.firstWhereOrNull((user) => user.id == id);
 
   MyUser? getUserByEmail(String email) => _usersCache.firstWhereOrNull((user) => user.email == email);
-
-  void removeUserByIdBold(String id) => _usersCache.removeWhere((user) => user.id == id);
 
   /// search usersCache for newUserId
   /// if not found, return false

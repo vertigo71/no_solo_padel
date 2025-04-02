@@ -4,7 +4,6 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/register_model.dart';
 import '../../models/parameter_model.dart';
@@ -19,7 +18,7 @@ class RegisterPage extends StatelessWidget {
     MyLog.log(_classString, 'Building', level:Level.FINE);
 
     AppState appState = context.read<AppState>();
-    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +29,7 @@ class RegisterPage extends StatelessWidget {
           Expanded(
             child: StreamBuilder(
               stream:
-                  fbHelpers.getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView) ?? 0),
+                  FbHelpers().getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView) ?? 0),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error al acceder al registro: ${snapshot.error}'));

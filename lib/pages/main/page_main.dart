@@ -45,24 +45,24 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    MyLog.log(_classString, 'initState');
+    MyLog.log(_classString, 'initState: _isLoading=$_isLoading', level:Level.FINE);
     super.initState();
     _director = context.read<Director>();
     // initialize data
-    _initializeData();
+    _initialize();
   }
 
   /// dispose the listeners when the widget is removed
   @override
   void dispose() {
     MyLog.log(_classString, 'dispose');
-    _director.fbHelpers.disposeListeners();
+    FbHelpers().disposeListeners();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     if (_isLoading) {
       if (_errorMessage != null) {
@@ -137,14 +137,16 @@ class _MainPageState extends State<MainPage> {
         builder: (context, appState, _) => Text(appState.getLoggedUser().name),
       ),
       actions: [
-        IconButton( // Register
+        IconButton(
+          // Register
           onPressed: () async {
             context.pushNamed(AppRoutes.register);
           },
           icon: ImageIcon(AssetImage('assets/icons/list.png')),
           tooltip: 'Registro',
         ),
-        Consumer<AppState>( // Admin
+        Consumer<AppState>(
+          // Admin
           builder: (context, appState, _) {
             if (appState.isLoggedUserSuper) {
               return IconButton(
@@ -159,7 +161,8 @@ class _MainPageState extends State<MainPage> {
             }
           },
         ),
-        IconButton( // Exit
+        IconButton(
+          // Exit
           onPressed: () async {
             MyLog.log(_classString, 'Icon SignOut begin', indent: true);
             // if back is pressed, user will be signedOut
@@ -231,56 +234,48 @@ class _MainPageState extends State<MainPage> {
     AppRouter.router.goNamed(AppRoutes.login);
   }
 
-  Future<void> _initializeData() async {
-    MyLog.log(_classString, '_initializeData begin');
+  Future<void> _initialize() async {
     AppState appState = _director.appState;
-    FbHelpers fbHelpers = _director.fbHelpers;
 
-    MyLog.log(_classString, '_initializeData signIn LoggedUser = ${AuthenticationHelper.user?.email}', indent: true);
-    MyLog.log(_classString, '_initializeData appState LoggedUser = ${appState.getLoggedUser().email}', indent: true);
+    MyLog.log(_classString, 'signIn authenticated user = ${AuthenticationHelper.user?.email}');
+    MyLog.log(_classString, 'LoggedUser = ${appState.getLoggedUser().email}');
 
     try {
       // check there is an user logged in the Firebase
       User? fireBaseUser = AuthenticationHelper.user;
       if (fireBaseUser == null || fireBaseUser.email == null) {
-        MyLog.log(_classString, '_initializeData User not authenticated = $fireBaseUser',
+        MyLog.log(_classString, '_initialize: User not authenticated = $fireBaseUser',
             level: Level.SEVERE, indent: true);
-        throw Exception('Error: Usuario no registrado en el sistema. Hable con el administrador.');
+        throw 'Error: Usuario no registrado en el sistema. Hable con el administrador.';
       }
 
       // create listeners for users and parameters
       // any changes to those classes will change appState
-      MyLog.log(_classString, '_initializeData createListeners for users and parameters.');
-      fbHelpers.createListeners(
+      MyLog.log(_classString, '_initialize: createListeners for users and parameters.');
+      FbHelpers().createListeners(
         parametersFunction: appState.setAllParametersAndNotify,
         usersFunction: appState.setChangedUsersAndNotify,
       );
 
       // Wait for users and parameters data to be loaded from Firestore.
-      try {
-        MyLog.log(_classString, '_initializeData waiting for users and parameters to load', indent: true);
-        await fbHelpers.dataLoaded();
-      } catch (error) {
-        MyLog.log(_classString, 'ERROR _initializeData fbHelpers.dataLoaded. Error: $error',
-            level: Level.SEVERE, indent: true);
-        rethrow;
-      }
+      MyLog.log(_classString, '_initialize: waiting for users and parameters to load', indent: true);
+      await FbHelpers().dataLoaded();
 
       // link appState.user to AuthenticationHelper.user
       // listener has already loaded all users into appState
       MyUser? appUser = appState.getUserByEmail(fireBaseUser.email!);
       if (appUser == null) {
         // User not found in appState
-        MyLog.log(_classString, '_initializeData user: ${fireBaseUser.email}  not registered in appState. Abort!',
+        MyLog.log(_classString, '_initialize user: ${fireBaseUser.email}  not registered in appState. Abort!',
             level: Level.SEVERE, indent: true);
-        throw Exception('Error: Usuario no registrado en la aplicación. Hable con el administrador.');
+        throw 'Error: Usuario no registrado en la aplicación. Hable con el administrador.';
       } else {
         // User found in appState.
         MyLog.log(_classString, '_initializeData user found in appState = $appUser', indent: true);
         appState.setLoggedUser(appUser, notify: false);
         appUser.lastLogin = Date.now();
         appUser.loginCount++;
-        await fbHelpers.updateUser(appUser);
+        await FbHelpers().updateUser(appUser);
 
         // Delete old logs and matches.
         // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
@@ -294,10 +289,10 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           _isLoading = false;
         });
-        MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=$_isLoading', indent: true);
+        MyLog.log(_classString, '_initialize: all data loaded, _isLoading=$_isLoading', indent: true);
       }
     } catch (e) {
-      MyLog.log(_classString, '_initializeData initial data loaded, _isLoading=$_isLoading',
+      MyLog.log(_classString, '_initialize: ERROR loading initial data: _isLoading=$_isLoading\nerror=${e.toString()}',
           level: Level.SEVERE, indent: true);
 
       setState(() {

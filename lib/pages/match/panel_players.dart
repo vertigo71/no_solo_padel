@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
@@ -35,7 +34,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   void initState() {
     super.initState();
 
-    MyLog.log(_classString, 'initState initializing variables ONLY ONCE');
+    MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level:Level.FINE);
     _selectedUser = context.read<AppState>().users[0];
     _loggedUser = context.read<AppState>().getLoggedUser();
   }
@@ -376,7 +375,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   // add user to match
   Future<Map<MyMatch, String>> _addUserToMatch({required MyUser user, required bool adminManagingUser}) async {
     MyLog.log(_classString, '_addUserToMatch');
-    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
@@ -399,7 +398,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     // newMatchFromFirestore is the match with the new player
     // null otherwise
     Map<MyMatch, int> result =
-        await fbHelpers.addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
+        await FbHelpers().addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
     MyMatch updatedMatch = result.keys.first; // Get the MyMatch object (key)
     playerPosition = result.values.first; // Get the updated player position (value)
 
@@ -419,7 +418,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   Future<Map<MyMatch, String>?> _removeUserFromMatch({required MyUser user, required bool adminManagingUser}) async {
     // removing user
     MyLog.log(_classString, '_removeUserFromMatch');
-    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
@@ -442,7 +441,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     // delete player from the match and upload the match to firestore database
     // newMatchFromFirestore is the match with the new player
     // null otherwise
-    MyMatch updatedMatch = await fbHelpers.deletePlayerFromMatch(appState: appState, matchId: match.id, user: user);
+    MyMatch updatedMatch = await FbHelpers().deletePlayerFromMatch(appState: appState, matchId: match.id, user: user);
 
     // text to be added to the register
     late String registerText;
@@ -457,12 +456,12 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   // send to register and telegram
   Future<void> _sendToRegister(MyMatch updatedMatch, String registerText) async {
-    FbHelpers fbHelpers = context.read<Director>().fbHelpers;
+    
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
     MyLog.log(_classString, '_sendToRegister send to register');
-    await fbHelpers.updateRegister(RegisterModel(date: match.id, message: registerText));
+    await FbHelpers().updateRegister(RegisterModel(date: match.id, message: registerText));
 
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(

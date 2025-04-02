@@ -6,7 +6,6 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/parameter_model.dart';
@@ -25,7 +24,6 @@ class GamesPanel extends StatelessWidget {
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
-        FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
@@ -33,7 +31,7 @@ class GamesPanel extends StatelessWidget {
 
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>
-          stream: fbHelpers.getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
+          stream: FbHelpers().getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Error al obtener los partidos: ${snapshot.error}'));

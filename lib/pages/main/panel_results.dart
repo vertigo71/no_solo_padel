@@ -5,7 +5,6 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/result_model.dart';
 import '../../models/match_model.dart';
@@ -26,13 +25,12 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Consumer<AppState>(
         builder: (context, appState, _) {
-          FbHelpers fbHelpers = context.read<Director>().fbHelpers;
 
           Date maxDate = Date.now();
           MyLog.log(_classString, 'StreamBuilder  to:$maxDate', indent: true);
 
           return StreamBuilder<List<MyMatch>>(
-            stream: fbHelpers.getMatchesStream(
+            stream: FbHelpers().getMatchesStream(
                 appState: appState, maxDate: maxDate, onlyOpenMatches: true, descending: true),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
@@ -76,7 +74,7 @@ class ResultsPanel extends StatelessWidget {
               try {
                 if (snapshot.hasData) {
                   final results = snapshot.data!;
-                  MyLog.log(_classString, '_buildMatchItem Results: $results', indent: true);
+                  MyLog.log(_classString, '_buildMatchItem Results: $results', level: Level.FINE, indent: true);
                   return Column(
                     children: results.map((result) => _buildResultCard(result, context)).toList(),
                   );

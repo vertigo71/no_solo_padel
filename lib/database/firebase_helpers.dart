@@ -18,15 +18,19 @@ final String _classString = '<db> FsHelper'.toLowerCase();
 
 /// Firestore helpers
 class FbHelpers {
+  static final FbHelpers _singleton = FbHelpers._internal();
+
+  factory FbHelpers() => _singleton;
+
+  FbHelpers._internal() {
+    MyLog.log(_classString, 'FbHelpers created', level: Level.FINE);
+  }
+
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
   bool _usersLoaded = false;
   bool _parametersLoaded = false;
-
-  FbHelpers() {
-    MyLog.log(_classString, 'Constructor');
-  }
 
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
@@ -69,69 +73,73 @@ class FbHelpers {
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
-    MyLog.log(_classString, 'createListeners ');
+    MyLog.log(_classString, 'createListeners ', level: Level.FINE, indent: true);
 
     // update parameters
     MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
         indent: true);
-    // only if null then create a new listener
-    _paramListener ??=
-        _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
-      (snapshot) {
-        MyLog.log(_classString, 'createListeners LISTENER loading parameters into appState ...', indent: true);
-        MyParameters? myParameters;
-        if (snapshot.exists && snapshot.data() != null) {
-          myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
-        }
-        MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters', indent: true);
-        parametersFunction(myParameters ?? MyParameters());
-        MyLog.log(_classString, 'createListeners parameters loaded', indent: true);
-        _parametersLoaded = true;
-      },
-      onError: (error) {
-        MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
-            level: Level.SEVERE, indent: true);
-        throw Exception('Error al crear el listener de parametros. No se han podido cargar.\n$error');
-      },
-      onDone: () {
-        MyLog.log(_classString, 'createListeners onDone loading parameters', indent: true);
-      },
-    );
+    if (_paramListener != null) {
+      MyLog.log(_classString, 'Parameters LISTENER already created', level: Level.WARNING, indent: true);
+      _parametersLoaded = true;
+    } else {
+      _parametersLoaded = false; // still not loaded
+      _paramListener =
+          _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
+        (snapshot) {
+          MyLog.log(_classString, 'LISTENER called: loading parameters into appState ...', indent: true);
+          MyParameters? myParameters;
+          if (snapshot.exists && snapshot.data() != null) {
+            myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
+          }
+          MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters', indent: true);
+          parametersFunction(myParameters ?? MyParameters());
+          MyLog.log(_classString, 'createListeners: onDone loading parameters', indent: true);
+          _parametersLoaded = true;
+        },
+        onError: (error) {
+          MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
+              level: Level.SEVERE, indent: true);
+          throw Exception('Error de escucha. No se han podido cargar los parametros del sistema.\n$error');
+        },
+      );
+    }
 
     // update users
     MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
-    // only if null then create a new listener
-    _usersListener ??= _instance.collection(UserFs.users.name).snapshots().listen(
-      (snapshot) {
-        MyLog.log(_classString, 'createListeners LISTENER loading users into appState', indent: true);
+    if (_usersListener != null) {
+      MyLog.log(_classString, 'Users LISTENER already created', level: Level.WARNING, indent: true);
+      _usersLoaded = true;
+    } else {
+      _usersLoaded = false; // still not loaded
+      _usersListener = _instance.collection(UserFs.users.name).snapshots().listen(
+        (snapshot) {
+          MyLog.log(_classString, 'LISTENER called: loading users into appState', indent: true);
 
-        List<MyUser> addedUsers = [];
-        List<MyUser> modifiedUsers = [];
-        List<MyUser> removedUsers = [];
-        _downloadChangedUsers(
-          snapshot: snapshot,
-          addedUsers: addedUsers,
-          modifiedUsers: modifiedUsers,
-          removedUsers: removedUsers,
-        );
-        MyLog.log(
-            _classString,
-            'createListeners LISTENER users added=${addedUsers.length} mod=${modifiedUsers.length} '
-            'removed=${removedUsers.length}',
-            indent: true);
-        usersFunction(addedUsers, modifiedUsers, removedUsers);
-        MyLog.log(_classString, 'createListeners users loaded', indent: true);
-        _usersLoaded = true;
-      },
-      onError: (error) {
-        MyLog.log(_classString, 'createListeners onError loading users. Error: $error',
-            level: Level.SEVERE, indent: true);
-        throw Exception('Error al crear el listener de usuarios. No se han podido cargar.\n$error');
-      },
-      onDone: () {
-        MyLog.log(_classString, 'createListeners onDone loading users', indent: true);
-      },
-    );
+          List<MyUser> addedUsers = [];
+          List<MyUser> modifiedUsers = [];
+          List<MyUser> removedUsers = [];
+          _downloadChangedUsers(
+            snapshot: snapshot,
+            addedUsers: addedUsers,
+            modifiedUsers: modifiedUsers,
+            removedUsers: removedUsers,
+          );
+          MyLog.log(
+              _classString,
+              'createListeners: users added=${addedUsers.length} mod=${modifiedUsers.length} '
+              'removed=${removedUsers.length}',
+              indent: true);
+          usersFunction(addedUsers, modifiedUsers, removedUsers);
+          MyLog.log(_classString, 'createListeners: onDone loading users', indent: true);
+          _usersLoaded = true;
+        },
+        onError: (error) {
+          MyLog.log(_classString, 'createListeners: onError loading users. Error: $error',
+              level: Level.SEVERE, indent: true);
+          throw Exception('Error de escucha. No se han podido cargar los usuarios del sistema.\n$error');
+        },
+      );
+    }
   }
 
   Future<void> dataLoaded() async {

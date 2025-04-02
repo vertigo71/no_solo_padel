@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel/database/firebase_helpers.dart';
 import 'package:no_solo_padel/models/user_model.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
@@ -46,7 +47,7 @@ class UserDeletePanel extends StatelessWidget {
     // Delete user
     try {
       MyLog.log(_classString, 'Elminando usuario  $user');
-      await director.fbHelpers.deleteUser(user);
+      await FbHelpers().deleteUser(user);
     } catch (e) {
       if (context.mounted) UiHelper.showMessage(context, 'No se ha podido eliminar al usuario ${user.name}');
       MyLog.log(_classString, 'eliminar usuario', exception: e, level: Level.SEVERE);

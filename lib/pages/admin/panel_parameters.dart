@@ -8,7 +8,6 @@ import 'package:collection/collection.dart';
 
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
@@ -63,16 +62,14 @@ class ParametersPanelState extends State<ParametersPanel> {
   final _formKey = GlobalKey<FormBuilderState>(); // Form key
 
   late AppState _appState;
-  late FbHelpers _fbHelpers;
 
   @override
   void initState() {
     super.initState();
-    MyLog.log(_classString, 'initState');
+    MyLog.log(_classString, 'initState', level: Level.FINE);
 
     // Retrieve instances from Provider
     _appState = context.read<AppState>();
-    _fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -212,7 +209,7 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   /// Validates and submits the form
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate');
+    MyLog.log(_classString, '_formValidate', level: Level.FINE );
 
     // Check if the form is valid before proceeding
     if (_formKey.currentState!.saveAndValidate()) {
@@ -232,7 +229,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       }
 
       try {
-        await _fbHelpers.updateParameters(myParameters);
+        await FbHelpers().updateParameters(myParameters);
         if (mounted) {
           UiHelper.showMessage(context, 'Los parámetros han sido actualizados.');
         }

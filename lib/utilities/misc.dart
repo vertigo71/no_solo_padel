@@ -29,17 +29,17 @@ final String _classString = 'Miscellaneous'.toUpperCase();
 /// Returns: A list of integers of length [numOfElements] in a pseudo-random order.
 ///
 List<int> getRandomList(int numOfElements, DateTime dateSeed) {
-  MyLog.log(_classString, 'getRandomList', level: Level.ALL);
+  MyLog.log(_classString, 'getRandomList', level: Level.FINE );
   int baseNum = dateSeed.millisecondsSinceEpoch;
   List<int> base =
       List<int>.generate(numOfElements, (index) => (baseNum * sin(baseNum + index)).floor() % numOfElements)
           .toSet()
           .toList();
-  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.ALL);
+  MyLog.log(_classString, 'getRandomList Base Sinus generated list $base', indent: true, level: Level.FINE);
 
   List<int> all = List<int>.generate(numOfElements, (int index) => numOfElements - index - 1);
   List<int> diff = all.where((element) => !base.contains(element)).toList();
-  MyLog.log(_classString, 'getRandomList Missing numbers list $diff', indent: true, level: Level.ALL);
+  MyLog.log(_classString, 'getRandomList Missing numbers list $diff', indent: true, level: Level.FINE);
 
   // add missing numbers
   for (int i = 0; i < diff.length; i++) {
@@ -49,7 +49,7 @@ List<int> getRandomList(int numOfElements, DateTime dateSeed) {
       base.insert(0, diff[i]);
     }
   }
-  MyLog.log(_classString, 'getRandomList Final order $base', indent: true, level: Level.ALL);
+  MyLog.log(_classString, 'getRandomList Final order $base', indent: true, level: Level.FINE);
 
   return base;
 }

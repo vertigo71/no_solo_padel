@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:simple_logger/simple_logger.dart';
 
+import '../database/firebase_helpers.dart';
 import '../models/debug.dart';
 import '../models/match_model.dart';
 import 'director.dart';
@@ -39,7 +40,7 @@ class MatchNotifier with ChangeNotifier {
     _matchSubscription?.cancel();
 
     try {
-      _matchSubscription = _director.fbHelpers.listenToMatch(
+      _matchSubscription = FbHelpers().listenToMatch(
             matchId: _match.id,
             appState: _director.appState,
             matchFunction: _notifyIfChanged,

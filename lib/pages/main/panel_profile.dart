@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import '../../database/authentication.dart';
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../utilities/ui_helpers.dart';
@@ -53,14 +52,12 @@ class ProfilePanelState extends State<ProfilePanel> {
   Uint8List? _compressedImageData; // Store the compressed image disk file in memory
 
   late AppState appState;
-  late FbHelpers fbHelpers;
 
   @override
   void initState() {
     super.initState();
 
     appState = context.read<AppState>();
-    fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -218,7 +215,7 @@ class ProfilePanelState extends State<ProfilePanel> {
   }
 
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate');
+    MyLog.log(_classString, '_formValidate', level: Level.FINE );
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formValues = _formKey.currentState?.value;
@@ -320,7 +317,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     user.name = newName;
 
     try {
-      await fbHelpers.updateUser(user);
+      await FbHelpers().updateUser(user);
     } catch (e) {
       MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario',
           level: Level.SEVERE, indent: true);
@@ -337,7 +334,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     user.emergencyInfo = newEmergencyInfo;
 
     try {
-      await fbHelpers.updateUser(user);
+      await FbHelpers().updateUser(user);
     } catch (e) {
       _showErrorMessage('Error al actualizar la información de emergencia del usuario', updatedFields);
       MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
@@ -380,7 +377,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     loggedUser.email = newEmail;
 
     try {
-      await fbHelpers.updateUser(loggedUser);
+      await FbHelpers().updateUser(loggedUser);
     } catch (e) {
       _showErrorMessage('Error al actualizar el correo del usuario en la base de datos', updatedFields);
       MyLog.log(_classString, 'updateEmail Error al actualizar el correo del usuario en la base de datos',
@@ -420,7 +417,7 @@ class ProfilePanelState extends State<ProfilePanel> {
   Future<bool> _updateAvatar(final List<String> updatedFields) async {
     MyLog.log(_classString, 'Uploading new avatar', indent: true);
     try {
-      await fbHelpers.updateUser(appState.getLoggedUser(), _compressedImageData );
+      await FbHelpers().updateUser(appState.getLoggedUser(), _compressedImageData );
       return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: ${e.toString()}', level: Level.SEVERE);

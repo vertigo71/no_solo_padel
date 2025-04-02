@@ -235,7 +235,8 @@ class MyMatch {
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
       ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
     MyLog.log(
-        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
+        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, '
+        'sortedMatchPlayers=$sortedMatchPlayers');
     Map<int, List<int>> courtPlayers = {};
 
     for (int i = 0; i < numFilledCourts; i++) {
@@ -256,7 +257,8 @@ class MyMatch {
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
       ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
     MyLog.log(
-        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
+        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, '
+        'sortedMatchPlayers=$sortedMatchPlayers');
     Map<int, List<int>> courtPlayers = {};
 
     for (int i = numFilledCourts - 1; i >= 0; i--) {

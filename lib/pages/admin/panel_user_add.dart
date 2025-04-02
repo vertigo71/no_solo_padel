@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../database/authentication.dart';
 import '../../database/firebase_helpers.dart';
 import '../../interface/app_state.dart';
-import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../utilities/ui_helpers.dart';
@@ -41,15 +40,13 @@ class UserAddPanelState extends State<UserAddPanel> {
   bool _isCreatingUser = false; // Track creation state
 
   late AppState appState;
-  late FbHelpers fbHelpers;
 
   @override
   void initState() {
     super.initState();
-    MyLog.log(_classString, 'initState');
+    MyLog.log(_classString, 'initState', level: Level.FINE);
 
     appState = context.read<AppState>();
-    fbHelpers = context.read<Director>().fbHelpers;
   }
 
   @override
@@ -181,7 +178,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       String response =
           await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
       if (response.isEmpty || response == noOption) return;
-      MyLog.log(_classString, 'build response = $response', indent: true);
+      MyLog.log(_classString, 'dialog response = $response', indent: true);
 
       setState(() {
         _isCreatingUser = true;
@@ -266,7 +263,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyLog.log(_classString, 'createNewUser user created=$myUser', indent: true);
 
     try {
-      fbHelpers.updateUser(myUser);
+      FbHelpers().updateUser(myUser);
     } catch (e) {
       if (mounted) UiHelper.showMessage(context, 'Error al crear el usuario en la base de datos');
       MyLog.log(_classString, 'Error creating user in Firestore', level: Level.SEVERE, indent: true);

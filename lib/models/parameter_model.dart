@@ -47,7 +47,7 @@ class MyParameters {
   ///
   /// Logs the creation of the instance if debug mode is enabled.
   MyParameters() {
-    MyLog.log(_classString, 'Constructor');
+    MyLog.log(_classString, 'Constructor', level: Level.FINE);
   }
 
   /// Converts a [Date] object to a character representing the day of the week.
