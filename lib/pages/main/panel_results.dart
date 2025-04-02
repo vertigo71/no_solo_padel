@@ -143,15 +143,13 @@ class ResultsPanel extends StatelessWidget {
             padding: EdgeInsets.all(1.0),
             child: Row(
               // crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               spacing: 1.0,
               children: [
-                Spacer(),
                 _buildTeam(result.teamA!),
                 _buildScore(result.teamA!.score, result.teamB!.score),
                 SizedBox(width: 10),
                 _buildTeam(result.teamB!),
-                Spacer(),
                 context.read<AppState>().isLoggedUserAdminOrSuper
                     ? InkWell(
                         onTap: () async {
@@ -174,7 +172,6 @@ class ResultsPanel extends StatelessWidget {
                         ),
                       )
                     : const SizedBox.shrink(),
-                Spacer(),
               ],
             ),
           ),
