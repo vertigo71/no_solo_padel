@@ -477,14 +477,18 @@ class FbHelpers {
     }
   }
 
-  Future<void> updateUser(MyUser myUser) async {
-    MyLog.log(_classString, 'updateUser = $myUser');
-    if (myUser.id == '') {
-      MyLog.log(_classString, 'updateUser ', myCustomObject: myUser, level: Level.SEVERE);
+  Future<void> updateUser(final MyUser user, [Uint8List? compressedImageData]) async {
+    MyLog.log(_classString, 'updateUser = $user');
+    if (user.id == '') {
+      MyLog.log(_classString, 'updateUser ', myCustomObject: user, level: Level.SEVERE);
+      throw Exception('Error: el usuario no tiene id. No se puede actualizar.');
+    }
+    if (compressedImageData != null) {
+      user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars}/${user.id}', compressedImageData);
     }
     return updateObject(
-      fields: myUser.toJson(),
-      pathSegments: [UserFs.users.name, myUser.id],
+      fields: user.toJson(),
+      pathSegments: [UserFs.users.name, user.id],
       forceSet: false, // replaces the old object if exists
     );
   }
@@ -659,7 +663,7 @@ class FbHelpers {
   ///
   /// Throws:
   ///   An Exception if the upload fails, containing the error message
-  Future<String?> uploadDataToStorage(final String filename, final Uint8List data) async {
+  Future<String?> _uploadDataToStorage(final String filename, final Uint8List data) async {
     MyLog.log(_classString, 'Uploading new file', indent: true);
 
     // Create a reference to the storage location where the file will be uploaded.
@@ -693,22 +697,22 @@ class FbHelpers {
     }
   }
 
-// StreamTransformer.fromHandlers and handleData
-//
-// StreamTransformer.fromHandlers: This is a convenient factory constructor for creating a StreamTransformer.
-// It allows you to define the transformation logic using handler functions.
-//
-// handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink):
-// data: This is where the magic happens. The data parameter receives the QuerySnapshot<Map<String, dynamic>>
-// emitted by the input stream (query.snapshots()).
-// So, every time there is a change in the query result,
-// the new QuerySnapshot is passed to the handleData function.
-// sink: The EventSink<List<T>> is the output sink. You use it to send the transformed data (a List<T>)
-// to the output stream. It is how you add data to the transformed stream.
-// How data gets here: When query.snapshots().transform(transformer(fromJson, appState)) is executed,
-// the bind method of the stream transformer is called. The bind method then attaches the handleData function
-// to the input stream. So that every time a new event happens on the input stream,
-// the handleData function is triggered, and the event data is passed as the data parameter.
+  // StreamTransformer.fromHandlers and handleData
+  //
+  // StreamTransformer.fromHandlers: This is a convenient factory constructor for creating a StreamTransformer.
+  // It allows you to define the transformation logic using handler functions.
+  //
+  // handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink):
+  // data: This is where the magic happens. The data parameter receives the QuerySnapshot<Map<String, dynamic>>
+  // emitted by the input stream (query.snapshots()).
+  // So, every time there is a change in the query result,
+  // the new QuerySnapshot is passed to the handleData function.
+  // sink: The EventSink<List<T>> is the output sink. You use it to send the transformed data (a List<T>)
+  // to the output stream. It is how you add data to the transformed stream.
+  // How data gets here: When query.snapshots().transform(transformer(fromJson, appState)) is executed,
+  // the bind method of the stream transformer is called. The bind method then attaches the handleData function
+  // to the input stream. So that every time a new event happens on the input stream,
+  // the handleData function is triggered, and the event data is passed as the data parameter.
   StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> _transformer<T>(
     T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     AppState? appState,

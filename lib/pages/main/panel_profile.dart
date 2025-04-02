@@ -419,11 +419,8 @@ class ProfilePanelState extends State<ProfilePanel> {
 
   Future<bool> _updateAvatar(final List<String> updatedFields) async {
     MyLog.log(_classString, 'Uploading new avatar', indent: true);
-    final String fileName = appState.getLoggedUser().id;
     try {
-      appState.getLoggedUser().avatarUrl =
-          await fbHelpers.uploadDataToStorage('avatars/$fileName', _compressedImageData!);
-      await fbHelpers.updateUser(appState.getLoggedUser());
+      await fbHelpers.updateUser(appState.getLoggedUser(), _compressedImageData );
       return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: ${e.toString()}', level: Level.SEVERE);
