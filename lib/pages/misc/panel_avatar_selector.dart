@@ -4,14 +4,15 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:simple_logger/simple_logger.dart';
 
-import '../../models/user_model.dart'; // Assuming MyUser is defined here
+import '../../models/user_model.dart';
 import '../../models/debug.dart';
 import '../../utilities/ui_helpers.dart';
 
 class AvatarSelector extends StatefulWidget {
-  const AvatarSelector({super.key, required this.user});
+  const AvatarSelector({super.key, required this.user, this.onImageSelected});
 
   final MyUser user;
+  final Function(Uint8List?)? onImageSelected; // Callback function
 
   @override
   State<AvatarSelector> createState() => _AvatarSelectorState();
@@ -84,6 +85,9 @@ class _AvatarSelectorState extends State<AvatarSelector> {
           setState(() {
             _compressedImageData = compressedBytes;
           });
+          if (widget.onImageSelected != null) {
+            widget.onImageSelected!(compressedBytes); // Call the callback
+          }
         } else {
           MyLog.log('_AvatarSelectorState', 'Error loading avatar', level: Level.SEVERE, indent: true);
           if (mounted) UiHelper.showMessage(context, 'Error al cargar la imagen');
