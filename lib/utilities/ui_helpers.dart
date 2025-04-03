@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 
 import '../models/debug.dart';
 import '../models/match_model.dart';
@@ -135,6 +137,57 @@ class UiHelper {
 
   static void showMessage(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text, style: const TextStyle(fontSize: 16))));
+  }
+
+  static Future<bool> showConfirmationModal(BuildContext context, String dialogText, String confirmationText,
+      {String errorMessage = 'Por favor, escriba "%s" para confirmar.'}) async {
+    final confirmationFormKey = GlobalKey<FormBuilderState>();
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(dialogText),
+              content: FormBuilder(
+                key: confirmationFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Escriba "$confirmationText" para confirmar'),
+                    FormBuilderTextField(
+                      name: 'userConfirmation',
+                      validator: FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false), // Cancel
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (confirmationFormKey.currentState!.saveAndValidate()) {
+                      final userConfirmation =
+                          confirmationFormKey.currentState!.value['userConfirmation'];
+                      if (userConfirmation == confirmationText) {
+                        Navigator.of(context).pop(true); // Confirm
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(errorMessage.replaceAll('%s', confirmationText))),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Confirmar'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   static Widget myCheckBox(

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/firebase_helpers.dart';
-import '../../interface/app_state.dart';
+import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
 import '../../utilities/misc.dart';
@@ -58,8 +58,9 @@ class RankingParamPanel extends StatefulWidget {
 class RankingParamPanelState extends State<RankingParamPanel> {
   final _formKey = GlobalKey<FormBuilderState>(); // Form key
   final _testFormKey = GlobalKey<FormBuilderState>(); // Form key for test section.
+  final _resetFormKey = GlobalKey<FormBuilderState>(); // Form key for the reset section
 
-  late AppState _appState;
+  late Director _director;
 
   @override
   void initState() {
@@ -67,10 +68,10 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     MyLog.log(_classString, 'initState', level: Level.FINE);
 
     // Retrieve instances from Provider
-    _appState = context.read<AppState>();
+    _director = context.read<Director>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateResult(); // Calculate initial sum after first frame
+      _updateResult(); // Calculate initial result after first frame
     });
   }
 
@@ -85,9 +86,12 @@ class RankingParamPanelState extends State<RankingParamPanel> {
           key: _formKey,
           child: ListView(
             children: [
-              // Generate text fields dynamically (excluding showLog)
+              _buildResetForm(),
+
+              const Divider(),
+
+              // Generate parameter fields dynamically
               for (var value in ParametersEnum.valuesByType(ParamType.ranking)) _buildTextField(value),
-              const Divider(), // Divider for UI separation
               // Update Button
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -101,9 +105,10 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                   ],
                 ),
               ),
+
               const Divider(), // Divider for UI separation
 
-              // add test values
+              // Test Form
               FormBuilder(
                 key: _testFormKey,
                 child: Column(
@@ -144,7 +149,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderTextField(
         name: parameter.name,
-        initialValue: _appState.getParamValue(parameter),
+        initialValue: _director.appState.getParamValue(parameter),
         decoration: InputDecoration(
           labelText: _FormFields.label[parameter] ?? '',
           border: const OutlineInputBorder(),
@@ -262,7 +267,68 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     );
   }
 
-  void _updateResult() {
-    setState(() {}); // Rebuild the widget to update the result
+  void _updateResult() => setState(() {}); // Rebuild the widget to update the result
+
+  Widget _buildResetForm() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilder(
+        key: _resetFormKey,
+        child: Row(
+          spacing: 8.0,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: () => _resetRanking(),
+                child: const Text('Reset Ranking'),
+              ),
+            ),
+            Flexible(
+              flex: 1,
+              child: FormBuilderTextField(
+                name: 'resetValue',
+                decoration: InputDecoration(
+                  labelText: 'Valor',
+                  border: const OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(),
+                  FormBuilderValidators.numeric(),
+                  FormBuilderValidators.integer(),
+                  FormBuilderValidators.min(0),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _resetRanking() async {
+    if (_resetFormKey.currentState!.saveAndValidate()) {
+      final resetValue = int.parse(_resetFormKey.currentState!.value['resetValue'].toString());
+
+      final confirmed = await UiHelper.showConfirmationModal(context, 'Confirmar Reset Ranking', 'ranking');
+      if (confirmed) {
+        // Implement your reset ranking logic here
+        MyLog.log(_classString, 'Reset ranking to: $resetValue', indent: true);
+        try {
+          await FbHelpers().updateAllUserRankings(resetValue);
+          await _director.updateAllUsers();
+
+          MyLog.log(_classString, 'Reset ranking success', indent: true);
+          if (mounted) UiHelper.showMessage(context, 'Ranking reseteado');
+        } catch (e) {
+          MyLog.log(_classString, 'Error al resetear ranking \n${e.toString()}', level: Level.SEVERE, indent: true);
+          if (mounted) UiHelper.showMessage(context, 'Error al resetear ranking.\n${e.toString()}');
+        }
+      } else {
+        MyLog.log(_classString, "Reset canceled.", level: Level.FINE, indent: true);
+      }
+    }
   }
 }

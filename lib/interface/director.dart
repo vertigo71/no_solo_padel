@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:no_solo_padel/models/register_model.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../database/authentication.dart';
 import '../database/firebase_helpers.dart';
@@ -32,6 +33,13 @@ class Director {
     await FbHelpers().disposeListeners();
     _appState.reset();
     await AuthenticationHelper.signOut();
+  }
+
+  // update all users
+  Future<void> updateAllUsers() async {
+    MyLog.log(_classString, 'updateAllUsers', level: Level.FINE );
+    List<MyUser> users = await FbHelpers().getAllUsers();
+    _appState.setAllUsers(users, notify: true);
   }
 
   /// delete old logs and matches

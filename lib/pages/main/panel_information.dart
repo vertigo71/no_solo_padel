@@ -133,9 +133,6 @@ class InformationPanel extends StatelessWidget {
         MyLog.log(_classString, 'Error updating user: $user \n$e', level: Level.SEVERE, indent: true);
         if (context.mounted) UiHelper.showMessage(context, 'Error al actualizar el usuario');
       }
-    } else {
-      MyLog.log(_classString, 'Error updating user: $user', level: Level.SEVERE, indent: true);
-      if (context.mounted) UiHelper.showMessage(context, 'Error al actualizar el usuario');
     }
   }
 

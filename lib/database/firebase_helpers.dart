@@ -501,6 +501,46 @@ class FbHelpers {
     );
   }
 
+  Future<void> updateAllUserRankings(int newRanking) async {
+    MyLog.log(_classString, 'updateAllUserRankings = $newRanking');
+    final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
+
+    // 1. Retrieve user documents
+    final querySnapshot = await usersCollection.get();
+
+    final batches = <WriteBatch>[];
+    var currentBatch = FirebaseFirestore.instance.batch();
+    var operationsInBatch = 0;
+
+    // 2. Create batched writes
+    for (final docSnapshot in querySnapshot.docs) {
+      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking});
+      operationsInBatch++;
+
+      // Firestore batch limit is typically 500, so create new batch when needed.
+      if (operationsInBatch >= 499) {
+        MyLog.log(_classString, 'updateAllUserRankings Creating new batch.', indent: true);
+
+        batches.add(currentBatch);
+        currentBatch = FirebaseFirestore.instance.batch();
+        operationsInBatch = 0;
+      }
+    }
+
+    //add any remaining operations.
+    if (operationsInBatch > 0) {
+      batches.add(currentBatch);
+    }
+
+    // 3. Commit batches
+    for (final batch in batches) {
+      await batch.commit();
+    }
+
+    MyLog.log(_classString, 'updateAllUserRankings Done. Batches=${batches.length} Operations=$operationsInBatch.',
+        indent: true);
+  }
+
   /// core = comment + isOpen + courtNames (all except players)
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       updateObject(
