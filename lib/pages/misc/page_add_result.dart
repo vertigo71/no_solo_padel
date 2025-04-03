@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel/database/firebase_helpers.dart';
@@ -12,6 +10,7 @@ import '../../interface/app_state.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
 import '../../models/result_model.dart';
+import '../../utilities/misc.dart';
 
 final String _classString = 'AddResultPage'.toUpperCase();
 const int numPlayers = 4;
@@ -54,7 +53,7 @@ class _AddResultPageState extends State<AddResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     if (!_matchLoaded) {
       MyLog.log(_classString, 'Building: match still not loaded', indent: true);
@@ -322,49 +321,12 @@ class _AddResultPageState extends State<AddResultPage> {
       throw ArgumentError('No se ha podido obtener los dos resultados');
     }
 
-    const double k = 1.0 / 3000;
     const int step = 20;
     const int range = 60;
-
-    final int scoreDiff = _scores[0] - _scores[1]; // teamA - teamB
+    const int rankingDiffToHalf = 3000;
     final int rankingA = _selectedPlayer[0]!.rankingPos + _selectedPlayer[1]!.rankingPos;
     final int rankingB = _selectedPlayer[2]!.rankingPos + _selectedPlayer[3]!.rankingPos;
-    final int rankingDiff = rankingA - rankingB; // teamA - teamB
-    final bool favoriteA = rankingDiff > 0;
 
-    if (scoreDiff > 0) {
-      // teamA wins
-      return [(scoreDiff * _pointsPerGame(step, range, k, rankingDiff, favoriteA)).round(), 0];
-    } else if (scoreDiff < 0) {
-      // teamB wins
-      return [0, (scoreDiff.abs() * _pointsPerGame(step, range, k, rankingDiff, !favoriteA)).round()];
-    } else {
-      // tie
-      if (rankingDiff == 0) {
-        // tie in ranking, tie in score
-        return [step, step];
-      } else if (favoriteA) {
-        // if favorite==A, teamB wins
-        return [0, step];
-      } else {
-        // if favorite==B, teamA wins
-        return [step, 0];
-      }
-    }
-  }
-
-  double _pointsPerGame(int step, int range, double k, int pointDiff, bool favoriteWins) {
-    MyLog.log(_classString, '_pointsPerGame s=$step r=$range k=$k d=$pointDiff favorite=$favoriteWins', indent: true);
-    // pointDiff = winner points team - loser points team
-    pointDiff = pointDiff.abs();
-    final double fraction = (1 + k * pointDiff.abs()) / (1 + exp(2 * k * pointDiff));
-    late double result;
-    if (favoriteWins) {
-      result = step + range * fraction;
-    } else {
-      result = step + range - range * fraction;
-    }
-    MyLog.log(_classString, '_pointsPerGame: fraction=$fraction, result=$result', indent: true);
-    return result;
+    return calculatePoints(step, range, rankingDiffToHalf, rankingA, rankingB, _scores[0], _scores[1]);
   }
 }

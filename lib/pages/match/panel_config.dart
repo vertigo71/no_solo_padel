@@ -49,6 +49,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     //     _formKey.currentState?.fields['$courtId$i']?.didChange('');
     //   }
     // }
+    // to access instant values:
+    //        _formKey.currentState?.instantValue['$courtId$i'] <=> _formKey.currentState?.fields['$courtId$i']?.value
+    // to access saved values: _formKey.currentState?.value
+    //
 
     // compare fields in case other user has changed any fields
     bool fieldsChanged = false;
