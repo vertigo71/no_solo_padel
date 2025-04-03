@@ -1,24 +1,16 @@
 import 'package:http/http.dart' as http;
 
-import '../models/debug.dart';
 import '../secret.dart';
 import 'date.dart';
+import '../models/debug.dart';
+
 
 final String _classString = 'HttpHelper'.toUpperCase();
 
 enum BotType { register, log, error }
 
-void sendDatedMessageToTelegram({required String message, required Date matchDate, int? fromDaysAgoToTelegram}) {
-  if (fromDaysAgoToTelegram != null) {
-    if (fromDaysAgoToTelegram < 0) {
-      throw Exception('Periodo para mandar un telegram tiene que ser positivo');
-    }
-    Date minDate = matchDate.subtract(Duration(days: fromDaysAgoToTelegram));
-    MyLog.log(_classString, 'days ago = $fromDaysAgoToTelegram, minDate = $minDate');
-
-    if (Date.now().isBefore(minDate)) return;
-  }
-
+void sendDatedMessageToTelegram({required String message, required Date matchDate}) {
+  MyLog.log(_classString, 'sendDatedMessageToTelegram');
   // add date to the message
   message = '$matchDate\n$message';
   sendMessageToTelegram(message, botType: BotType.register);

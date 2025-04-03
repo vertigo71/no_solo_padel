@@ -38,16 +38,16 @@ class AppState with ChangeNotifier {
   }
 
   /// parameter methods
-  String getParameterValue(ParametersEnum parameter) => _parametersCache.getStrValue(parameter);
+  String getParamValue(ParametersEnum parameter) => _parametersCache.getStrValue(parameter);
 
-  int? getIntParameterValue(ParametersEnum parameter) => _parametersCache.getIntValue(parameter);
+  int? getIntParamValue(ParametersEnum parameter) => _parametersCache.getIntValue(parameter);
 
-  bool getBoolParameterValue(ParametersEnum parameter) => _parametersCache.getBoolValue(parameter);
+  bool getBoolParamValue(ParametersEnum parameter) => _parametersCache.getBoolValue(parameter);
 
   bool isDayPlayable(Date date) => _parametersCache.isDayPlayable(date);
 
   Date get maxDateOfMatchesToView =>
-      Date.now().add(Duration(days: getIntParameterValue(ParametersEnum.matchDaysToView) ?? 0));
+      Date.now().add(Duration(days: getIntParamValue(ParametersEnum.matchDaysToView) ?? 0));
 
   void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 
@@ -112,7 +112,7 @@ class AppState with ChangeNotifier {
 
   bool get isLoggedUserSuper => _loggedUser.userType == UserType.superuser;
 
-  bool get showLog => getBoolParameterValue(ParametersEnum.showLog);
+  bool get showLog => getBoolParamValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
     MyLog.log(_classString, 'setAllUsers users=$users');

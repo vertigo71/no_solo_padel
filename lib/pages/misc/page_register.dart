@@ -15,10 +15,9 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     AppState appState = context.read<AppState>();
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +28,7 @@ class RegisterPage extends StatelessWidget {
           Expanded(
             child: StreamBuilder(
               stream:
-                  FbHelpers().getRegisterStream(appState.getIntParameterValue(ParametersEnum.registerDaysAgoToView) ?? 0),
+                  FbHelpers().getRegisterStream(appState.getIntParamValue(ParametersEnum.registerDaysAgoToView) ?? 0),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error al acceder al registro: ${snapshot.error}'));

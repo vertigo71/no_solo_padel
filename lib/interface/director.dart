@@ -39,9 +39,9 @@ class Director {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
     FbHelpers().deleteOldData(
-        RegisterFs.register.name, _appState.getIntParameterValue(ParametersEnum.registerDaysKeeping) ?? -1);
+        RegisterFs.register.name, _appState.getIntParamValue(ParametersEnum.registerDaysKeeping) ?? -1);
     FbHelpers().deleteOldData(
-        MatchFs.matches.name, _appState.getIntParameterValue(ParametersEnum.matchDaysKeeping) ?? -1);
+        MatchFs.matches.name, _appState.getIntParamValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
   Future<void> createTestData() async {

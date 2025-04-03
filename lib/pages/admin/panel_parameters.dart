@@ -22,7 +22,6 @@ class _FormFields {
     ParametersEnum.matchDaysKeeping: 'Partidos: histórico de días a conservar',
     ParametersEnum.registerDaysAgoToView: 'Registro: ver número de días atrás',
     ParametersEnum.registerDaysKeeping: 'Registro: histórico de días a conservar',
-    ParametersEnum.fromDaysAgoToTelegram: 'Enviar telegram si partido es antes de (días)',
     ParametersEnum.defaultCommentText: 'Texto por defecto del comentario',
     ParametersEnum.minDebugLevel: 'Debug (${_generateDebugLevelsText()})',
     ParametersEnum.weekDaysMatch: 'Días que se pueden jugar (${MyParameters.daysOfWeek})',
@@ -30,6 +29,7 @@ class _FormFields {
   };
 
   static String _generateDebugLevelsText() {
+    // LEVELS = [  ALL,  FINEST,  FINER,  FINE,  CONFIG,  INFO,  WARNING,  SEVERE,  SHOUT,  OFF]
     return Level.LEVELS
         .mapIndexed(
             (index, level) => level.name.length <= 5 ? '$index-${level.name}' : '$index-${level.name.substring(0, 5)}')
@@ -41,7 +41,6 @@ class _FormFields {
     ParametersEnum.matchDaysKeeping: '[0-9]',
     ParametersEnum.registerDaysAgoToView: '[0-9]',
     ParametersEnum.registerDaysKeeping: '[0-9]',
-    ParametersEnum.fromDaysAgoToTelegram: '[0-9]',
     ParametersEnum.defaultCommentText: '', // free text
     ParametersEnum.minDebugLevel: '[0-${Level.LEVELS.length - 1}]',
     ParametersEnum.weekDaysMatch: '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
@@ -74,14 +73,14 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     // compare fields in case other user has changed any fields
     bool areFieldsDifferent(dynamic formValue, dynamic realValue) => formValue != null && formValue != realValue;
     // Use ParametersEnum to iterate through fields and compare
-    bool fieldsChanged = ParametersEnum.values
+    bool fieldsChanged = ParametersEnum.valuesByType(ParamType.basic)
         .map((parameter) => areFieldsDifferent(
-            _formKey.currentState?.fields[parameter.name]?.value, _appState.getParameterValue(parameter)))
+            _formKey.currentState?.fields[parameter.name]?.value, _appState.getParamValue(parameter)))
         .any((changed) => changed);
 
     if (fieldsChanged) {
@@ -99,7 +98,7 @@ class ParametersPanelState extends State<ParametersPanel> {
           child: ListView(
             children: [
               // Generate text fields dynamically (excluding showLog)
-              for (var value in ParametersEnum.values)
+              for (var value in ParametersEnum.valuesByType(ParamType.basic))
                 if (value != ParametersEnum.showLog) _buildTextField(value),
 
               // Show Log Checkbox
@@ -111,6 +110,7 @@ class ParametersPanelState extends State<ParametersPanel> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
                       child: const Text('Actualizar'),
@@ -132,7 +132,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderTextField(
         name: parameter.name,
-        initialValue: _appState.getParameterValue(parameter),
+        initialValue: _appState.getParamValue(parameter),
         decoration: InputDecoration(
           labelText: _FormFields.label[parameter] ?? '',
           border: const OutlineInputBorder(),
@@ -209,14 +209,14 @@ class ParametersPanelState extends State<ParametersPanel> {
 
   /// Validates and submits the form
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate', level: Level.FINE );
+    MyLog.log(_classString, '_formValidate', level: Level.FINE);
 
     // Check if the form is valid before proceeding
     if (_formKey.currentState!.saveAndValidate()) {
       MyParameters myParameters = MyParameters();
       final formValues = _formKey.currentState!.value;
 
-      for (var value in ParametersEnum.values) {
+      for (var value in ParametersEnum.valuesByType(ParamType.basic)) {
         if (value == ParametersEnum.showLog) {
           // Convert bool to string before saving
           myParameters.setValue(value, boolToStr(formValues[value.name] ?? false));

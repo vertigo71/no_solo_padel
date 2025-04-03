@@ -20,11 +20,10 @@ class GamesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(
       builder: (context, appState, _) {
-
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
         MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', indent: true);
@@ -48,7 +47,9 @@ class GamesPanel extends StatelessWidget {
             List<MyMatch> playableMatches = [];
 
             // Create missing matches or get the ones in fetchedMatches if they exist
-            for (int days = 0; days < (appState.getIntParameterValue(ParametersEnum.matchDaysToView) ?? -1); days++) {
+            for (int days = 0;
+                days < (appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1);
+                days++) {
               Date date = Date.now().add(Duration(days: days));
               if (appState.isDayPlayable(date)) {
                 MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
@@ -81,7 +82,8 @@ class GamesPanel extends StatelessWidget {
                                 : UiHelper.lighten(UiHelper.getMatchColor(match), 0.2),
                         leading:
                             // red circle= closed, green circle=open
-                            CircleAvatar(backgroundColor: UiHelper.getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
+                            CircleAvatar(
+                                backgroundColor: UiHelper.getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
@@ -107,4 +109,3 @@ class GamesPanel extends StatelessWidget {
     );
   }
 }
-

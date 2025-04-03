@@ -10,24 +10,38 @@ final String _classString = '<md> Parameters'.toLowerCase();
 // parameter fields in Firestore
 enum ParameterFs { parameters }
 
-/// Enum representing available application parameters.
+/// Type of parameter
+enum ParamType { basic, ranking }
+
+/// Enum representing application parameters.
 enum ParametersEnum {
-  matchDaysToView(defaultValue: '10'), // Number of days to view matches.
-  matchDaysKeeping(defaultValue: '15'), // Number of days to keep match history.
-  registerDaysAgoToView(defaultValue: '1'), // Number of days ago to view registration data.
-  registerDaysKeeping(defaultValue: '15'), // Number of days to keep registration history.
-  fromDaysAgoToTelegram(defaultValue: '2'), // Number of days before a match to send a Telegram notification.
-  defaultCommentText(defaultValue: 'Introducir comentario por defecto'), // Default comment text.
-  minDebugLevel(defaultValue: '1'), // Minimum debug level.
-  weekDaysMatch(defaultValue: 'LMXJ'), // Days of the week when matches can be played.
-  showLog(defaultValue: '0'), // Flag to show log to all users.
+  // basic
+  matchDaysToView(defaultValue: '10', paramType: ParamType.basic),
+  matchDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
+  registerDaysAgoToView(defaultValue: '1', paramType: ParamType.basic),
+  registerDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
+  defaultCommentText(defaultValue: 'Introducir comentario por defecto', paramType: ParamType.basic),
+  minDebugLevel(defaultValue: '5', paramType: ParamType.basic),
+  weekDaysMatch(defaultValue: 'LMXJ', paramType: ParamType.basic),
+  showLog(defaultValue: '0', paramType: ParamType.basic),
+  // ranking
+  step(defaultValue: '20', paramType: ParamType.ranking),
+  range(defaultValue: '60', paramType: ParamType.ranking),
+  rankingDiffToHalf(defaultValue: '3000', paramType: ParamType.ranking),
   ;
 
-  /// Default value for the parameter.
   final String defaultValue;
+  final ParamType _paramType;
 
-  /// Constructor to initialize the enum value with a default value.
-  const ParametersEnum({required this.defaultValue});
+  const ParametersEnum({required this.defaultValue, required ParamType paramType}) : _paramType = paramType;
+
+  bool isRankingParameter() => _paramType == ParamType.ranking;
+
+  bool isBasicParameter() => _paramType == ParamType.basic;
+
+  static Iterable<ParametersEnum> valuesByType(ParamType paramType) {
+    return ParametersEnum.values.where((p) => p._paramType == paramType);
+  }
 }
 
 /// Class to manage application parameters.
@@ -100,7 +114,8 @@ class MyParameters {
   ///
   /// Returns the [Level] corresponding to the [minDebugLevel] parameter, or
   /// [Level.INFO] if the parameter is not found or the value is invalid.
-  Level get minDebugLevel => MyLog.int2level(getIntValue(ParametersEnum.minDebugLevel) ?? 1);
+  Level get minDebugLevel => MyLog.int2level(
+      getIntValue(ParametersEnum.minDebugLevel) ?? int.tryParse(ParametersEnum.minDebugLevel.defaultValue) ?? 1);
 
   /// Returns a string representation of the parameters map.
   ///

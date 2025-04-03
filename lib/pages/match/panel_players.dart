@@ -9,7 +9,6 @@ import '../../interface/app_state.dart';
 import '../../interface/match_notifier.dart';
 import '../../utilities/http_helper.dart';
 import '../../models/debug.dart';
-import '../../models/parameter_model.dart';
 import '../../models/register_model.dart';
 import '../../models/match_model.dart';
 import '../../models/user_model.dart';
@@ -34,7 +33,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   void initState() {
     super.initState();
 
-    MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level:Level.FINE);
+    MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
     _selectedUser = context.read<AppState>().users[0];
     _loggedUser = context.read<AppState>().getLoggedUser();
   }
@@ -48,7 +47,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match', level:Level.FINE);
+    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match', level: Level.FINE);
 
     return ListView(
       children: [
@@ -132,7 +131,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   Widget listOfPlayers() => Builder(
         builder: (context) {
           int playerNumber = 0;
-          MyLog.log(_classString, 'Building listOfPlayers', level:Level.FINE);
+          MyLog.log(_classString, 'Building listOfPlayers', level: Level.FINE);
           MyMatch match = context.read<MatchNotifier>().match;
 
           List<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
@@ -375,7 +374,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   // add user to match
   Future<Map<MyMatch, String>> _addUserToMatch({required MyUser user, required bool adminManagingUser}) async {
     MyLog.log(_classString, '_addUserToMatch');
-    
+
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
@@ -397,8 +396,8 @@ class PlayersPanelState extends State<PlayersPanel> {
     // add player to match and upload the match to firestore database
     // newMatchFromFirestore is the match with the new player
     // null otherwise
-    Map<MyMatch, int> result =
-        await FbHelpers().addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
+    Map<MyMatch, int> result = await FbHelpers()
+        .addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
     MyMatch updatedMatch = result.keys.first; // Get the MyMatch object (key)
     playerPosition = result.values.first; // Get the updated player position (value)
 
@@ -418,7 +417,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   Future<Map<MyMatch, String>?> _removeUserFromMatch({required MyUser user, required bool adminManagingUser}) async {
     // removing user
     MyLog.log(_classString, '_removeUserFromMatch');
-    
+
     AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
@@ -456,8 +455,6 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   // send to register and telegram
   Future<void> _sendToRegister(MyMatch updatedMatch, String registerText) async {
-    
-    AppState appState = context.read<AppState>();
     MyMatch match = context.read<MatchNotifier>().match;
 
     MyLog.log(_classString, '_sendToRegister send to register');
@@ -467,14 +464,14 @@ class PlayersPanelState extends State<PlayersPanel> {
     sendDatedMessageToTelegram(
         message: '$registerText\n'
             'APUNTADOS: ${match.playersReference.length} de ${match.getNumberOfCourts() * 4}',
-        matchDate: match.id,
-        fromDaysAgoToTelegram: appState.getIntParameterValue(ParametersEnum.fromDaysAgoToTelegram));
+        matchDate: match.id);
   }
 
   Future<bool> _confirmQuitMatch() async {
     const String option1 = 'Confirmar';
     const String option2 = 'Anular';
-    String response = await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+    String response =
+        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
     MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == option1;
   }
