@@ -35,8 +35,8 @@ class _FormFields {
 enum TestFields {
   rankingA(displayName: 'Ranking equipo A', min: 1000, max: 15000),
   rankingB(displayName: 'Ranking equipo B', min: 1000, max: 15000),
-  scoreA(displayName: 'Juegos equipo A', min: 0, max: 15),
-  scoreB(displayName: 'Juegos equipo B', min: 0, max: 15),
+  scoreA(displayName: 'A', min: 0, max: 15),
+  scoreB(displayName: 'B', min: 0, max: 15),
   pointsA(displayName: 'Puntos equipo A', min: 0, max: 0),
   pointsB(displayName: 'Puntos equipo B', min: 0, max: 0),
   ;
@@ -129,9 +129,13 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                     _buildTestSliderField(TestFields.rankingA),
                     _buildTestSliderField(TestFields.rankingB),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        Spacer(),
                         Expanded(child: _buildTestDropdownField(TestFields.scoreA)),
                         Expanded(child: _buildTestDropdownField(TestFields.scoreB)),
+                        Spacer(),
                       ],
                     ),
                     const SizedBox(height: 56.0),
@@ -253,7 +257,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       child: ListTile(
         tileColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(field.displayName, style: Theme.of(context).textTheme.bodyMedium),
-        subtitle: Text('\n$result'),
+        subtitle: Center(child: Text('\n$result')),
       ),
     );
   }
@@ -286,6 +290,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderDropdown<int>(
         name: field.name,
+        initialValue: field.min,
         decoration: InputDecoration(
           labelText: field.displayName,
           border: const OutlineInputBorder(),
