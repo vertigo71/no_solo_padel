@@ -89,20 +89,20 @@ class _AddResultPageState extends State<AddResultPage> {
             spacing: 8.0,
             children: [
               // add Team A
-              _selectPlayer(0),
-              _selectPlayer(1),
+              _buildPlayer(0),
+              _buildPlayer(1),
               // add score
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [_selectAddResult()],
+                  children: [_buildResults()],
                 ),
               ),
               // add Team B
-              _selectPlayer(2),
-              _selectPlayer(3),
+              _buildPlayer(2),
+              _buildPlayer(3),
               Divider(
                 height: 8.0,
               ),
@@ -141,8 +141,8 @@ class _AddResultPageState extends State<AddResultPage> {
     }
   }
 
-  Widget _selectPlayer(int numValue) {
-    MyLog.log(_classString, '_selectPlayer numValue=$numValue', indent: true);
+  Widget _buildPlayer(int numValue) {
+    MyLog.log(_classString, '_buildPlayer numValue=$numValue', indent: true, level: Level.FINE);
     return Card(
       elevation: 6.0,
       margin: const EdgeInsets.all(10),
@@ -178,21 +178,21 @@ class _AddResultPageState extends State<AddResultPage> {
     );
   }
 
-  Widget _selectAddResult() {
-    MyLog.log(_classString, '_selectAddResult', indent: true);
+  Widget _buildResults() {
+    MyLog.log(_classString, '_buildResult', level: Level.FINE, indent: true);
     return Column(
       spacing: 8.0,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _selectPartialResult(0),
+        _buildOneResult(0),
         Text('Resultado', style: TextStyle(fontWeight: FontWeight.bold)),
-        _selectPartialResult(1),
+        _buildOneResult(1),
       ],
     );
   }
 
-  Widget _selectPartialResult(int team) {
-    MyLog.log(_classString, '_selectPartialResult team=$team', indent: true);
+  Widget _buildOneResult(int team) {
+    MyLog.log(_classString, '_buildOneResult team=$team', indent: true, level: Level.FINE);
     return Card(
       elevation: 6.0,
       margin: const EdgeInsets.all(0.0),
