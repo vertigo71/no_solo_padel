@@ -9,6 +9,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../interface/app_state.dart';
 import '../../models/debug.dart';
 import '../../models/match_model.dart';
+import '../../models/parameter_model.dart';
 import '../../models/result_model.dart';
 import '../../utilities/misc.dart';
 
@@ -321,12 +322,27 @@ class _AddResultPageState extends State<AddResultPage> {
       throw ArgumentError('No se ha podido obtener los dos resultados');
     }
 
-    const int step = 20;
-    const int range = 60;
-    const int rankingDiffToHalf = 3000;
+    int? step = _appState.getIntParamValue(ParametersEnum.step);
+    int? range = _appState.getIntParamValue(ParametersEnum.range);
+    int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.rankingDiffToHalf);
+    int? freePoints = _appState.getIntParamValue(ParametersEnum.freePoints);
+
+    if (step == null || range == null || rankingDiffToHalf == null || freePoints == null) {
+      throw ArgumentError('No se han podido obtener los parámetros para el cálculo de puntos');
+    }
+
     final int rankingA = _selectedPlayer[0]!.rankingPos + _selectedPlayer[1]!.rankingPos;
     final int rankingB = _selectedPlayer[2]!.rankingPos + _selectedPlayer[3]!.rankingPos;
 
-    return calculatePoints(step, range, rankingDiffToHalf, rankingA, rankingB, _scores[0], _scores[1]);
+    return RankingPoints(
+      step: step,
+      range: range,
+      rankingDiffToHalf: rankingDiffToHalf,
+      freePoints: freePoints,
+      rankingA: rankingA,
+      rankingB: rankingB,
+      scoreA: _scores[0],
+      scoreB: _scores[1],
+    ).calculatePoints();
   }
 }

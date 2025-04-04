@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
+import 'package:no_solo_padel/utilities/misc.dart';
 import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -10,7 +11,6 @@ import '../../database/firebase_helpers.dart';
 import '../../interface/director.dart';
 import '../../models/debug.dart';
 import '../../models/parameter_model.dart';
-import '../../utilities/misc.dart';
 
 /// Class name identifier for logging
 final String _classString = 'RankingParamPanel'.toUpperCase();
@@ -21,22 +21,24 @@ class _FormFields {
     ParametersEnum.step: 'Mínimo de puntos por juego',
     ParametersEnum.range: 'Rango de puntos por juego',
     ParametersEnum.rankingDiffToHalf: 'Diferencia de rankings para sumar la mitad de puntos por juego',
+    ParametersEnum.freePoints: 'Puntos por participar',
   };
 
   static Map<ParametersEnum, String> listAllowedChars = {
     ParametersEnum.step: '[0-9]',
     ParametersEnum.range: '[0-9]',
     ParametersEnum.rankingDiffToHalf: '[0-9]',
+    ParametersEnum.freePoints: '[0-9]',
   };
 }
 
 enum TestFields {
-  rankingA(displayName: 'Ranking equipo A', min: 1000, max: 10000),
-  rankingB(displayName: 'Ranking equipo B', min: 1000, max: 10000),
-  scoreA(displayName: 'Puntuación equipo A', min: 0, max: 10),
-  scoreB(displayName: 'Puntuación equipo B', min: 0, max: 10),
-  resultA(displayName: 'Resultado equipo A', min: 0, max: 0),
-  resultB(displayName: 'Resultado equipo B', min: 0, max: 0),
+  rankingA(displayName: 'Ranking equipo A', min: 1000, max: 15000),
+  rankingB(displayName: 'Ranking equipo B', min: 1000, max: 15000),
+  scoreA(displayName: 'Juegos equipo A', min: 0, max: 15),
+  scoreB(displayName: 'Juegos equipo B', min: 0, max: 15),
+  pointsA(displayName: 'Puntos equipo A', min: 0, max: 0),
+  pointsB(displayName: 'Puntos equipo B', min: 0, max: 0),
   ;
 
   final String displayName;
@@ -128,8 +130,8 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                     _buildTestSliderField(TestFields.rankingB),
                     Row(
                       children: [
-                        Expanded(child: _buildTestSliderField(TestFields.scoreA)),
-                        Expanded(child: _buildTestSliderField(TestFields.scoreB)),
+                        Expanded(child: _buildTestDropdownField(TestFields.scoreA)),
+                        Expanded(child: _buildTestDropdownField(TestFields.scoreB)),
                       ],
                     ),
                     const SizedBox(height: 56.0),
@@ -212,8 +214,18 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       int step = int.tryParse(values[ParametersEnum.step.name] as String? ?? '') ?? 0;
       int range = int.tryParse(values[ParametersEnum.range.name] as String? ?? '') ?? 0;
       int rankingDiffToHalf = int.tryParse(values[ParametersEnum.rankingDiffToHalf.name] as String? ?? '') ?? 0;
+      int freePoints = int.tryParse(values[ParametersEnum.freePoints.name] as String? ?? '') ?? 0;
 
-      result = calculatePoints(step, range, rankingDiffToHalf, rankingA, rankingB, scoreA, scoreB);
+      result = RankingPoints(
+        step: step,
+        range: range,
+        rankingDiffToHalf: rankingDiffToHalf,
+        freePoints: freePoints,
+        rankingA: rankingA,
+        rankingB: rankingB,
+        scoreA: scoreA,
+        scoreB: scoreB,
+      ).calculatePoints();
     }
 
     return Padding(
@@ -226,8 +238,8 @@ class RankingParamPanelState extends State<RankingParamPanel> {
               style: TextStyle(fontWeight: FontWeight.bold)),
           Row(
             children: [
-              Expanded(child: _buildSingleResultField(TestFields.resultA, result[0])),
-              Expanded(child: _buildSingleResultField(TestFields.resultB, result[1])),
+              Expanded(child: _buildSingleResultField(TestFields.pointsA, result[0])),
+              Expanded(child: _buildSingleResultField(TestFields.pointsB, result[1])),
             ],
           ),
         ],
@@ -262,6 +274,28 @@ class RankingParamPanelState extends State<RankingParamPanel> {
         divisions: field.max - field.min,
         // Make slider discrete
         numberFormat: NumberFormat("#,###", 'es_ES'),
+        onChanged: (_) => _updateResult(),
+      ),
+    );
+  }
+
+  Widget _buildTestDropdownField(TestFields field) {
+    List<int> dropdownValues = List.generate(field.max - field.min + 1, (index) => field.min + index);
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderDropdown<int>(
+        name: field.name,
+        decoration: InputDecoration(
+          labelText: field.displayName,
+          border: const OutlineInputBorder(),
+        ),
+        items: dropdownValues.map((value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
         onChanged: (_) => _updateResult(),
       ),
     );

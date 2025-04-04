@@ -40,12 +40,30 @@ class _InformationPanelState extends State<InformationPanel> {
       return Scaffold(
         appBar: _buildAppBar(appState),
         body: ListView(
-          children: [
-            ...ListTile.divideTiles(
-                context: context,
-                tiles: appState.users.map(((user) => UiHelper.userInfoTile(
-                    user, appState.isLoggedUserAdminOrSuper ? () => _modifyUser(context, user) : null)))),
-          ],
+          children: ListTile.divideTiles(
+            context: context,
+            tiles: appState.users.indexed.map((indexedUser) {
+              final index = indexedUser.$1 + 1; // Add 1 for 1-based indexing
+              final user = indexedUser.$2;
+              return Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                      child: Text('$index', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  Expanded(
+                    child: UiHelper.userInfoTile(
+                      user,
+                      appState.isLoggedUserAdminOrSuper ? () => _modifyUser(context, user) : null,
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ).toList(), // Convert the Iterable<Widget> to List<Widget>
         ),
       );
     });
