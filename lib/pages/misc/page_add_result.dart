@@ -38,7 +38,7 @@ class _AddResultPageState extends State<AddResultPage> {
   late AppState _appState;
   bool _matchLoaded = false;
   String _errorMessage = '';
-  final List<MyUser?> _selectedPlayer = List.filled(numPlayers, null);
+  final List<MyUser?> _selectedPlayers = List.filled(numPlayers, null);
   final List<int> _scores = [0, 0];
 
   @override
@@ -149,10 +149,10 @@ class _AddResultPageState extends State<AddResultPage> {
       color: Theme.of(context).colorScheme.inversePrimary,
       child: DropdownMenu<MyUser>(
         width: double.infinity,
-        initialSelection: _selectedPlayer[numValue],
+        initialSelection: _selectedPlayers[numValue],
         onSelected: (MyUser? value) {
           setState(() {
-            _selectedPlayer[numValue] = value;
+            _selectedPlayers[numValue] = value;
           });
         },
         dropdownMenuEntries:
@@ -169,8 +169,8 @@ class _AddResultPageState extends State<AddResultPage> {
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            backgroundImage: _selectedPlayer[numValue]?.avatarUrl != null
-                ? NetworkImage(_selectedPlayer[numValue]!.avatarUrl!)
+            backgroundImage: _selectedPlayers[numValue]?.avatarUrl != null
+                ? NetworkImage(_selectedPlayers[numValue]!.avatarUrl!)
                 : null,
           ),
         ),
@@ -220,11 +220,11 @@ class _AddResultPageState extends State<AddResultPage> {
   Future<void> _save() async {
     MyLog.log(_classString, '_save', indent: true);
 
-    bool isAnyPlayerNull = _selectedPlayer.contains(null);
+    bool isAnyPlayerNull = _selectedPlayers.contains(null);
     bool areAllResultsZero = _scores.every((result) => result == 0);
 
     if (isAnyPlayerNull) {
-      MyLog.log(_classString, 'Null player. players=$_selectedPlayer', indent: true);
+      MyLog.log(_classString, 'Null player. players=$_selectedPlayers', indent: true);
       throw 'Añadir todos los jugadores';
     }
 
@@ -234,33 +234,33 @@ class _AddResultPageState extends State<AddResultPage> {
     }
 
     // check if there are repeated players
-    Set<MyUser> uniquePlayers = Set.from(_selectedPlayer);
+    Set<MyUser> uniquePlayers = Set.from(_selectedPlayers);
     if (uniquePlayers.length != numPlayers) {
-      MyLog.log(_classString, 'Repeated players. players=$_selectedPlayer', indent: true);
+      MyLog.log(_classString, 'Repeated players. players=$_selectedPlayers', indent: true);
       throw 'No se puede repetir un jugador';
     }
 
-    // calculate the point that each team will get
+    // calculate the points that each team will get
     List<int> points = _calculatePoints();
 
     // create teamA
     TeamResult teamA = TeamResult(
-      player1: _selectedPlayer[0]!,
-      player2: _selectedPlayer[1]!,
+      player1: _selectedPlayers[0]!,
+      player2: _selectedPlayers[1]!,
       points: points[0],
       score: _scores[0],
-      preRanking1: _selectedPlayer[0]!.rankingPos,
-      preRanking2: _selectedPlayer[1]!.rankingPos,
+      preRanking1: _selectedPlayers[0]!.rankingPos,
+      preRanking2: _selectedPlayers[1]!.rankingPos,
     );
 
     // create teamB
     TeamResult teamB = TeamResult(
-      player1: _selectedPlayer[2]!,
-      player2: _selectedPlayer[3]!,
+      player1: _selectedPlayers[2]!,
+      player2: _selectedPlayers[3]!,
       points: points[1],
       score: _scores[1],
-      preRanking1: _selectedPlayer[2]!.rankingPos,
-      preRanking2: _selectedPlayer[3]!.rankingPos,
+      preRanking1: _selectedPlayers[2]!.rankingPos,
+      preRanking2: _selectedPlayers[3]!.rankingPos,
     );
 
     // create GameResult
@@ -283,9 +283,9 @@ class _AddResultPageState extends State<AddResultPage> {
     // add points to players
     try {
       MyLog.log(_classString, 'Updating players points', indent: true);
-      _selectedPlayer.sublist(0, 2).forEach((player) => player!.rankingPos += teamA.points);
-      _selectedPlayer.sublist(2, 4).forEach((player) => player!.rankingPos += teamB.points);
-      await Future.wait(_selectedPlayer.map((e) async => await FbHelpers().updateUser(e!)));
+      _selectedPlayers.sublist(0, 2).forEach((player) => player!.rankingPos += teamA.points);
+      _selectedPlayers.sublist(2, 4).forEach((player) => player!.rankingPos += teamB.points);
+      await Future.wait(_selectedPlayers.map((e) async => await FbHelpers().updateUser(e!)));
     } catch (e) {
       MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
       throw ('Error al actualizar los puntos de los jugadores. \n${e.toString()}');
@@ -315,7 +315,7 @@ class _AddResultPageState extends State<AddResultPage> {
   List<int> _calculatePoints() {
     MyLog.log(_classString, '_calculatePointsA', indent: true);
 
-    if (_selectedPlayer.length != 4) {
+    if (_selectedPlayers.length != 4) {
       throw ArgumentError('No se ha podido obtener los cuatro jugadores');
     }
     if (_scores.length != 2) {
@@ -331,8 +331,8 @@ class _AddResultPageState extends State<AddResultPage> {
       throw ArgumentError('No se han podido obtener los parámetros para el cálculo de puntos');
     }
 
-    final int rankingA = _selectedPlayer[0]!.rankingPos + _selectedPlayer[1]!.rankingPos;
-    final int rankingB = _selectedPlayer[2]!.rankingPos + _selectedPlayer[3]!.rankingPos;
+    final int rankingA = _selectedPlayers[0]!.rankingPos + _selectedPlayers[1]!.rankingPos;
+    final int rankingB = _selectedPlayers[2]!.rankingPos + _selectedPlayers[3]!.rankingPos;
 
     return RankingPoints(
       step: step,
