@@ -38,42 +38,7 @@ class _InformationPanelState extends State<InformationPanel> {
 
     return Consumer<AppState>(builder: (context, appState, child) {
       return Scaffold(
-        appBar: AppBar(
-          actions: [
-            // typical layout: expanded, row, expanded, ...
-            Expanded(
-              child: Row(
-                spacing: 10,
-                // mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const SizedBox(width: 10),
-                  Flexible(flex: 2, child: const Text('Ranking')),
-                  Flexible(
-                    flex: 1,
-                    child: FormBuilderSwitch(
-                      name: 'switch',
-                      title: const Text(''),
-                      initialValue: appState.isUsersSortedByName,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onChanged: (value) {
-                        if (value != null) {
-                          appState.sortUsers(
-                              sortBy: value ? UsersSortOrder.byName : UsersSortOrder.byRanking, notify: true);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(flex: 2, child: const Text('Nombre')),
-                  const SizedBox(width: 10),
-                ],
-              ),
-            ),
-          ],
-        ),
+        appBar: _buildAppBar(appState),
         body: ListView(
           children: [
             ...ListTile.divideTiles(
@@ -84,6 +49,45 @@ class _InformationPanelState extends State<InformationPanel> {
         ),
       );
     });
+  }
+
+  PreferredSizeWidget? _buildAppBar(AppState appState) {
+    return AppBar(
+      actions: [
+        // typical layout: expanded, row, expanded, ...
+        Expanded(
+          child: Row(
+            spacing: 10,
+            // mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const SizedBox(width: 10),
+              Flexible(flex: 2, child: const Text('Ranking')),
+              Flexible(
+                flex: 1,
+                child: FormBuilderSwitch(
+                  name: 'switch',
+                  title: const Text(''),
+                  initialValue: appState.isUsersSortedByName,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (value) {
+                    if (value != null) {
+                      appState.sortUsers(
+                          sortBy: value ? UsersSortOrder.byName : UsersSortOrder.byRanking, notify: true);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(flex: 2, child: const Text('Nombre')),
+              const SizedBox(width: 10),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Future _modifyUser(BuildContext context, MyUser user) {
