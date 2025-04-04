@@ -10,6 +10,9 @@ import '../utilities/misc.dart';
 
 final String _classString = '<st> AppState'.toLowerCase();
 
+// sorting order
+enum UsersSortOrder { byName, byRanking }
+
 /// registers the state of the app
 /// Saves users and parameters in Cache variables
 /// Access to loggedUser
@@ -22,6 +25,7 @@ class AppState with ChangeNotifier {
   MyParameters _parametersCache = MyParameters();
   final List<MyUser> _usersCache = [];
   MyUser _loggedUser = MyUser();
+  UsersSortOrder _usersSorting = UsersSortOrder.byName;
 
   /// make loggedUser=none
   void resetLoggedUser() => setLoggedUser(MyUser(), notify: false);
@@ -86,26 +90,37 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  int get numUsers => _usersCache.length;
-
-  // Modifies _usersCache in place
-  List<MyUser> get users {
-    _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
-    return List.from(_usersCache);
+  void _sortUsersBold(UsersSortOrder sortBy) {
+    MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
+    _usersSorting = sortBy;
+    if (sortBy == UsersSortOrder.byName) {
+      _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
+    } else {
+      _usersCache.sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
+    }
   }
 
-  /// Sorts the users by their ranking position.
-  ///
-  /// Returns a new list of [MyUser] objects sorted by their [rankingPos] field.
-  ///
-  /// [descending]: If true, sorts the users in descending order (highest ranking first).
-  ///               If false, sorts the users in ascending order (lowest ranking first).
-  ///               Defaults to true.
-  /// Returns a new sorted list
-  List<MyUser> getUsersSortedByRanking({bool descending = true}) {
-    final List<MyUser> users = List.from(_usersCache);
-    users.sort((a, b) => descending ? b.rankingPos.compareTo(a.rankingPos) : a.rankingPos.compareTo(b.rankingPos));
-    return users;
+  // sort by name or ranking
+  void sortUsers({UsersSortOrder sortBy = UsersSortOrder.byName, bool notify = false}) {
+    if (_usersSorting != sortBy) {
+      _sortUsersBold(sortBy);
+      if (notify) notifyListeners();
+    } else {
+      MyLog.log(_classString, 'sortUsers already sorted', indent: true);
+    }
+  }
+
+  bool get isUsersSortedByName => _usersSorting == UsersSortOrder.byName;
+
+  int get numUsers => _usersCache.length;
+
+  List<MyUser> get users => List.from(_usersCache);
+
+  // Modifies _usersCache in place
+  // get users sorted by name or ranking
+  List<MyUser> getSortedUsers({UsersSortOrder sortBy = UsersSortOrder.byName, bool notify = false}) {
+    sortUsers(sortBy: sortBy, notify: notify);
+    return List.from(_usersCache);
   }
 
   bool get isLoggedUserAdminOrSuper => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
@@ -119,6 +134,7 @@ class AppState with ChangeNotifier {
 
     _usersCache.clear();
     _usersCache.addAll(users);
+    _sortUsersBold(_usersSorting);
 
     // convert loggedUser
     setLoggedUserById(_loggedUser.id, notify: false);
@@ -154,6 +170,7 @@ class AppState with ChangeNotifier {
       }
     }
 
+    _sortUsersBold(_usersSorting);
     if (notify) notifyListeners();
   }
 

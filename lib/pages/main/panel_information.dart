@@ -24,23 +24,62 @@ enum _FormFields {
   const _FormFields({required this.displayName});
 }
 
-class InformationPanel extends StatelessWidget {
+class InformationPanel extends StatefulWidget {
   const InformationPanel({super.key});
 
+  @override
+  State<InformationPanel> createState() => _InformationPanelState();
+}
+
+class _InformationPanelState extends State<InformationPanel> {
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
       return Scaffold(
+        appBar: AppBar(
+          actions: [
+            // typical layout: expanded, row, expanded, ...
+            Expanded(
+              child: Row(
+                spacing: 10,
+                // mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const SizedBox(width: 10),
+                  Flexible(flex: 2, child: const Text('Ranking')),
+                  Flexible(
+                    flex: 1,
+                    child: FormBuilderSwitch(
+                      name: 'switch',
+                      title: const Text(''),
+                      initialValue: appState.isUsersSortedByName,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (value) {
+                        if (value != null) {
+                          appState.sortUsers(
+                              sortBy: value ? UsersSortOrder.byName : UsersSortOrder.byRanking, notify: true);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(flex: 2, child: const Text('Nombre')),
+                  const SizedBox(width: 10),
+                ],
+              ),
+            ),
+          ],
+        ),
         body: ListView(
           children: [
             ...ListTile.divideTiles(
                 context: context,
-                tiles: appState.users.map(((user) {
-                  return UiHelper.userInfoTile(
-                      user, appState.isLoggedUserAdminOrSuper ? () => _modifyUser(context, user) : null);
-                }))),
+                tiles: appState.users.map(((user) => UiHelper.userInfoTile(
+                    user, appState.isLoggedUserAdminOrSuper ? () => _modifyUser(context, user) : null)))),
           ],
         ),
       );
@@ -161,7 +200,7 @@ class InformationPanel extends StatelessWidget {
             decoration: InputDecoration(labelText: _FormFields.ranking.displayName),
             keyboardType: TextInputType.numberWithOptions(signed: false, decimal: false),
             validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required( errorText: 'Este campo es obligatorio'),
+              FormBuilderValidators.required(errorText: 'Este campo es obligatorio'),
               FormBuilderValidators.numeric(errorText: 'Debe ser un número'),
               FormBuilderValidators.integer(errorText: 'Debe ser un número entero'),
               FormBuilderValidators.min(0, errorText: 'Debe ser mayor o igual que 0'),

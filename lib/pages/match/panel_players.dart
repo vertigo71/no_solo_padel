@@ -34,7 +34,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     super.initState();
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
-    _selectedUser = context.read<AppState>().users[0];
+    _selectedUser = context.read<AppState>().getSortedUsers()[0];
     _loggedUser = context.read<AppState>().getLoggedUser();
   }
 
@@ -143,7 +143,7 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.getNumberOfCourts(), 'pista')}';
-          List<MyUser> rankingSortedUsers = context.read<AppState>().getUsersSortedByRanking();
+          List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortOrder.byRanking);
           MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$rankingSortedUsers');
 
           return Column(
@@ -208,7 +208,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   Widget roulette() {
-    List<MyUser> users = context.read<AppState>().users;
+    List<MyUser> users = context.read<AppState>().getSortedUsers();
 
     return Padding(
       padding: const EdgeInsets.all(8.0),

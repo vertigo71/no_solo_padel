@@ -23,7 +23,7 @@ class UserDeletePanel extends StatelessWidget {
           children: [
             ...ListTile.divideTiles(
                 context: context,
-                tiles: appState.users.map(
+                tiles: appState.getSortedUsers().map(
                     ((user) => UiHelper.userInfoTile(user, () => _onTap(context, user, context.read<Director>()))))),
           ],
         ),

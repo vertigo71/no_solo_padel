@@ -45,7 +45,8 @@ class SortingPanelState extends State<SortingPanel> {
     MyLog.log(
         _classString,
         'SortingPanel totalWidth=${MediaQuery.of(context).size.width}, '
-        'totalTextWidth=$totalTextWidth, widthPadding=$widthPadding', indent: true );
+        'totalTextWidth=$totalTextWidth, widthPadding=$widthPadding',
+        indent: true);
 
     // Ensure padding is not negative.
     if (widthPadding < 0) {
@@ -94,9 +95,9 @@ class SortingPanelState extends State<SortingPanel> {
                     },
                     children: SortingType.values
                         .map((type) => Padding(
-                          padding: EdgeInsets.symmetric(horizontal: widthPadding),
-                          child: Text(type.label),
-                        ))
+                              padding: EdgeInsets.symmetric(horizontal: widthPadding),
+                              child: Text(type.label),
+                            ))
                         .toList(),
                   ),
                 ],
@@ -156,7 +157,7 @@ class SortingSubPanel extends StatelessWidget {
     MyLog.log(_classString, 'listOfMatches courts = $filledCourts', indent: true);
     MyLog.log(_classString, 'listOfMatches matchPlayers = $matchPlayers, courtPlayers = $sortedPlayers', indent: true);
 
-    List<MyUser> rankingSortedUsers = context.read<AppState>().getUsersSortedByRanking();
+    List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortOrder.byRanking);
 
     if (sortedPlayers.isEmpty) {
       return const Center(child: Text('No hay jugadores apuntados'));
