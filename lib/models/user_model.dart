@@ -119,7 +119,7 @@ class MyUser {
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
-  bool hasNotEmptyFields() {
+  bool hasNoEmptyFields() {
     return id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
   }
 

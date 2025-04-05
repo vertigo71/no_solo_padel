@@ -73,32 +73,35 @@ class FbHelpers {
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
-    MyLog.log(_classString, 'createListeners ', level: Level.FINE, indent: true);
-
-    // update parameters
     MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
         indent: true);
+
     if (_paramListener != null) {
-      MyLog.log(_classString, 'Parameters LISTENER already created', level: Level.WARNING, indent: true);
+      MyLog.log(_classString, 'ParamLISTENER already created', level: Level.WARNING, indent: true);
       _parametersLoaded = true;
     } else {
       _parametersLoaded = false; // still not loaded
       _paramListener =
           _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
         (snapshot) {
-          MyLog.log(_classString, 'LISTENER called: loading parameters into appState ...', indent: true);
           MyParameters? myParameters;
+
           if (snapshot.exists && snapshot.data() != null) {
+            MyLog.log(_classString, 'ParamLISTENER called: data found. loading parameters into appState ...',
+                indent: true);
             myParameters = MyParameters.fromJson(snapshot.data() as Map<String, dynamic>);
+          } else {
+            MyLog.log(_classString, 'ParamLISTENER called: no new data found in Firestore',
+                level: Level.WARNING, indent: true);
           }
-          MyLog.log(_classString, 'createListeners LISTENER parameters to load = $myParameters', indent: true);
+
           parametersFunction(myParameters ?? MyParameters());
-          MyLog.log(_classString, 'createListeners: onDone loading parameters', indent: true);
+
+          MyLog.log(_classString, 'ParamLISTENER: done: _parametersLoaded = true', indent: true);
           _parametersLoaded = true;
         },
         onError: (error) {
-          MyLog.log(_classString, 'createListeners onError loading parameters. Error: $error',
-              level: Level.SEVERE, indent: true);
+          MyLog.log(_classString, 'ParamLISTENER snapshot error: $error', level: Level.SEVERE, indent: true);
           throw Exception('Error de escucha. No se han podido cargar los parametros del sistema.\n$error');
         },
       );
@@ -106,35 +109,42 @@ class FbHelpers {
 
     // update users
     MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
+
     if (_usersListener != null) {
-      MyLog.log(_classString, 'Users LISTENER already created', level: Level.WARNING, indent: true);
+      MyLog.log(_classString, 'UserLISTENER already created', level: Level.WARNING, indent: true);
       _usersLoaded = true;
     } else {
       _usersLoaded = false; // still not loaded
       _usersListener = _instance.collection(UserFs.users.name).snapshots().listen(
         (snapshot) {
-          MyLog.log(_classString, 'LISTENER called: loading users into appState', indent: true);
+          if (snapshot.docChanges.isNotEmpty) {
+            MyLog.log(_classString, 'UserLISTENER called: data found. loading users into appState ...', indent: true);
 
-          List<MyUser> addedUsers = [];
-          List<MyUser> modifiedUsers = [];
-          List<MyUser> removedUsers = [];
-          _downloadChangedUsers(
-            snapshot: snapshot,
-            addedUsers: addedUsers,
-            modifiedUsers: modifiedUsers,
-            removedUsers: removedUsers,
-          );
-          MyLog.log(
-              _classString,
-              'createListeners: users added=${addedUsers.length} mod=${modifiedUsers.length} '
-              'removed=${removedUsers.length}',
-              indent: true);
-          usersFunction(addedUsers, modifiedUsers, removedUsers);
-          MyLog.log(_classString, 'createListeners: onDone loading users', indent: true);
+            List<MyUser> addedUsers = [];
+            List<MyUser> modifiedUsers = [];
+            List<MyUser> removedUsers = [];
+            _downloadChangedUsers(
+              snapshot: snapshot,
+              addedUsers: addedUsers,
+              modifiedUsers: modifiedUsers,
+              removedUsers: removedUsers,
+            );
+            MyLog.log(
+                _classString,
+                'UserLISTENER: users added=${addedUsers.length} mod=${modifiedUsers.length} '
+                'removed=${removedUsers.length}',
+                indent: true);
+            usersFunction(addedUsers, modifiedUsers, removedUsers);
+          } else {
+            MyLog.log(_classString, 'UserLISTENER called: no new data found in Firestore',
+                level: Level.WARNING, indent: true);
+          }
+
+          MyLog.log(_classString, 'UserLISTENER: done. _usersLoaded = true', indent: true);
           _usersLoaded = true;
         },
         onError: (error) {
-          MyLog.log(_classString, 'createListeners: onError loading users. Error: $error',
+          MyLog.log(_classString, 'UserLISTENER: onError loading users. Error: $error',
               level: Level.SEVERE, indent: true);
           throw Exception('Error de escucha. No se han podido cargar los usuarios del sistema.\n$error');
         },
@@ -182,33 +192,32 @@ class FbHelpers {
     removedUsers.clear();
 
     for (var docChanged in snapshot.docChanges) {
-      if (docChanged.doc.data() == null) {
-        MyLog.log(_classString, '_downloadChangedUsers ERROR data null', level: Level.SEVERE, indent: true);
-        throw 'Error en la base de datos de usuarios';
-      }
+      if (docChanged.doc.exists && docChanged.doc.data() != null) {
+        Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
 
-      Map<String, dynamic> data = docChanged.doc.data() as Map<String, dynamic>;
+        try {
+          MyUser user = MyUser.fromJson(data);
+          MyLog.log(_classString, '_downloadChangedUsers user=$user', indent: true);
 
-      try {
-        MyUser user = MyUser.fromJson(data);
-        MyLog.log(_classString, '_downloadChangedUsers user=$user', indent: true);
-
-        if (user.hasNotEmptyFields()) {
-          if (docChanged.type == DocumentChangeType.added) {
-            addedUsers.add(user);
-          } else if (docChanged.type == DocumentChangeType.modified) {
-            modifiedUsers.add(user);
-          } else if (docChanged.type == DocumentChangeType.removed) {
-            removedUsers.add(user);
+          if (user.hasNoEmptyFields()) {
+            if (docChanged.type == DocumentChangeType.added) {
+              addedUsers.add(user);
+            } else if (docChanged.type == DocumentChangeType.modified) {
+              modifiedUsers.add(user);
+            } else if (docChanged.type == DocumentChangeType.removed) {
+              removedUsers.add(user);
+            }
+          } else {
+            MyLog.log(_classString, '_downloadChangedUsers Error: Empty user!!!',
+                level: Level.SEVERE, myCustomObject: user, indent: true);
           }
-        } else {
-          MyLog.log(_classString, '_downloadChangedUsers Error: Empty user!!!',
-              level: Level.SEVERE, myCustomObject: user, indent: true);
+        } catch (e) {
+          MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
+              myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
+          throw Exception('Error en la base de datos de usuarios. \nError: ${e.toString()}');
         }
-      } catch (e) {
-        MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
-            myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
-        throw Exception('Error en la base de datos de usuarios. \nError: ${e.toString()}');
+      } else {
+        MyLog.log(_classString, '_downloadChangedUsers ERROR data null', level: Level.WARNING, indent: true);
       }
     }
   }

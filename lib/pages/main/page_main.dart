@@ -45,7 +45,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    MyLog.log(_classString, 'initState: _isLoading=$_isLoading', level:Level.FINE);
+    MyLog.log(_classString, 'initState: _isLoading=$_isLoading', level: Level.FINE);
     super.initState();
     _director = context.read<Director>();
     // initialize data
@@ -266,12 +266,12 @@ class _MainPageState extends State<MainPage> {
       MyUser? appUser = appState.getUserByEmail(fireBaseUser.email!);
       if (appUser == null) {
         // User not found in appState
-        MyLog.log(_classString, '_initialize user: ${fireBaseUser.email}  not registered in appState. Abort!',
+        MyLog.log(_classString, '_initialize LoggedUser: ${fireBaseUser.email}  not registered in appState. Abort!',
             level: Level.SEVERE, indent: true);
-        throw 'Error: Usuario no registrado en la aplicación. Hable con el administrador.';
+        throw 'Error: No se ha podido acceder al usuario';
       } else {
         // User found in appState.
-        MyLog.log(_classString, '_initializeData user found in appState = $appUser', indent: true);
+        MyLog.log(_classString, '_initializeData LoggedUser found in appState = $appUser', indent: true);
         appState.setLoggedUser(appUser, notify: false);
         appUser.lastLogin = Date.now();
         appUser.loginCount++;
