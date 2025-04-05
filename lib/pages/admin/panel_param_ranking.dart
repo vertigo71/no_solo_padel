@@ -330,7 +330,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                 name: 'resetValue',
                 decoration: InputDecoration(
                   labelText: 'Valor',
-                  border: const OutlineInputBorder(), 
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 validator: FormBuilderValidators.compose([
