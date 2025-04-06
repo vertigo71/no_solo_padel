@@ -35,9 +35,18 @@ class Director {
     await AuthenticationHelper.signOut();
   }
 
+  // set loggedUser
+  Future<void> setLoggedUser(MyUser user) async {
+    MyLog.log(_classString, 'setLoggedUser user=$user');
+    _appState.setLoggedUser(user, notify: false);
+    user.lastLogin = Date.now();
+    user.loginCount++;
+    await FbHelpers().updateUser(user);
+  }
+
   // update all users
   Future<void> updateAllUsers() async {
-    MyLog.log(_classString, 'updateAllUsers', level: Level.FINE );
+    MyLog.log(_classString, 'updateAllUsers', level: Level.FINE);
     List<MyUser> users = await FbHelpers().getAllUsers();
     _appState.setAllUsers(users, notify: true);
   }
@@ -46,10 +55,9 @@ class Director {
   Future<void> deleteOldData() async {
     // delete old register logs & matches at the Firestore
     MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    FbHelpers().deleteOldData(
-        RegisterFs.register.name, _appState.getIntParamValue(ParametersEnum.registerDaysKeeping) ?? -1);
-    FbHelpers().deleteOldData(
-        MatchFs.matches.name, _appState.getIntParamValue(ParametersEnum.matchDaysKeeping) ?? -1);
+    FbHelpers()
+        .deleteOldData(RegisterFs.register.name, _appState.getIntParamValue(ParametersEnum.registerDaysKeeping) ?? -1);
+    FbHelpers().deleteOldData(MatchFs.matches.name, _appState.getIntParamValue(ParametersEnum.matchDaysKeeping) ?? -1);
   }
 
   Future<void> createTestData() async {

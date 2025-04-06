@@ -13,7 +13,6 @@ import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../routes/routes.dart';
 import '../../utilities/date.dart';
-import '../../utilities/environment.dart';
 import '../../utilities/ui_helpers.dart';
 import 'panel_games.dart';
 import 'panel_information.dart';
@@ -32,7 +31,6 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0; // AppBar selected item
-  bool _isLoading = true; // Initially loading
   String? _errorMessage;
   late Director _director;
 
@@ -45,7 +43,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    MyLog.log(_classString, 'initState: _isLoading=$_isLoading', level: Level.FINE);
+    MyLog.log(_classString, 'initState', level: Level.FINE);
     super.initState();
     _director = context.read<Director>();
     // initialize data
@@ -64,28 +62,45 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
-    if (_isLoading) {
+    return Consumer<AppState>(builder: (context, appState, child) {
       if (_errorMessage != null) {
+        // there is an error
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
         return _buildErrorMessage();
-      } else {
+      } else if (!appState.getLoggedUser().isValid()) {
+        // no logged user saved in appState
+        MyLog.log(_classString, 'build without logged user', indent: true);
+        // set loggedUser if exists
+        if (AuthenticationHelper.user != null) {
+          // try to link appState.user to AuthenticationHelper.user
+          MyUser? user = appState.getUserByEmail(AuthenticationHelper.user!.email!);
+          if (user != null) {
+            // User found in appState.
+            MyLog.log(_classString, 'LoggedUser found in appState = $user', indent: true);
+            appState.setLoggedUser(user, notify: false);
+            user.lastLogin = Date.now();
+            user.loginCount++;
+            FbHelpers().updateUser(user); // listener will modify appState and rebuild Consumer
+          }
+        }
         return _buildLoadingIndicator(); // Still loading, no error
+      } else {
+        MyLog.log(_classString, 'build with logged user loggedUser=${appState.getLoggedUser()}', indent: true);
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            // if back is pressed, user will be signedOut
+            await _onBackPressed();
+          },
+          child: Scaffold(
+            appBar: _buildAppBar(context),
+            body: _kWidgetOptions.elementAt(_selectedIndex),
+            bottomNavigationBar: _buildBottomNavigationBar(),
+          ),
+        );
       }
-    } else {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          // if back is pressed, user will be signedOut
-          await _onBackPressed();
-        },
-        child: Scaffold(
-          appBar: _buildAppBar(context),
-          body: _kWidgetOptions.elementAt(_selectedIndex),
-          bottomNavigationBar: _buildBottomNavigationBar(),
-        ),
-      );
-    }
+    });
   }
 
   Widget _buildErrorMessage() {
@@ -253,7 +268,7 @@ class _MainPageState extends State<MainPage> {
       if (fireBaseUser == null || fireBaseUser.email == null) {
         MyLog.log(_classString, '_initialize: User not authenticated = $fireBaseUser',
             level: Level.SEVERE, indent: true);
-        throw 'Error: Usuario no registrado en el sistema. Hable con el administrador.';
+        throw 'Error: Usuario no registrado en el sistema. \nHable con el administrador.';
       }
 
       // create listeners for users and parameters
@@ -264,43 +279,14 @@ class _MainPageState extends State<MainPage> {
         usersFunction: appState.setChangedUsersAndNotify,
       );
 
-      // Wait for users and parameters data to be loaded from Firestore.
-      MyLog.log(_classString, '_initialize: waiting for users and parameters to load', indent: true);
-      await FbHelpers().dataLoaded();
-
-      // link appState.user to AuthenticationHelper.user
-      // listener has already loaded all users into appState
-      MyUser? appUser = appState.getUserByEmail(fireBaseUser.email!);
-      if (appUser == null) {
-        // User not found in appState
-        MyLog.log(_classString, '_initialize LoggedUser: ${fireBaseUser.email}  not registered in appState. Abort!',
-            level: Level.SEVERE, indent: true);
-        throw 'Error: No se ha podido acceder a tu usuario. \n'
-            'Puede ser un error de red o de base de datos';
-      } else {
-        // User found in appState.
-        MyLog.log(_classString, '_initializeData LoggedUser found in appState = $appUser', indent: true);
-        appState.setLoggedUser(appUser, notify: false);
-        appUser.lastLogin = Date.now();
-        appUser.loginCount++;
-        await FbHelpers().updateUser(appUser);
-
-        // Delete old logs and matches.
-        // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
-        // _director.deleteOldData(); // TODO: create a cloud function
-
-        // Create test data in development mode.
-        MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
-        if (Environment().isDevelopment) await _director.createTestData();
-
-        // Once data is loaded, update the state to indicate loading is complete.
-        setState(() {
-          _isLoading = false;
-        });
-        MyLog.log(_classString, '_initialize: all data loaded, _isLoading=$_isLoading', indent: true);
-      }
+      // Delete old logs and matches.
+      // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
+      // _director.deleteOldData(); // TODO: create a cloud function
+      // Create test data in development mode.
+      // MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
+      // if (Environment().isDevelopment) await _director.createTestData();
     } catch (e) {
-      MyLog.log(_classString, '_initialize: ERROR loading initial data: _isLoading=$_isLoading\nerror=${e.toString()}',
+      MyLog.log(_classString, '_initialize: ERROR loading initial data\nerror=${e.toString()}',
           level: Level.SEVERE, indent: true);
 
       setState(() {

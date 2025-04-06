@@ -119,9 +119,9 @@ class MyUser {
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
-  bool hasNoEmptyFields() {
-    return id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
-  }
+  bool hasNoEmptyFields() => id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
+
+  bool isValid() => hasNoEmptyFields();
 
   /// Getter for the user's email.
   String get email => _email;

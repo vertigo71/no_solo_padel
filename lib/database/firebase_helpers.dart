@@ -29,8 +29,6 @@ class FbHelpers {
   final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
-  bool _usersLoaded = false;
-  bool _parametersLoaded = false;
 
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
@@ -78,9 +76,7 @@ class FbHelpers {
 
     if (_paramListener != null) {
       MyLog.log(_classString, 'ParamLISTENER already created', level: Level.WARNING, indent: true);
-      _parametersLoaded = true;
     } else {
-      _parametersLoaded = false; // still not loaded
       _paramListener =
           _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
         (snapshot) {
@@ -97,8 +93,7 @@ class FbHelpers {
 
           parametersFunction(myParameters ?? MyParameters());
 
-          MyLog.log(_classString, 'ParamLISTENER: done: _parametersLoaded = true', indent: true);
-          _parametersLoaded = true;
+          MyLog.log(_classString, 'ParamLISTENER: done', indent: true);
         },
         onError: (error) {
           MyLog.log(_classString, 'ParamLISTENER snapshot error: $error', level: Level.SEVERE, indent: true);
@@ -112,9 +107,7 @@ class FbHelpers {
 
     if (_usersListener != null) {
       MyLog.log(_classString, 'UserLISTENER already created', level: Level.WARNING, indent: true);
-      _usersLoaded = true;
     } else {
-      _usersLoaded = false; // still not loaded
       _usersListener = _instance.collection(UserFs.users.name).snapshots().listen(
         (snapshot) {
           if (snapshot.docChanges.isNotEmpty) {
@@ -140,8 +133,7 @@ class FbHelpers {
                 level: Level.WARNING, indent: true);
           }
 
-          MyLog.log(_classString, 'UserLISTENER: done. _usersLoaded = true', indent: true);
-          _usersLoaded = true;
+          MyLog.log(_classString, 'UserLISTENER: done', indent: true);
         },
         onError: (error) {
           MyLog.log(_classString, 'UserLISTENER: onError loading users. Error: $error',
@@ -150,25 +142,6 @@ class FbHelpers {
         },
       );
     }
-  }
-
-  Future<void> dataLoaded() async {
-    MyLog.log(_classString, 'dataLoaded: loading data. Waiting to finish...');
-
-    await Future.wait([
-      Future(() async {
-        while (!_usersLoaded) {
-          await Future.delayed(Duration(milliseconds: 200));
-        }
-      }),
-      Future(() async {
-        while (!_parametersLoaded) {
-          await Future.delayed(Duration(milliseconds: 200));
-        }
-      }),
-    ]);
-
-    MyLog.log(_classString, 'dataLoaded: Loading users and parameters completed...');
   }
 
   Future<void> disposeListeners() async {
@@ -503,7 +476,7 @@ class FbHelpers {
     if (compressedImageData != null) {
       user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars}/${user.id}', compressedImageData);
     }
-    return updateObject(
+    await updateObject(
       fields: user.toJson(),
       pathSegments: [UserFs.users.name, user.id],
       forceSet: false, // replaces the old object if exists
@@ -552,25 +525,25 @@ class FbHelpers {
 
   /// core = comment + isOpen + courtNames (all except players)
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
-      updateObject(
+      await updateObject(
         fields: match.toJson(core: updateCore, matchPlayers: updatePlayers),
         pathSegments: [MatchFs.matches.name, match.id.toYyyyMMdd()],
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateResult({required GameResult result, required String matchId}) async => updateObject(
+  Future<void> updateResult({required GameResult result, required String matchId}) async => await updateObject(
         fields: result.toJson(),
         pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId],
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateRegister(RegisterModel registerModel) async => updateObject(
+  Future<void> updateRegister(RegisterModel registerModel) async => await updateObject(
         fields: registerModel.toJson(),
         pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMMdd()],
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateParameters(MyParameters myParameters) async => updateObject(
+  Future<void> updateParameters(MyParameters myParameters) async => await updateObject(
         fields: myParameters.toJson(),
         pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
         forceSet: true,
