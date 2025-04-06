@@ -51,21 +51,21 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     return ListView(
       children: [
-        heading(),
+        _stateHeading(),
         const Divider(thickness: 5),
-        joinMatchToggle(),
+        _joinMatchToggle(),
         const Divider(thickness: 5),
-        listOfPlayers(),
+        _buildMatchPlayersSection(),
         const SizedBox(height: 20),
         if (context.read<AppState>().isLoggedUserAdminOrSuper) const Divider(thickness: 5),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdminOrSuper) roulette(),
+        if (context.read<AppState>().isLoggedUserAdminOrSuper) _roulette(),
         const SizedBox(height: 50),
       ],
     );
   }
 
-  Widget heading() => Padding(
+  Widget _stateHeading() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Builder(
           builder: (context) {
@@ -97,7 +97,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         ),
       );
 
-  Widget joinMatchToggle() => Padding(
+  Widget _joinMatchToggle() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -128,7 +128,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         ),
       );
 
-  Widget listOfPlayers() => Builder(
+  Widget _buildMatchPlayersSection() => Builder(
         builder: (context) {
           int playerNumber = 0;
           MyLog.log(_classString, 'Building listOfPlayers', level: Level.FINE);
@@ -148,66 +148,56 @@ class PlayersPanelState extends State<PlayersPanel> {
 
           return Column(
             children: [
-              Card(
-                elevation: 6,
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  tileColor: Theme.of(context).appBarTheme.backgroundColor,
-                  titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
-                  title: Text('Apuntados ($numCourtsText)'),
-                ),
-              ),
-              Card(
-                elevation: 6,
-                margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ...usersPlaying.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
-                      ...usersSigned.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers),
-                          style: const TextStyle(color: Colors.red))),
-                      ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
-                    ],
-                  ),
-                ),
-              ),
+              _buildSubHeading('Apuntados ($numCourtsText)'),
+              _buildSubListOfPlayers([
+                ...usersPlaying.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
+                ...usersSigned.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers),
+                    style: const TextStyle(color: Colors.red))),
+                ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+              ]),
+              if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
-                Card(
-                  elevation: 6,
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    tileColor: Theme.of(context).appBarTheme.backgroundColor,
-                    titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
-                    title: const Text('Reservas'),
-                  ),
-                ),
-              if (usersReserve.isNotEmpty)
-                Card(
-                  elevation: 6,
-                  margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ...usersReserve.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildSubListOfPlayers([
+                  ...usersReserve.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
+                ]),
             ],
           );
         },
       );
+
+  Widget _buildSubHeading(String text) {
+    return Card(
+      elevation: 6,
+      margin: const EdgeInsets.all(10),
+      child: ListTile(
+        tileColor: Theme.of(context).appBarTheme.backgroundColor,
+        titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+        title: Text(text),
+      ),
+    );
+  }
+
+  Widget _buildSubListOfPlayers(List<Widget> list) {
+    return Card(
+      elevation: 6,
+      color: Theme.of(context).colorScheme.surfaceBright,
+      margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: list,
+        ),
+      ),
+    );
+  }
 
   String _playerText(int playerNumber, MyUser player, List<MyUser> rankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
         '<${rankingSortedUsers.indexOf(player) + 1}>';
   }
 
-  Widget roulette() {
+  Widget _roulette() {
     List<MyUser> users = context.read<AppState>().getSortedUsers();
 
     return Padding(

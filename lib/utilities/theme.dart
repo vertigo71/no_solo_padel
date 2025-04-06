@@ -80,5 +80,10 @@ ThemeData generateThemeData(BuildContext context) {
         foregroundColor: kDark,
       ),
     ),
+
+    // tile theme
+    listTileTheme: ListTileThemeData(
+      tileColor: Colors.transparent,
+    ),
   );
 }

@@ -168,6 +168,7 @@ class SortingSubPanel extends StatelessWidget {
             elevation: 6,
             margin: const EdgeInsets.all(10),
             child: ListTile(
+              tileColor: Theme.of(context).colorScheme.surfaceBright,
               leading: CircleAvatar(
                   backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                   child: Text(
