@@ -61,7 +61,7 @@ class Director {
   }
 
   Future<void> createTestData() async {
-    MyLog.log(_classString, 'createTestData');
+    MyLog.log(_classString, 'createTestData', level: Level.FINE);
 
     // create users if there are none
     if (_appState.numUsers == 0) {
@@ -98,7 +98,7 @@ class Director {
       }
     }
 
-    // update ranking position for every user
+    // update ranking position for every user if ranking = 0
     final users = _appState.users;
     final random = Random();
     for (MyUser user in users) {
@@ -115,18 +115,19 @@ class Director {
     }
     const int kNumMatches = 10;
     const int kMaxUsers = 10;
-    for (int d = 0; d < kNumMatches; d += 2) {
-      Date date = Date.now().add(Duration(days: d));
+    for (int i = 0; i < kNumMatches; i++) {
+      var deltaDays = Random().nextInt(kNumMatches); // between 0 and kNumMatches
+      Date date = Date.now().add(Duration(days: deltaDays));
       // if match doesn't exist or is empty, create match
       MyMatch? match = await FbHelpers().getMatch(date.toYyyyMMdd(), _appState);
       if (match == null || match.playersReference.isEmpty) {
         List<int> randomInts = getRandomList(kMaxUsers, date);
         MyMatch match = MyMatch(id: date);
-        match.comment = 'Las Tablas a las 10h30';
+        match.comment = 'Partido de prueba';
         match.isOpen = randomInts.first.isEven;
-        match.courtNamesReference.addAll(randomInts.map((e) => e.toString()).take((d % 4) + 1)); // max 4 courts
+        match.courtNamesReference.addAll(randomInts.map((e) => e.toString()).take((deltaDays % 4) + 1)); // max 4 courts
         match.playersReference.addAll(randomInts.map((e) => users[e % users.length]).toSet());
-        MyLog.log(_classString, 'createTestData: update match = $match', indent: true);
+        MyLog.log(_classString, 'createTestData: create match = $match', indent: true);
         await FbHelpers().updateMatch(match: match, updateCore: true, updatePlayers: true);
       }
     }

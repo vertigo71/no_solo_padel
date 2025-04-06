@@ -146,7 +146,7 @@ class _AddResultPageState extends State<AddResultPage> {
     return Card(
       elevation: 6.0,
       margin: const EdgeInsets.all(10),
-      color: Theme.of(context).colorScheme.inversePrimary,
+      color: Theme.of(context).colorScheme.surfaceBright,
       child: DropdownMenu<MyUser>(
         width: double.infinity,
         initialSelection: _selectedPlayers[numValue],
@@ -168,7 +168,7 @@ class _AddResultPageState extends State<AddResultPage> {
         leadingIcon: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            backgroundColor: Theme.of(context).colorScheme.surfaceBright,
             backgroundImage: _selectedPlayers[numValue]?.avatarUrl != null
                 ? NetworkImage(_selectedPlayers[numValue]!.avatarUrl!)
                 : null,
@@ -196,7 +196,7 @@ class _AddResultPageState extends State<AddResultPage> {
     return Card(
       elevation: 6.0,
       margin: const EdgeInsets.all(0.0),
-      color: Theme.of(context).colorScheme.inversePrimary,
+      color: Theme.of(context).colorScheme.surfaceBright,
       child: DropdownMenu<int>(
         width: 90,
         initialSelection: _scores[team],

@@ -82,7 +82,7 @@ class SortingPanelState extends State<SortingPanel> {
                 children: [
                   ToggleButtons(
                     renderBorder: false,
-                    fillColor: Theme.of(context).colorScheme.inversePrimary,
+                    fillColor: Theme.of(context).colorScheme.surfaceBright,
                     isSelected: List.generate(
                       // create a list of booleans. True for the selected toggle index
                       SortingType.values.length,

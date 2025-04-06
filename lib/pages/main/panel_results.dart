@@ -133,7 +133,7 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Card(
         margin: const EdgeInsets.fromLTRB(1.0, 1.0, 1.0, 1.0),
-        color: Theme.of(context).colorScheme.inversePrimary,
+        color: Theme.of(context).colorScheme.surfaceDim,
         elevation: 6.0,
         child: SizedBox(
           width: double.infinity, // Take up the full width of the Column

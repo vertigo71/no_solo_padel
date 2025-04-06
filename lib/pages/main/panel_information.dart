@@ -50,7 +50,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceBright,
                       child: Text('$index', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                     ),
                   ),

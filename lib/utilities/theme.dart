@@ -34,7 +34,9 @@ ThemeData generateThemeData(BuildContext context) {
       seedColor: kPrimaryDark,
       brightness: Brightness.light,
       surface: kPrimaryLight,
-      inversePrimary: kPrimaryMedium,
+      surfaceBright: kPrimaryLight,
+      surfaceDim: kPrimaryMedium,
+      inversePrimary: kPrimaryLight,
     ),
 
     // scaffold
@@ -48,7 +50,7 @@ ThemeData generateThemeData(BuildContext context) {
 
     // Bottom Navigation Bar Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: kPrimaryMedium, // Bottom bar background
+      backgroundColor: kPrimaryLight, // Bottom bar background
       selectedItemColor: kBlack, // Selected item color
       unselectedItemColor: kMedium, // Unselected item color
     ),

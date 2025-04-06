@@ -474,7 +474,7 @@ class FbHelpers {
       throw Exception('Error: el usuario no tiene id. No se puede actualizar.');
     }
     if (compressedImageData != null) {
-      user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars}/${user.id}', compressedImageData);
+      user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars.name}/${user.id}', compressedImageData);
     }
     await updateObject(
       fields: user.toJson(),

@@ -13,6 +13,7 @@ import '../../models/debug.dart';
 import '../../models/user_model.dart';
 import '../../routes/routes.dart';
 import '../../utilities/date.dart';
+import '../../utilities/environment.dart';
 import '../../utilities/ui_helpers.dart';
 import 'panel_games.dart';
 import 'panel_information.dart';
@@ -81,6 +82,10 @@ class _MainPageState extends State<MainPage> {
             user.lastLogin = Date.now();
             user.loginCount++;
             FbHelpers().updateUser(user); // listener will modify appState and rebuild Consumer
+
+            // Create test data in development mode.
+            // MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
+            if (Environment().isDevelopment)  _director.createTestData();
           }
         }
         return _buildLoadingIndicator(); // Still loading, no error
@@ -256,7 +261,7 @@ class _MainPageState extends State<MainPage> {
     AppRouter.router.goNamed(AppRoutes.kLogin);
   }
 
-  Future<void> _initialize() async {
+  void _initialize() {
     AppState appState = _director.appState;
 
     MyLog.log(_classString, 'signIn authenticated user = ${AuthenticationHelper.user?.email}');
@@ -282,16 +287,11 @@ class _MainPageState extends State<MainPage> {
       // Delete old logs and matches.
       // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
       // _director.deleteOldData(); // TODO: create a cloud function
-      // Create test data in development mode.
-      // MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
-      // if (Environment().isDevelopment) await _director.createTestData();
     } catch (e) {
       MyLog.log(_classString, '_initialize: ERROR loading initial data\nerror=${e.toString()}',
           level: Level.SEVERE, indent: true);
 
-      setState(() {
-        _errorMessage = e.toString();
-      });
+      _errorMessage = e.toString();
     }
   }
 }

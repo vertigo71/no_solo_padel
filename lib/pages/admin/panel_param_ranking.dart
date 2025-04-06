@@ -255,7 +255,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     return Card(
       elevation: 6.0,
       child: ListTile(
-        tileColor: Theme.of(context).colorScheme.inversePrimary,
+        tileColor: Theme.of(context).colorScheme.surfaceBright,
         title: Text(field.displayName, style: Theme.of(context).textTheme.bodyMedium),
         subtitle: Center(child: Text('\n$result')),
       ),

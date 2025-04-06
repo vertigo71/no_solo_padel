@@ -94,6 +94,7 @@ class MyApp extends StatelessWidget {
             colors: [
               kAltMedium,
               kPrimaryMedium,
+              kPrimaryMedium,
             ],
           ),
         ),
