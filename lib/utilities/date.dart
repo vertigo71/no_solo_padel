@@ -1,10 +1,7 @@
-
-
 import 'package:intl/intl.dart';
 
 // ignore: unused_element
 final String _classString = 'Date'.toUpperCase();
-
 
 class Date extends DateTime {
   Date(DateTime dateTime) : super(dateTime.year, dateTime.month, dateTime.day);
@@ -15,7 +12,7 @@ class Date extends DateTime {
 
   static Date now() => dateTimeToDate(DateTime.now());
 
-  static Date? parse(String? formattedString ) {
+  static Date? parse(String? formattedString) {
     try {
       return Date(DateTime.parse(formattedString!));
     } catch (_) {
