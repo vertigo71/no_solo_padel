@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -25,13 +27,12 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Consumer<AppState>(
         builder: (context, appState, _) {
-
           Date maxDate = Date.now();
           MyLog.log(_classString, 'StreamBuilder  to:$maxDate', indent: true);
 
           return StreamBuilder<List<MyMatch>>(
-            stream: FbHelpers().getMatchesStream(
-                appState: appState, maxDate: maxDate, onlyOpenMatches: true, descending: true),
+            stream: FbHelpers()
+                .getMatchesStream(appState: appState, maxDate: maxDate, onlyOpenMatches: true, descending: true),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 final matches = snapshot.data!;
@@ -211,6 +212,7 @@ class ResultsPanel extends StatelessWidget {
         dense: true,
         leading: CircleAvatar(
           backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
+          child: player.avatarUrl == null ? Text(player.name.substring(0, min(3, player.name.length))) : null,
         ),
         title: Text(player.name),
         subtitle: Text('$preRanking'),
@@ -234,8 +236,8 @@ class ResultsPanel extends StatelessWidget {
     // confirm erasing
     const String kYesOption = 'SI';
     const String kNoOption = 'NO';
-    String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres eliminar el resultado?', kYesOption, kNoOption);
+    String response = await UiHelper.myReturnValueDialog(
+        context, '¿Seguro que quieres eliminar el resultado?', kYesOption, kNoOption);
     if (response.isEmpty || response == kNoOption) return;
     MyLog.log(_classString, 'build response = $response', indent: true);
 
