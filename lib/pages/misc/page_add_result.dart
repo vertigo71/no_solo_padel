@@ -14,8 +14,8 @@ import '../../models/result_model.dart';
 import '../../utilities/misc.dart';
 
 final String _classString = 'AddResultPage'.toUpperCase();
-const int numPlayers = 4;
-const int maxGamesPerSet = 16;
+const int kNumPlayers = 4;
+const int kMaxGamesPerSet = 16;
 
 class AddResultPage extends StatefulWidget {
   const AddResultPage({super.key, required this.matchId});
@@ -38,7 +38,7 @@ class _AddResultPageState extends State<AddResultPage> {
   late AppState _appState;
   bool _matchLoaded = false;
   String _errorMessage = '';
-  final List<MyUser?> _selectedPlayers = List.filled(numPlayers, null);
+  final List<MyUser?> _selectedPlayers = List.filled(kNumPlayers, null);
   final List<int> _scores = [0, 0];
 
   @override
@@ -207,7 +207,7 @@ class _AddResultPageState extends State<AddResultPage> {
             });
           }
         },
-        dropdownMenuEntries: List.generate(maxGamesPerSet, (result) {
+        dropdownMenuEntries: List.generate(kMaxGamesPerSet, (result) {
           return DropdownMenuEntry<int>(
             value: result,
             label: result.toString(),
@@ -235,7 +235,7 @@ class _AddResultPageState extends State<AddResultPage> {
 
     // check if there are repeated players
     Set<MyUser> uniquePlayers = Set.from(_selectedPlayers);
-    if (uniquePlayers.length != numPlayers) {
+    if (uniquePlayers.length != kNumPlayers) {
       MyLog.log(_classString, 'Repeated players. players=$_selectedPlayers', indent: true);
       throw 'No se puede repetir un jugador';
     }

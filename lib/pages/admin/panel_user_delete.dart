@@ -37,12 +37,12 @@ class UserDeletePanel extends StatelessWidget {
       return;
     }
 
-    const String option1 = 'Eliminar';
-    const String option2 = 'Cancelar';
-    String response = await UiHelper.myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', option1, option2);
+    const String kOption1 = 'Eliminar';
+    const String kOption2 = 'Cancelar';
+    String response = await UiHelper.myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', kOption1, kOption2);
     MyLog.log(_classString, 'build response = $response');
 
-    if (response.isEmpty || response == option2) return;
+    if (response.isEmpty || response == kOption2) return;
 
     // Delete user
     try {

@@ -24,7 +24,7 @@ class UiHelper {
       icon: Container(
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: isSelected ? primaryMedium : Colors.transparent,
+          color: isSelected ? kPrimaryMedium : Colors.transparent,
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: icon,
@@ -225,7 +225,7 @@ class UiHelper {
       case PlayingState.playing:
       case PlayingState.signedNotPlaying:
       case PlayingState.reserve:
-        return primaryMedium;
+        return kPrimaryMedium;
     }
   }
 

@@ -173,11 +173,11 @@ class UserAddPanelState extends State<UserAddPanel> {
       if (!ok) return;
 
       // confirmation dialog
-      const String yesOption = 'SI';
-      const String noOption = 'NO';
+      const String kYesOption = 'SI';
+      const String kNoOption = 'NO';
       String response =
-          await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', yesOption, noOption);
-      if (response.isEmpty || response == noOption) return;
+          await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', kYesOption, kNoOption);
+      if (response.isEmpty || response == kNoOption) return;
       MyLog.log(_classString, 'dialog response = $response', indent: true);
 
       setState(() {
@@ -218,7 +218,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     // newEmail or newId is not somebody else's
     MyLog.log(_classString, 'checkUsername $username');
 
-    if (appState.getUserByEmail(username + MyUser.emailSuffix) != null || appState.getUserById(username) != null) {
+    if (appState.getUserByEmail(username + MyUser.kEmailSuffix) != null || appState.getUserById(username) != null) {
       UiHelper.showMessage(context, 'Ya hay un jugador con ese nombre de usuario');
       return false;
     }
@@ -240,7 +240,7 @@ class UserAddPanelState extends State<UserAddPanel> {
 
     // add user to Firebase Authentication
     String response =
-        await AuthenticationHelper.createUserWithEmailAndPwd(email: username + MyUser.emailSuffix, pwd: pwd);
+        await AuthenticationHelper.createUserWithEmailAndPwd(email: username + MyUser.kEmailSuffix, pwd: pwd);
     if (response.isNotEmpty) {
       // error creating new user
       MyLog.log(_classString, 'createNewUser ERROR creating user', level: Level.SEVERE, indent: true);
@@ -252,7 +252,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     MyUser myUser = MyUser(
       id: username,
       name: name,
-      email: username + MyUser.emailSuffix,
+      email: username + MyUser.kEmailSuffix,
       userType: isSuperuser
           ? UserType.superuser
           : isAdmin

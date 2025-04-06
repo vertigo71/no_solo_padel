@@ -6,24 +6,24 @@ import '../models/debug.dart';
 final String _classString = 'Theme'.toUpperCase();
 
 // Main colors
-const MaterialColor primaryMaterial = Colors.deepPurple;
-final Color primaryDark = Colors.deepPurple.shade900;
-final Color primaryMedium = Colors.deepPurple.shade200;
-final Color primaryLight = Colors.deepPurple.shade100;
+const MaterialColor kPrimaryMaterial = Colors.deepPurple;
+final Color kPrimaryDark = Colors.deepPurple.shade900;
+final Color kPrimaryMedium = Colors.deepPurple.shade200;
+final Color kPrimaryLight = Colors.deepPurple.shade100;
 
 // Alternative colors
-const MaterialColor altMaterial = Colors.deepOrange;
-final Color altDark = Colors.deepOrange.shade300;
-final Color altMedium = Colors.deepOrange.shade200;
-final Color altLight = Colors.deepOrange.shade100;
+const MaterialColor kAltMaterial = Colors.deepOrange;
+final Color kAltDark = Colors.deepOrange.shade300;
+final Color kAltMedium = Colors.deepOrange.shade200;
+final Color kAltLight = Colors.deepOrange.shade100;
 
 // misc colors
-const Color black = Colors.black;
-const Color dark = Colors.black87;
-const Color medium = Colors.black54;
-const Color light = Colors.black26;
-const Color lightest = Colors.white70;
-const Color white = Colors.white;
+const Color kBlack = Colors.black;
+const Color kDark = Colors.black87;
+const Color kMedium = Colors.black54;
+const Color kLight = Colors.black26;
+const Color kLightest = Colors.white70;
+const Color kWhite = Colors.white;
 
 ThemeData generateThemeData(BuildContext context) {
   MyLog.log(_classString, 'generateThemeData', level: Level.FINE);
@@ -31,10 +31,10 @@ ThemeData generateThemeData(BuildContext context) {
   return ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryDark,
+      seedColor: kPrimaryDark,
       brightness: Brightness.light,
-      surface: primaryLight,
-      inversePrimary: primaryMedium,
+      surface: kPrimaryLight,
+      inversePrimary: kPrimaryMedium,
     ),
 
     // scaffold
@@ -42,40 +42,40 @@ ThemeData generateThemeData(BuildContext context) {
 
     // App Bar Theme
     appBarTheme: AppBarTheme(
-      backgroundColor: primaryDark, // App bar background
-      foregroundColor: lightest, // App bar text color
+      backgroundColor: kPrimaryDark, // App bar background
+      foregroundColor: kLightest, // App bar text color
     ),
 
     // Bottom Navigation Bar Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: primaryMedium, // Bottom bar background
-      selectedItemColor: black, // Selected item color
-      unselectedItemColor: medium, // Unselected item color
+      backgroundColor: kPrimaryMedium, // Bottom bar background
+      selectedItemColor: kBlack, // Selected item color
+      unselectedItemColor: kMedium, // Unselected item color
     ),
 
     // Tab Bar Theme
     tabBarTheme: TabBarTheme(
-      dividerColor: primaryLight,
+      dividerColor: kPrimaryLight,
       indicatorSize: TabBarIndicatorSize.tab,
       // Ensure it fills the tab
       indicator: BoxDecoration(
-        color: primaryMedium, // background color
+        color: kPrimaryMedium, // background color
       ),
-      labelColor: dark,
+      labelColor: kDark,
       // Selected label color
-      unselectedLabelColor: primaryLight, // Unselected label color
+      unselectedLabelColor: kPrimaryLight, // Unselected label color
     ),
 
     // Button theme
     buttonTheme: ButtonThemeData(
-      buttonColor: primaryLight,
+      buttonColor: kPrimaryLight,
     ),
 
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryLight,
-        foregroundColor: dark,
+        backgroundColor: kPrimaryLight,
+        foregroundColor: kDark,
       ),
     ),
   );

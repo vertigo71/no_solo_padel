@@ -60,7 +60,7 @@ class Director {
       MyLog.log(_classString, 'createTestData: creating users', indent: true);
 
       // users
-      const List<String> users = [
+      const List<String> kUsers = [
         'Victor',
         'Ricardo',
         '2Kram', // 2 means superuser
@@ -72,14 +72,14 @@ class Director {
         '1Javi' // 1 means administrator
       ];
       RegExp reg = RegExp(r'^[0-9]');
-      for (String user in users) {
+      for (String user in kUsers) {
         late MyUser myUser;
         if (reg.hasMatch(user)) {
           UserType userType = UserType.values[int.parse(user[0])];
           user = user.substring(1);
-          myUser = MyUser(name: user, email: '$user${MyUser.emailSuffix}', id: user, userType: userType);
+          myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user, userType: userType);
         } else {
-          myUser = MyUser(name: user, email: '$user${MyUser.emailSuffix}', id: user);
+          myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user);
         }
         // create users in Firestore Authentication
         await AuthenticationHelper.createUserWithEmailAndPwd(email: myUser.email, pwd: getInitialPwd());
@@ -105,14 +105,14 @@ class Director {
     while (_appState.numUsers == 0) {
       await Future.delayed(const Duration(milliseconds: 200));
     }
-    const int numMatches = 10;
-    const int maxUsers = 10;
-    for (int d = 0; d < numMatches; d += 2) {
+    const int kNumMatches = 10;
+    const int kMaxUsers = 10;
+    for (int d = 0; d < kNumMatches; d += 2) {
       Date date = Date.now().add(Duration(days: d));
       // if match doesn't exist or is empty, create match
       MyMatch? match = await FbHelpers().getMatch(date.toYyyyMMdd(), _appState);
       if (match == null || match.playersReference.isEmpty) {
-        List<int> randomInts = getRandomList(maxUsers, date);
+        List<int> randomInts = getRandomList(kMaxUsers, date);
         MyMatch match = MyMatch(id: date);
         match.comment = 'Las Tablas a las 10h30';
         match.isOpen = randomInts.first.isEven;

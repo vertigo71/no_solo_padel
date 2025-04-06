@@ -27,10 +27,10 @@ class ConfigurationPanel extends StatefulWidget {
 
 class ConfigurationPanelState extends State<ConfigurationPanel> {
   final _formKey = GlobalKey<FormBuilderState>();
-  static const int maxNumberOfCourts = 6;
-  static const String commentId = 'comment';
-  static const String courtId = 'court';
-  static const String isOpenId = 'isOpen';
+  static const int kMaxNumberOfCourts = 6;
+  static const String kCommentId = 'comment';
+  static const String kCourtId = 'court';
+  static const String kIsOpenId = 'isOpen';
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +57,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     // compare fields in case other user has changed any fields
     bool fieldsChanged = false;
     bool areFieldsDifferent(dynamic formValue, dynamic matchValue) => formValue != null && formValue != matchValue;
-    fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[commentId]?.value, match.comment);
-    fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[isOpenId]?.value, match.isOpen);
+    fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[kCommentId]?.value, match.comment);
+    fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kIsOpenId]?.value, match.isOpen);
     fieldsChanged = fieldsChanged ||
         List.generate(
-            maxNumberOfCourts,
-            (i) => areFieldsDifferent(_formKey.currentState?.fields['$courtId$i']?.value,
+            kMaxNumberOfCourts,
+            (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
                 i < match.courtNamesReference.length ? match.courtNamesReference[i] : '')).any((changed) => changed);
 
     if (fieldsChanged) {
@@ -92,12 +92,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
               children: [
                 const Text('Pistas'),
                 const SizedBox(width: 10.0),
-                for (int i = 0; i < maxNumberOfCourts; i++)
+                for (int i = 0; i < kMaxNumberOfCourts; i++)
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(5.0),
                       child: FormBuilderTextField(
-                        name: '$courtId$i',
+                        name: '$kCourtId$i',
                         // Unique name for each field
                         decoration: InputDecoration(
                           // labelText: 'Pista ${i + 1}',
@@ -125,7 +125,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                 Text('Abrir convocatoria'),
                 const SizedBox(width: 10),
                 FormBuilderField<bool>(
-                  name: isOpenId,
+                  name: kIsOpenId,
                   initialValue: match.isOpen,
                   builder: (FormFieldState<bool> field) {
                     return UiHelper.myCheckBox(
@@ -144,7 +144,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
             // Comments
             FormBuilderTextField(
-              name: commentId,
+              name: kCommentId,
               decoration: InputDecoration(
                 labelText: 'Comentarios',
                 contentPadding: const EdgeInsets.all(8.0),
@@ -181,9 +181,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
     // empty courts
     List<String> courts = [];
-    for (int i = 0; i < maxNumberOfCourts; i++) {
-      if (_formKey.currentState?.value['$courtId$i'].isNotEmpty) {
-        courts.add(_formKey.currentState?.value['$courtId$i']);
+    for (int i = 0; i < kMaxNumberOfCourts; i++) {
+      if (_formKey.currentState?.value['$kCourtId$i'].isNotEmpty) {
+        courts.add(_formKey.currentState?.value['$kCourtId$i']);
       }
     }
     if (courts.isEmpty) return 'No se puede convocar un partido sin pistas';
@@ -206,8 +206,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // save all values
       state!.save();
 
-      MyLog.log(_classString, '_formValidate: open=${state.value[isOpenId]}', indent: true);
-      if (state.value[isOpenId]) {
+      MyLog.log(_classString, '_formValidate: open=${state.value[kIsOpenId]}', indent: true);
+      if (state.value[kIsOpenId]) {
         // if opening a match, check all fields
         String errorString = _checkForm();
         if (errorString.isNotEmpty) {
@@ -219,13 +219,13 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // all is correct or match is not open
       MyMatch newMatch = MyMatch(id: context.read<MatchNotifier>().match.id);
       // add courts available
-      for (int i = 0; i < maxNumberOfCourts; i++) {
-        if (state.value['$courtId$i'].isNotEmpty) {
-          newMatch.courtNamesReference.add(state.value['$courtId$i']);
+      for (int i = 0; i < kMaxNumberOfCourts; i++) {
+        if (state.value['$kCourtId$i'].isNotEmpty) {
+          newMatch.courtNamesReference.add(state.value['$kCourtId$i']);
         }
       }
-      newMatch.comment = state.value[commentId];
-      newMatch.isOpen = state.value[isOpenId];
+      newMatch.comment = state.value[kCommentId];
+      newMatch.isOpen = state.value[kIsOpenId];
       MyLog.log(_classString, '_formValidate: update match = $newMatch', indent: true);
       // Update to Firestore
       String message = 'Los datos han sido actualizados';

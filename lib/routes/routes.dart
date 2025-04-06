@@ -13,35 +13,35 @@ final String _classString = 'Routes'.toUpperCase();
 
 // Define route names (recommended):
 class AppRoutes {
-  static const String loginPath = '/login';
-  static const String login = 'login';
-  static const String mainPath = '/main';
-  static const String main = 'main';
-  static const String matchPath = '/match';
-  static const String match = 'match';
-  static const String adminPath = '/admin';
-  static const String admin = 'admin';
-  static const String registerPath = '/register';
-  static const String register = 'register';
-  static const String addResultPath = '/add_result';
-  static const String addResult = 'add_result';
+  static const String kLoginPath = '/login';
+  static const String kLogin = 'login';
+  static const String kMainPath = '/main';
+  static const String kMain = 'main';
+  static const String kMatchPath = '/match';
+  static const String kMatch = 'match';
+  static const String kAdminPath = '/admin';
+  static const String kAdmin = 'admin';
+  static const String kRegisterPath = '/register';
+  static const String kRegister = 'register';
+  static const String kAddResultPath = '/add_result';
+  static const String kAddResult = 'add_result';
 }
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.loginPath,
+    initialLocation: AppRoutes.kLoginPath,
     routes: <RouteBase>[
       GoRoute(
-          path: AppRoutes.loginPath,
+          path: AppRoutes.kLoginPath,
           builder: (BuildContext context, GoRouterState state) => const LoginPage(),
-          name: AppRoutes.login // Optional: give the route a name
+          name: AppRoutes.kLogin // Optional: give the route a name
           ),
       GoRoute(
-          path: AppRoutes.mainPath,
+          path: AppRoutes.kMainPath,
           builder: (BuildContext context, GoRouterState state) => const MainPage(),
-          name: AppRoutes.main),
+          name: AppRoutes.kMain),
       GoRoute(
-          path: AppRoutes.matchPath,
+          path: AppRoutes.kMatchPath,
           builder: (BuildContext context, GoRouterState state) {
             // never use a complex object as an argument
             // back button will not work
@@ -49,24 +49,24 @@ class AppRouter {
             MyLog.log(_classString, 'going to MatchPAge: match=$matchJson');
             return MatchPage(matchJson: matchJson); // Pass it to the widget
           },
-          name: AppRoutes.match),
+          name: AppRoutes.kMatch),
       GoRoute(
-          path: AppRoutes.adminPath,
+          path: AppRoutes.kAdminPath,
           builder: (BuildContext context, GoRouterState state) => const AdminPage(),
-          name: AppRoutes.admin),
+          name: AppRoutes.kAdmin),
       GoRoute(
-          path: AppRoutes.registerPath,
+          path: AppRoutes.kRegisterPath,
           builder: (BuildContext context, GoRouterState state) => const RegisterPage(),
-          name: AppRoutes.register),
+          name: AppRoutes.kRegister),
       GoRoute(
-          path: AppRoutes.addResultPath,
+          path: AppRoutes.kAddResultPath,
           builder: (BuildContext context, GoRouterState state) {
             // never use a complex object as an argument. Back button will not work
             final String matchId = state.extra as String; // Retrieve the argument
             MyLog.log(_classString, 'going to AddResultPAge: matchId=$matchId');
             return AddResultPage(matchId: matchId ); // Pass it to the widget
           },
-          name: AppRoutes.addResult),
+          name: AppRoutes.kAddResult),
     ],
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('Page Not Found')),

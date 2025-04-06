@@ -11,11 +11,11 @@ class RegisterModel {
   Date date;
   final List<String> _msgList = [];
 
-  static const String _timeStampFormat = 'yyyy-MM-dd HH:mm:ss';
-  static const String _divider = '>> ';
+  static const String _kTimeStampFormat = 'yyyy-MM-dd HH:mm:ss';
+  static const String _kDivider = '>> ';
 
   static String _getTimedMessage(String message) =>
-      dateTimeToString(DateTime.now(), format: _timeStampFormat) + _divider + message;
+      dateTimeToString(DateTime.now(), format: _kTimeStampFormat) + _kDivider + message;
 
   RegisterModel({required this.date, String? message}) {
     if (message != null) _msgList.add(_getTimedMessage(message));
@@ -34,11 +34,11 @@ class RegisterModel {
   }
 
   static DateTime getRegisterTimeStamp(String text) {
-    return extractDateTime(text, start: 0, format: _timeStampFormat);
+    return extractDateTime(text, start: 0, format: _kTimeStampFormat);
   }
 
   static String getRegisterText(String text) {
-    return text.substring(_timeStampFormat.length + _divider.length);
+    return text.substring(_kTimeStampFormat.length + _kDivider.length);
   }
 
   @override

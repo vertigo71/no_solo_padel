@@ -468,12 +468,12 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   Future<bool> _confirmQuitMatch() async {
-    const String option1 = 'Confirmar';
-    const String option2 = 'Anular';
+    const String kOption1 = 'Confirmar';
+    const String kOption2 = 'Anular';
     String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', option1, option2);
+        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', kOption1, kOption2);
     MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
-    return response == option1;
+    return response == kOption1;
   }
 
   void _refresh() => setState(() {});

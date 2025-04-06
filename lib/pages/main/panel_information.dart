@@ -174,11 +174,11 @@ class _InformationPanelState extends State<InformationPanel> {
         indent: true, level: Level.FINE);
 
     // confirm updating the parameters
-    const String yesOption = 'SI';
-    const String noOption = 'NO';
+    const String kYesOption = 'SI';
+    const String kNoOption = 'NO';
     String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar los datos?', yesOption, noOption);
-    if (response.isEmpty || response == noOption) return;
+        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar los datos?', kYesOption, kNoOption);
+    if (response.isEmpty || response == kNoOption) return;
     MyLog.log(_classString, 'dialog response = $response', indent: true);
 
     if (formKey.currentState!.saveAndValidate()) {

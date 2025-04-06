@@ -36,7 +36,7 @@ enum UserFs {
 /// Represents a user in the application.
 class MyUser {
   /// Suffix added to user emails.
-  static const String emailSuffix = '@nsp.com';
+  static const String kEmailSuffix = '@nsp.com';
 
   /// Unique identifier of the user.
   String id;

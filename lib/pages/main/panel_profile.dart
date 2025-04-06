@@ -63,7 +63,7 @@ class ProfilePanelState extends State<ProfilePanel> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     ImageProvider<Object>? imageProvider;
     try {
@@ -215,14 +215,14 @@ class ProfilePanelState extends State<ProfilePanel> {
   }
 
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate', level: Level.FINE );
+    MyLog.log(_classString, '_formValidate', level: Level.FINE);
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formValues = _formKey.currentState?.value;
 
       final newName = formValues?[_FormFieldsEnum.name.name] ?? '';
       final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.name] ?? '';
-      final newEmail = formValues?[_FormFieldsEnum.user.name]?.toLowerCase() + MyUser.emailSuffix ?? '';
+      final newEmail = formValues?[_FormFieldsEnum.user.name]?.toLowerCase() + MyUser.kEmailSuffix ?? '';
       final actualPwd = formValues?[_FormFieldsEnum.actualPwd.name] ?? '';
       final newPwd = formValues?[_FormFieldsEnum.newPwd.name] ?? '';
       final checkPwd = formValues?[_FormFieldsEnum.checkPwd.name] ?? '';
@@ -244,10 +244,11 @@ class ProfilePanelState extends State<ProfilePanel> {
       isValid = _checkAllPwd(actualPwd, newPwd, checkPwd);
       if (!isValid) return;
 
-      const String yesOption = 'SI';
-      const String noOption = 'NO';
-      String response = await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar?', yesOption, noOption);
-      if (response.isEmpty || response == noOption) return;
+      const String kYesOption = 'SI';
+      const String kNoOption = 'NO';
+      String response =
+          await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar?', kYesOption, kNoOption);
+      if (response.isEmpty || response == kNoOption) return;
 
       List<String> updatedFields = [];
 
@@ -417,7 +418,7 @@ class ProfilePanelState extends State<ProfilePanel> {
   Future<bool> _updateAvatar(final List<String> updatedFields) async {
     MyLog.log(_classString, 'Uploading new avatar', indent: true);
     try {
-      await FbHelpers().updateUser(appState.getLoggedUser(), _compressedImageData );
+      await FbHelpers().updateUser(appState.getLoggedUser(), _compressedImageData);
       return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: ${e.toString()}', level: Level.SEVERE);

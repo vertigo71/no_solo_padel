@@ -24,7 +24,7 @@ class _FormFields {
     ParametersEnum.registerDaysKeeping: 'Registro: histórico de días a conservar',
     ParametersEnum.defaultCommentText: 'Texto por defecto del comentario',
     ParametersEnum.minDebugLevel: 'Debug (${_generateDebugLevelsText()})',
-    ParametersEnum.weekDaysMatch: 'Días que se pueden jugar (${MyParameters.daysOfWeek})',
+    ParametersEnum.weekDaysMatch: 'Días que se pueden jugar (${MyParameters.kDaysOfWeek})',
     ParametersEnum.showLog: '', // Not a text field (showLog)
   };
 
@@ -43,7 +43,7 @@ class _FormFields {
     ParametersEnum.registerDaysKeeping: '[0-9]',
     ParametersEnum.defaultCommentText: '', // free text
     ParametersEnum.minDebugLevel: '[0-${Level.LEVELS.length - 1}]',
-    ParametersEnum.weekDaysMatch: '[${MyParameters.daysOfWeek.toLowerCase()}${MyParameters.daysOfWeek.toUpperCase()}]',
+    ParametersEnum.weekDaysMatch: '[${MyParameters.kDaysOfWeek.toLowerCase()}${MyParameters.kDaysOfWeek.toUpperCase()}]',
     ParametersEnum.showLog: '', // Not a text field (showLog)
   };
 }

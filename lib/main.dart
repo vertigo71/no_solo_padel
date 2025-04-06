@@ -28,11 +28,11 @@ Future<void> main() async {
   // use flavors to choose between dev, stage and prod
   String flavor = const String.fromEnvironment('FLAVOR');
   FirebaseOptions firebaseOptions;
-  if (flavor == devEnvironment) {
+  if (flavor == kDevEnvironment) {
     firebaseOptions = firebaseOptionsDev;
-  } else if (flavor == stageEnvironment) {
+  } else if (flavor == kStageEnvironment) {
     firebaseOptions = firebaseOptionsStage;
-  } else if (flavor == prodEnvironment) {
+  } else if (flavor == kProdEnvironment) {
     firebaseOptions = firebaseOptionsProd;
   } else {
     runApp(MaterialApp(
@@ -92,8 +92,8 @@ class MyApp extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              altMedium,
-              primaryMedium,
+              kAltMedium,
+              kPrimaryMedium,
             ],
           ),
         ),

@@ -15,6 +15,7 @@ import '../database/authentication.dart';
 import '../utilities/ui_helpers.dart';
 
 final String _classString = 'Login'.toUpperCase();
+const String kImage = 'assets/images/no_solo_padel_2025.png';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,8 +27,8 @@ class LoginPage extends StatefulWidget {
 class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   String _version = '';
-  static const String userId = 'username';
-  static const String pwdId = 'password';
+  static const String kUserId = 'username';
+  static const String kPwdId = 'password';
 
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
@@ -74,12 +75,11 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildListView() {
-    const String image = 'assets/images/no_solo_padel_2025.png';
     return ListView(
       padding: const EdgeInsets.all(30.0),
       children: [
         Image.asset(
-          image,
+          kImage,
           height: 300,
         ),
         const SizedBox(height: 40.0),
@@ -90,7 +90,7 @@ class LoginPageState extends State<LoginPage> {
             children: [
               // username
               FormBuilderTextField(
-                name: userId,
+                name: kUserId,
                 autofillHints: const [AutofillHints.username],
                 initialValue: getInitialUserName(),
                 onSubmitted: (String? str) => _formValidate(),
@@ -108,7 +108,7 @@ class LoginPageState extends State<LoginPage> {
 
               // password
               FormBuilderTextField(
-                name: pwdId,
+                name: kPwdId,
                 autofillHints: const [AutofillHints.password],
                 initialValue: getInitialPwd(),
                 onSubmitted: (String? str) => _formValidate(),
@@ -140,12 +140,12 @@ class LoginPageState extends State<LoginPage> {
     // Validate returns true if the form is valid, or false otherwise.
     if (_formKey.currentState!.saveAndValidate()) {
       final formData = _formKey.currentState!.value;
-      String email = formData[userId] + MyUser.emailSuffix;
+      String email = formData[kUserId] + MyUser.kEmailSuffix;
 
-      AuthenticationHelper.signIn(email: email, password: formData[pwdId]).then((result) async {
+      AuthenticationHelper.signIn(email: email, password: formData[kPwdId]).then((result) async {
         if (result == null) {
           // user has signed in
-          AppRouter.router.goNamed(AppRoutes.main);
+          AppRouter.router.goNamed(AppRoutes.kMain);
           MyLog.log(_classString, '_formValidate Back to login', indent: true);
         } else {
           if (mounted) UiHelper.showMessage(context, result);

@@ -7,7 +7,7 @@ import 'user_model.dart';
 
 final String _classString = '<md> MyResult'.toLowerCase();
 
-const String fieldSeparator = '#';
+const String kFieldSeparator = '#';
 
 // result fields in Firestore
 enum ResultFs { resultId, matchId, player1, player2, points, preRanking1, preRanking2, score, teamA, teamB, results }
@@ -205,7 +205,7 @@ class GameResultId {
 
   factory GameResultId.fromString(String id) {
     try {
-      final parts = id.split(fieldSeparator);
+      final parts = id.split(kFieldSeparator);
       final dateTime = DateTime.parse(parts[0]);
       final userId = parts[1];
       return GameResultId(dateTime: dateTime, userId: userId);
@@ -215,7 +215,7 @@ class GameResultId {
     }
   }
 
-  String get resultId => '${_dateTime.toIso8601String()}$fieldSeparator$_userId';
+  String get resultId => '${_dateTime.toIso8601String()}$kFieldSeparator$_userId';
 
   @override
   String toString() => '{${_dateTime.toIso8601String()},$_userId}';

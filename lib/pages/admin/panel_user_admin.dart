@@ -17,7 +17,7 @@ class UserAdminPanel extends StatefulWidget {
 
 class UserAdminPanelState extends State<UserAdminPanel> {
   int _selectedIndex = 0;
-  static const List<Widget> _widgetOptions = <Widget>[
+  static const List<Widget> _kWidgetOptions = <Widget>[
     UserAddPanel(),
     UserDeletePanel(),
   ];
@@ -27,7 +27,7 @@ class UserAdminPanelState extends State<UserAdminPanel> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
     return Scaffold(
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: _kWidgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

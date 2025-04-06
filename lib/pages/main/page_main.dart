@@ -36,7 +36,7 @@ class _MainPageState extends State<MainPage> {
   String? _errorMessage;
   late Director _director;
 
-  static const List<Widget> _widgetOptions = <Widget>[
+  static const List<Widget> _kWidgetOptions = <Widget>[
     GamesPanel(),
     ResultsPanel(),
     InformationPanel(),
@@ -81,7 +81,7 @@ class _MainPageState extends State<MainPage> {
         },
         child: Scaffold(
           appBar: _buildAppBar(context),
-          body: _widgetOptions.elementAt(_selectedIndex),
+          body: _kWidgetOptions.elementAt(_selectedIndex),
           bottomNavigationBar: _buildBottomNavigationBar(),
         ),
       );
@@ -106,7 +106,7 @@ class _MainPageState extends State<MainPage> {
                 await _director.signOut();
                 // _errorMessage = null;
                 MyLog.log(_classString, 'back to login', indent: true);
-                AppRouter.router.goNamed(AppRoutes.login);
+                AppRouter.router.goNamed(AppRoutes.kLogin);
               },
               child: const Text('Volver al inicio'),
             ),
@@ -147,7 +147,7 @@ class _MainPageState extends State<MainPage> {
         IconButton(
           // Register
           onPressed: () async {
-            context.pushNamed(AppRoutes.register);
+            context.pushNamed(AppRoutes.kRegister);
           },
           icon: ImageIcon(AssetImage('assets/icons/list.png')),
           tooltip: 'Registro',
@@ -158,7 +158,7 @@ class _MainPageState extends State<MainPage> {
             if (appState.isLoggedUserSuper) {
               return IconButton(
                 onPressed: () {
-                  context.pushNamed(AppRoutes.admin);
+                  context.pushNamed(AppRoutes.kAdmin);
                 },
                 icon: const Icon(Icons.admin_panel_settings),
                 tooltip: 'Configuración',
@@ -231,14 +231,14 @@ class _MainPageState extends State<MainPage> {
   ///   );
   Future<void> _onBackPressed() async {
     MyLog.log(_classString, '_onBackPressed begin');
-    const String yesOption = 'SI';
-    const String noOption = 'NO';
-    String response = await UiHelper.myReturnValueDialog(context, '¿Salir?', yesOption, noOption);
-    if (response.isEmpty || response == noOption) return;
+    const String kYesOption = 'SI';
+    const String kNoOption = 'NO';
+    String response = await UiHelper.myReturnValueDialog(context, '¿Salir?', kYesOption, kNoOption);
+    if (response.isEmpty || response == kNoOption) return;
     MyLog.log(_classString, '_onBackPressed response = $response', indent: true);
     await _director.signOut();
     MyLog.log(_classString, 'back to login', indent: true);
-    AppRouter.router.goNamed(AppRoutes.login);
+    AppRouter.router.goNamed(AppRoutes.kLogin);
   }
 
   Future<void> _initialize() async {

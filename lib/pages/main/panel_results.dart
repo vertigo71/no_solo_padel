@@ -67,7 +67,7 @@ class ResultsPanel extends StatelessWidget {
         spacing: 1.0,
         children: [
           _buildHeader(context, match.id.longFormat(),
-              () => context.pushNamed(AppRoutes.addResult, extra: match.id.toYyyyMMdd())),
+              () => context.pushNamed(AppRoutes.kAddResult, extra: match.id.toYyyyMMdd())),
           StreamBuilder<List<GameResult>>(
             stream: FbHelpers().getResultsStream(appState: appState, matchId: match.id.toYyyyMMdd()),
             builder: (context, snapshot) {
@@ -232,11 +232,11 @@ class ResultsPanel extends StatelessWidget {
     MyLog.log(_classString, '_eraseResult: $result');
 
     // confirm erasing
-    const String yesOption = 'SI';
-    const String noOption = 'NO';
+    const String kYesOption = 'SI';
+    const String kNoOption = 'NO';
     String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres eliminar el resultado?', yesOption, noOption);
-    if (response.isEmpty || response == noOption) return;
+        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres eliminar el resultado?', kYesOption, kNoOption);
+    if (response.isEmpty || response == kNoOption) return;
     MyLog.log(_classString, 'build response = $response', indent: true);
 
     // erase the gameResult

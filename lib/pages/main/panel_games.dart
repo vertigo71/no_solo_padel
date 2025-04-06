@@ -94,7 +94,7 @@ class GamesPanel extends StatelessWidget {
                             : null,
                         enabled: match.isOpen == true || appState.isLoggedUserAdminOrSuper,
                         onTap: () {
-                          context.pushNamed(AppRoutes.match, extra: match.toJson());
+                          context.pushNamed(AppRoutes.kMatch, extra: match.toJson());
                         },
                       ),
                     );

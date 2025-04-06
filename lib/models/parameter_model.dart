@@ -56,7 +56,7 @@ class MyParameters {
   final Map<ParametersEnum, String> _values = {for (var value in ParametersEnum.values) value: value.defaultValue};
 
   /// Constant string representing days of the week.
-  static const String daysOfWeek = 'LMXJVSD';
+  static const String kDaysOfWeek = 'LMXJVSD';
 
   /// Constructor for [MyParameters].
   ///
@@ -67,8 +67,8 @@ class MyParameters {
 
   /// Converts a [Date] object to a character representing the day of the week.
   ///
-  /// Returns a character from [daysOfWeek] corresponding to the day of the week.
-  static String dayCharFromDate(Date date) => daysOfWeek[date.weekday - DateTime.monday];
+  /// Returns a character from [kDaysOfWeek] corresponding to the day of the week.
+  static String dayCharFromDate(Date date) => kDaysOfWeek[date.weekday - DateTime.monday];
 
   /// Gets the string value of a parameter.
   ///

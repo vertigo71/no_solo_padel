@@ -5,9 +5,9 @@ import '../models/debug.dart';
 
 final String _classString = 'Environment'.toUpperCase();
 // these variables must identical to the ones defined in deploy.sh
-const String devEnvironment = 'dev';
-const String stageEnvironment = 'stage';
-const String prodEnvironment = 'prod';
+const String kDevEnvironment = 'dev';
+const String kStageEnvironment = 'stage';
+const String kProdEnvironment = 'prod';
 
 class Environment {
   static final Environment _singleton = Environment._internal();
@@ -26,11 +26,11 @@ class Environment {
       _initialized = true;
       assert(_packageInfo != null);
       _flavor = flavor;
-      if (flavor == prodEnvironment) {
+      if (flavor == kProdEnvironment) {
         MyLog.log(_classString, 'Production environment initialized');
-      } else if (flavor == stageEnvironment) {
+      } else if (flavor == kStageEnvironment) {
         MyLog.log(_classString, 'Staging environment initialized');
-      } else if (flavor == devEnvironment) {
+      } else if (flavor == kDevEnvironment) {
         MyLog.log(_classString, 'Development environment initialized');
       } else {
         MyLog.log(_classString, 'CRUCIAL ERROR: Unknown environment initialized', level: Level.SEVERE);
@@ -47,17 +47,17 @@ class Environment {
 
   bool get isProduction {
     assert(_initialized);
-    return _flavor == prodEnvironment;
+    return _flavor == kProdEnvironment;
   }
 
   bool get isDevelopment {
     assert(_initialized);
-    return _flavor == devEnvironment;
+    return _flavor == kDevEnvironment;
   }
 
   bool get isStaging {
     assert(_initialized);
-    return _flavor == stageEnvironment;
+    return _flavor == kStageEnvironment;
   }
 
   bool get isInitialized => _initialized;
