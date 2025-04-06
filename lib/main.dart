@@ -75,7 +75,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building MyApp', level:Level.FINE);
+    MyLog.log(_classString, 'Building MyApp', level: Level.FINE);
 
     return MultiProvider(
       providers: [
@@ -86,11 +86,23 @@ class MyApp extends StatelessWidget {
           create: (context) => Director(appState: context.read<AppState>()), // knows it all
         ),
       ],
-      child: MaterialApp.router(
-        // Use MaterialApp.router
-        debugShowCheckedModeBanner: false,
-        theme: generateThemeData(context),
-        routerConfig: AppRouter.router, // Assign the router
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              altMedium,
+              primaryMedium,
+            ],
+          ),
+        ),
+        child: MaterialApp.router(
+          // Use MaterialApp.router
+          debugShowCheckedModeBanner: false,
+          theme: generateThemeData(context),
+          routerConfig: AppRouter.router, // Assign the router
+        ),
       ),
     );
   }

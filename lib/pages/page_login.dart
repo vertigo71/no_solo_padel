@@ -147,11 +147,12 @@ class LoginPageState extends State<LoginPage> {
           // user has signed in
           AppRouter.router.goNamed(AppRoutes.main);
           MyLog.log(_classString, '_formValidate Back to login', indent: true);
-          _formKey.currentState?.fields[pwdId]?.didChange('');
         } else {
           if (mounted) UiHelper.showMessage(context, result);
         }
       });
+
+      UiHelper.showMessage(context, 'Cargando la aplicación...');
     }
   }
 }

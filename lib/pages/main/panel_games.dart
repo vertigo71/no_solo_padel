@@ -47,9 +47,7 @@ class GamesPanel extends StatelessWidget {
             List<MyMatch> playableMatches = [];
 
             // Create missing matches or get the ones in fetchedMatches if they exist
-            for (int days = 0;
-                days < (appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1);
-                days++) {
+            for (int days = 0; days < (appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1); days++) {
               Date date = Date.now().add(Duration(days: days));
               if (appState.isDayPlayable(date)) {
                 MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
@@ -78,12 +76,13 @@ class GamesPanel extends StatelessWidget {
                         tileColor:
                             // light red: closed, stateColor: open
                             match.isOpen
-                                ? UiHelper.getPlayingStateColor(context, playingState)
-                                : UiHelper.lighten(UiHelper.getMatchColor(match), 0.2),
+                                ? UiHelper.getTilePlayingColor(context, playingState)
+                                : UiHelper.getMatchTileColor(match),
                         leading:
                             // red circle= closed, green circle=open
                             CircleAvatar(
-                                backgroundColor: UiHelper.getMatchColor(match), child: Text(match.isOpen ? 'A' : 'C')),
+                                backgroundColor: UiHelper.getMatchAvatarColor(match),
+                                child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),

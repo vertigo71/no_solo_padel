@@ -67,29 +67,7 @@ class _MainPageState extends State<MainPage> {
     if (_isLoading) {
       if (_errorMessage != null) {
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () async {
-                  MyLog.log(_classString, 'build error message button pressed', indent: true);
-                  await _director.signOut();
-                  // _errorMessage = null;
-                  MyLog.log(_classString, 'back to login', indent: true);
-                  AppRouter.router.goNamed(AppRoutes.login);
-                },
-                child: const Text('Volver al inicio'),
-              ),
-            ],
-          ),
-        );
+        return _buildErrorMessage();
       } else {
         return _buildLoadingIndicator(); // Still loading, no error
       }
@@ -99,7 +77,6 @@ class _MainPageState extends State<MainPage> {
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
           // if back is pressed, user will be signedOut
-          // authStateChanges in initialPage will show loginPage
           await _onBackPressed();
         },
         child: Scaffold(
@@ -111,21 +88,51 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  Widget _buildErrorMessage() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red, fontSize: 24),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () async {
+                MyLog.log(_classString, 'build error message button pressed', indent: true);
+                await _director.signOut();
+                // _errorMessage = null;
+                MyLog.log(_classString, 'back to login', indent: true);
+                AppRouter.router.goNamed(AppRoutes.login);
+              },
+              child: const Text('Volver al inicio'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingIndicator() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SpinKitFadingCube(
-            color: Colors.blue,
-            size: 50.0,
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Loading...',
-            style: TextStyle(fontSize: 16),
-          ),
-        ],
+    return Scaffold(
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SpinKitFadingCube(
+              color: Colors.blue,
+              size: 50.0,
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Cargando...',
+              style: TextStyle(fontSize: 24),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -268,7 +275,8 @@ class _MainPageState extends State<MainPage> {
         // User not found in appState
         MyLog.log(_classString, '_initialize LoggedUser: ${fireBaseUser.email}  not registered in appState. Abort!',
             level: Level.SEVERE, indent: true);
-        throw 'Error: No se ha podido acceder al usuario';
+        throw 'Error: No se ha podido acceder a tu usuario. \n'
+            'Puede ser un error de red o de base de datos';
       } else {
         // User found in appState.
         MyLog.log(_classString, '_initializeData LoggedUser found in appState = $appUser', indent: true);

@@ -9,7 +9,8 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import '../models/debug.dart';
 import '../models/match_model.dart';
 import '../models/user_model.dart';
-import 'app_colors.dart';
+import 'theme.dart';
+
 
 final String _classString = 'UiHelper'.toUpperCase();
 
@@ -202,34 +203,29 @@ class UiHelper {
     );
   }
 
-  static Color getMatchColor(MyMatch match) {
+  static Color _getMatchColor(MyMatch match) {
     switch (match.isOpen) {
       case true:
-        return Colors.green;
+        return Colors.indigo.shade400;
       default:
         return Colors.red;
     }
   }
 
-  static Color getPlayingStateColor(BuildContext context, PlayingState playingState) {
+  static Color getMatchTileColor(MyMatch match) =>
+      lighten(_getMatchColor(match), 0.2);
+
+  static Color getMatchAvatarColor(MyMatch match) =>
+      lighten(_getMatchColor(match), 0.1);
+
+  static Color getTilePlayingColor(BuildContext context, PlayingState playingState) {
     switch (playingState) {
       case PlayingState.unsigned:
-        return Theme.of(context).listTileTheme.tileColor ?? Theme.of(context).colorScheme.surface;
+        return Theme.of(context).colorScheme.surface;
       case PlayingState.playing:
       case PlayingState.signedNotPlaying:
       case PlayingState.reserve:
-        return darken(Theme.of(context).canvasColor, .2);
-    }
-  }
-
-  static Color getUserColor(MyUser user) {
-    switch (user.userType) {
-      case UserType.admin:
-        return Colors.green;
-      case UserType.superuser:
-        return Colors.blue;
-      default:
-        return Colors.red;
+        return primaryMedium;
     }
   }
 

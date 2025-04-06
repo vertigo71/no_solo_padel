@@ -150,7 +150,7 @@ class AuthenticationHelper {
   ///   - A localized Spanish error message (`String`). If the error code is not
   ///     recognized, a generic message including the Firebase error code is returned.
   static String _toSpanish(FirebaseAuthException e) {
-    MyLog.log(_classString, '_toSpanish ${e.code} ${e.toString()}', level:Level.FINE);
+    MyLog.log(_classString, '_toSpanish ${e.code} ${e.toString()}', level: Level.FINE);
 
     switch (e.code) {
       case 'email-already-in-use':
@@ -166,7 +166,7 @@ class AuthenticationHelper {
       case 'weak-password':
         return 'Contraseña debe de tener más de 6 caracteres';
       default:
-        return 'Error de autenticación: ${e.code} (mensaje: ${e.message ?? 'No disponible'})';
+        return 'Error de autenticación: \n${e.code} \n(mensaje: ${e.message ?? 'No disponible'})';
     }
   }
 }
