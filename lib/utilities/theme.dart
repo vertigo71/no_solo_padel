@@ -78,5 +78,6 @@ ThemeData generateThemeData(BuildContext context) {
         foregroundColor: kDark,
       ),
     ),
+
   );
 }
