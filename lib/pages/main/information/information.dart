@@ -45,7 +45,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   Expanded(
                     child: UiHelper.userInfoTile(
                       user,
-                      appState.isLoggedUserAdminOrSuper ? () => _modifyUserModal(context, user) : null,
+                      appState.isLoggedUserSuper ? () => _modifyUserModal(context, user) : null,
                     ),
                   ),
                 ],

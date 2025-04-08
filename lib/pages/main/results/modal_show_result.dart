@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../../database/db_firebase_helpers.dart';
+import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_result.dart';
 import '../../../utilities/ui_helpers.dart';
@@ -17,6 +19,9 @@ class ShowResultModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    MyLog.log(_classString, 'Building ShowResultModal', level: Level.INFO, indent: true);
+    final AppState appState = context.read<AppState>();
+
     return Column(
       children: [
         Row(
@@ -32,24 +37,27 @@ class ShowResultModal extends StatelessWidget {
           height: 80,
         ),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment:
+              appState.isLoggedUserAdminOrSuper ? MainAxisAlignment.spaceEvenly : MainAxisAlignment.center,
           spacing: 8.0,
           children: [
             ElevatedButton(
               onPressed: () => context.pop(),
               child: const Text('Cerrar'),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  bool erased = await _eraseResult(result, context);
-                  if (context.mounted && erased) context.pop();
-                } on Exception catch (e) {
-                  if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
-                }
-              },
-              child: const Text('Eliminar resultado', style: TextStyle(color: Colors.red)),
-            ),
+            appState.isLoggedUserAdminOrSuper
+                ? ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        bool erased = await _eraseResult(result, context);
+                        if (context.mounted && erased) context.pop();
+                      } on Exception catch (e) {
+                        if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                      }
+                    },
+                    child: const Text('Eliminar resultado', style: TextStyle(color: Colors.red)),
+                  )
+                : const SizedBox.shrink(),
           ],
         ),
       ],
