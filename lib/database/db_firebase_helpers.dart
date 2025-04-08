@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:no_solo_padel/models/md_result.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
@@ -13,6 +12,7 @@ import '../models/md_match.dart';
 import '../models/md_parameter.dart';
 import '../models/md_user.dart';
 import '../models/md_date.dart';
+import '../models/md_result.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
 

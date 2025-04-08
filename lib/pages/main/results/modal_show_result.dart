@@ -1,14 +1,12 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/models/md_user.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../../database/db_firebase_helpers.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_result.dart';
 import '../../../utilities/ui_helpers.dart';
+import '../../../models/md_user.dart';
 
 final String _classString = 'ShowResultModal'.toUpperCase();
 
@@ -30,7 +28,9 @@ class ShowResultModal extends StatelessWidget {
             if (result.teamB != null) Expanded(child: _buildTeam(context, result.teamB!)),
           ],
         ),
-        const Divider( height: 80,),
+        const Divider(
+          height: 80,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           spacing: 8.0,
@@ -45,10 +45,10 @@ class ShowResultModal extends StatelessWidget {
                   bool erased = await _eraseResult(result, context);
                   if (context.mounted && erased) context.pop();
                 } on Exception catch (e) {
-                  if (context.mounted) UiHelper.showMessage(context, e.toString());
+                  if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
                 }
               },
-              child: const Text('Eliminar resultado'),
+              child: const Text('Eliminar resultado', style: TextStyle(color: Colors.red)),
             ),
           ],
         ),

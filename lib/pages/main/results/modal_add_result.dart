@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/database/db_firebase_helpers.dart';
-import 'package:no_solo_padel/models/md_user.dart';
-import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -12,13 +9,16 @@ import '../../../models/md_match.dart';
 import '../../../models/md_parameter.dart';
 import '../../../models/md_result.dart';
 import '../../../utilities/ut_misc.dart';
+import '../../../database/db_firebase_helpers.dart';
+import '../../../models/md_user.dart';
+import '../../../utilities/ui_helpers.dart';
 
-final String _classString = 'AddResultPage'.toUpperCase();
+final String _classString = 'AddResultModal'.toUpperCase();
 const int kNumPlayers = 4;
 const int kMaxGamesPerSet = 16;
 
-class AddResultPage extends StatefulWidget {
-  const AddResultPage({super.key, required this.matchId});
+class AddResultModal extends StatefulWidget {
+  const AddResultModal({super.key, required this.match});
 
   // argument matchJson vs matchId
   // matchJson: initialValue for FormBuilder will hold the correct initial values
@@ -27,122 +27,83 @@ class AddResultPage extends StatefulWidget {
   //   Good for configuration panel
   // matchId: _formKey.currentState?.fields[commentId]?.didChange(match.comment); should be implemented
   //   If any user changes any field, the form will update. Or if any rebuild is made, changes would be lost.
-  final String matchId;
+  final MyMatch match;
 
   @override
-  State<AddResultPage> createState() => _AddResultPageState();
+  State<AddResultModal> createState() => _AddResultModalState();
 }
 
-class _AddResultPageState extends State<AddResultPage> {
-  MyMatch? _match;
+class _AddResultModalState extends State<AddResultModal> {
+  late MyMatch _match;
   late AppState _appState;
-  bool _matchLoaded = false;
-  String _errorMessage = '';
   final List<MyUser?> _selectedPlayers = List.filled(kNumPlayers, null);
   final List<int> _scores = [0, 0];
 
   @override
   void initState() {
     super.initState();
-    try {
-      _appState = context.read<AppState>();
-      _initialize();
-    } catch (e) {
-      MyLog.log(_classString, 'Error initializing resultPage: ${e.toString()}', level: Level.SEVERE, indent: true);
-    }
+    _match = widget.match;
+    _appState = context.read<AppState>();
   }
 
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
-    if (!_matchLoaded) {
-      MyLog.log(_classString, 'Building: match still not loaded', indent: true);
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 40),
-              _errorMessage != ''
-                  ? Text(_errorMessage)
-                  : Text('Cargando el partido ...', style: TextStyle(fontSize: 24)),
-            ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 8.0,
+        children: [
+          // add Team A
+          _buildPlayer(0),
+          _buildPlayer(1),
+          // add score
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [_buildResults()],
+            ),
           ),
-        ),
-      );
-    } else if (_match == null) {
-      MyLog.log(_classString, 'Building: match is null', indent: true);
-      return Center(child: Text('Error al cargar el partido ...'));
-    }
-
-    MyLog.log(_classString, 'Building: match loaded match=$_match', indent: true);
-
-    // match is correct
-    try {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(_match!.id.longFormat()),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 8.0,
+          // add Team B
+          _buildPlayer(2),
+          _buildPlayer(3),
+          Divider(
+            height: 8.0,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // add Team A
-              _buildPlayer(0),
-              _buildPlayer(1),
-              // add score
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [_buildResults()],
-                ),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await _save();
+                    MyLog.log(_classString, 'Result saved', indent: true);
+                    if (context.mounted) context.pop();
+                  } catch (e) {
+                    MyLog.log(_classString, 'Error saving result: ${e.toString()}', indent: true);
+                    if (context.mounted) {
+                      UiHelper.myAlertDialog(context, 'No se ha podido añadir el resultado\n${e.toString()}');
+                    }
+                  }
+                },
+                child: Text('Guardar'),
               ),
-              // add Team B
-              _buildPlayer(2),
-              _buildPlayer(3),
-              Divider(
-                height: 8.0,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        await _save();
-                        MyLog.log(_classString, 'Result saved', indent: true);
-                        if (context.mounted) context.pop();
-                      } catch (e) {
-                        MyLog.log(_classString, 'Error saving result: ${e.toString()}', indent: true);
-                        if (context.mounted) {
-                          UiHelper.showMessage(context, 'No se ha podido añadir el resultado\n${e.toString()}');
-                        }
-                      }
-                    },
-                    child: Text('Guardar'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.pop();
-                    },
-                    child: Text('Cancelar'),
-                  ),
-                ],
+              ElevatedButton(
+                onPressed: () {
+                  context.pop();
+                },
+                child: Text('Cancelar'),
               ),
             ],
           ),
-        ),
-      );
-    } catch (e) {
-      return Text('Error cargando el partido ...\n${e.toString()}', style: TextStyle(fontSize: 24));
-    }
+        ],
+      ),
+    );
   }
 
   Widget _buildPlayer(int numValue) {
@@ -160,7 +121,7 @@ class _AddResultPageState extends State<AddResultPage> {
           });
         },
         dropdownMenuEntries:
-            _match!.getPlayers(state: PlayingState.playing).map<DropdownMenuEntry<MyUser>>((MyUser user) {
+            _match.getPlayers(state: PlayingState.playing).map<DropdownMenuEntry<MyUser>>((MyUser user) {
           return DropdownMenuEntry<MyUser>(
             value: user,
             label: user.name,
@@ -270,7 +231,7 @@ class _AddResultPageState extends State<AddResultPage> {
     // create GameResult
     GameResult gameResult = GameResult(
       id: GameResultId(userId: _appState.getLoggedUser().id),
-      matchId: _match!.id,
+      matchId: _match.id,
       teamA: teamA,
       teamB: teamB,
     );
@@ -278,7 +239,7 @@ class _AddResultPageState extends State<AddResultPage> {
     // save result to Firestore
     try {
       MyLog.log(_classString, 'Saving result: $gameResult', indent: true);
-      await FbHelpers().updateResult(result: gameResult, matchId: _match!.id.toYyyyMMdd());
+      await FbHelpers().updateResult(result: gameResult, matchId: _match.id.toYyyyMMdd());
     } catch (e) {
       MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
       throw 'Error al guardar el resultado.\n ${e.toString()}';
@@ -293,25 +254,6 @@ class _AddResultPageState extends State<AddResultPage> {
     } catch (e) {
       MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
       throw ('Error al actualizar los puntos de los jugadores. \n${e.toString()}');
-    }
-  }
-
-  void _initialize() async {
-    MyLog.log(_classString, '_initialize: Initializing parameters: ${widget.matchId}');
-    try {
-      // get match
-      _match = await FbHelpers().getMatch(widget.matchId, _appState);
-      MyLog.log(_classString, '_initialize: match = $_match', indent: true);
-
-      // all loaded
-      setState(() {
-        _matchLoaded = true;
-      });
-    } catch (e) {
-      MyLog.log(_classString, 'Error initializing resultPage: ${e.toString()}', level: Level.SEVERE, indent: true);
-      setState(() {
-        _errorMessage = 'Error al cargar el partido.\n${e.toString()}';
-      });
     }
   }
 

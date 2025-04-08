@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel/models/md_match.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -10,6 +9,8 @@ import 'players.dart';
 import 'config.dart';
 import 'sorting.dart';
 import '../../interface/if_app_state.dart';
+import '../../models/md_match.dart';
+
 
 final String _classString = 'MatchPage'.toUpperCase();
 

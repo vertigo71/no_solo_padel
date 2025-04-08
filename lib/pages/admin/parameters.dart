@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:collection/collection.dart';
@@ -11,6 +10,7 @@ import '../../interface/if_app_state.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_parameter.dart';
 import '../../utilities/ut_misc.dart';
+import '../../utilities/ui_helpers.dart';
 
 /// Class name identifier for logging
 final String _classString = 'ParametersPanel'.toUpperCase();
@@ -43,7 +43,8 @@ class _FormFields {
     ParametersEnum.registerDaysKeeping: '[0-9]',
     ParametersEnum.defaultCommentText: '', // free text
     ParametersEnum.minDebugLevel: '[0-${Level.LEVELS.length - 1}]',
-    ParametersEnum.weekDaysMatch: '[${MyParameters.kDaysOfWeek.toLowerCase()}${MyParameters.kDaysOfWeek.toUpperCase()}]',
+    ParametersEnum.weekDaysMatch:
+        '[${MyParameters.kDaysOfWeek.toLowerCase()}${MyParameters.kDaysOfWeek.toUpperCase()}]',
     ParametersEnum.showLog: '', // Not a text field (showLog)
   };
 }

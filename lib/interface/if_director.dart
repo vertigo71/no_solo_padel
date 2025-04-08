@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:no_solo_padel/models/md_register.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../database/db_authentication.dart';
@@ -13,6 +12,7 @@ import '../models/md_debug.dart';
 import '../models/md_match.dart';
 import '../models/md_parameter.dart';
 import '../models/md_user.dart';
+import '../models/md_register.dart';
 
 final String _classString = '<st> Director'.toLowerCase();
 

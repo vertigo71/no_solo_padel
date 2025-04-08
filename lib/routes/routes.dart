@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/pages/main/results/add_result.dart';
-import 'package:no_solo_padel/pages/misc/register.dart';
 
 import '../models/md_debug.dart';
 import '../pages/admin/home_admin.dart';
 import '../pages/main/home_main.dart';
 import '../pages/login.dart';
 import '../pages/match/home_match.dart';
+import '../pages/misc/register.dart';
 
 final String _classString = 'Routes'.toUpperCase();
 
@@ -23,8 +22,6 @@ class AppRoutes {
   static const String kAdmin = 'admin';
   static const String kRegisterPath = '/register';
   static const String kRegister = 'register';
-  static const String kAddResultPath = '/add_result';
-  static const String kAddResult = 'add_result';
 }
 
 class AppRouter {
@@ -58,15 +55,6 @@ class AppRouter {
           path: AppRoutes.kRegisterPath,
           builder: (BuildContext context, GoRouterState state) => const RegisterPage(),
           name: AppRoutes.kRegister),
-      GoRoute(
-          path: AppRoutes.kAddResultPath,
-          builder: (BuildContext context, GoRouterState state) {
-            // never use a complex object as an argument. Back button will not work
-            final String matchId = state.extra as String; // Retrieve the argument
-            MyLog.log(_classString, 'going to AddResultPAge: matchId=$matchId');
-            return AddResultPage(matchId: matchId ); // Pass it to the widget
-          },
-          name: AppRoutes.kAddResult),
     ],
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('Page Not Found')),

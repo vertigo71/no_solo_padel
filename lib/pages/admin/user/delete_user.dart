@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel/database/db_firebase_helpers.dart';
-import 'package:no_solo_padel/models/md_user.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +6,8 @@ import '../../../interface/if_app_state.dart';
 import '../../../interface/if_director.dart';
 import '../../../models/md_debug.dart';
 import '../../../utilities/ui_helpers.dart';
+import '../../../database/db_firebase_helpers.dart';
+import '../../../models/md_user.dart';
 
 final String _classString = 'UserDeletePanel'.toUpperCase();
 

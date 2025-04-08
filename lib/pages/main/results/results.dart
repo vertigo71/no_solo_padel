@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:no_solo_padel/pages/main/results/modal_add_result.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -11,7 +11,6 @@ import '../../../models/md_debug.dart';
 import '../../../models/md_result.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
-import '../../../routes/routes.dart';
 import '../../../models/md_date.dart';
 import 'modal_show_result.dart';
 
@@ -66,8 +65,7 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Column(
         children: [
-          _buildHeader(context, match.id.longFormat(),
-              () => context.pushNamed(AppRoutes.kAddResult, extra: match.id.toYyyyMMdd())),
+          _buildHeader(context, match.id.longFormat(), () => _addResultModal(context, match)),
           StreamBuilder<List<GameResult>>(
             stream: FbHelpers().getResultsStream(appState: appState, matchId: match.id.toYyyyMMdd()),
             builder: (context, snapshot) {
@@ -131,7 +129,7 @@ class ResultsPanel extends StatelessWidget {
     MyLog.log(_classString, 'Building result card: $result', indent: true);
     try {
       return InkWell(
-        onTap: () => _modifyResultModal(context, result),
+        onTap: () => _showResultModal(context, result),
         child: Card(
           margin: const EdgeInsets.all(2.0),
           color: Theme.of(context).colorScheme.surfaceDim,
@@ -173,13 +171,39 @@ class ResultsPanel extends StatelessWidget {
     return Text('$scoreA - $scoreB', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
   }
 
-  Future _modifyResultModal(BuildContext context, GameResult result) {
+  Future _addResultModal(BuildContext context, MyMatch match) {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-          title: Text(result.matchId.longFormat(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), ),
+          title: Text(
+            match.id.longFormat(),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
+            child: SingleChildScrollView(
+              // Make content scrollable if it's still too tall
+              child: AddResultModal(match: match),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future _showResultModal(BuildContext context, GameResult result) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+          title: Text(
+            result.matchId.longFormat(),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
