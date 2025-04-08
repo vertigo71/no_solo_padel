@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/pages/misc/page_add_result.dart';
-import 'package:no_solo_padel/pages/misc/page_register.dart';
+import 'package:no_solo_padel/pages/main/results/add_result.dart';
+import 'package:no_solo_padel/pages/misc/register.dart';
 
-import '../models/debug.dart';
-import '../pages/admin/page_admin.dart';
-import '../pages/main/page_main.dart';
-import '../pages/page_login.dart';
-import '../pages/match/page_match.dart';
+import '../models/md_debug.dart';
+import '../pages/admin/home_admin.dart';
+import '../pages/main/home_main.dart';
+import '../pages/login.dart';
+import '../pages/match/home_match.dart';
 
 final String _classString = 'Routes'.toUpperCase();
 

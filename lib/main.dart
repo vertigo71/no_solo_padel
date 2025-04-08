@@ -12,13 +12,13 @@ import 'firebase_options_dev.dart';
 import 'firebase_options_stage.dart';
 import 'firebase_options_prod.dart';
 
-import 'interface/director.dart';
-import 'models/debug.dart';
+import 'interface/if_director.dart';
+import 'models/md_debug.dart';
 import 'routes/routes.dart';
-import 'interface/app_state.dart';
+import 'interface/if_app_state.dart';
 import 'secret.dart';
-import 'utilities/environment.dart';
-import 'utilities/theme.dart';
+import 'utilities/ut_environment.dart';
+import 'utilities/ut_theme.dart';
 
 final String _classString = 'main'.toUpperCase();
 

@@ -6,14 +6,15 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
-import '../models/debug.dart';
-import '../models/match_model.dart';
-import '../models/user_model.dart';
-import 'theme.dart';
+import '../models/md_debug.dart';
+import '../models/md_match.dart';
+import '../models/md_user.dart';
+import 'ut_theme.dart';
 
 
 final String _classString = 'UiHelper'.toUpperCase();
 
+/// User Interface Helper Functions
 class UiHelper {
   /// BottomNavigationBarItem: set a background color over the selected option
   static BottomNavigationBarItem buildNavItem(int index, Widget icon, String label, int selectedIndex) {
