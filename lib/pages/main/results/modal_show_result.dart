@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel/models/md_user.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -16,33 +19,40 @@ class ShowResultModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding:  const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Column(
-                children: [
-                  _buildTeam(result.teamA),
-                ],
-              ),
-              const Column(
-                children: [
-                  Text('Result'),
-                ],
-              ),
-              const Column(
-                children: [
-                  Text('Team B'),
-                ],
-              ),
-            ],
-          ),
-          const Text('Buttons'),
-        ],
-      ),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          spacing: 8.0,
+          children: [
+            if (result.teamA != null) Expanded(child: _buildTeam(context, result.teamA!)),
+            _buildResult(result),
+            if (result.teamB != null) Expanded(child: _buildTeam(context, result.teamB!)),
+          ],
+        ),
+        const Divider( height: 80,),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          spacing: 8.0,
+          children: [
+            ElevatedButton(
+              onPressed: () => context.pop(),
+              child: const Text('Cerrar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  bool erased = await _eraseResult(result, context);
+                  if (context.mounted && erased) context.pop();
+                } on Exception catch (e) {
+                  if (context.mounted) UiHelper.showMessage(context, e.toString());
+                }
+              },
+              child: const Text('Eliminar resultado'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -51,7 +61,44 @@ class ShowResultModal extends StatelessWidget {
     return Text(points.toString(), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold));
   }
 
-  Future<void> _eraseResult(GameResult result, BuildContext context) async {
+  Widget _buildTeam(BuildContext context, TeamResult team) {
+    MyLog.log(_classString, 'Building team: $team', level: Level.INFO, indent: true);
+    return Column(
+      spacing: 8.0,
+      children: [
+        ..._buildPlayer(context, team.player1),
+        const SizedBox(height: 20),
+        ..._buildPlayer(context, team.player2),
+        const SizedBox(height: 20),
+        _buildPoints(team.points),
+      ],
+    );
+  }
+
+  List<Widget> _buildPlayer(BuildContext context, MyUser player) {
+    MyLog.log(_classString, 'Building player: $player', level: Level.INFO, indent: true);
+    return [
+      CircleAvatar(
+        backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
+        backgroundColor: Theme.of(context).colorScheme.surfaceBright,
+        radius: 35,
+      ),
+      Text(player.name),
+      Text(player.rankingPos.toString()),
+    ];
+  }
+
+  Widget _buildResult(GameResult result) {
+    MyLog.log(_classString, 'Building result: $result', indent: true);
+    if (result.teamA != null && result.teamB != null) {
+      return Text('${result.teamA!.score} - ${result.teamB!.score}',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
+    } else {
+      return Text('VS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
+    }
+  }
+
+  Future<bool> _eraseResult(GameResult result, BuildContext context) async {
     MyLog.log(_classString, '_eraseResult: $result');
 
     // confirm erasing
@@ -59,7 +106,7 @@ class ShowResultModal extends StatelessWidget {
     const String kNoOption = 'NO';
     String response = await UiHelper.myReturnValueDialog(
         context, '¿Seguro que quieres eliminar el resultado?', kYesOption, kNoOption);
-    if (response.isEmpty || response == kNoOption) return;
+    if (response.isEmpty || response == kNoOption) return false;
     MyLog.log(_classString, 'build response = $response', indent: true);
 
     // erase the gameResult
@@ -94,19 +141,7 @@ class ShowResultModal extends StatelessWidget {
           level: Level.SEVERE, indent: true);
       throw Exception('Error al actualizar los puntos de los jugadores \nError: ${e.toString()}');
     }
-  }
 
-  Widget _buildTeam(TeamResult team) {
-    MyLog.log(_classString, 'Building team: $team', level: Level.INFO, indent: true);
-    return Column( children: [
-      _buildPlayer(team.player1),
-      _buildPlayer(team.player2),
-      _buildPoints(team.points),
-    ], );
-  }
-
-  Widget _buildPlayer(MyUser player1) {
-    MyLog.log(_classString, 'Building player: $player1', level: Level.INFO, indent: true);
-
+    return true; // success
   }
 }

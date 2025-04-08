@@ -174,11 +174,21 @@ class ResultsPanel extends StatelessWidget {
   }
 
   Future _modifyResultModal(BuildContext context, GameResult result) {
-    return showModalBottomSheet(
+    return showDialog(
       context: context,
-      isScrollControlled: false,
       builder: (BuildContext context) {
-        return ShowResultModal(result: result);
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+          title: Text(result.matchId.longFormat(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
+            child: SingleChildScrollView(
+              // Make content scrollable if it's still too tall
+              child: ShowResultModal(result: result),
+            ),
+          ),
+        );
       },
     );
   }
