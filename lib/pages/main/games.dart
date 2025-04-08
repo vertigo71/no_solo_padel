@@ -37,7 +37,7 @@ class GamesPanel extends StatelessWidget {
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return UiHelper.buildLoadingIndicator();
+              return const Center(child: CircularProgressIndicator());
             }
 
             // snapshot.data is now a List<MyMatch> (or null if there's an error)

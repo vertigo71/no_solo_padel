@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
@@ -87,7 +88,7 @@ class _MainPageState extends State<MainPage> {
             if (Environment().isDevelopment) _director.createTestData();
           }
         }
-        return UiHelper.buildLoadingIndicator('Cargando ...'); // Still loading, no error
+        return _buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
         MyLog.log(_classString, 'build with logged user loggedUser=${appState.getLoggedUser()}', indent: true);
         return PopScope(
@@ -272,5 +273,26 @@ class _MainPageState extends State<MainPage> {
 
       _errorMessage = e.toString();
     }
+  }
+
+  Widget _buildLoadingIndicator([String title = '']) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SpinKitFadingCube(
+              color: Colors.blue,
+              size: 50.0,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: TextStyle(fontSize: 24),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

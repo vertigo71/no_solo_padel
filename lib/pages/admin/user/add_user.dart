@@ -88,7 +88,7 @@ class UserAddPanelState extends State<UserAddPanel> {
                     ElevatedButton(
                       onPressed: _isCreatingUser ? null : () async => await _formValidate(),
                       child: _isCreatingUser // Show loading indicator
-                          ? UiHelper.buildLoadingIndicator()
+                          ? const Center(child: CircularProgressIndicator())
                           : const Text('Añadir'), // Disable button while creating
                     ),
                   ],

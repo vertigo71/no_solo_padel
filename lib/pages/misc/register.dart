@@ -7,7 +7,6 @@ import '../../interface/if_app_state.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_register.dart';
 import '../../models/md_parameter.dart';
-import '../../utilities/ui_helpers.dart';
 
 final String _classString = 'RegisterPage'.toUpperCase();
 
@@ -36,7 +35,7 @@ class RegisterPage extends StatelessWidget {
                 }
 
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return UiHelper.buildLoadingIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (snapshot.hasData) {

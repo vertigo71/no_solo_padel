@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
@@ -76,27 +75,6 @@ abstract class UiHelper {
       onTap: () {
         if (onPressed != null) onPressed();
       },
-    );
-  }
-
-  static Widget buildLoadingIndicator([String title = '']) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SpinKitFadingCube(
-              color: Colors.blue,
-              size: 50.0,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: TextStyle(fontSize: 24),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

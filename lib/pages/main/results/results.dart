@@ -48,7 +48,7 @@ class ResultsPanel extends StatelessWidget {
                 MyLog.log(_classString, 'Build: Error loading matches: ${snapshot.error}');
                 return Center(child: Text('Error al obtener los partidos: \nError: ${snapshot.error}'));
               } else {
-                return UiHelper.buildLoadingIndicator(); // Loading indicator
+                return const Center(child: CircularProgressIndicator()); // Loading indicator
               }
             },
           );
@@ -82,7 +82,7 @@ class ResultsPanel extends StatelessWidget {
                       level: Level.SEVERE, indent: true);
                   throw snapshot.error!;
                 } else {
-                  return UiHelper.buildLoadingIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 }
               } catch (e) {
                 MyLog.log(_classString, 'Error building result card: ${e.toString()}',
