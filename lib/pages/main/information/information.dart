@@ -97,12 +97,6 @@ class _InformationPanelState extends State<InformationPanel> {
   }
 
   Future _modifyUserModal(BuildContext context, MyUser user) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return ModifyUserModal(user: user);
-      },
-    );
+    return UiHelper.modalPanel(context, user.name, ModifyUserModal(user: user));
   }
 }

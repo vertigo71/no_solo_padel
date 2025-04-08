@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
@@ -85,10 +84,10 @@ class _MainPageState extends State<MainPage> {
 
             // Create test data in development mode.
             // MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
-            if (Environment().isDevelopment)  _director.createTestData();
+            if (Environment().isDevelopment) _director.createTestData();
           }
         }
-        return _buildLoadingIndicator(); // Still loading, no error
+        return UiHelper.buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
         MyLog.log(_classString, 'build with logged user loggedUser=${appState.getLoggedUser()}', indent: true);
         return PopScope(
@@ -129,27 +128,6 @@ class _MainPageState extends State<MainPage> {
                 AppRouter.router.goNamed(AppRoutes.kLogin);
               },
               child: const Text('Volver al inicio'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return Scaffold(
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SpinKitFadingCube(
-              color: Colors.blue,
-              size: 50.0,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Cargando...',
-              style: TextStyle(fontSize: 24),
             ),
           ],
         ),
@@ -208,10 +186,11 @@ class _MainPageState extends State<MainPage> {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
-        UiHelper.buildNavItem(0, Icon(Icons.home), 'Inicio', _selectedIndex),
-        UiHelper.buildNavItem(1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Resultados', _selectedIndex),
-        UiHelper.buildNavItem(2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
-        UiHelper.buildNavItem(3, Icon(Icons.settings), 'Perfil', _selectedIndex),
+        UiHelper.buildNavItem(context, 0, Icon(Icons.home), 'Inicio', _selectedIndex),
+        UiHelper.buildNavItem(
+            context, 1, ImageIcon(AssetImage('assets/icons/podium.png')), 'Resultados', _selectedIndex),
+        UiHelper.buildNavItem(context, 2, ImageIcon(AssetImage('assets/icons/padel.png')), 'Jugadores', _selectedIndex),
+        UiHelper.buildNavItem(context, 3, Icon(Icons.settings), 'Perfil', _selectedIndex),
       ],
       currentIndex: _selectedIndex,
       onTap: (index) {

@@ -53,10 +53,6 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
         mainAxisSize: MainAxisSize.min,
         spacing: 8.0,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(user.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          ),
           AvatarSelector(
             user: user,
             onImageSelected: (Uint8List? imageData) {
@@ -113,7 +109,7 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
         if (context.mounted) Navigator.pop(context);
       } catch (e) {
         MyLog.log(_classString, 'Error updating user: $user \n$e', level: Level.SEVERE, indent: true);
-        if (context.mounted) UiHelper.showMessage(context, 'Error al actualizar el usuario');
+        if (context.mounted) UiHelper.myAlertDialog(context, 'Error al actualizar el usuario');
       }
     }
   }

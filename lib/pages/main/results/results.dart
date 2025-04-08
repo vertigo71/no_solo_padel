@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:no_solo_padel/pages/main/results/modal_add_result.dart';
+import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -47,7 +48,7 @@ class ResultsPanel extends StatelessWidget {
                 MyLog.log(_classString, 'Build: Error loading matches: ${snapshot.error}');
                 return Center(child: Text('Error al obtener los partidos: \nError: ${snapshot.error}'));
               } else {
-                return CircularProgressIndicator(); // Loading indicator
+                return UiHelper.buildLoadingIndicator(); // Loading indicator
               }
             },
           );
@@ -81,7 +82,7 @@ class ResultsPanel extends StatelessWidget {
                       level: Level.SEVERE, indent: true);
                   throw snapshot.error!;
                 } else {
-                  return CircularProgressIndicator();
+                  return UiHelper.buildLoadingIndicator();
                 }
               } catch (e) {
                 MyLog.log(_classString, 'Error building result card: ${e.toString()}',
@@ -172,48 +173,10 @@ class ResultsPanel extends StatelessWidget {
   }
 
   Future _addResultModal(BuildContext context, MyMatch match) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-          title: Text(
-            match.id.longFormat(),
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
-            child: SingleChildScrollView(
-              // Make content scrollable if it's still too tall
-              child: AddResultModal(match: match),
-            ),
-          ),
-        );
-      },
-    );
+    return UiHelper.modalPanel(context, match.id.longFormat(), AddResultModal(match: match));
   }
 
   Future _showResultModal(BuildContext context, GameResult result) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-          title: Text(
-            result.matchId.longFormat(),
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
-            child: SingleChildScrollView(
-              // Make content scrollable if it's still too tall
-              child: ShowResultModal(result: result),
-            ),
-          ),
-        );
-      },
-    );
+    return UiHelper.modalPanel(context, result.matchId.longFormat(), ShowResultModal(result: result));
   }
 }

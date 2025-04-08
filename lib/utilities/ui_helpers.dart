@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
@@ -11,21 +12,26 @@ import '../models/md_match.dart';
 import '../models/md_user.dart';
 import 'ut_theme.dart';
 
-
 final String _classString = 'UiHelper'.toUpperCase();
 
 /// User Interface Helper Functions
-class UiHelper {
-  /// BottomNavigationBarItem: set a background color over the selected option
-  static BottomNavigationBarItem buildNavItem(int index, Widget icon, String label, int selectedIndex) {
-    MyLog.log(_classString, 'BottomNavigationBarItem', level: Level.ALL);
+abstract class UiHelper {
+  /// Builds a `BottomNavigationBarItem` for a `BottomNavigationBar`.
+  ///
+  /// It takes the `index` of the item, an `icon` widget, a `label` string, and the `selectedIndex`
+  /// of the currently active item.
+  /// The icon is wrapped in a `Container` with padding and a rounded `BorderRadius`.
+  /// The background color of the icon's container changes to `kPrimaryMedium` if the item is selected.
+  static BottomNavigationBarItem buildNavItem(
+      BuildContext context, int index, Widget icon, String label, int selectedIndex) {
+    MyLog.log(_classString, 'BottomNavigationBarItem', level: Level.FINE);
 
     final isSelected = selectedIndex == index;
     return BottomNavigationBarItem(
       icon: Container(
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: isSelected ? kPrimaryMedium : Colors.transparent,
+          color: isSelected ? Theme.of(context).colorScheme.surfaceDim : Colors.transparent,
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: icon,
@@ -34,6 +40,12 @@ class UiHelper {
     );
   }
 
+  /// Builds a `ListTile` to display information about a `MyUser`.
+  ///
+  /// It shows the user's avatar (or a placeholder if the URL is null or invalid),
+  /// their name, emergency SOS information (if available), email (username part),
+  /// ranking position, user type's display name, login count, and last login date.
+  /// If an optional `onPressed` callback is provided, the tile becomes tappable.
   static Widget userInfoTile(MyUser user, [Function? onPressed]) {
     final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
 
@@ -67,6 +79,32 @@ class UiHelper {
     );
   }
 
+  static Widget buildLoadingIndicator([String title = '']) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SpinKitFadingCube(
+              color: Colors.blue,
+              size: 50.0,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: TextStyle(fontSize: 24),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Displays a simple modal alert dialog with a title ("¡Atención!") and the provided `text` as content.
+  ///
+  /// The dialog is not dismissible by tapping outside. It presents a single "Cerrar" (Close) button.
+  /// An optional `onDialogClosed` callback function can be provided, which will be executed
+  /// after the dialog is closed by pressing the button.
   static void myAlertDialog(BuildContext context, String text, {Function? onDialogClosed}) {
     if (context.mounted) {
       showDialog(
@@ -92,6 +130,15 @@ class UiHelper {
     }
   }
 
+  /// Displays a modal dialog with a title ("¡Atención!") and the provided `text` as content.
+  ///
+  /// It presents up to four `ElevatedButton` options based on the provided `option1`, `option2`,
+  /// and optional `option3` and `option4` strings.
+  /// The dialog is not dismissible by tapping outside.
+  ///
+  /// Returns a `Future<String>` that resolves to the text of the button pressed by the user.
+  /// If the dialog is dismissed without a button press or if the context is no longer mounted,
+  /// it returns an empty string.
   static Future<String> myReturnValueDialog(BuildContext context, String text, String option1, String option2,
       {String option3 = '', String option4 = ''}) async {
     if (context.mounted) {
@@ -137,10 +184,23 @@ class UiHelper {
     return '';
   }
 
+  /// Displays a simple `SnackBar` at the bottom of the screen with the provided `text`.
+  ///
+  /// This is a convenient way to show short, non-blocking messages to the user,
+  /// such as confirmations or brief notifications. The text is displayed with a font size of 16.
   static void showMessage(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text, style: const TextStyle(fontSize: 16))));
   }
 
+  /// Displays a confirmation modal dialog requiring the user to type a specific text to confirm an action.
+  ///
+  /// The dialog shows the provided `dialogText` as the main message and instructs the user to type
+  /// the `confirmationText` in a `FormBuilderTextField` to proceed.
+  /// An optional `errorMessage` can be provided to customize the error message displayed
+  /// if the user's input does not match the `confirmationText`.
+  ///
+  /// Returns `true` if the user types the correct confirmation text and presses 'Confirmar',
+  /// and `false` otherwise (if they press 'Cancelar' or fail to type the correct text).
   static Future<bool> showConfirmationModal(BuildContext context, String dialogText, String confirmationText,
       {String errorMessage = 'Por favor, escriba "%s" para confirmar.'}) async {
     final confirmationFormKey = GlobalKey<FormBuilderState>();
@@ -171,14 +231,12 @@ class UiHelper {
                 ElevatedButton(
                   onPressed: () {
                     if (confirmationFormKey.currentState!.saveAndValidate()) {
-                      final userConfirmation =
-                          confirmationFormKey.currentState!.value['userConfirmation'];
+                      final userConfirmation = confirmationFormKey.currentState!.value['userConfirmation'];
                       if (userConfirmation == confirmationText) {
                         Navigator.of(context).pop(true); // Confirm
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(errorMessage.replaceAll('%s', confirmationText))),
+                          SnackBar(content: Text(errorMessage.replaceAll('%s', confirmationText))),
                         );
                       }
                     }
@@ -190,6 +248,36 @@ class UiHelper {
           },
         ) ??
         false;
+  }
+
+  /// Displays a customizable modal dialog using Flutter's `showDialog` and `AlertDialog`.
+  ///
+  /// The dialog's background color is taken from the theme's `surfaceDim`.
+  /// The provided `title` is displayed at the top with a bold, slightly smaller font.
+  /// The `child` widget is shown as the main content, constrained to 80% of the screen width
+  /// and made vertically scrollable if its height exceeds the available space.
+  /// The dialog also includes horizontal padding.
+  static Future<void> modalPanel(BuildContext context, String title, Widget child) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+          title: Text(
+            title,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
+            child: SingleChildScrollView(
+              // Make content scrollable if it's still too tall
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   static Widget myCheckBox(
@@ -213,11 +301,9 @@ class UiHelper {
     }
   }
 
-  static Color getMatchTileColor(MyMatch match) =>
-      lighten(_getMatchColor(match), 0.2);
+  static Color getMatchTileColor(MyMatch match) => lighten(_getMatchColor(match), 0.2);
 
-  static Color getMatchAvatarColor(MyMatch match) =>
-      lighten(_getMatchColor(match), 0.1);
+  static Color getMatchAvatarColor(MyMatch match) => lighten(_getMatchColor(match), 0.1);
 
   static Color getTilePlayingColor(BuildContext context, PlayingState playingState) {
     switch (playingState) {
