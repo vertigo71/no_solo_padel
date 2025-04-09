@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:no_solo_padel/utilities/ut_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -64,11 +65,6 @@ class ShowResultModal extends StatelessWidget {
     );
   }
 
-  Widget _buildPoints(int points) {
-    MyLog.log(_classString, 'Building points: $points', indent: true);
-    return Text(points.toString(), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold));
-  }
-
   Widget _buildTeam(BuildContext context, TeamResult team) {
     MyLog.log(_classString, 'Building team: $team', level: Level.INFO, indent: true);
     return Column(
@@ -90,10 +86,26 @@ class ShowResultModal extends StatelessWidget {
         backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
         backgroundColor: Theme.of(context).colorScheme.surfaceBright,
         radius: 35,
+        child: player.avatarUrl == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
       ),
       Text(player.name),
       Text(player.rankingPos.toString()),
     ];
+  }
+
+  Widget _buildPoints(int points) {
+    MyLog.log(_classString, 'Building points: $points', indent: true);
+    return Container(
+      color: points >= 0 ? kLightGreen : kLightRed,
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        '$points puntos',
+        style: const TextStyle(
+          fontSize: 12,
+          // color: kLightest,
+        ),
+      ),
+    );
   }
 
   Widget _buildResult(GameResult result) {

@@ -79,7 +79,6 @@ class GamesPanel extends StatelessWidget {
                                 ? UiHelper.getTilePlayingColor(context, playingState)
                                 : UiHelper.getMatchTileColor(match),
                         leading:
-                            // red circle= closed, green circle=open
                             CircleAvatar(
                                 backgroundColor: UiHelper.getMatchAvatarColor(match),
                                 child: Text(match.isOpen ? 'A' : 'C')),

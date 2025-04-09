@@ -127,6 +127,7 @@ class _AddResultModalState extends State<AddResultModal> {
             label: user.name,
             leadingIcon: CircleAvatar(
               backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+              child: user.avatarUrl == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
             ),
           );
         }).toList(),
@@ -136,6 +137,9 @@ class _AddResultModalState extends State<AddResultModal> {
             backgroundColor: Theme.of(context).colorScheme.surfaceBright,
             backgroundImage: _selectedPlayers[numValue]?.avatarUrl != null
                 ? NetworkImage(_selectedPlayers[numValue]!.avatarUrl!)
+                : null,
+            child: _selectedPlayers[numValue] != null && _selectedPlayers[numValue]!.avatarUrl == null
+                ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
                 : null,
           ),
         ),

@@ -17,13 +17,18 @@ final Color kAltDark = Colors.deepOrange.shade300;
 final Color kAltMedium = Colors.deepOrange.shade200;
 final Color kAltLight = Colors.deepOrange.shade100;
 
-// misc colors
+// grey colors
 const Color kBlack = Colors.black;
 const Color kDark = Colors.black87;
 const Color kMedium = Colors.black54;
 const Color kLight = Colors.black26;
 const Color kLightest = Colors.white70;
 const Color kWhite = Colors.white;
+
+// other
+final Color kLightRed = Colors.red.shade400;
+final Color kLightGreen = Colors.green.shade400;
+
 
 ThemeData generateThemeData(BuildContext context) {
   MyLog.log(_classString, 'generateThemeData', level: Level.FINE);
