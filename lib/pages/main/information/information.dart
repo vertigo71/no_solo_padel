@@ -45,7 +45,11 @@ class _InformationPanelState extends State<InformationPanel> {
                   Expanded(
                     child: UiHelper.userInfoTile(
                       user,
-                      appState.isLoggedUserSuper ? () => _modifyUserModal(context, user) : null,
+                      // logged user can only edit users with higher or equal rank
+                      appState.isLoggedUserAdminOrSuper &&
+                              appState.getLoggedUser().userType.index >= user.userType.index
+                          ? () => _modifyUserModal(context, user)
+                          : null,
                     ),
                   ),
                 ],

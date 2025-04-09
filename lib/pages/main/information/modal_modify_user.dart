@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter/foundation.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
+import '../../../interface/if_app_state.dart';
 import '../../../models/md_user.dart';
 import '../../../utilities/ut_avatar_selector.dart';
 import '../../../database/db_firebase_helpers.dart';
@@ -38,11 +40,13 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
   Uint8List? selectedImageData;
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
   late MyUser user;
+  late AppState _appState;
 
   @override
   void initState() {
     super.initState();
     user = widget.user;
+    _appState = context.read<AppState>();
   }
 
   @override
@@ -127,6 +131,7 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
             ),
             initialValue: user.userType,
             items: UserType.values
+                .where((type) => _appState.getLoggedUser().userType.index >= type.index)
                 .map((type) => DropdownMenuItem(
                       value: type,
                       child: Text(type.displayName),
