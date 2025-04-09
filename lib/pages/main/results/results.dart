@@ -13,6 +13,7 @@ import '../../../models/md_result.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
 import '../../../models/md_date.dart';
+import '../../../utilities/ut_theme.dart';
 import 'modal_show_result.dart';
 
 final String _classString = 'ResultsPanel'.toUpperCase();
@@ -136,16 +137,16 @@ class ResultsPanel extends StatelessWidget {
           color: Theme.of(context).colorScheme.surfaceDim,
           elevation: 6.0,
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 18.0),
             child: Row(
               // crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildPlayer(result.teamA!.player1),
-                _buildPlayer(result.teamA!.player2),
+                _buildPlayer(result.teamA!.player1, result.teamA!.points),
+                _buildPlayer(result.teamA!.player2, result.teamA!.points),
                 _buildScore(result.teamA!.score, result.teamB!.score),
-                _buildPlayer(result.teamB!.player1),
-                _buildPlayer(result.teamB!.player2),
+                _buildPlayer(result.teamB!.player1, result.teamB!.points),
+                _buildPlayer(result.teamB!.player2, result.teamB!.points),
               ],
             ),
           ),
@@ -159,11 +160,24 @@ class ResultsPanel extends StatelessWidget {
     }
   }
 
-  Widget _buildPlayer(MyUser player) {
+  Widget _buildPlayer(MyUser player, int points) {
     MyLog.log(_classString, 'Building player: $player', indent: true);
-    return CircleAvatar(
-      backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
-      child: player.avatarUrl == null ? Text(player.name.substring(0, min(3, player.name.length))) : null,
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      clipBehavior: Clip.none,
+      children: [
+        CircleAvatar(
+          backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,
+          child: player.avatarUrl == null ? Text(player.name.substring(0, min(3, player.name.length))) : null,
+        ),
+        Positioned(
+          bottom: -15,
+          child: Container(
+            color: points >= 0 ? kLightGreen : kLightRed,
+            child: Text(points.toString(), style: const TextStyle(color: kLightest, fontSize: 12)),
+          ),
+        ),
+      ],
     );
   }
 
