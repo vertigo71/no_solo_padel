@@ -51,43 +51,39 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 8.0,
-        children: <Widget>[
-          AvatarSelector(
-            user: user,
-            onImageSelected: (Uint8List? imageData) {
-              selectedImageData = imageData;
-              MyLog.log(_classString, "Image Selected in modal selected image=${selectedImageData != null}",
-                  indent: true);
-            },
+    return Column(
+      spacing: 8.0,
+      children: <Widget>[
+        AvatarSelector(
+          user: user,
+          onImageSelected: (Uint8List? imageData) {
+            selectedImageData = imageData;
+            MyLog.log(_classString, "Image Selected in modal selected image=${selectedImageData != null}",
+                indent: true);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(26.0, 16, 26.0, 16.0),
+          child: _buildUserForm(_formKey, user),
+        ),
+        const Divider(),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => _acceptChanges(context), // Call the internal _acceptChanges
+                child: const Text('Aceptar'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(46.0, 16, 16.0, 16.0),
-            child: _buildUserForm(_formKey, user),
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () => _acceptChanges(context), // Call the internal _acceptChanges
-                  child: const Text('Aceptar'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cerrar'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

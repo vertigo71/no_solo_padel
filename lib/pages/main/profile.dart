@@ -101,7 +101,10 @@ class ProfilePanelState extends State<ProfilePanel> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Row(
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceEvenly,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8.0,
                       children: [
                         // Show image if picked or uploaded
                         CircleAvatar(
@@ -112,10 +115,9 @@ class ProfilePanelState extends State<ProfilePanel> {
                               ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white))
                               : null,
                         ),
-                        const SizedBox(width: 40),
                         ElevatedButton(
                           onPressed: _pickImage,
-                          child: const Text('Seleccionar Avatar'),
+                          child: const Text('Seleccionar\nAvatar', textAlign: TextAlign.center),
                         ),
                       ],
                     ),

@@ -35,7 +35,7 @@ class ShowResultModal extends StatelessWidget {
           ],
         ),
         const Divider(
-          height: 80,
+          height: 40,
         ),
         Row(
           mainAxisAlignment:

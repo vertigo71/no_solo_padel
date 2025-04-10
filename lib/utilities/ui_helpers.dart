@@ -245,9 +245,9 @@ abstract class UiHelper {
             title,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 16.0), // Add some horizontal padding
+          insetPadding: EdgeInsets.symmetric(horizontal: 8.0), // Add some horizontal padding
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // Set the width to 80% of the screen width
+            width: MediaQuery.of(context).size.width,
             child: SingleChildScrollView(
               // Make content scrollable if it's still too tall
               child: child,
