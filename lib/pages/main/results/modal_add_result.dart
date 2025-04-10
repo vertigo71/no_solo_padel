@@ -284,15 +284,23 @@ class _AddResultModalState extends State<AddResultModal> {
     final int rankingA = _selectedPlayers[0]!.rankingPos + _selectedPlayers[1]!.rankingPos;
     final int rankingB = _selectedPlayers[2]!.rankingPos + _selectedPlayers[3]!.rankingPos;
 
-    return RankingPoints(
-      step: step,
-      range: range,
-      rankingDiffToHalf: rankingDiffToHalf,
-      freePoints: freePoints,
-      rankingA: rankingA,
-      rankingB: rankingB,
-      scoreA: _scores[0],
-      scoreB: _scores[1],
-    ).calculatePoints();
+    try {
+      return RankingPoints(
+        step: step,
+        range: range,
+        rankingDiffToHalf: rankingDiffToHalf,
+        freePoints: freePoints,
+        rankingA: rankingA,
+        rankingB: rankingB,
+        scoreA: _scores[0],
+        scoreB: _scores[1],
+      ).calculatePoints();
+    } catch (e) {
+      MyLog.log(_classString, 'Error calculating points: ${e.toString()}', indent: true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        UiHelper.showMessage(context, 'Error al calcular los puntos.\n${e.toString()}');
+      });
+      return [0, 0];
+    }
   }
 }

@@ -220,16 +220,24 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       int rankingDiffToHalf = int.tryParse(values[ParametersEnum.rankingDiffToHalf.name] as String? ?? '') ?? 0;
       int freePoints = int.tryParse(values[ParametersEnum.freePoints.name] as String? ?? '') ?? 0;
 
-      result = RankingPoints(
-        step: step,
-        range: range,
-        rankingDiffToHalf: rankingDiffToHalf,
-        freePoints: freePoints,
-        rankingA: rankingA,
-        rankingB: rankingB,
-        scoreA: scoreA,
-        scoreB: scoreB,
-      ).calculatePoints();
+      try {
+        result = RankingPoints(
+          step: step,
+          range: range,
+          rankingDiffToHalf: rankingDiffToHalf,
+          freePoints: freePoints,
+          rankingA: rankingA,
+          rankingB: rankingB,
+          scoreA: scoreA,
+          scoreB: scoreB,
+        ).calculatePoints();
+      } catch (e) {
+        result = [-1, -1];
+        MyLog.log(_classString, 'Error calculating points ${e.toString()}', level: Level.SEVERE, indent: true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          UiHelper.showMessage(context, 'Error al calcular los puntos de cada equipo');
+        });
+      }
     }
 
     return Padding(

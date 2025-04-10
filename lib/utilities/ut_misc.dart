@@ -156,6 +156,10 @@ class RankingPoints {
 
     // calculate k, the scaling factor, based on rankingDiffToHalf.
     // with factor 1.0, rankingDiffToHalf gets its meaning
+    if (rankingDiffToHalf == 0) {
+      MyLog.log(_classString, 'Error: el DR mitad es 0', indent: true);
+      throw 'Error: el DR mitad es 0';
+    }
     double k = 1.0 * rankingDifference / rankingDiffToHalf;
 
     // Calculate the fraction based on ranking difference and the scaling factor k.
