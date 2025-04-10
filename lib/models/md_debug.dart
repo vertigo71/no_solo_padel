@@ -44,11 +44,9 @@ class MyLog {
     final String logMessage = "[$heading]$indentation$message";
 
     // show in Telegram
-    if (level >= Level.SEVERE) {
+    if (level >= Level.WARNING) {
       String errorMsg = '\n******************'
-          '\n**** *****'
           '\n**** ERROR  *****'
-          '\n**** *****'
           '\n******************';
       errorMsg += '\n$message';
       if (myCustomObject != null) errorMsg += '\nOBJECT\n$myCustomObject';
@@ -57,26 +55,27 @@ class MyLog {
     }
 
     // show in console
-    _simpleLogger.log(level, logMessage, error: exception);
-    if (exception != null) {
-      _simpleLogger.log(level, '**************** $exception');
-    }
+    if (level >= _simpleLogger.level) {
+      _simpleLogger.log(level, logMessage);
 
-    if (myCustomObject != null) {
-      try {
-        if (myCustomObject is Map) {
-          String data = "{\n\t";
-          int num = 1;
-          myCustomObject.forEach((key, value) {
-            data += '"$key": $value ,';
-            if (num++ % 5 == 0) data += '\n\t';
-          });
-          data += "\n}";
-          _simpleLogger.log(level, '$indentation$indentation$data');
-        } else {
-          _simpleLogger.log(level, '$indentation$indentation$myCustomObject');
-        }
-      } catch (_) {}
+      if (exception != null) _simpleLogger.log(level, '**************** $exception');
+
+      if (myCustomObject != null) {
+        try {
+          if (myCustomObject is Map) {
+            String data = "{\n\t";
+            int num = 1;
+            myCustomObject.forEach((key, value) {
+              data += '"$key": $value ,';
+              if (num++ % 5 == 0) data += '\n\t';
+            });
+            data += "\n}";
+            _simpleLogger.log(level, '$indentation$indentation$data');
+          } else {
+            _simpleLogger.log(level, '$indentation$indentation$myCustomObject');
+          }
+        } catch (_) {}
+      }
     }
 
     // show in BugFender
