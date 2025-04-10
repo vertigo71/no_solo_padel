@@ -42,7 +42,7 @@ class ResultsPanel extends StatelessWidget {
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
                     final match = matches[index];
-                    return _buildMatchItem(match, context);
+                    return _buildMatchItem(context, match, appState);
                   },
                 );
               } else if (snapshot.hasError) {
@@ -61,13 +61,11 @@ class ResultsPanel extends StatelessWidget {
     }
   }
 
-  Widget _buildMatchItem(MyMatch match, BuildContext context) {
-    AppState appState = context.read<AppState>();
-
+  Widget _buildMatchItem(BuildContext context, MyMatch match, AppState appState) {
     try {
       return Column(
         children: [
-          _buildHeader(context, match.id.longFormat(), () => _addResultModal(context, match)),
+          _buildHeader(context, match.id.longFormat(), appState, () => _addResultModal(context, match)),
           StreamBuilder<List<GameResult>>(
             stream: FbHelpers().getResultsStream(appState: appState, matchId: match.id.toYyyyMMdd()),
             builder: (context, snapshot) {
@@ -108,22 +106,24 @@ class ResultsPanel extends StatelessWidget {
     }
   }
 
-  Widget _buildHeader(BuildContext context, String headerText, VoidCallback onAddResult) => Card(
+  Widget _buildHeader(BuildContext context, String headerText, AppState appState, VoidCallback onAddResult) => Card(
         elevation: 6,
         margin: const EdgeInsets.all(1.0),
         child: ListTile(
           tileColor: Theme.of(context).appBarTheme.backgroundColor,
           titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
           title: Text(headerText),
-          leading: GestureDetector(
-            onTap: onAddResult,
-            child: Tooltip(
-              message: 'Agregar nuevo resultado',
-              child: CircleAvatar(
-                child: Icon(Icons.add),
-              ),
-            ),
-          ),
+          leading: appState.isLoggedUserAdminOrSuper
+              ? GestureDetector(
+                  onTap: onAddResult,
+                  child: Tooltip(
+                    message: 'Agregar nuevo resultado',
+                    child: CircleAvatar(
+                      child: Icon(Icons.add),
+                    ),
+                  ),
+                )
+              : null,
         ),
       );
 
