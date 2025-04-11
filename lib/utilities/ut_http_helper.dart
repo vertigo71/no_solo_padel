@@ -4,10 +4,9 @@ import '../secret.dart';
 import '../models/md_date.dart';
 import '../models/md_debug.dart';
 
-
 final String _classString = 'HttpHelper'.toUpperCase();
 
-enum BotType { register, log, error }
+enum BotType { register, error }
 
 void sendDatedMessageToTelegram({required String message, required Date matchDate}) {
   MyLog.log(_classString, 'sendDatedMessageToTelegram');
@@ -20,12 +19,15 @@ Future<void> sendMessageToTelegram(String message, {BotType botType = BotType.re
   late String tmpBotToken;
   late String tmpChatId;
 
-  if (botType == BotType.error) {
-    tmpBotToken = getTelegramErrorBotToken();
-    tmpChatId = getTelegramErrorChatId();
-  } else if (botType == BotType.register) {
-    tmpBotToken = getTelegramBotToken();
-    tmpChatId = getTelegramChatId();
+  switch (botType) {
+    case BotType.register:
+      tmpBotToken = getTelegramBotToken();
+      tmpChatId = getTelegramChatId();
+      break;
+    case BotType.error:
+      tmpBotToken = getTelegramErrorBotToken();
+      tmpChatId = getTelegramErrorChatId();
+      break;
   }
 
   var url = Uri.parse('https://api.telegram.org/bot$tmpBotToken/'
