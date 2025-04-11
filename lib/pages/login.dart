@@ -15,7 +15,7 @@ import '../utilities/ui_helpers.dart';
 import '../routes/routes.dart';
 
 final String _classString = 'Login'.toUpperCase();
-const String kImage = 'assets/images/no_solo_padel_2025.png';
+const String kImage = 'assets/images/no_solo_padel_2025.jpeg';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

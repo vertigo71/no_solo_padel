@@ -12,7 +12,6 @@ final String _classString = 'SortingPanel'.toUpperCase();
 enum SortingType {
   ranking('Ranking'),
   palindromic('Capicúa'),
-  upsideDown('Inverso'),
   random('Aleatorio');
 
   final String label;
@@ -112,7 +111,6 @@ class SortingPanelState extends State<SortingPanel> {
               // better be const, so it is not rebuilt every time the index changes
               SortingSubPanel(sortingType: SortingType.ranking),
               SortingSubPanel(sortingType: SortingType.palindromic),
-              SortingSubPanel(sortingType: SortingType.upsideDown),
               SortingSubPanel(sortingType: SortingType.random),
             ],
           ),
@@ -138,9 +136,6 @@ class SortingSubPanel extends StatelessWidget {
         break;
       case SortingType.palindromic:
         courtPlayers = match.getPalindromicPlayerPairs();
-        break;
-      case SortingType.upsideDown:
-        courtPlayers = match.getUpsideDownPlayerPairs();
         break;
       case SortingType.random:
         courtPlayers = match.getRandomPlayerPairs();

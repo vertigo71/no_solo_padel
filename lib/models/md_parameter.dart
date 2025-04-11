@@ -28,7 +28,7 @@ enum ParametersEnum {
   step(defaultValue: '20', paramType: ParamType.ranking),
   range(defaultValue: '60', paramType: ParamType.ranking),
   rankingDiffToHalf(defaultValue: '3000', paramType: ParamType.ranking),
-  freePoints(defaultValue: '25', paramType: ParamType.ranking),
+  freePoints(defaultValue: '50', paramType: ParamType.ranking),
   ;
 
   final String defaultValue;

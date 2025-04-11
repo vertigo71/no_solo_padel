@@ -251,28 +251,6 @@ class MyMatch {
     return courtPlayers;
   }
 
-  Map<int, List<int>> getUpsideDownPlayerPairs() {
-    int numFilledCourts = getNumberOfFilledCourts();
-    // use cascade (..) operator as sort returns void
-    List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
-      ..sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
-    MyLog.log(
-        _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, '
-        'sortedMatchPlayers=$sortedMatchPlayers');
-    Map<int, List<int>> courtPlayers = {};
-
-    for (int i = numFilledCourts - 1; i >= 0; i--) {
-      courtPlayers[numFilledCourts - i - 1] = [
-        _players.indexOf(sortedMatchPlayers[i * 4]),
-        _players.indexOf(sortedMatchPlayers[i * 4 + 3]),
-        _players.indexOf(sortedMatchPlayers[i * 4 + 1]),
-        _players.indexOf(sortedMatchPlayers[i * 4 + 2]),
-      ];
-    }
-
-    return courtPlayers;
-  }
-
   Map<int, List<int>> getPalindromicPlayerPairs() {
     int numFilledCourts = getNumberOfFilledCourts();
     // use cascade (..) operator as sort returns void
