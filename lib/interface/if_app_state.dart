@@ -61,14 +61,13 @@ class AppState with ChangeNotifier {
 
   /// user methods
   MyUser? get loggedUser => _loggedUser;
+
   bool get isLoggedUser => _loggedUser != null;
 
   void setLoggedUser(MyUser user, {required bool notify}) {
     MyLog.log(_classString, 'setLoggedUser $user');
 
     _loggedUser = user;
-    // update MyLog name and email
-    MyLog.loggedUserId = _loggedUser!.id;
 
     if (notify) notifyListeners();
   }

@@ -5,22 +5,23 @@ import 'package:flutter_bugfender/flutter_bugfender.dart';
 
 import '../utilities/ut_http_helper.dart';
 
-class MyLog {
+abstract class MyLog {
   static final SimpleLogger _simpleLogger = SimpleLogger();
+  static String loggedUserId = '';
 
   /// initialize the logger
   static void initialize() {
     _simpleLogger.setLevel(Level.INFO);
     _simpleLogger.formatter = (info) {
       final formattedTime = DateFormat('HH:mm:ss.SSS').format(info.time);
-      final String levelString =
-          (info.level.name.length <= 5) ? info.level.name.padRight(5) : info.level.name.substring(0, 5);
+      final String levelString = _substring(info.level.name, 5);
 
       return '$levelString $formattedTime ${info.message}';
     };
   }
 
-  static String loggedUserId = '';
+  static String _substring(String str, int maxLength) =>
+      str.length <= maxLength ? str.padRight(maxLength) : str.substring(0, maxLength);
 
   /// convert an integer Debug level value into a Level variable
   /// if the int level is not valid, return Level.ALL
@@ -45,12 +46,16 @@ class MyLog {
 
     // show in Telegram
     if (level >= Level.WARNING) {
-      String errorMsg = '\n******************'
-          '\n**** ERROR  *****'
-          '\n******************';
-      errorMsg += '\n$message';
-      if (myCustomObject != null) errorMsg += '\nOBJECT\n$myCustomObject';
-      if (exception != null) errorMsg += '\nEXCEPTION\n$exception';
+      String errorMsg = level == Level.SEVERE
+          ? '\n******************'
+              '\n**** ERROR  *****'
+              '\n******************'
+              '\n'
+          : '';
+      errorMsg += message.toString();
+      if (myCustomObject != null) errorMsg += '\nOBJECT\n${myCustomObject.toString()}';
+      if (exception != null) errorMsg += '\nEXCEPTION\n${exception.toString()}';
+
       sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', botType: BotType.error);
     }
 
@@ -58,7 +63,7 @@ class MyLog {
     if (level >= _simpleLogger.level) {
       _simpleLogger.log(level, logMessage);
 
-      if (exception != null) _simpleLogger.log(level, '**************** $exception');
+      if (exception != null) _simpleLogger.log(level, '** EXCEPTION ** ${exception.toString()}');
 
       if (myCustomObject != null) {
         try {
@@ -87,7 +92,7 @@ class MyLog {
     } else {
       logFunction = FlutterBugfender.info;
     }
-    logFunction('[$heading] $message'
+    logFunction('[$loggedUserId:$heading] $message'
         '${myCustomObject == null ? "" : "\nOBJECT: ${myCustomObject.toString()}"}'
         '${exception == null ? "" : "\nERROR: ${exception.toString()}"}');
   }
