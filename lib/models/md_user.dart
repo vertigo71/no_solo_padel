@@ -1,3 +1,4 @@
+import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
@@ -18,7 +19,7 @@ enum UserType {
   const UserType(this.displayName);
 }
 
-// user fields in Firestore
+/// user fields in Firestore
 enum UserFs {
   users,
   userId,
@@ -31,6 +32,12 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
+}
+
+/// users sort order
+enum UsersSortBy {
+  ranking,
+  name,
 }
 
 /// Represents a user in the application.
@@ -226,4 +233,19 @@ class MyUser {
         avatarUrl,
         rankingPos,
       );
+}
+
+Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {
+  int compareToNoDiacritics(String a, String b) =>
+      removeDiacritics(a.toLowerCase()).compareTo(removeDiacritics(b.toLowerCase()));
+
+  switch (sortBy) {
+    case UsersSortBy.ranking:
+      return (a, b) {
+        int rankingCompare = b.rankingPos.compareTo(a.rankingPos);
+        return rankingCompare == 0 ? compareToNoDiacritics(a.name, b.name) : rankingCompare;
+      }; // Descending ranking
+    case UsersSortBy.name:
+      return (a, b) => compareToNoDiacritics(a.name, b.name); // Ascending name (no diacritics)
+  }
 }

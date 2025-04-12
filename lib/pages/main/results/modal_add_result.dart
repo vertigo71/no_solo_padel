@@ -120,17 +120,20 @@ class _AddResultModalState extends State<AddResultModal> {
             _selectedPlayers[numValue] = value;
           });
         },
-        dropdownMenuEntries:
-            _match.getPlayers(state: PlayingState.playing).map<DropdownMenuEntry<MyUser>>((MyUser user) {
-          return DropdownMenuEntry<MyUser>(
-            value: user,
-            label: user.name,
-            leadingIcon: CircleAvatar(
-              backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-              child: user.avatarUrl == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
-            ),
-          );
-        }).toList(),
+        dropdownMenuEntries: () {
+          final List<MyUser> players = _match.getPlayers(state: PlayingState.playing);
+          players.sort(getMyUserComparator(UsersSortBy.name));
+          return players.map<DropdownMenuEntry<MyUser>>((MyUser user) {
+            return DropdownMenuEntry<MyUser>(
+              value: user,
+              label: user.name,
+              leadingIcon: CircleAvatar(
+                backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                child: user.avatarUrl == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
+              ),
+            );
+          }).toList();
+        }(),
         leadingIcon: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(

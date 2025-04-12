@@ -85,7 +85,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   onChanged: (value) {
                     if (value != null) {
                       appState.sortUsers(
-                          sortBy: value ? UsersSortOrder.byName : UsersSortOrder.byRanking, notify: true);
+                          sortBy: value ? UsersSortBy.name : UsersSortBy.ranking, notify: true);
                     }
                   },
                 ),

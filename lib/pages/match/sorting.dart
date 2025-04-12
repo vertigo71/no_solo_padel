@@ -152,7 +152,7 @@ class SortingSubPanel extends StatelessWidget {
     MyLog.log(_classString, 'listOfMatches courts = $filledCourts', indent: true);
     MyLog.log(_classString, 'listOfMatches matchPlayers = $matchPlayers, courtPlayers = $sortedPlayers', indent: true);
 
-    List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortOrder.byRanking);
+    List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
 
     if (sortedPlayers.isEmpty) {
       return const Center(child: Text('No hay jugadores apuntados'));

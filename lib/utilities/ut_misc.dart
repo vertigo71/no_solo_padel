@@ -1,4 +1,3 @@
-import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:math';
 
@@ -75,8 +74,6 @@ bool strToBool(String value) {
   if (value == 'true') return true;
   return false;
 }
-
-String lowCaseNoDiacritics(String str) => removeDiacritics(str.toLowerCase());
 
 class RankingPoints {
   /// - The minimum points awarded

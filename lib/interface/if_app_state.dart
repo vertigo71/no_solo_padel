@@ -6,12 +6,8 @@ import '../models/md_date.dart';
 import '../models/md_debug.dart';
 import '../models/md_parameter.dart';
 import '../models/md_user.dart';
-import '../utilities/ut_misc.dart';
 
 final String _classString = '<st> AppState'.toLowerCase();
-
-// sorting order
-enum UsersSortOrder { byName, byRanking }
 
 /// registers the state of the app
 /// Saves users and parameters in Cache variables
@@ -25,7 +21,7 @@ class AppState with ChangeNotifier {
   MyParameters _parametersCache = MyParameters();
   final List<MyUser> _usersCache = [];
   MyUser _loggedUser = MyUser();
-  UsersSortOrder _usersSorting = UsersSortOrder.byName;
+  UsersSortBy _usersSorting = UsersSortBy.name;
 
   /// make loggedUser=none
   void resetLoggedUser() => setLoggedUser(MyUser(), notify: false);
@@ -91,18 +87,14 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void _sortUsersBold(UsersSortOrder sortBy) {
+  void _sortUsersBold(UsersSortBy sortBy) {
     MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
     _usersSorting = sortBy;
-    if (sortBy == UsersSortOrder.byName) {
-      _usersCache.sort((a, b) => lowCaseNoDiacritics(a.name).compareTo(lowCaseNoDiacritics(b.name)));
-    } else {
-      _usersCache.sort((a, b) => b.rankingPos.compareTo(a.rankingPos));
-    }
+    _usersCache.sort ( getMyUserComparator(sortBy));
   }
 
   // sort by name or ranking
-  void sortUsers({UsersSortOrder sortBy = UsersSortOrder.byName, bool notify = false}) {
+  void sortUsers({UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
     if (_usersSorting != sortBy) {
       _sortUsersBold(sortBy);
       if (notify) notifyListeners();
@@ -111,7 +103,7 @@ class AppState with ChangeNotifier {
     }
   }
 
-  bool get isUsersSortedByName => _usersSorting == UsersSortOrder.byName;
+  bool get isUsersSortedByName => _usersSorting == UsersSortBy.name;
 
   int get numUsers => _usersCache.length;
 
@@ -119,7 +111,7 @@ class AppState with ChangeNotifier {
 
   // Modifies _usersCache in place
   // get users sorted by name or ranking
-  List<MyUser> getSortedUsers({UsersSortOrder sortBy = UsersSortOrder.byName, bool notify = false}) {
+  List<MyUser> getSortedUsers({UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
     sortUsers(sortBy: sortBy, notify: notify);
     return List.from(_usersCache);
   }

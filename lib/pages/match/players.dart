@@ -143,7 +143,7 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.getNumberOfCourts(), 'pista')}';
-          List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortOrder.byRanking);
+          List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
           MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$rankingSortedUsers');
 
           return Column(
