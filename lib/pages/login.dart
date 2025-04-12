@@ -90,50 +90,52 @@ class LoginPageState extends State<LoginPage> {
         const SizedBox(height: 40.0),
         FormBuilder(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // username
-              FormBuilderTextField(
-                name: kUserId,
-                autofillHints: const [AutofillHints.username],
-                initialValue: getInitialUserName(),
-                onSubmitted: (String? str) => _formValidate(),
-                inputFormatters: [
-                  LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
-                ],
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(labelText: 'Usuario'),
-                validator: FormBuilderValidators.compose([
-                  FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-                ]),
-              ),
+          child: AutofillGroup(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // username
+                FormBuilderTextField(
+                  name: kUserId,
+                  autofillHints: const [AutofillHints.username],
+                  initialValue: getInitialUserName(),
+                  onSubmitted: (String? str) => _formValidate(),
+                  inputFormatters: [
+                    LowerCaseTextFormatter(RegExp(r'[^ @]'), allow: true),
+                  ],
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(labelText: 'Usuario'),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                  ]),
+                ),
 
-              const SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
 
-              // password
-              FormBuilderTextField(
-                name: kPwdId,
-                autofillHints: const [AutofillHints.password],
-                initialValue: getInitialPwd(),
-                onSubmitted: (String? str) => _formValidate(),
-                keyboardType: TextInputType.text,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Contraseña'),
-                validator: FormBuilderValidators.compose([
-                  FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-                ]),
-              ),
+                // password
+                FormBuilderTextField(
+                  name: kPwdId,
+                  autofillHints: const [AutofillHints.password],
+                  initialValue: getInitialPwd(),
+                  onSubmitted: (String? str) => _formValidate(),
+                  keyboardType: TextInputType.text,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(errorText: 'No puede estar vacío'),
+                  ]),
+                ),
 
-              const SizedBox(height: 30.0),
+                const SizedBox(height: 30.0),
 
-              // Validar
-              ElevatedButton(
-                onPressed: () => _formValidate(),
-                child: const Text('Entrar'),
-              ),
-              const SizedBox(height: 50.0),
-            ],
+                // Validar
+                ElevatedButton(
+                  onPressed: () => _formValidate(),
+                  child: const Text('Entrar'),
+                ),
+                const SizedBox(height: 50.0),
+              ],
+            ),
           ),
         )
       ],
