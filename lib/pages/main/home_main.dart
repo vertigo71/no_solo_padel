@@ -69,7 +69,7 @@ class _MainPageState extends State<MainPage> {
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
         return _buildErrorMessage();
       } else if (appState.loggedUser == null) {
-        // no logged user saved in appState
+        // no logged user
         MyLog.log(_classString, 'build without logged user', indent: true);
         // set loggedUser if exists
         if (AuthenticationHelper.user != null) {
@@ -77,6 +77,7 @@ class _MainPageState extends State<MainPage> {
           MyUser? user = appState.getUserByEmail(AuthenticationHelper.user!.email!);
           if (user != null) {
             // User found in appState.
+            // if not, listeners are still creating users
             MyLog.log(_classString, 'LoggedUser found in appState = $user', indent: true);
             appState.setLoggedUser(user, notify: false);
             user.lastLogin = Date.now();

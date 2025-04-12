@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
+import '../interface/if_app_state.dart';
 import '../interface/if_director.dart';
 import '../models/md_debug.dart';
 import '../models/md_user.dart';
@@ -38,19 +39,23 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    MyLog.log(_classString, 'initState', level: Level.FINE );
+    MyLog.log(_classString, 'initState', level: Level.FINE);
     getVersion();
-
-    // this page must only be presented when user is not logged in
-    // in some cases, back button comes to this page with a logged user
-    // this must be prevented
-    context.read<Director>().signOut();
   }
 
   /// build the widget tree
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
+
+    // if there is a logged user, go to main page
+    if (context.read<AppState>().loggedUser != null) {
+      MyLog.log(_classString, 'build: User already logged in', indent: true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AppRouter.router.goNamed(AppRoutes.kMain);
+      });
+      return const CircularProgressIndicator();
+    }
 
     return Scaffold(
       bottomNavigationBar: BottomAppBar(

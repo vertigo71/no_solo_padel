@@ -71,12 +71,11 @@ class FbHelpers {
     required void Function(MyParameters? parameters) parametersFunction,
     required void Function(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) usersFunction,
   }) async {
-    MyLog.log(_classString, 'creating LISTENER for parameters. Listener should be null = $_paramListener',
-        indent: true);
-
+    // update parameters
     if (_paramListener != null) {
       MyLog.log(_classString, 'ParamLISTENER already created', level: Level.WARNING, indent: true);
     } else {
+      MyLog.log(_classString, 'creating ParamLISTENER ', indent: true);
       _paramListener =
           _instance.collection(ParameterFs.parameters.name).doc(ParameterFs.parameters.name).snapshots().listen(
         (snapshot) {
@@ -103,11 +102,10 @@ class FbHelpers {
     }
 
     // update users
-    MyLog.log(_classString, 'creating LISTENER for users. Listener should be null = $_usersListener', indent: true);
-
     if (_usersListener != null) {
       MyLog.log(_classString, 'UserLISTENER already created', level: Level.WARNING, indent: true);
     } else {
+      MyLog.log(_classString, 'creating UserLISTENER ', indent: true);
       _usersListener = _instance.collection(UserFs.users.name).snapshots().listen(
         (snapshot) {
           if (snapshot.docChanges.isNotEmpty) {
