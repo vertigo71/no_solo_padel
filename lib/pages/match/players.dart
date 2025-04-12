@@ -445,16 +445,14 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   // send to register and telegram
   Future<void> _sendToRegister(MyMatch updatedMatch, String registerText) async {
-    MyMatch match = context.read<MatchNotifier>().match;
-
     MyLog.log(_classString, '_sendToRegister send to register');
-    await FbHelpers().updateRegister(RegisterModel(date: match.id, message: registerText));
+    await FbHelpers().updateRegister(RegisterModel(date: updatedMatch.id, message: registerText));
 
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
         message: '$registerText\n'
-            'APUNTADOS: ${match.playersReference.length} de ${match.getNumberOfCourts() * 4}',
-        matchDate: match.id);
+            'APUNTADOS: ${updatedMatch.playersReference.length} de ${updatedMatch.getNumberOfCourts() * 4}',
+        matchDate: updatedMatch.id);
   }
 
   Future<bool> _confirmQuitMatch() async {
