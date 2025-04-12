@@ -254,7 +254,8 @@ class _MainPageState extends State<MainPage> {
       if (fireBaseUser == null || fireBaseUser.email == null) {
         MyLog.log(_classString, '_initialize: User not authenticated = $fireBaseUser',
             level: Level.SEVERE, indent: true);
-        throw 'Error: Usuario no registrado en el sistema. \nHable con el administrador.';
+        throw 'El usuario ha sido desconectado\no\n'
+            'Usuario no registrado en el sistema';
       }
 
       // create listeners for users and parameters

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
-import '../interface/if_app_state.dart';
-import '../interface/if_director.dart';
 import '../models/md_debug.dart';
 import '../models/md_user.dart';
 import '../secret.dart';
@@ -49,7 +46,7 @@ class LoginPageState extends State<LoginPage> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     // if there is a logged user, go to main page
-    if (context.read<AppState>().loggedUser != null) {
+    if (AuthenticationHelper.user != null) {
       MyLog.log(_classString, 'build: User already logged in', indent: true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         AppRouter.router.goNamed(AppRoutes.kMain);
