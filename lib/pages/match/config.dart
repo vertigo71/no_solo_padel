@@ -31,12 +31,13 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   static const String kCommentId = 'comment';
   static const String kCourtId = 'court';
   static const String kIsOpenId = 'isOpen';
+  static const String kSortingId = 'sorting';
 
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for match=$match', level:Level.FINE);
+    MyLog.log(_classString, 'Building Form for match=$match', level: Level.FINE);
 
     // // initial values for all fields
     // // FormBuilder initial values do not work in case another user updates any field
@@ -59,6 +60,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     bool areFieldsDifferent(dynamic formValue, dynamic matchValue) => formValue != null && formValue != matchValue;
     fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[kCommentId]?.value, match.comment);
     fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kIsOpenId]?.value, match.isOpen);
+    fieldsChanged =
+        fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kSortingId]?.value, match.sortingType);
     fieldsChanged = fieldsChanged ||
         List.generate(
             kMaxNumberOfCourts,
@@ -86,75 +89,22 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
             const SizedBox(height: 30.0),
 
             // Courts
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const Text('Pistas'),
-                const SizedBox(width: 10.0),
-                for (int i = 0; i < kMaxNumberOfCourts; i++)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: FormBuilderTextField(
-                        name: '$kCourtId$i',
-                        // Unique name for each field
-                        decoration: InputDecoration(
-                          // labelText: 'Pista ${i + 1}',
-                          contentPadding: const EdgeInsets.all(8.0),
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                          ),
-                        ),
-                        initialValue: i < match.courtNamesReference.length ? match.courtNamesReference[i] : '',
-                        inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
-                        keyboardType: TextInputType.text,
-                        textAlign: TextAlign.center, // Center the text
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            _buildCourts(),
 
             const SizedBox(height: 30.0),
 
             // Open match
-            Row(
-              children: <Widget>[
-                const SizedBox(width: 10),
-                Text('Abrir convocatoria'),
-                const SizedBox(width: 10),
-                FormBuilderField<bool>(
-                  name: kIsOpenId,
-                  initialValue: match.isOpen,
-                  builder: (FormFieldState<bool> field) {
-                    return UiHelper.myCheckBox(
-                      context: context,
-                      value: field.value ?? false,
-                      onChanged: (newValue) {
-                        field.didChange(newValue);
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
+            _builtIsOpen(),
+
+            const SizedBox(height: 30.0),
+
+            // type of sorting
+            _sortingType(),
 
             const SizedBox(height: 40.0),
 
             // Comments
-            FormBuilderTextField(
-              name: kCommentId,
-              decoration: InputDecoration(
-                labelText: 'Comentarios',
-                contentPadding: const EdgeInsets.all(8.0),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                ),
-              ),
-              keyboardType: TextInputType.text,
-              initialValue: match.comment,
-            ),
+            _buildComments(),
 
             // Aceptar button
             Padding(
@@ -176,8 +126,115 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     );
   }
 
+  Widget _buildComments() {
+    MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building Comments', level: Level.FINE, indent: true);
+
+    return FormBuilderTextField(
+      name: kCommentId,
+      decoration: InputDecoration(
+        labelText: 'Comentarios',
+        contentPadding: const EdgeInsets.all(8.0),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4.0)),
+        ),
+      ),
+      keyboardType: TextInputType.text,
+      initialValue: match.comment,
+    );
+  }
+
+  Widget _sortingType() {
+    MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building sorting type', level: Level.FINE, indent: true);
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 18.0),
+      child: Row(
+        children: <Widget>[
+          const SizedBox(width: 10),
+          Text('Tipo de sorteo:'),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FormBuilderDropdown<MatchSortingType>(
+              name: kSortingId,
+              initialValue: match.sortingType,
+              items: MatchSortingType.values
+                  .map((MatchSortingType type) => DropdownMenuItem<MatchSortingType>(
+                        value: type,
+                        child: Text(type.label),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourts() {
+    MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building Courts', level: Level.FINE, indent: true);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Text('Pistas'),
+        const SizedBox(width: 10.0),
+        for (int i = 0; i < kMaxNumberOfCourts; i++)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: FormBuilderTextField(
+                name: '$kCourtId$i',
+                // Unique name for each field
+                decoration: InputDecoration(
+                  // labelText: 'Pista ${i + 1}',
+                  contentPadding: const EdgeInsets.all(8.0),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  ),
+                ),
+                initialValue: i < match.courtNamesReference.length ? match.courtNamesReference[i] : '',
+                inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
+                keyboardType: TextInputType.text,
+                textAlign: TextAlign.center, // Center the text
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _builtIsOpen() {
+    MyMatch match = context.read<MatchNotifier>().match;
+    MyLog.log(_classString, 'Building isOpen', level: Level.FINE, indent: true);
+
+    return Row(
+      children: <Widget>[
+        const SizedBox(width: 10),
+        Text('Abrir convocatoria'),
+        const SizedBox(width: 10),
+        FormBuilderField<bool>(
+          name: kIsOpenId,
+          initialValue: match.isOpen,
+          builder: (FormFieldState<bool> field) {
+            return UiHelper.myCheckBox(
+              context: context,
+              value: field.value ?? false,
+              onChanged: (newValue) {
+                field.didChange(newValue);
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   String _checkForm() {
-    MyLog.log(_classString, '_checkForm check all courts', level: Level.FINE );
+    MyLog.log(_classString, '_checkForm check all courts', level: Level.FINE);
 
     // empty courts
     List<String> courts = [];
@@ -197,7 +254,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   }
 
   Future<void> _formValidate() async {
-    MyLog.log(_classString, '_formValidate: validate the form', level: Level.FINE );
+    MyLog.log(_classString, '_formValidate: validate the form', level: Level.FINE);
 
     var state = _formKey.currentState;
 
@@ -226,6 +283,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
       newMatch.comment = state.value[kCommentId];
       newMatch.isOpen = state.value[kIsOpenId];
+      newMatch.sortingType = state.value[kSortingId];
       MyLog.log(_classString, '_formValidate: update match = $newMatch', indent: true);
       // Update to Firestore
       String message = 'Los datos han sido actualizados';

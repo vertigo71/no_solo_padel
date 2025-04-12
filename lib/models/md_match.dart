@@ -23,7 +23,17 @@ enum PlayingState {
 }
 
 // match fields in Firestore
-enum MatchFs { matches, date, comment, isOpen, courtNames, players }
+enum MatchFs { matches, date, comment, isOpen, courtNames, players, sortingType }
+
+enum MatchSortingType {
+  ranking('Ranking'),
+  palindromic('Capicúa'),
+  random('Aleatorio');
+
+  final String label;
+
+  const MatchSortingType(this.label);
+}
 
 class MyMatch {
   Date id;
@@ -31,8 +41,15 @@ class MyMatch {
   final List<String> _courtNames = [];
   String comment;
   bool isOpen;
+  MatchSortingType sortingType;
 
-  MyMatch({required this.id, this.comment = '', this.isOpen = false, List<MyUser>? players, List<String>? courtNames}) {
+  MyMatch(
+      {required this.id,
+      this.comment = '',
+      this.isOpen = false,
+      this.sortingType = MatchSortingType.ranking,
+      List<MyUser>? players,
+      List<String>? courtNames}) {
     _players.addAll(players ?? {});
     _courtNames.addAll(courtNames ?? {});
   }
@@ -62,6 +79,7 @@ class MyMatch {
       courtNames: List<String>.from(json[MatchFs.courtNames.name] ?? []),
       comment: json[MatchFs.comment.name] ?? '',
       isOpen: json[MatchFs.isOpen.name] ?? false,
+      sortingType: MatchSortingType.values[json[MatchFs.sortingType.name] ?? 0],
     );
   }
 
@@ -81,6 +99,7 @@ class MyMatch {
     List<String>? courtNames,
     String? comment,
     bool? isOpen,
+    MatchSortingType? sortingType,
   }) {
     return MyMatch(
       id: id ?? this.id,
@@ -88,6 +107,7 @@ class MyMatch {
       courtNames: courtNames ?? List.from(_courtNames),
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
+      sortingType: sortingType ?? this.sortingType,
     );
   }
 
@@ -117,6 +137,8 @@ class MyMatch {
         .map((entry) => entry.key) // Extract the player
         .toList(); // Convert to list
   }
+
+
 
   /// return -1 if not found
   int getPlayerPosition(MyUser user) => _players.indexOf(user);
@@ -192,6 +214,17 @@ class MyMatch {
     }
 
     return playerStates;
+  }
+
+  Map<int, List<int>>  getPlayingPairs() {
+    switch (sortingType) {
+      case MatchSortingType.ranking:
+        return getRankingPlayerPairs();
+      case MatchSortingType.palindromic:
+     return getPalindromicPlayerPairs();
+      case MatchSortingType.random:
+        return getRandomPlayerPairs();
+    }
   }
 
   /// Generates a map representing player positions to courts for the match.
@@ -282,6 +315,7 @@ class MyMatch {
         if (core) MatchFs.courtNames.name: _courtNames.toList(),
         if (core) MatchFs.comment.name: comment,
         if (core) MatchFs.isOpen.name: isOpen, // bool
+        if (core) MatchFs.sortingType.name: sortingType.index, // int
       };
 
   String toJsonString() => jsonEncode(toJson());
@@ -297,7 +331,8 @@ class MyMatch {
         listEquals(_players, other._players) && // Compare lists using collection package
         listEquals(_courtNames, other._courtNames) && // Compare lists using collection package
         comment == other.comment &&
-        isOpen == other.isOpen;
+        isOpen == other.isOpen &&
+        sortingType == other.sortingType;
   }
 
   @override
@@ -307,5 +342,6 @@ class MyMatch {
         const DeepCollectionEquality().hash(_courtNames), // Hash lists using collection package
         comment,
         isOpen,
+        sortingType,
       );
 }

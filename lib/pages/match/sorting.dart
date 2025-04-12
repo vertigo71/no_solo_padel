@@ -9,16 +9,6 @@ import '../../models/md_user.dart';
 
 final String _classString = 'SortingPanel'.toUpperCase();
 
-enum SortingType {
-  ranking('Ranking'),
-  palindromic('Capicúa'),
-  random('Aleatorio');
-
-  final String label;
-
-  const SortingType(this.label);
-}
-
 class SortingPanel extends StatefulWidget {
   const SortingPanel({super.key});
 
@@ -27,30 +17,10 @@ class SortingPanel extends StatefulWidget {
 }
 
 class SortingPanelState extends State<SortingPanel> {
-  int _selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
     MyLog.log(_classString, 'SortingPanel for match=$match');
-
-    // Calculate the total estimated text width.
-    double totalTextWidth =
-        SortingType.values.map((type) => type.label.length * 10.0).reduce((value, element) => value + element);
-
-    // Calculate the horizontal padding.
-    double widthPadding = (MediaQuery.of(context).size.width - totalTextWidth) / 8.0;
-
-    MyLog.log(
-        _classString,
-        'SortingPanel totalWidth=${MediaQuery.of(context).size.width}, '
-        'totalTextWidth=$totalTextWidth, widthPadding=$widthPadding',
-        indent: true);
-
-    // Ensure padding is not negative.
-    if (widthPadding < 0) {
-      widthPadding = 0;
-    }
 
     return Column(
       children: <Widget>[
@@ -64,56 +34,17 @@ class SortingPanelState extends State<SortingPanel> {
               title: Text(match.comment),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black87, // Border color
-                width: 0.5, // Border width
-              ),
-              borderRadius: BorderRadius.circular(6.0), // Rounded corners
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ToggleButtons(
-                    renderBorder: false,
-                    fillColor: Theme.of(context).colorScheme.surfaceBright,
-                    isSelected: List.generate(
-                      // create a list of booleans. True for the selected toggle index
-                      SortingType.values.length,
-                      (index) => index == _selectedIndex,
-                    ),
-                    onPressed: (int index) {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                    },
-                    children: SortingType.values
-                        .map((type) => Padding(
-                              padding: EdgeInsets.symmetric(horizontal: widthPadding),
-                              child: Text(type.label),
-                            ))
-                        .toList(),
-                  ),
-                ],
-              ),
-            ),
+        Card(
+          elevation: 6,
+          margin: const EdgeInsets.all(10),
+          child: ListTile(
+            tileColor: Theme.of(context).appBarTheme.backgroundColor,
+            titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+            title: Text('Tipo de sorteo: ${match.sortingType.label}'),
           ),
         ),
         Expanded(
-          child: IndexedStack(
-            index: _selectedIndex,
-            children: const <Widget>[
-              // better be const, so it is not rebuilt every time the index changes
-              SortingSubPanel(sortingType: SortingType.ranking),
-              SortingSubPanel(sortingType: SortingType.palindromic),
-              SortingSubPanel(sortingType: SortingType.random),
-            ],
-          ),
+          child: SortingSubPanel(sortingType: match.sortingType),
         ),
       ],
     );
@@ -121,8 +52,8 @@ class SortingPanelState extends State<SortingPanel> {
 }
 
 class SortingSubPanel extends StatelessWidget {
-  const SortingSubPanel({super.key, required SortingType sortingType}) : _sortingType = sortingType;
-  final SortingType _sortingType;
+  const SortingSubPanel({super.key, required MatchSortingType sortingType}) : _sortingType = sortingType;
+  final MatchSortingType _sortingType;
 
   @override
   Widget build(BuildContext context) {
@@ -131,13 +62,13 @@ class SortingSubPanel extends StatelessWidget {
 
     Map<int, List<int>> courtPlayers;
     switch (_sortingType) {
-      case SortingType.ranking:
+      case MatchSortingType.ranking:
         courtPlayers = match.getRankingPlayerPairs();
         break;
-      case SortingType.palindromic:
+      case MatchSortingType.palindromic:
         courtPlayers = match.getPalindromicPlayerPairs();
         break;
-      case SortingType.random:
+      case MatchSortingType.random:
         courtPlayers = match.getRandomPlayerPairs();
         break;
     }
