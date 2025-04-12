@@ -70,9 +70,9 @@ class ProfilePanelState extends State<ProfilePanel> {
       if (_compressedImageData != null) {
         // if user has picked an image, use it
         imageProvider = MemoryImage(_compressedImageData!);
-      } else if (appState.getLoggedUser().avatarUrl != null) {
+      } else if (appState.isLoggedUser && appState.loggedUser!.avatarUrl != null) {
         // else, if there is an image in firebase storage
-        imageProvider = NetworkImage(appState.getLoggedUser().avatarUrl!);
+        imageProvider = NetworkImage(appState.loggedUser!.avatarUrl!);
       }
     } catch (e) {
       MyLog.log(_classString, 'Error building image', level: Level.SEVERE, indent: true);
@@ -204,13 +204,20 @@ class ProfilePanelState extends State<ProfilePanel> {
   }
 
   String _getInitialValue(_FormFieldsEnum formFieldEnum) {
+    final MyUser? loggedUser = appState.loggedUser;
+
+    if (loggedUser == null) {
+      MyLog.log(_classString, '_getInitialValue loggedUser is null', level: Level.SEVERE);
+      throw Exception('No se ha podido obtener el usuario conectado');
+    }
+
     switch (formFieldEnum) {
       case _FormFieldsEnum.name:
-        return appState.getLoggedUser().name;
+        return loggedUser.name;
       case _FormFieldsEnum.emergencyInfo:
-        return appState.getLoggedUser().emergencyInfo;
+        return loggedUser.emergencyInfo;
       case _FormFieldsEnum.user:
-        return appState.getLoggedUser().email.split('@')[0];
+        return loggedUser.email.split('@')[0];
       default:
         return '';
     }
@@ -236,11 +243,19 @@ class ProfilePanelState extends State<ProfilePanel> {
       MyLog.log(_classString, '_formValidate $newPwd', indent: true);
       MyLog.log(_classString, '_formValidate $checkPwd', indent: true);
 
+      // logged user
+      final MyUser? loggedUser = appState.loggedUser;
+
+      if (loggedUser == null) {
+        MyLog.log(_classString, '_formValidate loggedUser is null', level: Level.SEVERE);
+        throw Exception('No se ha podido obtener el usuario conectado');
+      }
+
       // Validation and Update Logic
-      bool isValid = _checkName(newName);
+      bool isValid = _checkName(newName, loggedUser);
       if (!isValid) return;
 
-      isValid = _checkEmail(newEmail, actualPwd);
+      isValid = _checkEmail(newEmail, actualPwd, loggedUser);
       if (!isValid) return;
 
       isValid = _checkAllPwd(actualPwd, newPwd, checkPwd);
@@ -255,22 +270,22 @@ class ProfilePanelState extends State<ProfilePanel> {
       List<String> updatedFields = [];
 
       // Handle name update
-      if (newName != appState.getLoggedUser().name) {
-        isValid = await _updateName(newName);
+      if (newName != loggedUser.name) {
+        isValid = await _updateName(newName, loggedUser);
         if (!isValid) return;
         updatedFields.add('Nombre');
       }
 
       // Handle emergency info update
-      if (newEmergencyInfo != appState.getLoggedUser().emergencyInfo) {
-        isValid = await _updateEmergencyInfo(newEmergencyInfo, updatedFields);
+      if (newEmergencyInfo != loggedUser.emergencyInfo) {
+        isValid = await _updateEmergencyInfo(newEmergencyInfo, updatedFields, loggedUser);
         if (!isValid) return;
         updatedFields.add('Información de emergencia');
       }
 
       // Handle email update
-      if (newEmail != appState.getLoggedUser().email) {
-        isValid = await _updateEmail(newEmail, actualPwd, updatedFields);
+      if (newEmail != loggedUser.email) {
+        isValid = await _updateEmail(newEmail, actualPwd, updatedFields, loggedUser);
         if (!isValid) return;
         updatedFields.add('Correo');
       }
@@ -284,7 +299,7 @@ class ProfilePanelState extends State<ProfilePanel> {
 
       // Handle avatar upload
       if (_compressedImageData != null) {
-        isValid = await _updateAvatar(updatedFields);
+        isValid = await _updateAvatar(updatedFields, loggedUser);
         if (!isValid) return;
         updatedFields.add('Avatar');
       }
@@ -297,12 +312,12 @@ class ProfilePanelState extends State<ProfilePanel> {
     }
   }
 
-  bool _checkName(String newName) {
+  bool _checkName(String newName, MyUser loggedUser) {
     // newName is not somebody else's
 
     MyLog.log(_classString, 'checkName $newName');
 
-    if (newName != appState.getLoggedUser().name) {
+    if (newName != loggedUser.name) {
       MyUser? user = appState.getUserByName(newName);
       if (user != null) {
         UiHelper.showMessage(context, 'Ya hay un usuario con ese nombre');
@@ -313,14 +328,13 @@ class ProfilePanelState extends State<ProfilePanel> {
     return true;
   }
 
-  Future<bool> _updateName(String newName) async {
+  Future<bool> _updateName(String newName, MyUser loggedUser) async {
     MyLog.log(_classString, 'updateName $newName');
 
-    MyUser user = appState.getLoggedUser();
-    user.name = newName;
+    loggedUser.name = newName;
 
     try {
-      await FbHelpers().updateUser(user);
+      await FbHelpers().updateUser(loggedUser);
     } catch (e) {
       MyLog.log(_classString, 'updateName Error al actualizar el nombre del usuario',
           level: Level.SEVERE, indent: true);
@@ -330,14 +344,14 @@ class ProfilePanelState extends State<ProfilePanel> {
     return true;
   }
 
-  Future<bool> _updateEmergencyInfo(String newEmergencyInfo, final List<String> updatedFields) async {
+  Future<bool> _updateEmergencyInfo(
+      String newEmergencyInfo, final List<String> updatedFields, MyUser loggedUser) async {
     MyLog.log(_classString, 'updateEmergencyInfo $newEmergencyInfo');
 
-    MyUser user = appState.getLoggedUser();
-    user.emergencyInfo = newEmergencyInfo;
+    loggedUser.emergencyInfo = newEmergencyInfo;
 
     try {
-      await FbHelpers().updateUser(user);
+      await FbHelpers().updateUser(loggedUser);
     } catch (e) {
       _showErrorMessage('Error al actualizar la información de emergencia del usuario', updatedFields);
       MyLog.log(_classString, 'updateEmergencyInfo Error al actualizar  la información de emergencia del usuario',
@@ -348,11 +362,11 @@ class ProfilePanelState extends State<ProfilePanel> {
     return true;
   }
 
-  bool _checkEmail(String newEmail, String actualPwd) {
+  bool _checkEmail(String newEmail, String actualPwd, MyUser loggedUser) {
     // newEmail is not somebody else's
     MyLog.log(_classString, 'checkEmail $newEmail');
 
-    if (newEmail != appState.getLoggedUser().email) {
+    if (newEmail != loggedUser.email) {
       MyUser? user = appState.getUserByEmail(newEmail);
       if (user != null) {
         UiHelper.showMessage(context, 'Ya hay un usuario con ese correo');
@@ -366,7 +380,8 @@ class ProfilePanelState extends State<ProfilePanel> {
     return true;
   }
 
-  Future<bool> _updateEmail(String newEmail, String actualPwd, final List<String> updatedFields) async {
+  Future<bool> _updateEmail(
+      String newEmail, String actualPwd, final List<String> updatedFields, MyUser loggedUser) async {
     MyLog.log(_classString, 'updateEmail $newEmail');
 
     String response = await AuthenticationHelper.updateEmail(newEmail: newEmail, actualPwd: actualPwd);
@@ -376,7 +391,6 @@ class ProfilePanelState extends State<ProfilePanel> {
       return false;
     }
 
-    MyUser loggedUser = appState.getLoggedUser();
     loggedUser.email = newEmail;
 
     try {
@@ -417,10 +431,10 @@ class ProfilePanelState extends State<ProfilePanel> {
     return true;
   }
 
-  Future<bool> _updateAvatar(final List<String> updatedFields) async {
+  Future<bool> _updateAvatar(final List<String> updatedFields, MyUser loggedUser) async {
     MyLog.log(_classString, 'Uploading new avatar', indent: true);
     try {
-      await FbHelpers().updateUser(appState.getLoggedUser(), _compressedImageData);
+      await FbHelpers().updateUser(loggedUser, _compressedImageData);
       return true; // Return true on success
     } catch (e) {
       MyLog.log(_classString, 'Error al subir el avatar: ${e.toString()}', level: Level.SEVERE);

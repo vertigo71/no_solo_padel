@@ -9,6 +9,7 @@ import '../../interface/if_app_state.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_match.dart';
 import '../../models/md_parameter.dart';
+import '../../models/md_user.dart';
 import '../../routes/routes.dart';
 import '../../models/md_date.dart';
 import '../../utilities/ui_helpers.dart';
@@ -65,8 +66,14 @@ class GamesPanel extends StatelessWidget {
                 ...ListTile.divideTiles(
                   context: context,
                   tiles: playableMatches.map((match) {
-                    String playingStateStr = match.getPlayingStateString(appState.getLoggedUser());
-                    PlayingState playingState = match.getPlayingState(appState.getLoggedUser());
+                    final MyUser? loggedUser = appState.loggedUser;
+                    if (loggedUser == null) {
+                      MyLog.log(_classString, 'build loggedUser is null', level: Level.SEVERE);
+                      throw Exception('No se ha podido obtener el usuario conectado');
+                    }
+
+                    String playingStateStr = match.getPlayingStateString(loggedUser);
+                    PlayingState playingState = match.getPlayingState(loggedUser);
                     final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
                     return Card(
@@ -78,10 +85,9 @@ class GamesPanel extends StatelessWidget {
                             match.isOpen
                                 ? UiHelper.getTilePlayingColor(context, playingState)
                                 : UiHelper.getMatchTileColor(match),
-                        leading:
-                            CircleAvatar(
-                                backgroundColor: UiHelper.getMatchAvatarColor(match),
-                                child: Text(match.isOpen ? 'A' : 'C')),
+                        leading: CircleAvatar(
+                            backgroundColor: UiHelper.getMatchAvatarColor(match),
+                            child: Text(match.isOpen ? 'A' : 'C')),
                         title: match.isOpen
                             ? Text('${match.id.toString()}\n$playingStateStr$comment')
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),

@@ -20,11 +20,11 @@ class AppState with ChangeNotifier {
   /// attributes
   MyParameters _parametersCache = MyParameters();
   final List<MyUser> _usersCache = [];
-  MyUser _loggedUser = MyUser();
+  MyUser? _loggedUser;
   UsersSortBy _usersSorting = UsersSortBy.name;
 
   /// make loggedUser=none
-  void resetLoggedUser() => setLoggedUser(MyUser(), notify: false);
+  void resetLoggedUser() => _loggedUser = null;
 
   void resetParameters() => setAllParameters(MyParameters(), notify: false);
 
@@ -60,14 +60,15 @@ class AppState with ChangeNotifier {
   }
 
   /// user methods
-  MyUser getLoggedUser() => _loggedUser;
+  MyUser? get loggedUser => _loggedUser;
+  bool get isLoggedUser => _loggedUser != null;
 
   void setLoggedUser(MyUser user, {required bool notify}) {
     MyLog.log(_classString, 'setLoggedUser $user');
 
     _loggedUser = user;
     // update MyLog name and email
-    MyLog.loggedUserId = _loggedUser.id;
+    MyLog.loggedUserId = _loggedUser!.id;
 
     if (notify) notifyListeners();
   }
@@ -79,7 +80,7 @@ class AppState with ChangeNotifier {
 
     if (loggedUser == null) {
       MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', level: Level.SEVERE);
-      throw Exception('User not found. User=$userId');
+      throw Exception('LoggedUser not set. User not found. User=$userId');
     }
 
     setLoggedUser(loggedUser, notify: notify);
@@ -87,10 +88,11 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
+  // bold: affects directly cached users
   void _sortUsersBold(UsersSortBy sortBy) {
     MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
     _usersSorting = sortBy;
-    _usersCache.sort ( getMyUserComparator(sortBy));
+    _usersCache.sort(getMyUserComparator(sortBy));
   }
 
   // sort by name or ranking
@@ -116,21 +118,23 @@ class AppState with ChangeNotifier {
     return List.from(_usersCache);
   }
 
-  bool get isLoggedUserAdminOrSuper => [UserType.admin, UserType.superuser].contains(_loggedUser.userType);
+  bool get isLoggedUserAdminOrSuper =>
+      [UserType.admin, UserType.superuser].contains(_loggedUser?.userType ?? UserType.basic);
 
-  bool get isLoggedUserSuper => _loggedUser.userType == UserType.superuser;
+  bool get isLoggedUserSuper => _loggedUser == null ? false : _loggedUser!.userType == UserType.superuser;
 
   bool get showLog => getBoolParamValue(ParametersEnum.showLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
     MyLog.log(_classString, 'setAllUsers users=$users');
 
+    // replace cached users
     _usersCache.clear();
     _usersCache.addAll(users);
     _sortUsersBold(_usersSorting);
 
     // convert loggedUser
-    setLoggedUserById(_loggedUser.id, notify: false);
+    if (_loggedUser != null) setLoggedUserById(_loggedUser!.id, notify: false);
 
     if (notify) notifyListeners();
   }

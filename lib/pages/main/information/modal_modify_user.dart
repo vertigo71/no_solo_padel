@@ -127,7 +127,7 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
             ),
             initialValue: user.userType,
             items: UserType.values
-                .where((type) => _appState.getLoggedUser().userType.index >= type.index)
+                .where((type) => (_appState.loggedUser?.userType.index ?? UserType.basic.index) >= type.index)
                 .map((type) => DropdownMenuItem(
                       value: type,
                       child: Text(type.displayName),

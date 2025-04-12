@@ -35,7 +35,7 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
     _selectedUser = context.read<AppState>().getSortedUsers()[0];
-    _loggedUser = context.read<AppState>().getLoggedUser();
+    _loggedUser = context.read<AppState>().loggedUser ?? MyUser();
   }
 
   @override
@@ -48,6 +48,11 @@ class PlayersPanelState extends State<PlayersPanel> {
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
     MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match', level: Level.FINE);
+
+    if (!context.read<AppState>().isLoggedUser) {
+      MyLog.log(_classString, 'User is not logged in', level: Level.SEVERE);
+      return Center(child: Text('No hay ningún usuario logueado'));
+    }
 
     return ListView(
       children: [

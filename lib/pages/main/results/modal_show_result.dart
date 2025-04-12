@@ -30,7 +30,7 @@ class ShowResultModal extends StatelessWidget {
           spacing: 8.0,
           children: [
             if (result.teamA != null) Expanded(child: _buildTeam(context, result.teamA!)),
-            _buildResult(result),
+            _buildScore(result),
             if (result.teamB != null) Expanded(child: _buildTeam(context, result.teamB!)),
           ],
         ),
@@ -70,16 +70,16 @@ class ShowResultModal extends StatelessWidget {
     return Column(
       spacing: 8.0,
       children: [
-        ..._buildPlayer(context, team.player1),
+        ..._buildPlayer(context, team.player1, team.preRanking1),
         const SizedBox(height: 20),
-        ..._buildPlayer(context, team.player2),
+        ..._buildPlayer(context, team.player2, team.preRanking2),
         const SizedBox(height: 20),
         _buildPoints(team.points),
       ],
     );
   }
 
-  List<Widget> _buildPlayer(BuildContext context, MyUser player) {
+  List<Widget> _buildPlayer(BuildContext context, MyUser player, int preRanking) {
     MyLog.log(_classString, 'Building player: $player', level: Level.INFO, indent: true);
     return [
       CircleAvatar(
@@ -89,7 +89,7 @@ class ShowResultModal extends StatelessWidget {
         child: player.avatarUrl == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
       ),
       Text(player.name),
-      Text(player.rankingPos.toString()),
+      Text(preRanking.toString()),
     ];
   }
 
@@ -108,7 +108,7 @@ class ShowResultModal extends StatelessWidget {
     );
   }
 
-  Widget _buildResult(GameResult result) {
+  Widget _buildScore(GameResult result) {
     MyLog.log(_classString, 'Building result: $result', indent: true);
     if (result.teamA != null && result.teamB != null) {
       return Text('${result.teamA!.score} - ${result.teamB!.score}',

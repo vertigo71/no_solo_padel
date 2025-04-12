@@ -32,14 +32,21 @@ class UserDeletePanel extends StatelessWidget {
   }
 
   Future<void> _onTap(BuildContext context, MyUser user, Director director) async {
-    if (user.id == director.appState.getLoggedUser().id) {
-      UiHelper.showMessage(context, 'No se puede eliminar el usuario actual');
+    final MyUser? loggedUser = director.appState.loggedUser;
+    if (loggedUser == null) {
+      MyLog.log(_classString, '_onTap loggedUser is null', level: Level.SEVERE);
+      throw Exception('No se ha podido obtener el usuario conectado');
+    }
+
+    if (user.id == loggedUser.id) {
+      UiHelper.showMessage(context, 'No se puede eliminar el usuario conectado');
       return;
     }
 
     const String kOption1 = 'Eliminar';
     const String kOption2 = 'Cancelar';
-    String response = await UiHelper.myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', kOption1, kOption2);
+    String response =
+        await UiHelper.myReturnValueDialog(context, '¿Eliminar usuario ${user.name}?', kOption1, kOption2);
     MyLog.log(_classString, 'build response = $response');
 
     if (response.isEmpty || response == kOption2) return;

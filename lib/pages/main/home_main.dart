@@ -68,7 +68,7 @@ class _MainPageState extends State<MainPage> {
         // there is an error
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
         return _buildErrorMessage();
-      } else if (!appState.getLoggedUser().isValid()) {
+      } else if (appState.loggedUser == null) {
         // no logged user saved in appState
         MyLog.log(_classString, 'build without logged user', indent: true);
         // set loggedUser if exists
@@ -90,7 +90,7 @@ class _MainPageState extends State<MainPage> {
         }
         return _buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
-        MyLog.log(_classString, 'build with logged user loggedUser=${appState.getLoggedUser()}', indent: true);
+        MyLog.log(_classString, 'build with logged user loggedUser=${appState.loggedUser}', indent: true);
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {
@@ -140,7 +140,7 @@ class _MainPageState extends State<MainPage> {
     return AppBar(
       automaticallyImplyLeading: false,
       title: Consumer<AppState>(
-        builder: (context, appState, _) => Text(appState.getLoggedUser().name),
+        builder: (context, appState, _) => Text(appState.loggedUser?.name ?? 'Nadie conectado'),
       ),
       actions: [
         IconButton(
@@ -245,7 +245,7 @@ class _MainPageState extends State<MainPage> {
     AppState appState = _director.appState;
 
     MyLog.log(_classString, 'signIn authenticated user = ${AuthenticationHelper.user?.email}');
-    MyLog.log(_classString, 'LoggedUser = ${appState.getLoggedUser().email}');
+    MyLog.log(_classString, 'LoggedUser = ${appState.loggedUser?.email ?? 'vacío'}');
 
     try {
       // check there is an user logged in the Firebase

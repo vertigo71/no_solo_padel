@@ -295,8 +295,14 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         await FbHelpers().updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
         // do not update notifier as the listener match_notifier will do it
 
+        // logged user
+        final MyUser? loggedUser = appState.loggedUser;
+        if (loggedUser == null) {
+          MyLog.log(_classString, '_formValidate loggedUser is null', level: Level.SEVERE);
+          throw Exception('No se ha podido obtener el usuario conectado');
+        }
+
         String registerText = '';
-        MyUser loggedUser = appState.getLoggedUser();
         int newNumCourts = newMatch.getNumberOfCourts();
 
         // detect if the match has been opened or closed

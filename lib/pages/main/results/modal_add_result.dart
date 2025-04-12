@@ -235,9 +235,17 @@ class _AddResultModalState extends State<AddResultModal> {
       preRanking2: _selectedPlayers[3]!.rankingPos,
     );
 
+    // logged user
+    final MyUser? loggedUser = _appState.loggedUser;
+
+    if (loggedUser == null) {
+      MyLog.log(_classString, '_save loggedUser is null', level: Level.SEVERE);
+      throw Exception('No se ha podido obtener el usuario conectado');
+    }
+
     // create GameResult
     GameResult gameResult = GameResult(
-      id: GameResultId(userId: _appState.getLoggedUser().id),
+      id: GameResultId(userId: loggedUser.id),
       matchId: _match.id,
       teamA: teamA,
       teamB: teamB,

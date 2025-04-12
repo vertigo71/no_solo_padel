@@ -46,8 +46,9 @@ class _InformationPanelState extends State<InformationPanel> {
                     child: UiHelper.userInfoTile(
                       user,
                       // logged user can only edit users with higher or equal rank
-                      appState.isLoggedUserAdminOrSuper &&
-                              appState.getLoggedUser().userType.index >= user.userType.index
+                      appState.loggedUser != null &&
+                              appState.isLoggedUserAdminOrSuper &&
+                              appState.loggedUser!.userType.index >= user.userType.index
                           ? () => _modifyUserModal(context, user)
                           : null,
                     ),
@@ -84,8 +85,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   ),
                   onChanged: (value) {
                     if (value != null) {
-                      appState.sortUsers(
-                          sortBy: value ? UsersSortBy.name : UsersSortBy.ranking, notify: true);
+                      appState.sortUsers(sortBy: value ? UsersSortBy.name : UsersSortBy.ranking, notify: true);
                     }
                   },
                 ),
