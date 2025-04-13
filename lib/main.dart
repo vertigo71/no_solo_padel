@@ -57,7 +57,7 @@ Future<void> main() async {
         ..dsn = getSentryDsn()
         ..sendDefaultPii = true
         ..environment = flavor
-        ..maxBreadcrumbs = 10000;
+        ..maxBreadcrumbs = 100000;
     },
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
