@@ -101,7 +101,7 @@ class MyUser {
       id: id ?? this.id,
       name: name ?? this.name,
       emergencyInfo: emergencyInfo ?? this.emergencyInfo,
-      email: email ?? this.email,
+      email: email ?? _email,
       userType: userType ?? this.userType,
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
@@ -110,19 +110,17 @@ class MyUser {
     );
   }
 
-  /// Creates a new MyUser object from an existing MyUser object.
-  MyUser copyFrom(MyUser user) {
-    return MyUser(
-      id: user.id,
-      name: user.name,
-      emergencyInfo: user.emergencyInfo,
-      email: user.email,
-      userType: user.userType,
-      lastLogin: user.lastLogin,
-      loginCount: user.loginCount,
-      avatarUrl: user.avatarUrl,
-      rankingPos: user.rankingPos,
-    );
+  /// Updates the fields of the *current* MyUser object from another MyUser object.
+  void copyFrom(MyUser user) {
+    id = user.id;
+    name = user.name;
+    emergencyInfo = user.emergencyInfo;
+    _email = user._email;
+    userType = user.userType;
+    lastLogin = user.lastLogin;
+    loginCount = user.loginCount;
+    avatarUrl = user.avatarUrl;
+    rankingPos = user.rankingPos;
   }
 
   /// Checks if the user has non-empty id, name, and email fields.

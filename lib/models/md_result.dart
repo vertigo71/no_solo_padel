@@ -20,7 +20,7 @@ class GameResult {
 
   GameResult({required this.id, required this.matchId, this.teamA, this.teamB});
 
-  GameResult copyFrom({
+  GameResult copyWith({
     GameResultId? id,
     Date? matchId,
     TeamResult? teamA,
@@ -113,7 +113,7 @@ class TeamResult {
     required this.preRanking2,
   });
 
-  TeamResult copyFrom({
+  TeamResult copyWith({
     MyUser? player1,
     MyUser? player2,
     int? points,
