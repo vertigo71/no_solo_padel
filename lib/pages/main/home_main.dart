@@ -92,6 +92,7 @@ class _MainPageState extends State<MainPage> {
         return _buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
         MyLog.log(_classString, 'build with logged user loggedUser=${appState.loggedUser}', indent: true);
+
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {

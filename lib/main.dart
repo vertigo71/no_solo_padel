@@ -3,7 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bugfender/flutter_bugfender.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -23,8 +23,6 @@ import 'utilities/ut_theme.dart';
 final String _classString = 'main'.toUpperCase();
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   // use flavors to choose between dev, stage and prod
   String flavor = const String.fromEnvironment('FLAVOR');
   FirebaseOptions firebaseOptions;
@@ -47,27 +45,30 @@ Future<void> main() async {
     return;
   }
 
-  await Firebase.initializeApp(options: firebaseOptions);
-  // The user remains signed in even after closing and reopening the app.
-  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-
   await initializeDateFormatting('es_ES', null); // Spanish
   MyLog.initialize();
   await Environment().initialize(flavor: flavor);
-
-  await FlutterBugfender.init(
-    getBugFenderAppId(),
-    enableCrashReporting: true,
-    enableUIEventLogging: true,
-    enableAndroidLogcatLogging: false,
-    printToConsole: false,
-    version: "1",
-    build: "1",
-  );
-  FlutterBugfender.log("Executing: ${DateTime.now()}");
   MyLog.log(_classString, 'Environment = $flavor');
 
-  runApp(MyApp());
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = getSentryDsn();
+      // Adds request headers and IP for users,
+      // visit: https://docs.sentry.io/platforms/dart/data-management/data-collected/ for more info
+      options.sendDefaultPii = true;
+      options.environment = flavor;
+      options.maxBreadcrumbs = 1000;
+    },
+    appRunner: () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      await Firebase.initializeApp(options: firebaseOptions);
+      // The user remains signed in even after closing and reopening the app.
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+
+      runApp(SentryWidget(child: MyApp()));
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {

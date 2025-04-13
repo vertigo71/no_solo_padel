@@ -68,6 +68,7 @@ class AppState with ChangeNotifier {
     MyLog.log(_classString, 'setLoggedUser $user');
 
     _loggedUser = user;
+    MyLog.setLoggedUserId(user.id);
 
     if (notify) notifyListeners();
   }
@@ -79,12 +80,10 @@ class AppState with ChangeNotifier {
 
     if (loggedUser == null) {
       MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', level: Level.SEVERE);
-      throw Exception('LoggedUser not set. User not found. User=$userId');
+      throw Exception('Usuario logeado no encontrado en la aplicación. User=$userId');
     }
 
     setLoggedUser(loggedUser, notify: notify);
-
-    if (notify) notifyListeners();
   }
 
   // bold: affects directly cached users
@@ -168,6 +167,9 @@ class AppState with ChangeNotifier {
 
     _sortUsersBold(_usersSorting);
     if (notify) notifyListeners();
+
+    // log on Sentry if users are loaded or changed
+    MyLog.log(_classString, 'appState=$this', captureSentryMessage: true);
   }
 
   MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);
@@ -200,6 +202,6 @@ class AppState with ChangeNotifier {
 
   @override
   String toString() => 'Parameters = $_parametersCache\n'
-      '#users=${_usersCache.length}\n'
+      '#users=$_usersCache\n'
       'loggedUser=$_loggedUser';
 }

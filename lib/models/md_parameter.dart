@@ -114,7 +114,6 @@ class MyParameters {
   /// Gets the minimum debug level from the [minDebugLevel] parameter.
   ///
   /// Returns the [Level] corresponding to the [minDebugLevel] parameter, or
-  /// [Level.INFO] if the parameter is not found or the value is invalid.
   Level get minDebugLevel => MyLog.int2level(
       getIntValue(ParametersEnum.minDebugLevel) ?? int.tryParse(ParametersEnum.minDebugLevel.defaultValue) ?? 1);
 

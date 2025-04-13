@@ -20,7 +20,7 @@ class ShowResultModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building ShowResultModal', level: Level.INFO, indent: true);
+    MyLog.log(_classString, 'Building ShowResultModal', level: Level.FINE, indent: true);
     final AppState appState = context.read<AppState>();
 
     return Column(
@@ -66,7 +66,7 @@ class ShowResultModal extends StatelessWidget {
   }
 
   Widget _buildTeam(BuildContext context, TeamResult team) {
-    MyLog.log(_classString, 'Building team: $team', level: Level.INFO, indent: true);
+    MyLog.log(_classString, 'Building team: $team', level: Level.FINE, indent: true);
     return Column(
       spacing: 8.0,
       children: [
@@ -80,7 +80,7 @@ class ShowResultModal extends StatelessWidget {
   }
 
   List<Widget> _buildPlayer(BuildContext context, MyUser player, int preRanking) {
-    MyLog.log(_classString, 'Building player: $player', level: Level.INFO, indent: true);
+    MyLog.log(_classString, 'Building player: $player', level: Level.FINE, indent: true);
     return [
       CircleAvatar(
         backgroundImage: player.avatarUrl != null ? NetworkImage(player.avatarUrl!) : null,

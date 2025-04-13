@@ -24,7 +24,7 @@ class MatchNotifier with ChangeNotifier {
 
   /// Constructs a [MatchNotifier] with the given [MyMatch] and [Director].
   /// Initializes the Firestore listener.
-  MatchNotifier(this._match, this._director)  {
+  MatchNotifier(this._match, this._director) {
     MyLog.log(_classString, 'Constructor match = $_match');
     _createListener();
   }
@@ -41,10 +41,10 @@ class MatchNotifier with ChangeNotifier {
 
     try {
       _matchSubscription = FbHelpers().listenToMatch(
-            matchId: _match.id,
-            appState: _director.appState,
-            matchFunction: _notifyIfChanged,
-          );
+        matchId: _match.id,
+        appState: _director.appState,
+        matchFunction: _notifyIfChanged,
+      );
     } catch (e) {
       MyLog.log(_classString, '_createListener ERROR listening to match ${_match.id}',
           exception: e, level: Level.SEVERE, indent: true);
@@ -59,12 +59,11 @@ class MatchNotifier with ChangeNotifier {
   void _notifyIfChanged(MyMatch newMatch) {
     MyLog.log(_classString, '_notifyIfChanged for match=${_match.id}');
     if (_match != newMatch) {
-      MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', indent: true);
+      MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', captureSentryMessage: true);
       _match = newMatch;
       notifyListeners(); // Notify listeners about the change
     }
   }
-
 
   /// Updates the [MyMatch] object with a new [MyMatch].
   /// If the new match has a different ID, it cancels the existing Firestore listener and creates a new one.

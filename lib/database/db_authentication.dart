@@ -34,7 +34,7 @@ class AuthenticationHelper {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       // Successful sign-in
-      MyLog.loggedUserId = _auth.currentUser?.uid??'';
+      MyLog.setLoggedUserId(_auth.currentUser?.uid ?? '');
       return null;
     } on FirebaseAuthException catch (e) {
       return _toSpanish(e);
@@ -47,7 +47,7 @@ class AuthenticationHelper {
   static Future<void> signOut() async {
     MyLog.log(_classString, 'SignOut');
     await _auth.signOut();
-    MyLog.loggedUserId = '';
+    MyLog.setLoggedUserId('');
   }
 
   /// Creates a new user in Firestore using email and password authentication.

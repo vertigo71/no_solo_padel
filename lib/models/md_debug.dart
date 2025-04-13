@@ -1,17 +1,27 @@
-import 'dart:async';
 import 'package:intl/intl.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:simple_logger/simple_logger.dart';
-import 'package:flutter_bugfender/flutter_bugfender.dart';
 
 import '../utilities/ut_http_helper.dart';
 
 abstract class MyLog {
   static final SimpleLogger _simpleLogger = SimpleLogger();
-  static String loggedUserId = '';
+  static String _loggedUserId = '';
+
+  static void setLoggedUserId(String userId) {
+    _loggedUserId = userId;
+    Sentry.configureScope(
+      (scope) => scope.setUser(SentryUser(id: userId)),
+    );
+  }
+
+  static String get loggedUserId => _loggedUserId;
+
+  static const Level _kDefaultLevel = Level.INFO;
 
   /// initialize the logger
   static void initialize() {
-    _simpleLogger.setLevel(Level.INFO);
+    _simpleLogger.setLevel(_kDefaultLevel);
     _simpleLogger.formatter = (info) {
       final formattedTime = DateFormat('HH:mm:ss.SSS').format(info.time);
       final String levelString = _substring(info.level.name, 5);
@@ -29,7 +39,7 @@ abstract class MyLog {
     if (level >= 0 && level < Level.LEVELS.length) {
       return Level.LEVELS[level];
     } else {
-      return Level.INFO; // Default to INFO if invalid
+      return _kDefaultLevel; // Default to INFO if invalid
     }
   }
 
@@ -39,61 +49,96 @@ abstract class MyLog {
 
   static void setDebugLevel(Level level) => _simpleLogger.setLevel(level);
 
-  static void log(String heading, Object message,
-      {Object? myCustomObject, Object? exception, Level level = Level.INFO, bool indent = false}) {
+  static String _breakIntoLines(String str, [String indent = '']) {
+    const int kMaxLineLength = 80;
+    String currentString = indent;
+    List<String> items = str.split(' ');
+    List<String> lines = [];
+    while (items.isNotEmpty) {
+      while (currentString.length < kMaxLineLength && items.isNotEmpty) {
+        currentString += '${items.removeAt(0)} ';
+      }
+      lines.add(currentString);
+      currentString = indent; // next lines are indented
+    }
+    return lines.join('\n');
+  }
+
+  static String _objectToString(dynamic object, [String indent = '']) {
+    if (object != null) {
+      try {
+        if (object is Map) {
+          String data = indent;
+          int num = 1;
+          object.forEach((key, value) {
+            data += '"$key": $value, ';
+            if (num++ % 5 == 0) data += '\n$indent';
+          });
+          return data;
+        } else {
+          return _breakIntoLines(object.toString(), indent);
+        }
+      } catch (_) {}
+    }
+    return '';
+  }
+
+  static String _buildMessage(
+    String heading,
+    Object message,
+    Object? myCustomObject,
+    Object? exception,
+    String indentation,
+  ) {
+    String str = '[$heading]$indentation$message';
+    final String secondIndent = ' ' * 5;
+    if (exception != null) str += '\n$secondIndent** EXCEPTION **\n${_breakIntoLines(str, secondIndent)}';
+    if (myCustomObject != null) str += '\n$secondIndent** OBJECT **\n${_objectToString(myCustomObject, secondIndent)}';
+
+    return str;
+  }
+
+  static void log(
+    String heading,
+    Object message, {
+    Object? myCustomObject,
+    Object? exception,
+    Level level = _kDefaultLevel,
+    bool indent = false,
+    bool captureSentryMessage = false,
+  }) {
     final String indentation = indent ? '     >> ' : ' ';
-    final String logMessage = "[$heading]$indentation$message";
+    final String logMessage = _buildMessage(heading, message, myCustomObject, exception, indentation);
 
     // show in Telegram
     if (level >= Level.WARNING) {
-      String errorMsg = level == Level.SEVERE
-          ? '\n******************'
-              '\n**** ERROR  *****'
-              '\n******************'
-              '\n'
-          : '';
-      errorMsg += message.toString();
-      if (myCustomObject != null) errorMsg += '\nOBJECT\n${myCustomObject.toString()}';
-      if (exception != null) errorMsg += '\nEXCEPTION\n${exception.toString()}';
-
-      sendMessageToTelegram('[$loggedUserId:$heading]\n$errorMsg', botType: BotType.error);
+      sendMessageToTelegram('[$_loggedUserId]$logMessage', botType: BotType.error);
     }
 
     // show in console
-    if (level >= _simpleLogger.level) {
-      _simpleLogger.log(level, logMessage);
+    if (level >= _simpleLogger.level) _simpleLogger.log(level, logMessage);
 
-      if (exception != null) _simpleLogger.log(level, '** EXCEPTION ** ${exception.toString()}');
-
-      if (myCustomObject != null) {
-        try {
-          if (myCustomObject is Map) {
-            String data = "{\n\t";
-            int num = 1;
-            myCustomObject.forEach((key, value) {
-              data += '"$key": $value ,';
-              if (num++ % 5 == 0) data += '\n\t';
-            });
-            data += "\n}";
-            _simpleLogger.log(level, '$indentation$indentation$data');
-          } else {
-            _simpleLogger.log(level, '$indentation$indentation$myCustomObject');
-          }
-        } catch (_) {}
-      }
+    // show in Sentry
+    SentryLevel sentryLevel = SentryLevel.info;
+    switch (level) {
+      case Level.SHOUT:
+      case Level.SEVERE:
+        sentryLevel = SentryLevel.error;
+        break;
+      case Level.WARNING:
+        sentryLevel = SentryLevel.warning;
+        break;
+      case Level.INFO:
+        sentryLevel = SentryLevel.info;
+        break;
+      default:
+        sentryLevel = SentryLevel.debug;
     }
 
-    // show in BugFender
-    Future<void> Function(String) logFunction;
-    if (level >= Level.SEVERE) {
-      logFunction = FlutterBugfender.error;
-    } else if (level == Level.WARNING) {
-      logFunction = FlutterBugfender.warn;
+    if (captureSentryMessage || level >= Level.WARNING) {
+      Sentry.captureMessage(logMessage, level: sentryLevel);
     } else {
-      logFunction = FlutterBugfender.info;
+      Sentry.addBreadcrumb(Breadcrumb(message: logMessage, level: sentryLevel));
     }
-    logFunction('[$loggedUserId:$heading] $message'
-        '${myCustomObject == null ? "" : "\nOBJECT: ${myCustomObject.toString()}"}'
-        '${exception == null ? "" : "\nERROR: ${exception.toString()}"}');
   }
 }
