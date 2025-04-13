@@ -119,26 +119,28 @@ abstract class MyLog {
     if (level >= _simpleLogger.level) _simpleLogger.log(level, logMessage);
 
     // show in Sentry
-    SentryLevel sentryLevel = SentryLevel.info;
-    switch (level) {
-      case Level.SHOUT:
-      case Level.SEVERE:
-        sentryLevel = SentryLevel.error;
-        break;
-      case Level.WARNING:
-        sentryLevel = SentryLevel.warning;
-        break;
-      case Level.INFO:
-        sentryLevel = SentryLevel.info;
-        break;
-      default:
-        sentryLevel = SentryLevel.debug;
-    }
+    if (level >= _kDefaultLevel) { // block FINE and lower messages
+      SentryLevel sentryLevel = SentryLevel.info;
+      switch (level) {
+        case Level.SHOUT:
+        case Level.SEVERE:
+          sentryLevel = SentryLevel.error;
+          break;
+        case Level.WARNING:
+          sentryLevel = SentryLevel.warning;
+          break;
+        case Level.INFO:
+          sentryLevel = SentryLevel.info;
+          break;
+        default:
+          sentryLevel = SentryLevel.debug;
+      }
 
-    if (captureSentryMessage || level >= Level.WARNING) {
-      Sentry.captureMessage(logMessage, level: sentryLevel);
-    } else if (level >= _kDefaultLevel) {
-      Sentry.addBreadcrumb(Breadcrumb(message: logMessage, level: sentryLevel));
+      if (captureSentryMessage || level >= Level.WARNING) {
+        Sentry.captureMessage(logMessage, level: sentryLevel);
+      } else {
+        Sentry.addBreadcrumb(Breadcrumb(message: logMessage, level: sentryLevel));
+      }
     }
   }
 }
