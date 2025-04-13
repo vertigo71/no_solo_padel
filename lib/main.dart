@@ -46,8 +46,8 @@ Future<void> main() async {
   }
 
   await initializeDateFormatting('es_ES', null); // Spanish
-  MyLog.initialize();
   await Environment().initialize(flavor: flavor);
+  MyLog.initialize();
   MyLog.log(_classString, 'Environment = $flavor');
 
   await SentryFlutter.init(

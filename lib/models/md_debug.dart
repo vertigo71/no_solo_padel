@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:simple_logger/simple_logger.dart';
 
+import '../utilities/ut_environment.dart';
 import '../utilities/ut_http_helper.dart';
 
 abstract class MyLog {
@@ -21,7 +22,12 @@ abstract class MyLog {
 
   /// initialize the logger
   static void initialize() {
-    _simpleLogger.setLevel(_kDefaultLevel);
+    if (!Environment().isDevelopment) {
+      _simpleLogger.setLevel(Level.SEVERE); // set a high level to avoid logging until it is set
+    } else {
+      _simpleLogger.setLevel(_kDefaultLevel);
+    }
+
     _simpleLogger.formatter = (info) {
       final formattedTime = DateFormat('HH:mm:ss.SSS').format(info.time);
       final String levelString = _substring(info.level.name, 5);
@@ -119,7 +125,8 @@ abstract class MyLog {
     if (level >= _simpleLogger.level) _simpleLogger.log(level, logMessage);
 
     // show in Sentry
-    if (level >= _kDefaultLevel) { // block FINE and lower messages
+    if (level >= _kDefaultLevel) {
+      // block FINE and lower messages
       SentryLevel sentryLevel = SentryLevel.info;
       switch (level) {
         case Level.SHOUT:
