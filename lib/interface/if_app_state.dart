@@ -194,7 +194,7 @@ class AppState with ChangeNotifier {
           level: Level.SEVERE, indent: true);
     }
     for (var user in usersFound) {
-      MyLog.log(_classString, '_updateCachedUser. Updating: $newUser ', indent: true);
+      MyLog.log(_classString, '_updateCachedUser. Updating from: $newUser ', indent: true);
       user.copyFrom(newUser);
     }
     return true;
