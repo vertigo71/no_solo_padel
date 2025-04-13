@@ -269,7 +269,11 @@ class _MainPageState extends State<MainPage> {
 
       // Delete old logs and matches.
       // MyLog.log(_classString, '_initializeData deleting old data ...', indent: true);
-      // _director.deleteOldData(); // TODO: create a cloud function
+      // _director.deleteOldData();
+      // TODO: create a cloud function to delete old data
+      //    maybe no need. everytime ranking is reset, old data is deleted
+      //    create a ranking users history
+      //    edit results??
     } catch (e) {
       MyLog.log(_classString, '_initialize: ERROR loading initial data\nerror=${e.toString()}',
           level: Level.SEVERE, indent: true);
