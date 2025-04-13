@@ -1,7 +1,8 @@
+import 'package:collection/collection.dart';
 import 'package:simple_logger/simple_logger.dart';
-import 'package:collection/collection.dart'; // For deep comparison of lists
 import 'md_date.dart';
 import 'md_user.dart';
+import 'md_debug.dart';
 
 final String _classString = '<md> Historic'.toLowerCase();
 
@@ -13,6 +14,7 @@ class Historic {
   final List<MyUser> _users = [];
 
   Historic(this.id, [List<MyUser>? users]) {
+    MyLog.log(_classString, 'constructor', level: Level.FINE);
     if (users != null) _users.addAll(users);
   }
 
@@ -46,20 +48,18 @@ class Historic {
   // FromJson method
   factory Historic.fromJson(Map<String, dynamic> json) {
     return Historic(
-      Date.parse(json['id']) ?? Date.now(), // Assuming 'id' is a String representation of Date
-      // You might need to adjust the key based on your actual JSON structure
-    ).._users.addAll((json['users'] as List<dynamic>?)
+      Date.parse(json[HistoricFs.id.name]) ?? Date.now(),
+    ).._users.addAll((json[HistoricFs.users.name] as List<dynamic>?)
             ?.map((userJson) => MyUser.fromJson(userJson as Map<String, dynamic>))
             .toList() ??
         []);
-    // Assuming 'users' is a List of MyUser objects represented as JSON
   }
 
   // ToJson method
   Map<String, dynamic> toJson() {
     return {
-      'id': id.toIso8601String(), // Or your preferred Date format
-      'users': _users.map((user) => user.toJson()).toList(),
+      HistoricFs.id.name: id.toYyyyMMdd(),
+      HistoricFs.users.name: _users.map((user) => user.toJson()).toList(),
     };
   }
 }
