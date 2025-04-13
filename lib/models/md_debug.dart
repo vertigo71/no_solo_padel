@@ -137,7 +137,7 @@ abstract class MyLog {
 
     if (captureSentryMessage || level >= Level.WARNING) {
       Sentry.captureMessage(logMessage, level: sentryLevel);
-    } else {
+    } else if (level >= _kDefaultLevel) {
       Sentry.addBreadcrumb(Breadcrumb(message: logMessage, level: sentryLevel));
     }
   }

@@ -270,6 +270,9 @@ class _AddResultModalState extends State<AddResultModal> {
       MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
       throw ('Error al actualizar los puntos de los jugadores. \n${e.toString()}');
     }
+
+    // log to Sentry
+    MyLog.log(_classString, 'SENTRY result created', myCustomObject: gameResult, captureSentryMessage: true);
   }
 
   /// list of 2 ints with the points of each team A and B

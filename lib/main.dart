@@ -52,12 +52,12 @@ Future<void> main() async {
 
   await SentryFlutter.init(
     (options) {
-      options.dsn = getSentryDsn();
-      // Adds request headers and IP for users,
       // visit: https://docs.sentry.io/platforms/dart/data-management/data-collected/ for more info
-      options.sendDefaultPii = true;
-      options.environment = flavor;
-      options.maxBreadcrumbs = 1000;
+      options
+        ..dsn = getSentryDsn()
+        ..sendDefaultPii = true
+        ..environment = flavor
+        ..maxBreadcrumbs = 10000;
     },
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();

@@ -169,7 +169,7 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
 
     // log on Sentry if users are loaded or changed
-    MyLog.log(_classString, 'appState=$this', captureSentryMessage: true);
+    MyLog.log(_classString, 'SENTRY appState', myCustomObject: this, captureSentryMessage: true);
   }
 
   MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);
@@ -202,6 +202,6 @@ class AppState with ChangeNotifier {
 
   @override
   String toString() => 'Parameters = $_parametersCache\n'
-      '#users=$_usersCache\n'
-      'loggedUser=$_loggedUser';
+      '\t#users=$_usersCache\n'
+      '\tloggedUser=$_loggedUser';
 }

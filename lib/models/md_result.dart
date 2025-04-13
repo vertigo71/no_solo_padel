@@ -149,10 +149,10 @@ class TeamResult {
     return TeamResult(
       player1: player1,
       player2: player2,
-      points: json[ResultFs.points.name]??0,
-      score: json[ResultFs.score.name]??0,
-      preRanking1: json[ResultFs.preRanking1.name]??0,
-      preRanking2: json[ResultFs.preRanking2.name]??0,
+      points: json[ResultFs.points.name] ?? 0,
+      score: json[ResultFs.score.name] ?? 0,
+      preRanking1: json[ResultFs.preRanking1.name] ?? 0,
+      preRanking2: json[ResultFs.preRanking2.name] ?? 0,
     );
   }
 

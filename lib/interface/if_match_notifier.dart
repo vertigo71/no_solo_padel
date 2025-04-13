@@ -59,7 +59,7 @@ class MatchNotifier with ChangeNotifier {
   void _notifyIfChanged(MyMatch newMatch) {
     MyLog.log(_classString, '_notifyIfChanged for match=${_match.id}');
     if (_match != newMatch) {
-      MyLog.log(_classString, '_notifyIfChanged Match updated from Firestore: $newMatch', captureSentryMessage: true);
+      MyLog.log(_classString, 'SENTRY Match updated from Firestore', myCustomObject: newMatch, captureSentryMessage: true);
       _match = newMatch;
       notifyListeners(); // Notify listeners about the change
     }
