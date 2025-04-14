@@ -31,7 +31,7 @@ class GamesPanel extends StatelessWidget {
 
         return StreamBuilder<List<MyMatch>>(
           // StreamBuilder for List<MyMatch>
-          stream: FbHelpers().getMatchesStream(appState: appState, fromDate: fromDate, maxDate: maxDate),
+          stream: FbHelpers().getMatchesStream(appState: appState, fromDate: fromDate, toDate: maxDate),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Error al obtener los partidos: ${snapshot.error}'));

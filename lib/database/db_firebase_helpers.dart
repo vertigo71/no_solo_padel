@@ -198,7 +198,7 @@ class FbHelpers {
     required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     Date? fromDate,
-    Date? maxDate,
+    Date? toDate,
     AppState? appState,
     Query Function(Query)? filter,
     bool descending = false,
@@ -223,8 +223,8 @@ class FbHelpers {
       if (fromDate != null) {
         query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
       }
-      if (maxDate != null) {
-        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMmDd());
+      if (toDate != null) {
+        query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
       }
 
       if (filter != null) {
@@ -255,29 +255,38 @@ class FbHelpers {
   Stream<List<MyMatch>>? getMatchesStream({
     required AppState appState,
     Date? fromDate,
-    Date? maxDate,
+    Date? toDate,
     bool onlyOpenMatches = false,
     bool descending = false,
-  }) =>
-      getStream(
-        pathSegments: [MatchFs.matches.name],
-        fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-        fromDate: fromDate,
-        maxDate: maxDate,
-        appState: appState,
-        filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
-        descending: descending,
-      );
+  }) {
+    MyLog.log(
+        _classString,
+        'getMatchesStream fromDate=$fromDate toDate=$toDate '
+        'onlyOpenMatches=$onlyOpenMatches descending=$descending');
+
+    return getStream(
+      pathSegments: [MatchFs.matches.name],
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      fromDate: fromDate,
+      toDate: toDate,
+      appState: appState,
+      filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
+      descending: descending,
+    );
+  }
 
   Stream<List<GameResult>>? getResultsStream({
     required AppState appState,
     required String matchId,
-  }) =>
-      getStream(
+  }) {
+    MyLog.log(_classString, 'getResultsStream matchId=$matchId');
+
+    return getStream(
         pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
         fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
         appState: appState,
       );
+  }
 
   Future<T?> getObject<T>({
     required List<String> pathSegments, // List of collection/doc identifiers
@@ -336,7 +345,7 @@ class FbHelpers {
     required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     Date? fromDate,
-    Date? maxDate,
+    Date? toDate,
     AppState? appState,
     Query Function(Query)? filter,
   }) async {
@@ -359,8 +368,8 @@ class FbHelpers {
       if (fromDate != null) {
         query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
       }
-      if (maxDate != null) {
-        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMmDd());
+      if (toDate != null) {
+        query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
       }
 
       if (filter != null) {
@@ -394,14 +403,14 @@ class FbHelpers {
     required AppState appState,
     required String playerId,
     Date? fromDate,
-    Date? maxDate,
+    Date? toDate,
   }) async {
     return getAllObjects<MyMatch>(
       pathSegments: [MatchFs.matches.name],
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       // Unified call
       fromDate: fromDate,
-      maxDate: maxDate,
+      toDate: toDate,
       appState: appState,
       filter: (query) => query.where(MatchFs.players.name, arrayContains: playerId),
     );
@@ -728,7 +737,7 @@ class FbHelpers {
     MyLog.log(_classString, 'saveAllUsersToHistoric');
     List<MyUser> allUsers = await getAllUsers();
 
-    Historic historic = Historic(id: Date.now(), users: allUsers);
+    Historic historic = Historic.fromUsers(id: Date.now(), users: allUsers);
     await updateHistoric(historic: historic);
   }
 

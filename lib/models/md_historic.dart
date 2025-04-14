@@ -7,64 +7,87 @@ import 'md_debug.dart';
 final String _classString = '<md> Historic'.toLowerCase();
 
 // result fields in Firestore
-enum HistoricFs { historic, id, users }
+enum HistoricFs { historic, id, usersRanking }
 
 class Historic {
   Date id;
-  final List<MyUser> _users = [];
+  final Map<String, int> _usersRanking = {};
 
-  Historic({required this.id, List<MyUser>? users}) {
+  /// Constructor
+  /// _usersRanking is a Map{String, int} where the key is the user id and the value is the ranking position
+  /// user id must be different from HistoricFs.id.name
+  Historic({required this.id, Map<String, int>? usersRanking}) {
     MyLog.log(_classString, 'constructor', level: Level.FINE);
-    if (users != null) _users.addAll(users);
+    _usersRanking.addAll(
+      Map.fromEntries(
+        (usersRanking?.entries ?? []) // Handle null case by defaulting to an empty iterable
+            .where((entry) => entry.key != HistoricFs.id.name),
+      ),
+    );
+  }
+
+  Historic.fromUsers({required this.id, List<MyUser>? users}) {
+    MyLog.log(_classString, 'constructor fromUsers', level: Level.FINE);
+    users?.forEach((user) {
+      if (user.id != HistoricFs.id.name) {
+        _usersRanking[user.id] = user.rankingPos;
+      }
+    });
   }
 
   // CopyFrom method (updates the existing object)
   void copyFrom(Historic other) {
+    MyLog.log(_classString, 'copyFrom', level: Level.FINE);
+
     id = other.id;
-    _users.clear();
-    _users.addAll(other._users.map((user) => user.copyWith()));
+    _usersRanking.clear();
+    _usersRanking.addAll(other._usersRanking);
   }
 
   // CopyWith method (creates a new object)
   Historic copyWith({
     Date? id,
-    List<MyUser>? users,
+    Map<String, int>? usersRanking,
   }) {
+    MyLog.log(_classString, 'copyWith', level: Level.FINE);
+
     return Historic(
       id: id ?? this.id,
-    ).._users.addAll(users?.map((user) => user.copyWith()).toList() ?? _users.map((user) => user.copyWith()).toList());
+      usersRanking: usersRanking ?? _usersRanking,
+    );
   }
 
   // Operator ==
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Historic && id == other.id && const DeepCollectionEquality().equals(_users, other._users);
+    return other is Historic &&
+        id == other.id &&
+        const DeepCollectionEquality().equals(_usersRanking, other._usersRanking);
   }
 
   @override
-  int get hashCode => Object.hash(id, const DeepCollectionEquality().hash(_users));
+  int get hashCode => Object.hash(id, const DeepCollectionEquality().hash(_usersRanking));
 
-  // FromJson method
   factory Historic.fromJson(Map<String, dynamic> json) {
-    return Historic(
-      id: Date.parse(json[HistoricFs.id.name]) ?? Date.now(),
-    ).._users.addAll((json[HistoricFs.users.name] as List<dynamic>?)
-            ?.map((userJson) => MyUser.fromJson(userJson as Map<String, dynamic>))
-            .toList() ??
-        []);
+    MyLog.log(_classString, 'fromJson', level: Level.FINE);
+
+    final id = Date.parse(json[HistoricFs.id.name]) ?? Date.now();
+
+    final usersRanking = Map<String, int>.fromEntries(
+      json.entries.where((entry) => entry.key != HistoricFs.id.name && entry.value is int)
+          as Iterable<MapEntry<String, int>>,
+    );
+
+    return Historic(id: id, usersRanking: usersRanking);
   }
 
-  // ToJson method
   Map<String, dynamic> toJson() {
-    final usersMap = <String, dynamic>{};
-    for (final user in _users) {
-      usersMap[user.id] = user.toJson();
-    }
+    MyLog.log(_classString, 'toJson', level: Level.FINE);
 
     return {
       HistoricFs.id.name: id.toYyyyMmDd(),
-      HistoricFs.users.name: usersMap,
+      ..._usersRanking,
     };
   }
 }

@@ -28,12 +28,12 @@ class ResultsPanel extends StatelessWidget {
     try {
       return Consumer<AppState>(
         builder: (context, appState, _) {
-          Date maxDate = Date.now();
-          MyLog.log(_classString, 'StreamBuilder  to:$maxDate', indent: true);
+          Date toDate = Date.now();
+          MyLog.log(_classString, 'StreamBuilder  to:$toDate', indent: true);
 
           return StreamBuilder<List<MyMatch>>(
             stream: FbHelpers()
-                .getMatchesStream(appState: appState, maxDate: maxDate, onlyOpenMatches: true, descending: true),
+                .getMatchesStream(appState: appState, toDate: toDate, onlyOpenMatches: true, descending: true),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 final matches = snapshot.data!;
