@@ -31,7 +31,7 @@ class Date extends DateTime {
     return DateFormat('EEEE, d-MMMM', 'es_ES').format(this);
   }
 
-  String toYyyyMMdd() {
+  String toYyyyMmDd() {
     return DateFormat('yyyyMMdd', 'es_ES').format(this);
   }
 

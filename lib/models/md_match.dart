@@ -45,7 +45,7 @@ class MyMatch {
 
   MyMatch(
       {required this.id,
-      this.comment = '',
+      required this.comment, // set default comment
       this.isOpen = false,
       this.sortingType = MatchSortingType.ranking,
       List<MyUser>? players,
@@ -307,10 +307,10 @@ class MyMatch {
   }
 
   @override
-  String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players)');
+  String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players,comment=$comment)');
 
   Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
-        MatchFs.date.name: id.toYyyyMMdd(),
+        MatchFs.date.name: id.toYyyyMmDd(),
         if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
         if (core) MatchFs.courtNames.name: _courtNames.toList(),
         if (core) MatchFs.comment.name: comment,

@@ -43,7 +43,7 @@ class RegisterModel {
 
   @override
   String toString() {
-    return ('${date.toYyyyMMdd()}:${_msgList.last}>');
+    return ('${date.toYyyyMmDd()}:${_msgList.last}>');
   }
 
   factory RegisterModel.fromJson(Map<String, dynamic> json) => RegisterModel.list(
@@ -52,7 +52,7 @@ class RegisterModel {
       );
 
   Map<String, dynamic> toJson() => {
-        RegisterFs.date.name: date.toYyyyMMdd(),
+        RegisterFs.date.name: date.toYyyyMmDd(),
         RegisterFs.registerMessage.name: FieldValue.arrayUnion(_msgList),
       };
 }

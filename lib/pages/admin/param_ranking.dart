@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
+import 'package:no_solo_padel/models/md_match.dart';
+import 'package:no_solo_padel/models/md_register.dart';
+import 'package:no_solo_padel/models/md_result.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_director.dart';
+import '../../models/md_date.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_parameter.dart';
 import '../../utilities/ut_misc.dart';
@@ -90,7 +94,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
             children: [
               _buildResetForm(),
 
-              const Divider(),
+              const Divider(height: 80),
 
               // Generate parameter fields dynamically
               for (var value in ParametersEnum.valuesByType(ParamType.ranking)) _buildTextField(value),
@@ -322,7 +326,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       child: FormBuilder(
         key: _resetFormKey,
         child: Row(
-          spacing: 8.0,
+          spacing: 28.0,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
@@ -359,15 +363,37 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     if (_resetFormKey.currentState!.saveAndValidate()) {
       final resetValue = int.parse(_resetFormKey.currentState!.value['resetValue'].toString());
 
-      final confirmed = await UiHelper.showConfirmationModal(context, 'Confirmar Reset Ranking', 'ranking');
+      final confirmed = await UiHelper.showConfirmationModal(
+        context,
+        'Reset Ranking',
+        'Se va a proceder a:\n'
+            '- Eliminar todos los partidos anteriores al dia de hoy\n'
+            '- Establecer el ranking de todos los jugadores a: $resetValue\n'
+            '- Guardar el ranking actual de cada usuario en un histórico',
+        'ranking',
+      );
       if (confirmed) {
         // Implement your reset ranking logic here
         MyLog.log(_classString, 'Reset ranking to: $resetValue', indent: true);
         try {
-          await FbHelpers().updateAllUserRankings(resetValue);
-          await _director.updateAllUsers();
+          Date toDate = Date.now().subtract(const Duration(days: 1));
+
+          // erase all past register docs
+          await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
+
+          // erase all past matches
+          await FbHelpers().deleteDocsBatch(
+            collection: MatchFs.matches.name,
+            subcollection: ResultFs.results.name,
+            toDate: toDate,
+          );
+
+          // reset ranking and notify
+          await FbHelpers().updateAllUserRankingsBatch(resetValue);
+          // await _director.updateAllUsers(true); // no need. Listeners are called
 
           MyLog.log(_classString, 'Reset ranking success', indent: true);
+
           if (mounted) UiHelper.showMessage(context, 'Ranking reseteado');
         } catch (e) {
           MyLog.log(_classString, 'Error al resetear ranking \n${e.toString()}', level: Level.SEVERE, indent: true);

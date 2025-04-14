@@ -71,7 +71,7 @@ class GameResult {
     }
     return {
       ResultFs.resultId.name: id.resultId,
-      ResultFs.matchId.name: matchId.toYyyyMMdd(),
+      ResultFs.matchId.name: matchId.toYyyyMmDd(),
       'teamA': teamA!.toJson(),
       'teamB': teamB!.toJson(),
     };

@@ -1,5 +1,7 @@
 import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
+import 'dart:core';
+
 import 'md_date.dart';
 import 'md_debug.dart';
 
@@ -41,7 +43,7 @@ enum UsersSortBy {
 }
 
 /// Represents a user in the application.
-class MyUser {
+class MyUser implements Comparable<MyUser> {
   /// Suffix added to user emails.
   static const String kEmailSuffix = '@nsp.com';
 
@@ -195,7 +197,7 @@ class MyUser {
       UserFs.emergencyInfo.name: emergencyInfo,
       UserFs.email.name: email,
       UserFs.userType.name: userType.index,
-      UserFs.lastLogin.name: lastLogin?.toYyyyMMdd() ?? '',
+      UserFs.lastLogin.name: lastLogin?.toYyyyMmDd() ?? '',
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
       UserFs.rankingPos.name: rankingPos,
@@ -231,6 +233,10 @@ class MyUser {
         avatarUrl,
         rankingPos,
       );
+
+  @override
+  int compareTo(MyUser other) =>
+      removeDiacritics(name.toLowerCase()).compareTo(removeDiacritics(other.name.toLowerCase()));
 }
 
 Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {

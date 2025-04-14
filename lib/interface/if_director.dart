@@ -10,9 +10,7 @@ import '../utilities/ut_misc.dart';
 import 'if_app_state.dart';
 import '../models/md_debug.dart';
 import '../models/md_match.dart';
-import '../models/md_parameter.dart';
 import '../models/md_user.dart';
-import '../models/md_register.dart';
 
 final String _classString = '<st> Director'.toLowerCase();
 
@@ -45,19 +43,10 @@ class Director {
   }
 
   // update all users
-  Future<void> updateAllUsers() async {
-    MyLog.log(_classString, 'updateAllUsers', level: Level.FINE);
+  Future<void> updateAllUsers(bool notify) async {
+    MyLog.log(_classString, 'updateAllUsers');
     List<MyUser> users = await FbHelpers().getAllUsers();
-    _appState.setAllUsers(users, notify: true);
-  }
-
-  /// delete old logs and matches
-  Future<void> deleteOldData() async {
-    // delete old register logs & matches at the Firestore
-    MyLog.log(_classString, 'deleteOldData: Deleting old logs and matches');
-    FbHelpers()
-        .deleteOldData(RegisterFs.register.name, _appState.getIntParamValue(ParametersEnum.registerDaysKeeping) ?? -1);
-    FbHelpers().deleteOldData(MatchFs.matches.name, _appState.getIntParamValue(ParametersEnum.matchDaysKeeping) ?? -1);
+    _appState.setAllUsers(users, notify: notify);
   }
 
   Future<void> createTestData() async {
@@ -115,16 +104,15 @@ class Director {
     }
     const int kNumMatches = 10;
     const int kMaxUsers = 10;
-    for (int i = 0; i < kNumMatches; i++) {
-      var deltaDays = Random().nextInt(kNumMatches); // between 0 and kNumMatches
+    for (int i = 0; i < kNumMatches / 2; i++) {
+      var deltaDays = -kNumMatches + Random().nextInt(2 * kNumMatches); // between -kNumMatches and kNumMatches
       Date date = Date.now().add(Duration(days: deltaDays));
       // if match doesn't exist or is empty, create match
-      MyMatch? match = await FbHelpers().getMatch(date.toYyyyMMdd(), _appState);
+      MyMatch? match = await FbHelpers().getMatch(date.toYyyyMmDd(), _appState);
       if (match == null || match.playersReference.isEmpty) {
         List<int> randomInts = getRandomList(kMaxUsers, date);
-        MyMatch match = MyMatch(id: date);
-        match.comment = 'Partido de prueba';
-        match.isOpen = randomInts.first.isEven;
+        MyMatch match = MyMatch(id: date, comment: 'Partido de prueba');
+        match.isOpen = deltaDays < 0 ? true : randomInts.first.isEven;
         match.courtNamesReference.addAll(randomInts.map((e) => e.toString()).take((deltaDays % 4) + 1)); // max 4 courts
         match.playersReference.addAll(randomInts.map((e) => users[e % users.length]).toSet());
         MyLog.log(_classString, 'createTestData: create match = $match', indent: true);

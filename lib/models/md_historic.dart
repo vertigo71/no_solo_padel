@@ -58,7 +58,7 @@ class Historic {
   // ToJson method
   Map<String, dynamic> toJson() {
     return {
-      HistoricFs.id.name: id.toYyyyMMdd(),
+      HistoricFs.id.name: id.toYyyyMmDd(),
       HistoricFs.users.name: _users.map((user) => user.toJson()).toList(),
     };
   }

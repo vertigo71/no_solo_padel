@@ -32,10 +32,10 @@ class FbHelpers {
 
   /// return false if existed, true if created
   Future<bool> createMatchIfNotExists({required Date matchId}) async {
-    bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: matchId.toYyyyMMdd());
+    bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: matchId.toYyyyMmDd());
     if (exists) return false;
     MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId');
-    await updateMatch(match: MyMatch(id: matchId), updateCore: true, updatePlayers: true);
+    await updateMatch(match: MyMatch(id: matchId, comment: ''), updateCore: true, updatePlayers: true);
     return true;
   }
 
@@ -53,14 +53,14 @@ class FbHelpers {
     MyLog.log(_classString, 'listenToMatch creating LISTENER for match=$matchId');
     StreamSubscription? streamSubscription;
     streamSubscription =
-        _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd()).snapshots().listen((snapshot) {
+        _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd()).snapshots().listen((snapshot) {
       if (snapshot.exists && snapshot.data() != null) {
         MyMatch newMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
         MyLog.log(_classString, 'listenToMatch LISTENER newMatch found = $newMatch', indent: true);
         matchFunction(newMatch);
       } else {
         MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.', indent: true);
-        matchFunction(MyMatch(id: matchId));
+        matchFunction(MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText)));
       }
     });
 
@@ -193,26 +193,6 @@ class FbHelpers {
     }
   }
 
-  Future<void> deleteOldData(String collection, int daysAgo) async {
-    MyLog.log(_classString, '_deleteOldData collection=$collection days=$daysAgo');
-
-    if (daysAgo <= 0) return;
-
-    return _instance
-        .collection(collection)
-        .where(FieldPath.documentId, isLessThan: Date(DateTime.now()).subtract(Duration(days: daysAgo)).toYyyyMMdd())
-        .get()
-        .then((snapshot) {
-      for (QueryDocumentSnapshot ds in snapshot.docs) {
-        MyLog.log(_classString, 'deleteOldData Delete collection=$collection id=${ds.id}', indent: true);
-        ds.reference.delete();
-      }
-    }).catchError((onError) {
-      MyLog.log(_classString, 'deleteOldData Delete collection=$collection',
-          exception: onError, level: Level.SEVERE, indent: true);
-    });
-  }
-
   Stream<List<T>>? getStream<T>({
     required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
@@ -240,10 +220,10 @@ class FbHelpers {
       query = query.orderBy(FieldPath.documentId, descending: descending);
 
       if (fromDate != null) {
-        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
       }
       if (maxDate != null) {
-        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMmDd());
       }
 
       if (filter != null) {
@@ -376,10 +356,10 @@ class FbHelpers {
       Query query = collectionReference;
 
       if (fromDate != null) {
-        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMMdd());
+        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
       }
       if (maxDate != null) {
-        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMMdd());
+        query = query.where(FieldPath.documentId, isLessThan: maxDate.toYyyyMmDd());
       }
 
       if (filter != null) {
@@ -481,7 +461,7 @@ class FbHelpers {
     );
   }
 
-  Future<void> updateAllUserRankings(int newRanking) async {
+  Future<void> updateAllUserRankingsBatch(int newRanking) async {
     MyLog.log(_classString, 'updateAllUserRankings = $newRanking');
     final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
 
@@ -525,7 +505,7 @@ class FbHelpers {
   Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
       await updateObject(
         fields: match.toJson(core: updateCore, matchPlayers: updatePlayers),
-        pathSegments: [MatchFs.matches.name, match.id.toYyyyMMdd()],
+        pathSegments: [MatchFs.matches.name, match.id.toYyyyMmDd()],
         forceSet: false, // replaces the old object if exists
       );
 
@@ -537,7 +517,7 @@ class FbHelpers {
 
   Future<void> updateRegister(RegisterModel registerModel) async => await updateObject(
         fields: registerModel.toJson(),
-        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMMdd()],
+        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
         forceSet: false, // replaces the old object if exists
       );
 
@@ -570,7 +550,7 @@ class FbHelpers {
     try {
       await _instance
           .collection(MatchFs.matches.name)
-          .doc(result.matchId.toYyyyMMdd())
+          .doc(result.matchId.toYyyyMmDd())
           .collection(ResultFs.results.name)
           .doc(result.id.resultId)
           .delete();
@@ -581,6 +561,68 @@ class FbHelpers {
     }
   }
 
+  Future<void> deleteDocsBatch(
+      {required String collection, String? subcollection, Date? fromDate, Date? toDate}) async {
+    MyLog.log(_classString,
+        'deleteObjectsBatch $collection/$subcollection = ${fromDate?.toYyyyMmDd()} - ${toDate?.toYyyyMmDd()}');
+
+    // 0. Create query
+    Query query = FirebaseFirestore.instance.collection(collection);
+
+    query = query.orderBy(FieldPath.documentId);
+
+    if (fromDate != null) {
+      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
+    }
+    if (toDate != null) {
+      query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
+    }
+
+    final querySnapshot = await query.get();
+
+    final batches = <WriteBatch>[];
+    WriteBatch currentBatch = FirebaseFirestore.instance.batch();
+    int operationsInBatch = 0;
+
+    // inline function to add doc to batch
+    // updates currentBatch and operationsInBatch
+    void addDocToBatch(DocumentReference reference) {
+      currentBatch.delete(reference);
+      operationsInBatch++;
+      if (operationsInBatch >= 499) {
+        MyLog.log(_classString, 'deleteObjectsBatch Creating new batch for subcollection.', indent: true);
+        batches.add(currentBatch);
+        currentBatch = FirebaseFirestore.instance.batch();
+        operationsInBatch = 0;
+      }
+    }
+
+    for (final docSnapshot in querySnapshot.docs) {
+      if (subcollection != null) {
+        final subCollectionRef = docSnapshot.reference.collection(subcollection);
+        final subCollectionDocs = await subCollectionRef.get();
+        for (final subDoc in subCollectionDocs.docs) {
+          addDocToBatch(subDoc.reference);
+        }
+      }
+      addDocToBatch(docSnapshot.reference);
+    }
+
+    if (operationsInBatch > 0) {
+      batches.add(currentBatch);
+    }
+
+    for (final batch in batches) {
+      await batch.commit();
+    }
+
+    MyLog.log(
+        _classString,
+        'deleteObjectsBatch $collection/$subcollection Done. Batches=${batches.length} '
+        'Operations=${querySnapshot.size} + ${subcollection != null ? " (plus subcollections)" : ""}.',
+        indent: true);
+  }
+
   /// return match if user was inserted. null otherwise
   Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
@@ -589,7 +631,7 @@ class FbHelpers {
     int position = -1,
   }) async {
     MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
-    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
 
     return await _instance.runTransaction((transaction) async {
       // get snapshot
@@ -602,7 +644,7 @@ class FbHelpers {
         MyLog.log(_classString, 'addPlayerToMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
-        myMatch = MyMatch(id: matchId);
+        myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText));
         MyLog.log(_classString, 'addPlayerToMatch NEW match ', indent: true);
       }
 
@@ -636,7 +678,7 @@ class FbHelpers {
     required AppState appState,
   }) async {
     MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $matchId');
-    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMMdd());
+    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
 
     return await _instance.runTransaction((transaction) async {
       // get match
@@ -649,7 +691,7 @@ class FbHelpers {
         MyLog.log(_classString, 'deletePlayerFromMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
-        myMatch = MyMatch(id: matchId);
+        myMatch = MyMatch(id: matchId,comment: appState.getParamValue(ParametersEnum.defaultCommentText));
         MyLog.log(_classString, 'deletePlayerFromMatch NEW match ', indent: true);
       }
 

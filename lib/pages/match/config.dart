@@ -37,7 +37,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for match=$match', level: Level.FINE);
+    MyLog.log(_classString, 'Building Form for match=$match');
 
     // // initial values for all fields
     // // FormBuilder initial values do not work in case another user updates any field
@@ -55,29 +55,31 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     // to access saved values: _formKey.currentState?.value
     //
 
-    // compare fields in case other user has changed any fields
-    bool fieldsChanged = false;
-    bool areFieldsDifferent(dynamic formValue, dynamic matchValue) => formValue != null && formValue != matchValue;
-    fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[kCommentId]?.value, match.comment);
-    fieldsChanged = fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kIsOpenId]?.value, match.isOpen);
-    fieldsChanged =
-        fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kSortingId]?.value, match.sortingType);
-    fieldsChanged = fieldsChanged ||
-        List.generate(
-            kMaxNumberOfCourts,
-            (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
-                i < match.courtNamesReference.length ? match.courtNamesReference[i] : '')).any((changed) => changed);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // compare fields in case other user has changed any fields
+      bool fieldsChanged = false;
+      bool areFieldsDifferent(dynamic formValue, dynamic matchValue) => formValue != null && formValue != matchValue;
 
-    if (fieldsChanged) {
-      // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
-      // immediately after a rebuild, particularly within the build method.
-      // If you're showing SnackBars in response to user interactions or asynchronous operations,
-      // this overhead is unnecessary.
-      MyLog.log(_classString, 'Fields have changed', indent: true);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      fieldsChanged = areFieldsDifferent(_formKey.currentState?.fields[kCommentId]?.value, match.comment);
+      fieldsChanged =
+          fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kIsOpenId]?.value, match.isOpen);
+      fieldsChanged =
+          fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kSortingId]?.value, match.sortingType);
+      fieldsChanged = fieldsChanged ||
+          List.generate(
+              kMaxNumberOfCourts,
+              (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
+                  i < match.courtNamesReference.length ? match.courtNamesReference[i] : '')).any((changed) => changed);
+
+      if (fieldsChanged) {
+        // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
+        // immediately after a rebuild, particularly within the build method.
+        // If you're showing SnackBars in response to user interactions or asynchronous operations,
+        // this overhead is unnecessary.
+        MyLog.log(_classString, 'Fields have changed', indent: true);
         UiHelper.showMessage(context, '¡Atención! Los datos han sido actualizados por otro usuario');
-      });
-    }
+      }
+    });
 
     return FormBuilder(
       key: _formKey,
@@ -274,7 +276,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
 
       // all is correct or match is not open
-      MyMatch newMatch = MyMatch(id: context.read<MatchNotifier>().match.id);
+      MyMatch newMatch = MyMatch(id: context.read<MatchNotifier>().match.id, comment: '');
       // add courts available
       for (int i = 0; i < kMaxNumberOfCourts; i++) {
         if (state.value['$kCourtId$i'].isNotEmpty) {

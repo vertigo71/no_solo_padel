@@ -56,7 +56,10 @@ class GamesPanel extends StatelessWidget {
                   playableMatches.add(foundMatch);
                 } else {
                   // Create a new MyMatch in memory
-                  playableMatches.add(MyMatch(id: date));
+                  playableMatches.add(MyMatch(
+                    id: date,
+                    comment: appState.getParamValue(ParametersEnum.defaultCommentText),
+                  ));
                 }
               }
             }

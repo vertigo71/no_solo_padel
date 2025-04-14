@@ -179,7 +179,7 @@ abstract class UiHelper {
   ///
   /// Returns `true` if the user types the correct confirmation text and presses 'Confirmar',
   /// and `false` otherwise (if they press 'Cancelar' or fail to type the correct text).
-  static Future<bool> showConfirmationModal(BuildContext context, String dialogText, String confirmationText,
+  static Future<bool> showConfirmationModal(BuildContext context, String dialogText, String bodyText, String confirmationText,
       {String errorMessage = 'Por favor, escriba "%s" para confirmar.'}) async {
     final confirmationFormKey = GlobalKey<FormBuilderState>();
 
@@ -187,12 +187,15 @@ abstract class UiHelper {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surfaceDim,
               title: Text(dialogText),
               content: FormBuilder(
                 key: confirmationFormKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Text(bodyText, style: TextStyle(fontSize: 14)),
+                    SizedBox(height: 30),
                     Text('Escriba "$confirmationText" para confirmar'),
                     FormBuilderTextField(
                       name: 'userConfirmation',
