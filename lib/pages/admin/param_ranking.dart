@@ -388,6 +388,9 @@ class RankingParamPanelState extends State<RankingParamPanel> {
             toDate: toDate,
           );
 
+          // save all users to historic
+          await FbHelpers().saveAllUsersToHistoric();
+
           // reset ranking and notify
           await FbHelpers().updateAllUserRankingsBatch(resetValue);
           // await _director.updateAllUsers(true); // no need. Listeners are called

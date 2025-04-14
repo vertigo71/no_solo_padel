@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:no_solo_padel/models/md_historic.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
@@ -515,6 +516,12 @@ class FbHelpers {
         forceSet: false, // replaces the old object if exists
       );
 
+  Future<void> updateHistoric({required Historic historic}) async => await updateObject(
+        fields: historic.toJson(),
+        pathSegments: [HistoricFs.historic.name, historic.id.toYyyyMmDd()],
+        forceSet: false, // replaces the old object if exists
+      );
+
   Future<void> updateRegister(RegisterModel registerModel) async => await updateObject(
         fields: registerModel.toJson(),
         pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
@@ -691,7 +698,7 @@ class FbHelpers {
         MyLog.log(_classString, 'deletePlayerFromMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
-        myMatch = MyMatch(id: matchId,comment: appState.getParamValue(ParametersEnum.defaultCommentText));
+        myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText));
         MyLog.log(_classString, 'deletePlayerFromMatch NEW match ', indent: true);
       }
 
@@ -715,6 +722,14 @@ class FbHelpers {
       throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
           'Error = $onError');
     });
+  }
+
+  Future saveAllUsersToHistoric() async {
+    MyLog.log(_classString, 'saveAllUsersToHistoric');
+    List<MyUser> allUsers = await getAllUsers();
+
+    Historic historic = Historic(id: Date.now(), users: allUsers);
+    await updateHistoric(historic: historic);
   }
 
   /// Uploads raw data (Uint8List) to Firebase Storage.

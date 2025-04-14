@@ -13,7 +13,7 @@ class Historic {
   Date id;
   final List<MyUser> _users = [];
 
-  Historic(this.id, [List<MyUser>? users]) {
+  Historic({required this.id, List<MyUser>? users}) {
     MyLog.log(_classString, 'constructor', level: Level.FINE);
     if (users != null) _users.addAll(users);
   }
@@ -31,7 +31,7 @@ class Historic {
     List<MyUser>? users,
   }) {
     return Historic(
-      id ?? this.id,
+      id: id ?? this.id,
     ).._users.addAll(users?.map((user) => user.copyWith()).toList() ?? _users.map((user) => user.copyWith()).toList());
   }
 
@@ -48,7 +48,7 @@ class Historic {
   // FromJson method
   factory Historic.fromJson(Map<String, dynamic> json) {
     return Historic(
-      Date.parse(json[HistoricFs.id.name]) ?? Date.now(),
+      id: Date.parse(json[HistoricFs.id.name]) ?? Date.now(),
     ).._users.addAll((json[HistoricFs.users.name] as List<dynamic>?)
             ?.map((userJson) => MyUser.fromJson(userJson as Map<String, dynamic>))
             .toList() ??
@@ -57,9 +57,14 @@ class Historic {
 
   // ToJson method
   Map<String, dynamic> toJson() {
+    final usersMap = <String, dynamic>{};
+    for (final user in _users) {
+      usersMap[user.id] = user.toJson();
+    }
+
     return {
       HistoricFs.id.name: id.toYyyyMmDd(),
-      HistoricFs.users.name: _users.map((user) => user.toJson()).toList(),
+      HistoricFs.users.name: usersMap,
     };
   }
 }
