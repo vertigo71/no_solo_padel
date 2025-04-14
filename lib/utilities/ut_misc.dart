@@ -168,7 +168,7 @@ class RankingPoints {
     if (isFavorite) {
       result = step + range * fraction; // Favorite team wins
     } else {
-      result = step + range - range * fraction; // Underdog wins
+      result = step + range * (1 - fraction); // Underdog wins
     }
 
     MyLog.log(

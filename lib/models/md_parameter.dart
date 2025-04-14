@@ -26,8 +26,8 @@ enum ParametersEnum {
   showLog(defaultValue: '0', paramType: ParamType.basic),
   // ranking
   step(defaultValue: '20', paramType: ParamType.ranking),
-  range(defaultValue: '60', paramType: ParamType.ranking),
-  rankingDiffToHalf(defaultValue: '3000', paramType: ParamType.ranking),
+  range(defaultValue: '40', paramType: ParamType.ranking),
+  rankingDiffToHalf(defaultValue: '1000', paramType: ParamType.ranking),
   freePoints(defaultValue: '50', paramType: ParamType.ranking),
   ;
 
