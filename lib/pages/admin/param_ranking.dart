@@ -67,6 +67,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
   final _resetFormKey = GlobalKey<FormBuilderState>(); // Form key for the reset section
 
   late Director _director;
+  bool _isResetting = false;
 
   @override
   void initState() {
@@ -136,10 +137,10 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Spacer(),
+                        const Spacer(),
                         Expanded(child: _buildTestDropdownField(TestFields.scoreA)),
                         Expanded(child: _buildTestDropdownField(TestFields.scoreB)),
-                        Spacer(),
+                        const Spacer(),
                       ],
                     ),
                     const SizedBox(height: 56.0),
@@ -332,8 +333,14 @@ class RankingParamPanelState extends State<RankingParamPanel> {
             Flexible(
               flex: 2,
               child: ElevatedButton(
-                onPressed: () => _resetRanking(),
-                child: const Text('Reset Ranking'),
+                onPressed: _isResetting ? null : _showConfirmationDialog, // Disable button while resetting
+                child: _isResetting
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Text('Reset Ranking'),
               ),
             ),
             Flexible(
@@ -359,7 +366,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     );
   }
 
-  Future<void> _resetRanking() async {
+  Future<void> _showConfirmationDialog() async {
     if (_resetFormKey.currentState!.saveAndValidate()) {
       final resetValue = int.parse(_resetFormKey.currentState!.value['resetValue'].toString());
 
@@ -373,37 +380,48 @@ class RankingParamPanelState extends State<RankingParamPanel> {
         'ranking',
       );
       if (confirmed) {
-        // Implement your reset ranking logic here
-        MyLog.log(_classString, 'Reset ranking to: $resetValue', indent: true);
-        try {
-          Date toDate = Date.now().subtract(const Duration(days: 1));
-
-          // erase all past register docs
-          await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
-
-          // erase all past matches
-          await FbHelpers().deleteDocsBatch(
-            collection: MatchFs.matches.name,
-            subcollection: ResultFs.results.name,
-            toDate: toDate,
-          );
-
-          // save all users to historic
-          await FbHelpers().saveAllUsersToHistoric();
-
-          // reset ranking and notify
-          await FbHelpers().updateAllUserRankingsBatch(resetValue);
-          // await _director.updateAllUsers(true); // no need. Listeners are called
-
-          MyLog.log(_classString, 'Reset ranking success', indent: true);
-
-          if (mounted) UiHelper.showMessage(context, 'Ranking reseteado');
-        } catch (e) {
-          MyLog.log(_classString, 'Error al resetear ranking \n${e.toString()}', level: Level.SEVERE, indent: true);
-          if (mounted) UiHelper.showMessage(context, 'Error al resetear ranking.\n${e.toString()}');
-        }
+        _resetRanking(resetValue);
       } else {
         MyLog.log(_classString, "Reset canceled.", level: Level.FINE, indent: true);
+      }
+    }
+  }
+
+  Future<void> _resetRanking(int resetValue) async {
+    setState(() {
+      _isResetting = true;
+    });
+    try {
+      Date toDate = Date.now().subtract(const Duration(days: 1));
+
+      // erase all past register docs
+      await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
+
+      // erase all past matches
+      await FbHelpers().deleteDocsBatch(
+        collection: MatchFs.matches.name,
+        subcollection: ResultFs.results.name,
+        toDate: toDate,
+      );
+
+      // save all users to historic
+      await FbHelpers().saveAllUsersToHistoric();
+
+      // reset ranking and notify
+      await FbHelpers().updateAllUserRankingsBatch(resetValue);
+      // await _director.updateAllUsers(true); // no need. Listeners are called
+
+      MyLog.log(_classString, 'Reset ranking success', indent: true);
+
+      if (mounted) UiHelper.showMessage(context, 'Ranking reseteado');
+    } catch (e) {
+      MyLog.log(_classString, 'Error al resetear ranking \n${e.toString()}', level: Level.SEVERE, indent: true);
+      if (mounted) UiHelper.showMessage(context, 'Error al resetear ranking.\n${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResetting = false;
+        });
       }
     }
   }
