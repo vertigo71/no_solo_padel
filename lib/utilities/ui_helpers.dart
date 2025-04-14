@@ -66,11 +66,9 @@ abstract class UiHelper {
         child: imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
       ),
       isThreeLine: true,
-      title: Text(user.name),
-      subtitle: Text('${sosInfo}Usuario: ${user.email.split('@')[0]}\n'
-          'Ranking: ${user.rankingPos}'),
-      trailing: Text('${user.userType.displayName}\n'
-          'Login: ${user.loginCount} veces\n'
+      title: Text('${user.name} - ${user.rankingPos}'),
+      subtitle: Text('$sosInfo'
+          '${user.userType.displayName}\n'
           '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
       onTap: () {
         if (onPressed != null) onPressed();
