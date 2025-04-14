@@ -230,7 +230,7 @@ class ProfilePanelState extends State<ProfilePanel> {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formValues = _formKey.currentState?.value;
 
-      var newName = formValues?[_FormFieldsEnum.name.name] ?? '';
+      final newName = formValues?[_FormFieldsEnum.name.name] ?? '';
       final newEmergencyInfo = formValues?[_FormFieldsEnum.emergencyInfo.name] ?? '';
       final newEmail = formValues?[_FormFieldsEnum.user.name]?.toLowerCase() + MyUser.kEmailSuffix ?? '';
       final actualPwd = formValues?[_FormFieldsEnum.actualPwd.name] ?? '';
@@ -250,11 +250,6 @@ class ProfilePanelState extends State<ProfilePanel> {
       if (loggedUser == null) {
         MyLog.log(_classString, '_formValidate loggedUser is null', level: Level.SEVERE);
         throw Exception('No se ha podido obtener el usuario conectado');
-      }
-
-      // Juli exception
-      if (loggedUser.id == 'Juli') {
-        newName = 'Julianito';
       }
 
       // Validation and Update Logic
