@@ -18,12 +18,10 @@ class Historic {
   /// user id must be different from HistoricFs.id.name
   Historic({required this.id, Map<String, int>? usersRanking}) {
     MyLog.log(_classString, 'constructor', level: Level.FINE);
-    _usersRanking.addAll(
-      Map.fromEntries(
-        (usersRanking?.entries ?? []) // Handle null case by defaulting to an empty iterable
-            .where((entry) => entry.key != HistoricFs.id.name),
-      ),
-    );
+    _usersRanking.addAll(usersRanking ?? {});
+    if (_usersRanking.remove(HistoricFs.id.name) != null) {
+      MyLog.log(_classString, 'user id found ${HistoricFs.id.name}', level: Level.WARNING);
+    }
   }
 
   Historic.fromUsers({required this.id, List<MyUser>? users}) {
@@ -75,8 +73,9 @@ class Historic {
     final id = Date.parse(json[HistoricFs.id.name]) ?? Date.now();
 
     final usersRanking = Map<String, int>.fromEntries(
-      json.entries.where((entry) => entry.key != HistoricFs.id.name && entry.value is int)
-          as Iterable<MapEntry<String, int>>,
+      json.entries
+          .where((entry) => entry.key != HistoricFs.id.name && entry.value is int)
+          .map((entry) => MapEntry(entry.key, entry.value as int)),
     );
 
     return Historic(id: id, usersRanking: usersRanking);

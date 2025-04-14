@@ -178,7 +178,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       String response =
           await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres añadir el usuario?', kYesOption, kNoOption);
       if (response.isEmpty || response == kNoOption) return;
-      MyLog.log(_classString, 'dialog response = $response', indent: true);
+      MyLog.log(_classString, 'dialog response = $response', level: Level.FINE, indent: true);
 
       setState(() {
         _isCreatingUser = true;

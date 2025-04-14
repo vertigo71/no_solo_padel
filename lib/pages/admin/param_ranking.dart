@@ -12,6 +12,7 @@ import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_director.dart';
 import '../../models/md_date.dart';
 import '../../models/md_debug.dart';
+import '../../models/md_historic.dart';
 import '../../models/md_parameter.dart';
 import '../../utilities/ut_misc.dart';
 import '../../utilities/ui_helpers.dart';
@@ -336,10 +337,10 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                 onPressed: _isResetting ? null : _showConfirmationDialog, // Disable button while resetting
                 child: _isResetting
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text('Reset Ranking'),
               ),
             ),
@@ -367,18 +368,38 @@ class RankingParamPanelState extends State<RankingParamPanel> {
   }
 
   Future<void> _showConfirmationDialog() async {
+    // check if a historic already exists for today
+    Historic? historic = await FbHelpers().getHistoric(Date.now());
+    if (historic != null) {
+      // confirmation dialog
+      const String kYesOption = 'SI';
+      const String kNoOption = 'NO';
+      String response = kNoOption;
+      if (mounted) {
+        response = await UiHelper.myReturnValueDialog(
+            context, 'Ya existe un histórico para hoy\n¿Quieres sobreescribirlo?', kYesOption, kNoOption);
+      }
+
+      if (response.isEmpty || response == kNoOption) return;
+      MyLog.log(_classString, 'dialog response = $response', level: Level.FINE, indent: true);
+      if (response == kNoOption) return;
+    }
+
     if (_resetFormKey.currentState!.saveAndValidate()) {
       final resetValue = int.parse(_resetFormKey.currentState!.value['resetValue'].toString());
 
-      final confirmed = await UiHelper.showConfirmationModal(
-        context,
-        'Reset Ranking',
-        'Se va a proceder a:\n'
-            '- Eliminar todos los partidos anteriores al dia de hoy\n'
-            '- Establecer el ranking de todos los jugadores a: $resetValue\n'
-            '- Guardar el ranking actual de cada usuario en un histórico',
-        'ranking',
-      );
+      bool confirmed = false;
+      if (mounted) {
+        confirmed = await UiHelper.showConfirmationModal(
+          context,
+          'Reset Ranking',
+          'Se va a proceder a:\n'
+              '- Eliminar todos los partidos anteriores al dia de hoy\n'
+              '- Establecer el ranking de todos los jugadores a: $resetValue\n'
+              '- Guardar el ranking actual de cada usuario en un histórico',
+          'ranking',
+        );
+      }
       if (confirmed) {
         _resetRanking(resetValue);
       } else {

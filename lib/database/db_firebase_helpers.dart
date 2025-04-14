@@ -282,10 +282,10 @@ class FbHelpers {
     MyLog.log(_classString, 'getResultsStream matchId=$matchId');
 
     return getStream(
-        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
-        fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
-        appState: appState,
-      );
+      pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      appState: appState,
+    );
   }
 
   Future<T?> getObject<T>({
@@ -340,6 +340,10 @@ class FbHelpers {
           pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
           fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
       MyParameters();
+
+  Future<Historic?> getHistoric(Date date) async => await getObject(
+      pathSegments: [HistoricFs.historic.name, date.toYyyyMmDd()],
+      fromJson: (json, [AppState? appState]) => Historic.fromJson(json));
 
   Future<List<T>> getAllObjects<T>({
     required List<String> pathSegments, // List of collection/doc identifiers
