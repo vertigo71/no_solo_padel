@@ -66,10 +66,11 @@ abstract class UiHelper {
         child: imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
       ),
       isThreeLine: true,
-      title: Text('${user.name} - ${user.rankingPos}'),
+      title: Text(user.name),
       subtitle: Text('$sosInfo'
           '${user.userType.displayName}\n'
           '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
+      trailing: Text( '\n${user.rankingPos}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       onTap: () {
         if (onPressed != null) onPressed();
       },

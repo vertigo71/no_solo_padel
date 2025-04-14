@@ -36,7 +36,7 @@ class _InformationPanelState extends State<InformationPanel> {
               return Row(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.only(left: 8),
                     child: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
                       child: Text('$index', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
