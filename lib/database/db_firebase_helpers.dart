@@ -643,7 +643,7 @@ class FbHelpers {
         indent: true);
   }
 
-  /// return match if user was inserted. null otherwise
+  /// return match with the position of inserted user
   Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
     required MyUser player,
@@ -691,7 +691,7 @@ class FbHelpers {
     });
   }
 
-  /// return match if user was deleted. null otherwise
+  /// return match
   Future<MyMatch> deletePlayerFromMatch({
     required Date matchId,
     required MyUser user,
