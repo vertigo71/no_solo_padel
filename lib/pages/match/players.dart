@@ -150,26 +150,23 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
-          UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers =
+          UnmodifiableListView<MyUser> roRankingSortedUsers =
               context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.ranking);
-          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$unmodifiableRankingSortedUsers');
+          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$roRankingSortedUsers');
 
           return Column(
             children: [
               _buildSubHeading('Apuntados ($numCourtsText)'),
               _buildSubListOfPlayers([
-                ...usersPlaying
-                    .map((player) => Text(_buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers))),
-                ...usersSigned.map((player) => Text(
-                    _buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers),
+                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers))),
+                ...usersSigned.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers),
                     style: const TextStyle(color: Colors.red))),
                 ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
               ]),
               if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
                 _buildSubListOfPlayers([
-                  ...usersReserve
-                      .map((player) => Text(_buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers))),
+                  ...usersReserve.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers))),
                 ]),
             ],
           );
@@ -203,14 +200,13 @@ class PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
-  String _buildPlayerText(
-      int playerNumber, MyUser player, UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers) {
+  String _buildPlayerText(int playerNumber, MyUser player, UnmodifiableListView<MyUser> roRankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
-        '<${unmodifiableRankingSortedUsers.indexOf(player) + 1}>';
+        '<${roRankingSortedUsers.indexOf(player) + 1}>';
   }
 
   Widget _buildRoulette() {
-    UnmodifiableListView<MyUser> unmodifiableUsers = context.read<AppState>().getUnmodifiableSortedUsers();
+    UnmodifiableListView<MyUser> roUsers = context.read<AppState>().getUnmodifiableSortedUsers();
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -241,10 +237,10 @@ class PlayersPanelState extends State<PlayersPanel> {
                 ),
                 onSelectedItemChanged: (index) {
                   setState(() {
-                    _selectedUser = unmodifiableUsers[index];
+                    _selectedUser = roUsers[index];
                   });
                 },
-                children: unmodifiableUsers
+                children: roUsers
                     .map((u) => Container(
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(

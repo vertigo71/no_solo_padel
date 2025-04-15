@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:simple_logger/simple_logger.dart';
@@ -33,13 +34,22 @@ class Director {
     await AuthenticationHelper.signOut();
   }
 
-  /// check and rebuild users
+  /// check if, for each User, its list of matchesId is correct
   /// checking they are in the right matches
-  Future<void> checkUserMatches( ) async {
-    MyLog.log(_classString, 'checkUserMatches', level: Level.FINE );
+  Future<void> checkUserMatches() async {
+    MyLog.log(_classString, 'checkUserMatches', level: Level.FINE);
 
     List<MyMatch> matches = await FbHelpers().getAllMatches(_appState);
-    List<MyUser> users = _appState.unmodifiableUsers;
+    UnmodifiableListView<MyUser> roUsers = _appState.unmodifiableUsers;
+    for (MyUser user in roUsers) {
+      for (MyMatch match in matches) {
+        bool matchContainsUser = match.isInTheMatch(user);
+        bool userContainsMatch = user.unmodifiableMatchIds.contains(match.id.toYyyyMmDd());
+        if (matchContainsUser != userContainsMatch) {
+          MyLog.log(_classString, 'checkUserMatches: user = $user, match = $match', indent: true, level: Level.WARNING);
+        }
+      }
+    }
   }
 
   Future<void> createTestData() async {

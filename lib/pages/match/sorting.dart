@@ -81,12 +81,12 @@ class SortingSubPanel extends StatelessWidget {
   Widget _listViewOfMatches(BuildContext context, Map<int, List<int>> sortedPlayers) {
     MyMatch match = context.read<MatchNotifier>().match;
     int filledCourts = match.numberOfFilledCourts;
-    UnmodifiableListView<MyUser> unmodifiableMatchPlayers = match.unmodifiablePlayers;
+    UnmodifiableListView<MyUser> roMatchPlayers = match.unmodifiablePlayers;
     MyLog.log(_classString, 'listOfMatches courts = $filledCourts', indent: true);
-    MyLog.log(_classString, 'listOfMatches matchPlayers = $unmodifiableMatchPlayers, courtPlayers = $sortedPlayers',
+    MyLog.log(_classString, 'listOfMatches matchPlayers = $roMatchPlayers, courtPlayers = $sortedPlayers',
         indent: true);
 
-    UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers =
+    UnmodifiableListView<MyUser> roRankingSortedUsers =
         context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.ranking);
 
     if (sortedPlayers.isEmpty) {
@@ -108,10 +108,10 @@ class SortingSubPanel extends StatelessWidget {
               title: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  '${_getPlayerText(court, 0, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)} y '
-                  '${_getPlayerText(court, 1, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)}\n\n'
-                  '${_getPlayerText(court, 2, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)} y '
-                  '${_getPlayerText(court, 3, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)}',
+                  '${_getPlayerText(court, 0, roMatchPlayers, sortedPlayers, roRankingSortedUsers)} y '
+                  '${_getPlayerText(court, 1, roMatchPlayers, sortedPlayers, roRankingSortedUsers)}\n\n'
+                  '${_getPlayerText(court, 2, roMatchPlayers, sortedPlayers, roRankingSortedUsers)} y '
+                  '${_getPlayerText(court, 3, roMatchPlayers, sortedPlayers, roRankingSortedUsers)}',
                 ),
               ),
             ),
@@ -120,8 +120,8 @@ class SortingSubPanel extends StatelessWidget {
     }
   }
 
-  String _getPlayerText(int court, int index, UnmodifiableListView<MyUser> unmodifiableMatchPlayers,
-          Map<int, List<int>> sortedPlayers, UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers) =>
-      '${unmodifiableMatchPlayers[sortedPlayers[court]![index]].name} '
-      '<${unmodifiableRankingSortedUsers.indexOf(unmodifiableMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
+  String _getPlayerText(int court, int index, UnmodifiableListView<MyUser> roMatchPlayers,
+          Map<int, List<int>> sortedPlayers, UnmodifiableListView<MyUser> roRankingSortedUsers) =>
+      '${roMatchPlayers[sortedPlayers[court]![index]].name} '
+      '<${roRankingSortedUsers.indexOf(roMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
 }
