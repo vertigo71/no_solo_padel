@@ -138,10 +138,51 @@ class MyMatch {
         .toList(); // Convert to list
   }
 
+  /// Generates a map that associates each player ([MyUser]) in the [_players] list with their corresponding
+  /// [PlayingState]. The state is determined based on the player's position in the list relative to the number
+  /// of filled courts and the total number of available court slots.
+  ///
+  /// - Players within the first [getNumberOfFilledCourts() * 4] positions are assigned [PlayingState.playing].
+  /// - Players within the next [_courtNames.length * 4] positions are assigned [PlayingState.signedNotPlaying].
+  /// - Remaining players are assigned [PlayingState.reserve].
+  ///
+  /// This function relies on the [getNumberOfFilledCourts()] and [_courtNames] properties to determine the
+  /// appropriate playing states.
+  ///
+  /// Returns: A [Map<MyUser, PlayingState>] containing the playing state of each player.
+  Map<MyUser, PlayingState> getAllPlayingStates() {
+    final int numberOfPlayingPlayers = getNumberOfFilledCourts() * 4;
+    final int numberOfCourtCapacityInPlayers = _courtNames.length * 4;
 
+    final Map<MyUser, PlayingState> playerStates = {};
+
+    for (int i = 0; i < _players.length; i++) {
+      if (i < numberOfPlayingPlayers) {
+        playerStates[_players[i]] = PlayingState.playing;
+      } else if (i < numberOfCourtCapacityInPlayers) {
+        playerStates[_players[i]] = PlayingState.signedNotPlaying;
+      } else {
+        playerStates[_players[i]] = PlayingState.reserve;
+      }
+    }
+
+    return playerStates;
+  }
+
+  PlayingState getPlayingState(MyUser player) {
+    Map<MyUser, PlayingState> map = getAllPlayingStates();
+    PlayingState? playingState = map[player];
+    if (playingState == null) {
+      return PlayingState.unsigned;
+    } else {
+      return playingState;
+    }
+  }
+
+  String getPlayingStateString(MyUser player) => getPlayingState(player).displayText;
 
   /// return -1 if not found
-  int getPlayerPosition(MyUser user) => _players.indexOf(user);
+  int getPlayerPosition(MyUser player) => _players.indexOf(player);
 
   bool isInTheMatch(MyUser player) => _players.contains(player);
 
@@ -157,6 +198,7 @@ class MyMatch {
   ///          already exists.
   int insertPlayer(MyUser player, {int position = -1}) {
     if (_players.contains(player)) {
+      // uses operator==
       return -1;
     }
 
@@ -170,58 +212,15 @@ class MyMatch {
   }
 
   /// Returns `true` if [player] was in the list, and `false` if not.
+  /// uses operator==
   bool removePlayer(MyUser player) => _players.remove(player);
 
-  PlayingState getPlayingState(MyUser player) {
-    Map<MyUser, PlayingState> map = getAllPlayingStates();
-    PlayingState? playingState = map[player];
-    if (playingState == null) {
-      return PlayingState.unsigned;
-    } else {
-      return playingState;
-    }
-  }
-
-  String getPlayingStateString(MyUser player) => getPlayingState(player).displayText;
-
-  /// Generates a map that associates each player ([MyUser]) in the [_players] list with their corresponding
-  /// [PlayingState]. The state is determined based on the player's position in the list relative to the number
-  /// of filled courts and the total number of available court slots.
-  ///
-  /// - Players within the first [getNumberOfFilledCourts() * 4] positions are assigned [PlayingState.playing].
-  /// - Players within the next [_courtNames.length * 4] positions are assigned [PlayingState.signedNotPlaying].
-  /// - Remaining players are assigned [PlayingState.reserve].
-  ///
-  /// This function relies on the [getNumberOfFilledCourts()] and [_courtNames] properties to determine the
-  /// appropriate playing states.
-  ///
-  /// Returns: A [Map<MyUser, PlayingState>] containing the playing state of each player.
-  Map<MyUser, PlayingState> getAllPlayingStates() {
-    final int numberOfFilledCourts = getNumberOfFilledCourts();
-    final int numberOfPlayingPlayers = numberOfFilledCourts * 4;
-    final int numberOfSignedPlayers = _courtNames.length * 4;
-
-    final Map<MyUser, PlayingState> playerStates = {};
-
-    for (int i = 0; i < _players.length; i++) {
-      if (i < numberOfPlayingPlayers) {
-        playerStates[_players[i]] = PlayingState.playing;
-      } else if (i < numberOfSignedPlayers) {
-        playerStates[_players[i]] = PlayingState.signedNotPlaying;
-      } else {
-        playerStates[_players[i]] = PlayingState.reserve;
-      }
-    }
-
-    return playerStates;
-  }
-
-  Map<int, List<int>>  getPlayingPairs() {
+  Map<int, List<int>> getPlayingPairs() {
     switch (sortingType) {
       case MatchSortingType.ranking:
         return getRankingPlayerPairs();
       case MatchSortingType.palindromic:
-     return getPalindromicPlayerPairs();
+        return getPalindromicPlayerPairs();
       case MatchSortingType.random:
         return getRandomPlayerPairs();
     }
