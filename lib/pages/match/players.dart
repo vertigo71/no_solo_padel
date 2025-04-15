@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +36,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     super.initState();
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
-    _selectedUser = context.read<AppState>().getSortedUsers()[0];
+    _selectedUser = context.read<AppState>().getUnmodifiableSortedUsers()[0];
     _loggedUser = context.read<AppState>().loggedUser ?? MyUser();
   }
 
@@ -56,21 +58,21 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     return ListView(
       children: [
-        _stateHeading(),
+        _buildPlayerStateHeading(),
         const Divider(thickness: 5),
-        _joinMatchToggle(),
+        _buildJoinMatchToggle(),
         const Divider(thickness: 5),
         _buildMatchPlayersSection(),
         const SizedBox(height: 20),
         if (context.read<AppState>().isLoggedUserAdminOrSuper) const Divider(thickness: 5),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdminOrSuper) _roulette(),
+        if (context.read<AppState>().isLoggedUserAdminOrSuper) _buildRoulette(),
         const SizedBox(height: 50),
       ],
     );
   }
 
-  Widget _stateHeading() => Padding(
+  Widget _buildPlayerStateHeading() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Builder(
           builder: (context) {
@@ -102,7 +104,7 @@ class PlayersPanelState extends State<PlayersPanel> {
         ),
       );
 
-  Widget _joinMatchToggle() => Padding(
+  Widget _buildJoinMatchToggle() => Padding(
         padding: const EdgeInsets.all(18.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -148,22 +150,26 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
-          List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
-          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$rankingSortedUsers');
+          UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers =
+              context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.ranking);
+          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$unmodifiableRankingSortedUsers');
 
           return Column(
             children: [
               _buildSubHeading('Apuntados ($numCourtsText)'),
               _buildSubListOfPlayers([
-                ...usersPlaying.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
-                ...usersSigned.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers),
+                ...usersPlaying
+                    .map((player) => Text(_buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers))),
+                ...usersSigned.map((player) => Text(
+                    _buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers),
                     style: const TextStyle(color: Colors.red))),
                 ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
               ]),
               if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
                 _buildSubListOfPlayers([
-                  ...usersReserve.map((player) => Text(_playerText(++playerNumber, player, rankingSortedUsers))),
+                  ...usersReserve
+                      .map((player) => Text(_buildPlayerText(++playerNumber, player, unmodifiableRankingSortedUsers))),
                 ]),
             ],
           );
@@ -197,13 +203,14 @@ class PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
-  String _playerText(int playerNumber, MyUser player, List<MyUser> rankingSortedUsers) {
+  String _buildPlayerText(
+      int playerNumber, MyUser player, UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
-        '<${rankingSortedUsers.indexOf(player) + 1}>';
+        '<${unmodifiableRankingSortedUsers.indexOf(player) + 1}>';
   }
 
-  Widget _roulette() {
-    List<MyUser> users = context.read<AppState>().getSortedUsers();
+  Widget _buildRoulette() {
+    UnmodifiableListView<MyUser> unmodifiableUsers = context.read<AppState>().getUnmodifiableSortedUsers();
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -234,10 +241,10 @@ class PlayersPanelState extends State<PlayersPanel> {
                 ),
                 onSelectedItemChanged: (index) {
                   setState(() {
-                    _selectedUser = users[index];
+                    _selectedUser = unmodifiableUsers[index];
                   });
                 },
-                children: users
+                children: unmodifiableUsers
                     .map((u) => Container(
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(

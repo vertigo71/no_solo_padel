@@ -56,9 +56,9 @@ class MyMatch {
 
   UnmodifiableListView<String> get unmodifiableCourtNames => UnmodifiableListView(_courtNames);
 
-  List<MyUser> get copyPlayers => List.from(_players);
+  List<MyUser> get copyOfPlayers => List.from(_players);
 
-  List<String> get copyCourtNames => List.from(_courtNames);
+  List<String> get copyOfCourtNames => List.from(_courtNames);
 
   // methods por _players
   void addPlayer(MyUser player) {
@@ -168,7 +168,7 @@ class MyMatch {
   /// Returns: A list of [MyUser] objects, either all players or those matching the
   ///          specified playing state.
   List<MyUser> getPlayers({PlayingState? state}) {
-    if (state == null) return copyPlayers;
+    if (state == null) return copyOfPlayers;
     return getAllPlayingStates()
         .entries
         .where((entry) => entry.value == state) // Filter by playing state

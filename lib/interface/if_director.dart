@@ -33,20 +33,13 @@ class Director {
     await AuthenticationHelper.signOut();
   }
 
-  // set loggedUser
-  Future<void> setLoggedUser(MyUser user) async {
-    MyLog.log(_classString, 'setLoggedUser user=$user');
-    _appState.setLoggedUser(user, notify: false);
-    user.lastLogin = Date.now();
-    user.loginCount++;
-    await FbHelpers().updateUser(user);
-  }
+  /// check and rebuild users
+  /// checking they are in the right matches
+  Future<void> checkUserMatches( ) async {
+    MyLog.log(_classString, 'checkUserMatches', level: Level.FINE );
 
-  // update all users
-  Future<void> updateAllUsers(bool notify) async {
-    MyLog.log(_classString, 'updateAllUsers');
-    List<MyUser> users = await FbHelpers().getAllUsers();
-    _appState.setAllUsers(users, notify: notify);
+    List<MyMatch> matches = await FbHelpers().getAllMatches(_appState);
+    List<MyUser> users = _appState.unmodifiableUsers;
   }
 
   Future<void> createTestData() async {
@@ -88,9 +81,9 @@ class Director {
     }
 
     // update ranking position for every user if ranking = 0
-    final users = _appState.users;
+    final readOnlyUsers = _appState.unmodifiableUsers;
     final random = Random();
-    for (MyUser user in users) {
+    for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {
         user.rankingPos = random.nextInt(10000);
         await FbHelpers().updateUser(user);
@@ -114,7 +107,7 @@ class Director {
         MyMatch match = MyMatch(id: date, comment: 'Partido de prueba');
         match.isOpen = deltaDays < 0 ? true : randomInts.first.isEven;
         match.addAllCourtNames(randomInts.map((e) => e.toString()).take((deltaDays % 4) + 1)); // max 4 courts
-        match.addAllPlayers(randomInts.map((e) => users[e % users.length]).toSet());
+        match.addAllPlayers(randomInts.map((e) => readOnlyUsers[e % readOnlyUsers.length]).toSet());
         MyLog.log(_classString, 'createTestData: create match = $match', indent: true);
         await FbHelpers().updateMatch(match: match, updateCore: true, updatePlayers: true);
       }

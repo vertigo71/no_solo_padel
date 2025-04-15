@@ -402,6 +402,11 @@ class FbHelpers {
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
+  Future<List<MyMatch>> getAllMatches(AppState appState) async => getAllObjects<MyMatch>(
+        pathSegments: [MatchFs.matches.name],
+        fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      );
+
   /// returns all matches containing a player
   Future<List<MyMatch>> getAllPlayerMatches({
     required AppState appState,
@@ -421,7 +426,7 @@ class FbHelpers {
   }
 
   /// returns all results from a match
-  Future<List<GameResult>> getAllResults({
+  Future<List<GameResult>> getAllMatchResults({
     required String matchId,
     required AppState appState,
   }) async {

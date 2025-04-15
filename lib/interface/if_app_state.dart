@@ -107,13 +107,16 @@ class AppState with ChangeNotifier {
 
   int get numUsers => _usersCache.length;
 
-  List<MyUser> get users => List.from(_usersCache);
+  List<MyUser> get copyOfUsers => List.from(_usersCache);
+
+  UnmodifiableListView<MyUser> get unmodifiableUsers => UnmodifiableListView(_usersCache);
 
   // Modifies _usersCache in place
   // get users sorted by name or ranking
-  List<MyUser> getSortedUsers({UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
+  UnmodifiableListView<MyUser> getUnmodifiableSortedUsers(
+      {UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
     sortUsers(sortBy: sortBy, notify: notify);
-    return List.from(_usersCache);
+    return UnmodifiableListView(_usersCache);
   }
 
   bool get isLoggedUserAdminOrSuper =>

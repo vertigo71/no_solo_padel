@@ -78,7 +78,7 @@ class MyUser implements Comparable<MyUser> {
 
   UnmodifiableListView<String> get unmodifiableMatchIds => UnmodifiableListView(_matchIds);
 
-  List<String> get copyMatchIds => List.from(_matchIds);
+  List<String> get copyOfMatchIds => List.from(_matchIds);
 
   // methods por _matchIds
   void addMatchId(String matchId) {

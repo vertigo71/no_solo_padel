@@ -86,7 +86,8 @@ class SortingSubPanel extends StatelessWidget {
     MyLog.log(_classString, 'listOfMatches matchPlayers = $unmodifiableMatchPlayers, courtPlayers = $sortedPlayers',
         indent: true);
 
-    List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
+    UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers =
+        context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.ranking);
 
     if (sortedPlayers.isEmpty) {
       return const Center(child: Text('No hay jugadores apuntados'));
@@ -107,10 +108,10 @@ class SortingSubPanel extends StatelessWidget {
               title: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  '${_getPlayerText(court, 0, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)} y '
-                  '${_getPlayerText(court, 1, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)}\n\n'
-                  '${_getPlayerText(court, 2, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)} y '
-                  '${_getPlayerText(court, 3, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)}',
+                  '${_getPlayerText(court, 0, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)} y '
+                  '${_getPlayerText(court, 1, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)}\n\n'
+                  '${_getPlayerText(court, 2, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)} y '
+                  '${_getPlayerText(court, 3, unmodifiableMatchPlayers, sortedPlayers, unmodifiableRankingSortedUsers)}',
                 ),
               ),
             ),
@@ -120,10 +121,7 @@ class SortingSubPanel extends StatelessWidget {
   }
 
   String _getPlayerText(int court, int index, UnmodifiableListView<MyUser> unmodifiableMatchPlayers,
-      Map<int, List<int>> sortedPlayers, List<MyUser> rankingSortedUsers) {
-    // return '${sortedPlayers[court]![index] + 1} - ${matchPlayers[sortedPlayers[court]![index]].name} '
-    //     '<${rankingSortedUsers.indexOf(matchPlayers[sortedPlayers[court]![index]]) + 1}>';
-    return '${unmodifiableMatchPlayers[sortedPlayers[court]![index]].name} '
-        '<${rankingSortedUsers.indexOf(unmodifiableMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
-  }
+          Map<int, List<int>> sortedPlayers, UnmodifiableListView<MyUser> unmodifiableRankingSortedUsers) =>
+      '${unmodifiableMatchPlayers[sortedPlayers[court]![index]].name} '
+      '<${unmodifiableRankingSortedUsers.indexOf(unmodifiableMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
 }

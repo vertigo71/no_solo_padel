@@ -67,9 +67,10 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kSortingId]?.value, match.sortingType);
       fieldsChanged = fieldsChanged ||
           List.generate(
-              kMaxNumberOfCourts,
-              (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
-                  i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : '')).any((changed) => changed);
+                  kMaxNumberOfCourts,
+                  (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
+                      i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : ''))
+              .any((changed) => changed);
 
       if (fieldsChanged) {
         // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
@@ -280,7 +281,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // add courts available
       for (int i = 0; i < kMaxNumberOfCourts; i++) {
         if (state.value['$kCourtId$i'].isNotEmpty) {
-          newMatch.unmodifiableCourtNames.add(state.value['$kCourtId$i']);
+          newMatch.addCourtName(state.value['$kCourtId$i']);
         }
       }
       newMatch.comment = state.value[kCommentId];

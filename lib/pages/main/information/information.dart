@@ -30,7 +30,7 @@ class _InformationPanelState extends State<InformationPanel> {
         body: ListView(
           children: ListTile.divideTiles(
             context: context,
-            tiles: appState.users.indexed.map((indexedUser) {
+            tiles: appState.unmodifiableUsers.indexed.map((indexedUser) {
               final index = indexedUser.$1 + 1; // Add 1 for 1-based indexing
               final user = indexedUser.$2;
               return Row(
