@@ -171,7 +171,7 @@ class FbHelpers {
           MyUser user = MyUser.fromJson(data);
           MyLog.log(_classString, '_downloadChangedUsers user=$user', indent: true);
 
-          if (user.hasNoEmptyFields()) {
+          if (user.hasBasicInfo()) {
             if (docChanged.type == DocumentChangeType.added) {
               addedUsers.add(user);
             } else if (docChanged.type == DocumentChangeType.modified) {

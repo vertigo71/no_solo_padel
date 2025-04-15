@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -78,10 +80,11 @@ class SortingSubPanel extends StatelessWidget {
 
   Widget _listViewOfMatches(BuildContext context, Map<int, List<int>> sortedPlayers) {
     MyMatch match = context.read<MatchNotifier>().match;
-    int filledCourts = match.getNumberOfFilledCourts();
-    List<MyUser> matchPlayers = match.playersReference;
+    int filledCourts = match.numberOfFilledCourts;
+    UnmodifiableListView<MyUser> unmodifiableMatchPlayers = match.unmodifiablePlayers;
     MyLog.log(_classString, 'listOfMatches courts = $filledCourts', indent: true);
-    MyLog.log(_classString, 'listOfMatches matchPlayers = $matchPlayers, courtPlayers = $sortedPlayers', indent: true);
+    MyLog.log(_classString, 'listOfMatches matchPlayers = $unmodifiableMatchPlayers, courtPlayers = $sortedPlayers',
+        indent: true);
 
     List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
 
@@ -98,16 +101,16 @@ class SortingSubPanel extends StatelessWidget {
               leading: CircleAvatar(
                   backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                   child: Text(
-                    match.courtNamesReference.elementAt(court),
+                    match.unmodifiableCourtNames.elementAt(court),
                     style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                   )),
               title: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  '${_getPlayerText(court, 0, matchPlayers, sortedPlayers, rankingSortedUsers)} y '
-                  '${_getPlayerText(court, 1, matchPlayers, sortedPlayers, rankingSortedUsers)}\n\n'
-                  '${_getPlayerText(court, 2, matchPlayers, sortedPlayers, rankingSortedUsers)} y '
-                  '${_getPlayerText(court, 3, matchPlayers, sortedPlayers, rankingSortedUsers)}',
+                  '${_getPlayerText(court, 0, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)} y '
+                  '${_getPlayerText(court, 1, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)}\n\n'
+                  '${_getPlayerText(court, 2, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)} y '
+                  '${_getPlayerText(court, 3, unmodifiableMatchPlayers, sortedPlayers, rankingSortedUsers)}',
                 ),
               ),
             ),
@@ -116,11 +119,11 @@ class SortingSubPanel extends StatelessWidget {
     }
   }
 
-  String _getPlayerText(int court, int index, List<MyUser> matchPlayers, Map<int, List<int>> sortedPlayers,
-      List<MyUser> rankingSortedUsers) {
+  String _getPlayerText(int court, int index, UnmodifiableListView<MyUser> unmodifiableMatchPlayers,
+      Map<int, List<int>> sortedPlayers, List<MyUser> rankingSortedUsers) {
     // return '${sortedPlayers[court]![index] + 1} - ${matchPlayers[sortedPlayers[court]![index]].name} '
     //     '<${rankingSortedUsers.indexOf(matchPlayers[sortedPlayers[court]![index]]) + 1}>';
-    return '${matchPlayers[sortedPlayers[court]![index]].name} '
-        '<${rankingSortedUsers.indexOf(matchPlayers[sortedPlayers[court]![index]]) + 1}>';
+    return '${unmodifiableMatchPlayers[sortedPlayers[court]![index]].name} '
+        '<${rankingSortedUsers.indexOf(unmodifiableMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
   }
 }

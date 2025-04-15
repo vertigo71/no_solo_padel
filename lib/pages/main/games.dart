@@ -96,7 +96,7 @@ class GamesPanel extends StatelessWidget {
                             : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
                         subtitle: match.isOpen
                             ? Text(
-                                'APUNTADOS: ${match.playersReference.length} de ${match.getNumberOfCourts() * 4}',
+                                'APUNTADOS: ${match.unmodifiablePlayers.length} de ${match.numberOfCourts * 4}',
                                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               )
                             : null,

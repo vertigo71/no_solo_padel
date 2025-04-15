@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
@@ -34,6 +35,7 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
+  matchIds, // NEW FIELD: List of match IDs
 }
 
 /// users sort order
@@ -47,32 +49,16 @@ class MyUser implements Comparable<MyUser> {
   /// Suffix added to user emails.
   static const String kEmailSuffix = '@nsp.com';
 
-  /// Unique identifier of the user.
   String id;
-
-  /// Name of the user.
   String name;
-
-  /// Emergency information for the user.
   String emergencyInfo;
-
-  /// Private email field, accessed via getter and setter.
   String _email;
-
-  /// Type of the user (basic, admin, superuser).
   UserType userType;
-
-  /// Last login date of the user.
   Date? lastLogin;
-
-  /// Number of times the user has logged in.
   int loginCount;
-
-  /// URL of the user's avatar.
   String? avatarUrl;
-
-  /// Ranking position of the user.
   int rankingPos;
+  final List<String> _matchIds = [];
 
   /// Constructor for MyUser class.
   MyUser({
@@ -85,7 +71,39 @@ class MyUser implements Comparable<MyUser> {
     this.loginCount = 0,
     this.avatarUrl,
     this.rankingPos = 0,
-  }) : _email = email.toLowerCase();
+    List<String>? matchIds,
+  }) : _email = email.toLowerCase() {
+    _matchIds.addAll(matchIds ?? []);
+  }
+
+  UnmodifiableListView<String> get unmodifiableMatchIds => UnmodifiableListView(_matchIds);
+
+  List<String> get copyMatchIds => List.from(_matchIds);
+
+  // methods por _matchIds
+  void addMatchId(String matchId) {
+    if (!_matchIds.contains(matchId)) _matchIds.add(matchId);
+  }
+
+  void addAllMatchId(Iterable<String> newMatchIds) {
+    for (final matchId in newMatchIds) {
+      addMatchId(matchId);
+    }
+  }
+
+  bool removeMatchId(String matchId) {
+    return _matchIds.remove(matchId);
+  }
+
+  void clearMatchId() {
+    _matchIds.clear();
+  }
+
+  /// Getter for the user's email.
+  String get email => _email;
+
+  /// Setter for the user's email, converting it to lowercase.
+  set email(String email) => _email = email.toLowerCase();
 
   /// Creates a new MyUser object with updated fields.
   MyUser copyWith({
@@ -98,6 +116,7 @@ class MyUser implements Comparable<MyUser> {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
+    List<String>? matchIds,
   }) {
     return MyUser(
       id: id ?? this.id,
@@ -109,6 +128,7 @@ class MyUser implements Comparable<MyUser> {
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       rankingPos: rankingPos ?? this.rankingPos,
+      matchIds: matchIds ?? _matchIds,
     );
   }
 
@@ -123,28 +143,12 @@ class MyUser implements Comparable<MyUser> {
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
     rankingPos = user.rankingPos;
+    _matchIds.clear();
+    _matchIds.addAll(user._matchIds);
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
-  bool hasNoEmptyFields() => id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
-
-  bool isValid() => hasNoEmptyFields();
-
-  /// Getter for the user's email.
-  String get email => _email;
-
-  /// Setter for the user's email, converting it to lowercase.
-  set email(String email) => _email = email.toLowerCase();
-
-  /// Converts an integer to a UserType enum value.
-  static UserType intToUserType(int? type) {
-    try {
-      return UserType.values[type!];
-    } catch (e) {
-      MyLog.log(_classString, 'Invalid UserType index: $type, Error: ${e.toString()}', level: Level.WARNING);
-      return UserType.basic;
-    }
-  }
+  bool hasBasicInfo() => id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
 
   /// Returns a string representation of the MyUser object.
   @override
@@ -168,11 +172,12 @@ class MyUser implements Comparable<MyUser> {
         name: json[UserFs.name.name] ?? '',
         emergencyInfo: json[UserFs.emergencyInfo.name] ?? '',
         email: json[UserFs.email.name] ?? '',
-        userType: intToUserType(json[UserFs.userType.name]),
+        userType: _intToUserType(json[UserFs.userType.name]),
         lastLogin: Date.parse(json[UserFs.lastLogin.name]),
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
+        matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creating MyUser from Firestore: ${e.toString()}',
@@ -201,6 +206,7 @@ class MyUser implements Comparable<MyUser> {
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
       UserFs.rankingPos.name: rankingPos,
+      UserFs.matchIds.name: List.from(_matchIds),
     };
   }
 
@@ -209,6 +215,7 @@ class MyUser implements Comparable<MyUser> {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! MyUser) return false;
+    final listEquals = const DeepCollectionEquality().equals; // Use collection package
     return id == other.id &&
         name == other.name &&
         emergencyInfo == other.emergencyInfo &&
@@ -217,7 +224,8 @@ class MyUser implements Comparable<MyUser> {
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
-        rankingPos == other.rankingPos;
+        rankingPos == other.rankingPos &&
+        listEquals(_matchIds, other._matchIds);
   }
 
   /// Overrides the hashCode getter.
@@ -232,11 +240,21 @@ class MyUser implements Comparable<MyUser> {
         loginCount,
         avatarUrl,
         rankingPos,
+        Object.hashAll(_matchIds),
       );
 
   @override
   int compareTo(MyUser other) =>
       removeDiacritics(name.toLowerCase()).compareTo(removeDiacritics(other.name.toLowerCase()));
+
+  static UserType _intToUserType(int? type) {
+    try {
+      return UserType.values[type!];
+    } catch (e) {
+      MyLog.log(_classString, 'Invalid UserType index: $type, Error: ${e.toString()}', level: Level.WARNING);
+      return UserType.basic;
+    }
+  }
 }
 
 Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {

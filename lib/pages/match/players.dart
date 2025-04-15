@@ -143,11 +143,11 @@ class PlayersPanelState extends State<PlayersPanel> {
           List<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
           List<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
-          for (int i = usersPlaying.length + usersSigned.length; i < match.getNumberOfCourts() * 4; i++) {
+          for (int i = usersPlaying.length + usersSigned.length; i < match.numberOfCourts * 4; i++) {
             usersFillEmptySpaces.add(MyUser());
           }
 
-          String numCourtsText = 'disponible ${singularOrPlural(match.getNumberOfCourts(), 'pista')}';
+          String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
           List<MyUser> rankingSortedUsers = context.read<AppState>().getSortedUsers(sortBy: UsersSortBy.ranking);
           MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$rankingSortedUsers');
 
@@ -456,7 +456,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
         message: '$registerText\n'
-            'APUNTADOS: ${updatedMatch.playersReference.length} de ${updatedMatch.getNumberOfCourts() * 4}',
+            'APUNTADOS: ${updatedMatch.unmodifiablePlayers.length} de ${updatedMatch.numberOfCourts * 4}',
         matchDate: updatedMatch.id);
   }
 

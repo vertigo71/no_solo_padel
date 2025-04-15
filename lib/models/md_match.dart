@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
 import 'md_date.dart';
@@ -50,47 +48,56 @@ class MyMatch {
       this.sortingType = MatchSortingType.ranking,
       List<MyUser>? players,
       List<String>? courtNames}) {
-    _players.addAll(players ?? {});
-    _courtNames.addAll(courtNames ?? {});
+    _players.addAll(players ?? []);
+    _courtNames.addAll(courtNames ?? []);
   }
 
-  List<MyUser> get playersReference => _players;
+  UnmodifiableListView<MyUser> get unmodifiablePlayers => UnmodifiableListView(_players);
 
-  List<String> get courtNamesReference => _courtNames;
+  UnmodifiableListView<String> get unmodifiableCourtNames => UnmodifiableListView(_courtNames);
 
-  List<MyUser> get playersCopy => List.from(_players);
+  List<MyUser> get copyPlayers => List.from(_players);
 
-  List<String> get courtNamesCopy => List.from(_courtNames);
+  List<String> get copyCourtNames => List.from(_courtNames);
 
-  factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-    final playerIds = List<String>.from(json[MatchFs.players.name] ?? []);
-    final players = <MyUser>[];
-
-    for (final playerId in playerIds) {
-      final user = appState.getUserById(playerId);
-      if (user != null) {
-        players.add(user);
-      }
-    }
-
-    return MyMatch(
-      id: Date.parse(json[MatchFs.date.name]) ?? Date.ymd(1971),
-      players: players,
-      courtNames: List<String>.from(json[MatchFs.courtNames.name] ?? []),
-      comment: json[MatchFs.comment.name] ?? '',
-      isOpen: json[MatchFs.isOpen.name] ?? false,
-      sortingType: MatchSortingType.values[json[MatchFs.sortingType.name] ?? 0],
-    );
+  // methods por _players
+  void addPlayer(MyUser player) {
+    if (!_players.contains(player)) _players.add(player);
   }
 
-  factory MyMatch.fromJsonString(String jsonString, AppState appState) {
-    // Make jsonString nullable
-    try {
-      return MyMatch.fromJson(jsonDecode(jsonString), appState);
-    } catch (e) {
-      MyLog.log(_classString, 'fromJsonString: Error decoding JSON: ${e.toString()}', level: Level.SEVERE);
-      throw Exception('Error: no se ha podido acceder al partido\n${e.toString()}');
+  void addAllPlayers(Iterable<MyUser> newPlayers) {
+    for (final player in newPlayers) {
+      addPlayer(player);
     }
+  }
+
+  bool removePlayer(MyUser player) {
+    return _players.remove(player);
+  }
+
+  void clearPlayers() {
+    _players.clear();
+  }
+
+  // Methods for _courtNames
+  void addCourtName(String courtName) {
+    if (!_courtNames.contains(courtName)) {
+      _courtNames.add(courtName);
+    }
+  }
+
+  void addAllCourtNames(Iterable<String> newCourtNames) {
+    for (final courtName in newCourtNames) {
+      addCourtName(courtName);
+    }
+  }
+
+  bool removeCourtName(String courtName) {
+    return _courtNames.remove(courtName);
+  }
+
+  void clearCourtNames() {
+    _courtNames.clear();
   }
 
   MyMatch copyWith({
@@ -103,19 +110,50 @@ class MyMatch {
   }) {
     return MyMatch(
       id: id ?? this.id,
-      players: players ?? List.from(_players),
-      courtNames: courtNames ?? List.from(_courtNames),
+      players: players ?? _players,
+      courtNames: courtNames ?? _courtNames,
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
       sortingType: sortingType ?? this.sortingType,
     );
   }
 
+  factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
+    // .cast<String>() is a method that attempts to create a new List<String> view of an existing list.
+    final playerIds = json[MatchFs.players.name]?.cast<String>() ?? [];
+    final players = <MyUser>[];
+
+    for (final playerId in playerIds) {
+      final user = appState.getUserById(playerId);
+      if (user != null) {
+        players.add(user);
+      }
+    }
+
+    return MyMatch(
+      id: Date.parse(json[MatchFs.date.name]) ?? Date.ymd(1971),
+      players: players,
+      courtNames: json[MatchFs.courtNames.name]?.cast<String>() ?? [],
+      comment: json[MatchFs.comment.name] ?? '',
+      isOpen: json[MatchFs.isOpen.name] ?? false,
+      sortingType: MatchSortingType.values[json[MatchFs.sortingType.name] ?? 0],
+    );
+  }
+
+  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
+        MatchFs.date.name: id.toYyyyMmDd(),
+        if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
+        if (core) MatchFs.courtNames.name: _courtNames.toList(),
+        if (core) MatchFs.comment.name: comment,
+        if (core) MatchFs.isOpen.name: isOpen, // bool
+        if (core) MatchFs.sortingType.name: sortingType.index, // int
+      };
+
   bool isCourtInMatch(String court) => _courtNames.contains(court);
 
-  int getNumberOfFilledCourts() => min((_players.length / 4).floor(), _courtNames.length);
+  int get numberOfFilledCourts => min((_players.length / 4).floor(), numberOfCourts);
 
-  int getNumberOfCourts() => _courtNames.length;
+  int get numberOfCourts => _courtNames.length;
 
   /// Retrieves a list of players, optionally filtered by their playing state.
   ///
@@ -130,7 +168,7 @@ class MyMatch {
   /// Returns: A list of [MyUser] objects, either all players or those matching the
   ///          specified playing state.
   List<MyUser> getPlayers({PlayingState? state}) {
-    if (state == null) return List.from(_players);
+    if (state == null) return copyPlayers;
     return getAllPlayingStates()
         .entries
         .where((entry) => entry.value == state) // Filter by playing state
@@ -142,16 +180,16 @@ class MyMatch {
   /// [PlayingState]. The state is determined based on the player's position in the list relative to the number
   /// of filled courts and the total number of available court slots.
   ///
-  /// - Players within the first [getNumberOfFilledCourts() * 4] positions are assigned [PlayingState.playing].
+  /// - Players within the first [getnumberOfFilledCourts * 4] positions are assigned [PlayingState.playing].
   /// - Players within the next [_courtNames.length * 4] positions are assigned [PlayingState.signedNotPlaying].
   /// - Remaining players are assigned [PlayingState.reserve].
   ///
-  /// This function relies on the [getNumberOfFilledCourts()] and [_courtNames] properties to determine the
+  /// This function relies on the [getnumberOfFilledCourts] and [_courtNames] properties to determine the
   /// appropriate playing states.
   ///
   /// Returns: A [Map<MyUser, PlayingState>] containing the playing state of each player.
   Map<MyUser, PlayingState> getAllPlayingStates() {
-    final int numberOfPlayingPlayers = getNumberOfFilledCourts() * 4;
+    final int numberOfPlayingPlayers = numberOfFilledCourts * 4;
     final int numberOfCourtCapacityInPlayers = _courtNames.length * 4;
 
     final Map<MyUser, PlayingState> playerStates = {};
@@ -211,10 +249,6 @@ class MyMatch {
     return position;
   }
 
-  /// Returns `true` if [player] was in the list, and `false` if not.
-  /// uses operator==
-  bool removePlayer(MyUser player) => _players.remove(player);
-
   Map<int, List<int>> getPlayingPairs() {
     switch (sortingType) {
       case MatchSortingType.ranking:
@@ -244,7 +278,7 @@ class MyMatch {
   ///     - The values are lists of four integer positions representing the players
   ///       assigned to each court.
   Map<int, List<int>> getRandomPlayerPairs() {
-    int numFilledCourts = getNumberOfFilledCourts();
+    int numFilledCourts = numberOfFilledCourts;
     List<int> randomIndexes = getRandomList(numFilledCourts * 4, id);
 
     Map<int, List<int>> courtPlayers = {};
@@ -262,7 +296,7 @@ class MyMatch {
   }
 
   Map<int, List<int>> getRankingPlayerPairs() {
-    int numFilledCourts = getNumberOfFilledCourts();
+    int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
       ..sort(getMyUserComparator(UsersSortBy.ranking));
@@ -285,7 +319,7 @@ class MyMatch {
   }
 
   Map<int, List<int>> getPalindromicPlayerPairs() {
-    int numFilledCourts = getNumberOfFilledCourts();
+    int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
       ..sort(getMyUserComparator(UsersSortBy.ranking));
@@ -307,17 +341,6 @@ class MyMatch {
 
   @override
   String toString() => ('($id,open=$isOpen,courts=$_courtNames,names=$_players,comment=$comment)');
-
-  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
-        MatchFs.date.name: id.toYyyyMmDd(),
-        if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
-        if (core) MatchFs.courtNames.name: _courtNames.toList(),
-        if (core) MatchFs.comment.name: comment,
-        if (core) MatchFs.isOpen.name: isOpen, // bool
-        if (core) MatchFs.sortingType.name: sortingType.index, // int
-      };
-
-  String toJsonString() => jsonEncode(toJson());
 
   // must compare all fields
   // match_notifier requires that in _notifyIfChanged method

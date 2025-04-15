@@ -69,7 +69,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           List.generate(
               kMaxNumberOfCourts,
               (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
-                  i < match.courtNamesReference.length ? match.courtNamesReference[i] : '')).any((changed) => changed);
+                  i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : '')).any((changed) => changed);
 
       if (fieldsChanged) {
         // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
@@ -198,7 +198,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                     borderRadius: BorderRadius.all(Radius.circular(4.0)),
                   ),
                 ),
-                initialValue: i < match.courtNamesReference.length ? match.courtNamesReference[i] : '',
+                initialValue: i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : '',
                 inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
                 keyboardType: TextInputType.text,
                 textAlign: TextAlign.center, // Center the text
@@ -280,7 +280,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       // add courts available
       for (int i = 0; i < kMaxNumberOfCourts; i++) {
         if (state.value['$kCourtId$i'].isNotEmpty) {
-          newMatch.courtNamesReference.add(state.value['$kCourtId$i']);
+          newMatch.unmodifiableCourtNames.add(state.value['$kCourtId$i']);
         }
       }
       newMatch.comment = state.value[kCommentId];
@@ -305,7 +305,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         }
 
         String registerText = '';
-        int newNumCourts = newMatch.getNumberOfCourts();
+        int newNumCourts = newMatch.numberOfCourts;
 
         // detect if the match has been opened or closed
         // otherwise detect if there is a change in the number of courts
@@ -316,7 +316,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           } else {
             registerText = '${loggedUser.name} ha cerrado la convocatoria';
           }
-        } else if (oldMatch.getNumberOfCourts() != newNumCourts && newMatch.isOpen) {
+        } else if (oldMatch.numberOfCourts != newNumCourts && newMatch.isOpen) {
           registerText =
               '${loggedUser.name}  ha modificado el número de pistas\nAhora hay ${singularOrPlural(newNumCourts, 'pista disponible', 'pistas disponibles')}';
         }
