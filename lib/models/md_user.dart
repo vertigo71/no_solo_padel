@@ -99,6 +99,11 @@ class MyUser implements Comparable<MyUser> {
     _matchIds.clear();
   }
 
+  void setMatchIds(List<String> newMatchIds) {
+    _matchIds.clear();
+    _matchIds.addAll(newMatchIds);
+  }
+
   /// Getter for the user's email.
   String get email => _email;
 

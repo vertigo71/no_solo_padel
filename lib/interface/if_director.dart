@@ -36,19 +36,35 @@ class Director {
 
   /// check if, for each User, its list of matchesId is correct
   /// checking they are in the right matches
-  Future<void> checkUserMatches() async {
+  Future<void> checkUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
     MyLog.log(_classString, 'checkUserMatches', level: Level.FINE);
 
-    List<MyMatch> matches = await FbHelpers().getAllMatches(_appState);
+    List<MyMatch> allMatches = await FbHelpers().getAllMatches(_appState);
+    Map<MyUser, List<MyMatch>> userMatches = {};
+    for (MyMatch match in allMatches) {
+      for (MyUser user in match.unmodifiablePlayers) {
+        if (!userMatches.containsKey(user)) userMatches[user] = [];
+        userMatches[user]?.add(match);
+      }
+    }
     UnmodifiableListView<MyUser> roUsers = _appState.unmodifiableUsers;
     for (MyUser user in roUsers) {
-      for (MyMatch match in matches) {
-        bool matchContainsUser = match.isInTheMatch(user);
-        bool userContainsMatch = user.unmodifiableMatchIds.contains(match.id.toYyyyMmDd());
-        if (matchContainsUser != userContainsMatch) {
-          MyLog.log(_classString, 'checkUserMatches: user = $user, match = $match', indent: true, level: Level.WARNING);
-        }
+      List<String> rightUserMatches = userMatches[user]?.map((e) => e.id.toYyyyMmDd()).toList() ?? [];
+      List<String> actualUserMatches = user.unmodifiableMatchIds.toList();
+      if (rightUserMatches.length != actualUserMatches.length ||
+          rightUserMatches.toSet().intersection(actualUserMatches.toSet()).length != rightUserMatches.length) {
+        MyLog.log(_classString, 'checkUserMatches: user = $user should have these matches\n$rightUserMatches',
+            indent: true, level: Level.WARNING);
+        rightMatchesForUser[user] = rightUserMatches;
       }
+    }
+  }
+
+  Future<void> rebuildWrongUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
+    MyLog.log(_classString, 'rebuildUserMatches', level: Level.FINE);
+    for (var user in rightMatchesForUser.keys) {
+      user.setMatchIds(rightMatchesForUser[user]!);
+      await FbHelpers().updateUser(user);
     }
   }
 
