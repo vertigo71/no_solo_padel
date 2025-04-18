@@ -63,6 +63,7 @@ class _InformationPanelState extends State<InformationPanel> {
   }
 
   PreferredSizeWidget? _buildAppBar(AppState appState) {
+    MyLog.log(_classString, 'Building AppBar', level: Level.FINE);
     return AppBar(
       actions: [
         // typical layout: expanded, row, expanded, ...
