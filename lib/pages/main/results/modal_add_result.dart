@@ -122,7 +122,7 @@ class _AddResultModalState extends State<AddResultModal> {
         },
         dropdownMenuEntries: () {
           final List<MyUser> players = _match.getPlayers(state: PlayingState.playing);
-          players.sort(getMyUserComparator(UsersSortBy.name));
+          players.sort(getMyUserComparator(UsersSortBy.name, null ));
           return players.map<DropdownMenuEntry<MyUser>>((MyUser user) {
             return DropdownMenuEntry<MyUser>(
               value: user,
@@ -270,9 +270,6 @@ class _AddResultModalState extends State<AddResultModal> {
       MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
       throw ('Error al actualizar los puntos de los jugadores. \n${e.toString()}');
     }
-
-    // log to Sentry
-    MyLog.log(_classString, 'SENTRY result created', myCustomObject: gameResult, captureSentryMessage: true);
   }
 
   /// list of 2 ints with the points of each team A and B

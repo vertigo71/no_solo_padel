@@ -249,17 +249,6 @@ class MyMatch {
     return position;
   }
 
-  Map<int, List<int>> getPlayingPairs() {
-    switch (sortingType) {
-      case MatchSortingType.ranking:
-        return getRankingPlayerPairs();
-      case MatchSortingType.palindromic:
-        return getPalindromicPlayerPairs();
-      case MatchSortingType.random:
-        return getRandomPlayerPairs();
-    }
-  }
-
   /// Generates a map representing player positions to courts for the match.
   ///
   /// This function calculates player pairings based on the number of filled courts
@@ -295,11 +284,11 @@ class MyMatch {
     return courtPlayers;
   }
 
-  Map<int, List<int>> getRankingPlayerPairs() {
+  Map<int, List<int>> getRankingPlayerPairs(int? defaultRanking) {
     int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
-      ..sort(getMyUserComparator(UsersSortBy.ranking));
+      ..sort(getMyUserComparator(UsersSortBy.ranking, defaultRanking));
     MyLog.log(
         _classString,
         'getRankingPlayerPairs numOfCourts=$numFilledCourts, '
@@ -318,11 +307,11 @@ class MyMatch {
     return courtPlayers;
   }
 
-  Map<int, List<int>> getPalindromicPlayerPairs() {
+  Map<int, List<int>> getPalindromicPlayerPairs(int? defaultRanking) {
     int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
-      ..sort(getMyUserComparator(UsersSortBy.ranking));
+      ..sort(getMyUserComparator(UsersSortBy.ranking, defaultRanking));
     MyLog.log(
         _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
     Map<int, List<int>> courtPlayers = {};

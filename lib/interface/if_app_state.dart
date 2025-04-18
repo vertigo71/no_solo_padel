@@ -90,7 +90,7 @@ class AppState with ChangeNotifier {
   void _sortUsersBold(UsersSortBy sortBy) {
     MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
     _usersSorting = sortBy;
-    _usersCache.sort(getMyUserComparator(sortBy));
+    _usersCache.sort(getMyUserComparator(sortBy, getIntParamValue(ParametersEnum.defaultRanking)));
   }
 
   // sort by name or ranking
@@ -170,9 +170,6 @@ class AppState with ChangeNotifier {
 
     _sortUsersBold(_usersSorting);
     if (notify) notifyListeners();
-
-    // log on Sentry if users are loaded or changed
-    MyLog.log(_classString, 'SENTRY appState', myCustomObject: this, captureSentryMessage: true);
   }
 
   MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);

@@ -18,6 +18,7 @@ final String _classString = 'ParametersPanel'.toUpperCase();
 /// Helper class to define form fields and their properties
 class _FormFields {
   static Map<ParametersEnum, String> label = {
+    ParametersEnum.defaultRanking: 'Valor al resetear el ranking',
     ParametersEnum.matchDaysToView: 'Partidos: ver número de días',
     ParametersEnum.matchDaysKeeping: 'Partidos: histórico de días a conservar',
     ParametersEnum.registerDaysAgoToView: 'Registro: ver número de días atrás',
@@ -37,6 +38,7 @@ class _FormFields {
   }
 
   static Map<ParametersEnum, String> listAllowedChars = {
+    ParametersEnum.defaultRanking: '[0-9]',
     ParametersEnum.matchDaysToView: '[0-9]',
     ParametersEnum.matchDaysKeeping: '[0-9]',
     ParametersEnum.registerDaysAgoToView: '[0-9]',

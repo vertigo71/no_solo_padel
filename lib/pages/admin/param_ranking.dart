@@ -65,7 +65,6 @@ class RankingParamPanel extends StatefulWidget {
 class RankingParamPanelState extends State<RankingParamPanel> {
   final _formKey = GlobalKey<FormBuilderState>(); // Form key
   final _testFormKey = GlobalKey<FormBuilderState>(); // Form key for test section.
-  final _resetFormKey = GlobalKey<FormBuilderState>(); // Form key for the reset section
 
   late Director _director;
   bool _isResetting = false;
@@ -325,43 +324,16 @@ class RankingParamPanelState extends State<RankingParamPanel> {
   Widget _buildResetForm() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: FormBuilder(
-        key: _resetFormKey,
-        child: Row(
-          spacing: 28.0,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: _isResetting ? null : _showConfirmationDialog, // Disable button while resetting
-                child: _isResetting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Reset Ranking'),
-              ),
-            ),
-            Flexible(
-              flex: 1,
-              child: FormBuilderTextField(
-                name: 'resetValue',
-                decoration: InputDecoration(
-                  labelText: 'Valor',
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: FormBuilderValidators.compose([
-                  FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-                  FormBuilderValidators.numeric(errorText: 'Debe ser un número válido'),
-                  FormBuilderValidators.integer(errorText: 'Debe ser un número entero'),
-                  FormBuilderValidators.min(0, errorText: 'Debe ser mayor o igual a 0'),
-                ]),
-              ),
-            ),
-          ],
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _isResetting ? null : _showConfirmationDialog, // Disable button while resetting
+          child: _isResetting
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text('\nReset Ranking (valor = ${_director.appState.getParamValue(ParametersEnum.defaultRanking)})\n'),
         ),
       ),
     );
@@ -385,26 +357,30 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       if (response == kNoOption) return;
     }
 
-    if (_resetFormKey.currentState!.saveAndValidate()) {
-      final resetValue = int.parse(_resetFormKey.currentState!.value['resetValue'].toString());
+    final int resetValue;
+    try {
+      resetValue = int.parse(_director.appState.getParamValue(ParametersEnum.defaultRanking));
+    } catch (e) {
+      MyLog.log(_classString, 'Error parsing reset value ${e.toString()}', level: Level.SEVERE, indent: true);
+      throw 'Error al obtener el parámetro del nuevo ranking.';
+    }
 
-      bool confirmed = false;
-      if (mounted) {
-        confirmed = await UiHelper.showConfirmationModal(
-          context,
-          'Reset Ranking',
-          'Se va a proceder a:\n'
-              '- Eliminar todos los partidos anteriores al dia de hoy\n'
-              '- Establecer el ranking de todos los jugadores a: $resetValue\n'
-              '- Guardar el ranking actual de cada usuario en un histórico',
-          'ranking',
-        );
-      }
-      if (confirmed) {
-        _resetRanking(resetValue);
-      } else {
-        MyLog.log(_classString, "Reset canceled.", level: Level.FINE, indent: true);
-      }
+    bool confirmed = false;
+    if (mounted) {
+      confirmed = await UiHelper.showConfirmationModal(
+        context,
+        'Reset Ranking',
+        'Se va a proceder a:\n'
+            '- Eliminar todos los partidos anteriores al dia de hoy\n'
+            '- Establecer el ranking de todos los jugadores a: $resetValue\n'
+            '- Guardar el ranking actual de cada usuario en un histórico',
+        'ranking',
+      );
+    }
+    if (confirmed) {
+      _resetRanking(resetValue);
+    } else {
+      MyLog.log(_classString, "Reset canceled.", level: Level.FINE, indent: true);
     }
   }
 

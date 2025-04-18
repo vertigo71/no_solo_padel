@@ -3,6 +3,7 @@ import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 
+import '../utilities/ut_misc.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
 
@@ -262,13 +263,22 @@ class MyUser implements Comparable<MyUser> {
   }
 }
 
-Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {
-  int compareToNoDiacritics(String a, String b) =>
-      removeDiacritics(a.toLowerCase()).compareTo(removeDiacritics(b.toLowerCase()));
-
+Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy, int? defaultRanking) {
   switch (sortBy) {
     case UsersSortBy.ranking:
       return (a, b) {
+        if (defaultRanking != null) {
+          final aIsDefault = a.rankingPos == defaultRanking;
+          final bIsDefault = b.rankingPos == defaultRanking;
+
+          if (aIsDefault && !bIsDefault) {
+            return 1; // a (default) comes after b
+          }
+          if (!aIsDefault && bIsDefault) {
+            return -1; // a (not default) comes before b
+          }
+          // If both or neither are default, compare by ranking
+        }
         int rankingCompare = b.rankingPos.compareTo(a.rankingPos);
         return rankingCompare == 0 ? compareToNoDiacritics(a.name, b.name) : rankingCompare;
       }; // Descending ranking

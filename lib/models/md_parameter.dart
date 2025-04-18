@@ -16,6 +16,7 @@ enum ParamType { basic, ranking }
 /// Enum representing application parameters.
 enum ParametersEnum {
   // basic
+  defaultRanking(defaultValue: '5000', paramType: ParamType.basic),
   matchDaysToView(defaultValue: '10', paramType: ParamType.basic),
   matchDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
   registerDaysAgoToView(defaultValue: '1', paramType: ParamType.basic),

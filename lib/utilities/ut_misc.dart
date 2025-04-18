@@ -1,3 +1,4 @@
+import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:math';
 
@@ -75,6 +76,16 @@ bool strToBool(String value) {
   return false;
 }
 
+// lowerCase, no diacritics
+int compareToNoDiacritics(String a, String b) =>
+    removeDiacritics(a.toLowerCase()).compareTo(removeDiacritics(b.toLowerCase()));
+
+// true if a and b are not equal
+bool xor(bool a, bool b) => a != b;
+
+// true if a and b are equal
+bool xnor(bool a, bool b) => a == b;
+
 class RankingPoints {
   /// - The minimum points awarded
   int step;
@@ -123,9 +134,6 @@ class RankingPoints {
     final bool teamAIsFavorite = rankingDifference > 0;
     final bool teamAWins = scoreDifference > 0;
 
-    // true if a and b are equal
-    bool nxor(bool a, bool b) => a == b;
-
     // add free points to the result
     List<int> addFreePoints(int result) => [freePoints + result, freePoints - result];
 
@@ -141,7 +149,7 @@ class RankingPoints {
       return teamAIsFavorite ? addFreePoints(-winnerResult) : addFreePoints(winnerResult);
     }
 
-    int winnerResult = (scoreDifference.abs() * _winnerPointsPerGame(nxor(teamAWins, teamAIsFavorite))).round();
+    int winnerResult = (scoreDifference.abs() * _winnerPointsPerGame(xnor(teamAWins, teamAIsFavorite))).round();
 
     return teamAWins ? addFreePoints(winnerResult) : addFreePoints(-winnerResult);
   }
