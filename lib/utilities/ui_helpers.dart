@@ -70,7 +70,10 @@ abstract class UiHelper {
       subtitle: Text('$sosInfo'
           '${user.userType.displayName}\n'
           '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
-      trailing: Text( '\n${user.rankingPos}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      trailing: Text('\n${user.rankingPos}',
+          style: user.isActive
+              ? TextStyle(fontSize: 14, fontWeight: FontWeight.bold)
+              : TextStyle(fontSize: 14, color: kLightRed)),
       onTap: () {
         if (onPressed != null) onPressed();
       },
@@ -178,7 +181,8 @@ abstract class UiHelper {
   ///
   /// Returns `true` if the user types the correct confirmation text and presses 'Confirmar',
   /// and `false` otherwise (if they press 'Cancelar' or fail to type the correct text).
-  static Future<bool> showConfirmationModal(BuildContext context, String dialogText, String bodyText, String confirmationText,
+  static Future<bool> showConfirmationModal(
+      BuildContext context, String dialogText, String bodyText, String confirmationText,
       {String errorMessage = 'Por favor, escriba "%s" para confirmar.'}) async {
     final confirmationFormKey = GlobalKey<FormBuilderState>();
 
