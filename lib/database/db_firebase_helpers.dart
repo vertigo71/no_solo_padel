@@ -480,7 +480,9 @@ class FbHelpers {
     );
   }
 
-  Future<void> updateAllUserRankingsBatch(int newRanking) async {
+  /// set all users ranking to newRanking
+  /// make all users inactive
+  Future<void> updateAllUserRankingsBatch({required int newRanking, required bool isActive}) async {
     MyLog.log(_classString, 'updateAllUserRankings = $newRanking');
     final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
 
@@ -493,7 +495,7 @@ class FbHelpers {
 
     // 2. Create batched writes
     for (final docSnapshot in querySnapshot.docs) {
-      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking});
+      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking, UserFs.isActive.name: isActive});
       operationsInBatch++;
 
       // Firestore batch limit is typically 500, so create new batch when needed.

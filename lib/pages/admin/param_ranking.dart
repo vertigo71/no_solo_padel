@@ -362,7 +362,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       resetValue = int.parse(_director.appState.getParamValue(ParametersEnum.defaultRanking));
     } catch (e) {
       MyLog.log(_classString, 'Error parsing reset value ${e.toString()}', level: Level.SEVERE, indent: true);
-      throw 'Error al obtener el parámetro del nuevo ranking.';
+      throw 'Error al obtener el parámetro del ranking por defecto.';
     }
 
     bool confirmed = false;
@@ -405,7 +405,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       await FbHelpers().saveAllUsersToHistoric();
 
       // reset ranking and notify
-      await FbHelpers().updateAllUserRankingsBatch(resetValue);
+      await FbHelpers().updateAllUserRankingsBatch(newRanking: resetValue, isActive: false);
       // await _director.updateAllUsers(true); // no need. Listeners are called
 
       MyLog.log(_classString, 'Reset ranking success', indent: true);

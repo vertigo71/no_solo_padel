@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:diacritic/diacritic.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 
@@ -36,7 +35,8 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
-  matchIds, // NEW FIELD: List of match IDs
+  isActive, // Whether the user has played a match or not
+  matchIds, // List of match IDs
 }
 
 /// users sort order
@@ -46,7 +46,7 @@ enum UsersSortBy {
 }
 
 /// Represents a user in the application.
-class MyUser implements Comparable<MyUser> {
+class MyUser {
   /// Suffix added to user emails.
   static const String kEmailSuffix = '@nsp.com';
 
@@ -58,7 +58,8 @@ class MyUser implements Comparable<MyUser> {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
-  int rankingPos;
+  int _rankingPos;
+  bool _isActive;
   final List<String> _matchIds = [];
 
   /// Constructor for MyUser class.
@@ -71,15 +72,34 @@ class MyUser implements Comparable<MyUser> {
     this.lastLogin,
     this.loginCount = 0,
     this.avatarUrl,
-    this.rankingPos = 0,
+    int rankingPos = 0,
+    bool isActive = false,
     List<String>? matchIds,
-  }) : _email = email.toLowerCase() {
+  })  : _rankingPos = rankingPos,
+        _isActive = isActive,
+        _email = email.toLowerCase() {
     _matchIds.addAll(matchIds ?? []);
   }
 
   UnmodifiableListView<String> get unmodifiableMatchIds => UnmodifiableListView(_matchIds);
 
   List<String> get copyOfMatchIds => List.from(_matchIds);
+
+  // methods por _rankingPos
+  int get rankingPos => _rankingPos;
+
+  set rankingPos(int newRankingPos) {
+    _rankingPos = newRankingPos;
+    _isActive = true;
+  }
+
+  void resetRankingPos(int newRankingPos) {
+    _rankingPos = newRankingPos;
+    _isActive = false;
+  }
+
+  // methods for _isActive
+  bool get isActive => _isActive;
 
   // methods por _matchIds
   void addMatchId(String matchId) {
@@ -122,6 +142,7 @@ class MyUser implements Comparable<MyUser> {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
+    bool? isActive,
     List<String>? matchIds,
   }) {
     return MyUser(
@@ -133,7 +154,8 @@ class MyUser implements Comparable<MyUser> {
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      rankingPos: rankingPos ?? this.rankingPos,
+      rankingPos: rankingPos ?? _rankingPos,
+      isActive: isActive ?? _isActive,
       matchIds: matchIds ?? _matchIds,
     );
   }
@@ -148,7 +170,8 @@ class MyUser implements Comparable<MyUser> {
     lastLogin = user.lastLogin;
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
-    rankingPos = user.rankingPos;
+    rankingPos = user._rankingPos;
+    _isActive = user._isActive;
     _matchIds.clear();
     _matchIds.addAll(user._matchIds);
   }
@@ -183,6 +206,7 @@ class MyUser implements Comparable<MyUser> {
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
+        isActive: json[UserFs.isActive.name] ?? false,
         matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
       );
     } catch (e) {
@@ -211,7 +235,8 @@ class MyUser implements Comparable<MyUser> {
       UserFs.lastLogin.name: lastLogin?.toYyyyMmDd() ?? '',
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
-      UserFs.rankingPos.name: rankingPos,
+      UserFs.rankingPos.name: _rankingPos,
+      UserFs.isActive.name: _isActive,
       UserFs.matchIds.name: List.from(_matchIds),
     };
   }
@@ -230,7 +255,8 @@ class MyUser implements Comparable<MyUser> {
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
-        rankingPos == other.rankingPos &&
+        _rankingPos == other._rankingPos &&
+        _isActive == other._isActive &&
         listEquals(_matchIds, other._matchIds);
   }
 
@@ -245,13 +271,10 @@ class MyUser implements Comparable<MyUser> {
         lastLogin,
         loginCount,
         avatarUrl,
-        rankingPos,
+        _rankingPos,
+        _isActive,
         Object.hashAll(_matchIds),
       );
-
-  @override
-  int compareTo(MyUser other) =>
-      removeDiacritics(name.toLowerCase()).compareTo(removeDiacritics(other.name.toLowerCase()));
 
   static UserType _intToUserType(int? type) {
     try {
@@ -263,23 +286,19 @@ class MyUser implements Comparable<MyUser> {
   }
 }
 
-Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy, int? defaultRanking) {
+Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {
   switch (sortBy) {
     case UsersSortBy.ranking:
       return (a, b) {
-        if (defaultRanking != null) {
-          final aIsDefault = a.rankingPos == defaultRanking;
-          final bIsDefault = b.rankingPos == defaultRanking;
-
-          if (aIsDefault && !bIsDefault) {
-            return 1; // a (default) comes after b
-          }
-          if (!aIsDefault && bIsDefault) {
-            return -1; // a (not default) comes before b
-          }
-          // If both or neither are default, compare by ranking
+        // Primary sort: non-active users go to the end
+        if (a.isActive && !b.isActive) {
+          return -1; // a (active) comes before b (not active)
         }
-        int rankingCompare = b.rankingPos.compareTo(a.rankingPos);
+        if (!a.isActive && b.isActive) {
+          return 1; // a (not active) comes after b (active)
+        }
+        // Tertiary sort: by ranking (descending)
+        final rankingCompare = b.rankingPos.compareTo(a.rankingPos);
         return rankingCompare == 0 ? compareToNoDiacritics(a.name, b.name) : rankingCompare;
       }; // Descending ranking
     case UsersSortBy.name:

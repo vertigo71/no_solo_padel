@@ -90,7 +90,7 @@ class AppState with ChangeNotifier {
   void _sortUsersBold(UsersSortBy sortBy) {
     MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
     _usersSorting = sortBy;
-    _usersCache.sort(getMyUserComparator(sortBy, getIntParamValue(ParametersEnum.defaultRanking)));
+    _usersCache.sort(getMyUserComparator(sortBy));
   }
 
   // sort by name or ranking

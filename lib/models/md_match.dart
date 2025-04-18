@@ -284,11 +284,11 @@ class MyMatch {
     return courtPlayers;
   }
 
-  Map<int, List<int>> getRankingPlayerPairs(int? defaultRanking) {
+  Map<int, List<int>> getRankingPlayerPairs() {
     int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
-      ..sort(getMyUserComparator(UsersSortBy.ranking, defaultRanking));
+      ..sort(getMyUserComparator(UsersSortBy.ranking));
     MyLog.log(
         _classString,
         'getRankingPlayerPairs numOfCourts=$numFilledCourts, '
@@ -307,11 +307,11 @@ class MyMatch {
     return courtPlayers;
   }
 
-  Map<int, List<int>> getPalindromicPlayerPairs(int? defaultRanking) {
+  Map<int, List<int>> getPalindromicPlayerPairs() {
     int numFilledCourts = numberOfFilledCourts;
     // use cascade (..) operator as sort returns void
     List<MyUser> sortedMatchPlayers = getPlayers(state: PlayingState.playing)
-      ..sort(getMyUserComparator(UsersSortBy.ranking, defaultRanking));
+      ..sort(getMyUserComparator(UsersSortBy.ranking));
     MyLog.log(
         _classString, 'getRankingPlayerPairs numOfCourts=$numFilledCourts, sortedMatchPlayers=$sortedMatchPlayers');
     Map<int, List<int>> courtPlayers = {};

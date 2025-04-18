@@ -7,7 +7,6 @@ import '../../interface/if_app_state.dart';
 import '../../interface/if_match_notifier.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_match.dart';
-import '../../models/md_parameter.dart';
 import '../../models/md_user.dart';
 
 final String _classString = 'SortingPanel'.toUpperCase();
@@ -61,16 +60,15 @@ class SortingSubPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    AppState appState = context.read<AppState>();
     MyLog.log(_classString, 'SortingSubPanel sortingType=${_sortingType.name}, match=$match');
 
     Map<int, List<int>> courtPlayers;
     switch (_sortingType) {
       case MatchSortingType.ranking:
-        courtPlayers = match.getRankingPlayerPairs(appState.getIntParamValue(ParametersEnum.defaultRanking));
+        courtPlayers = match.getRankingPlayerPairs();
         break;
       case MatchSortingType.palindromic:
-        courtPlayers = match.getPalindromicPlayerPairs(appState.getIntParamValue(ParametersEnum.defaultRanking));
+        courtPlayers = match.getPalindromicPlayerPairs();
         break;
       case MatchSortingType.random:
         courtPlayers = match.getRandomPlayerPairs();

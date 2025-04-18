@@ -122,7 +122,7 @@ class _AddResultModalState extends State<AddResultModal> {
         },
         dropdownMenuEntries: () {
           final List<MyUser> players = _match.getPlayers(state: PlayingState.playing);
-          players.sort(getMyUserComparator(UsersSortBy.name, null ));
+          players.sort(getMyUserComparator(UsersSortBy.name));
           return players.map<DropdownMenuEntry<MyUser>>((MyUser user) {
             return DropdownMenuEntry<MyUser>(
               value: user,
