@@ -36,7 +36,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     super.initState();
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
-    _selectedUser = context.read<AppState>().getUnmodifiableSortedUsers()[0];
+    _selectedUser = context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.name)[0];
     _loggedUser = context.read<AppState>().loggedUser ?? MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: '');
   }
 
@@ -206,7 +206,8 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   Widget _buildRoulette() {
-    UnmodifiableListView<MyUser> roUsers = context.read<AppState>().getUnmodifiableSortedUsers();
+    UnmodifiableListView<MyUser> roUsers =
+        context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.name);
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
