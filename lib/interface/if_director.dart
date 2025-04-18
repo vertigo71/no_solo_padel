@@ -93,7 +93,8 @@ class Director {
         if (reg.hasMatch(user)) {
           UserType userType = UserType.values[int.parse(user[0])];
           user = user.substring(1);
-          myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user, userType: userType);
+          myUser = MyUser(
+              name: user, email: '$user${MyUser.kEmailSuffix}', id: user, userType: userType);
         } else {
           myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user);
         }

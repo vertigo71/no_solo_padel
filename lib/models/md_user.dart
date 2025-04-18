@@ -62,8 +62,34 @@ class MyUser {
   bool _isActive;
   final List<String> _matchIds = [];
 
-  /// Constructor for MyUser class.
-  MyUser({
+  factory MyUser({
+    // Public factory constructor
+    required String id,
+    required String name,
+    required String email,
+    String emergencyInfo = '',
+    UserType userType = UserType.basic,
+    Date? lastLogin,
+    int loginCount = 0,
+    String? avatarUrl,
+    int rankingPos = 0,
+  }) {
+    return MyUser._(
+      id: id,
+      name: name,
+      emergencyInfo: emergencyInfo,
+      email: email,
+      userType: userType,
+      lastLogin: lastLogin,
+      loginCount: loginCount,
+      avatarUrl: avatarUrl,
+      rankingPos: rankingPos,
+      isActive: false,
+    );
+  }
+
+  /// Private Constructor for MyUser class.
+  MyUser._({
     this.id = '',
     this.name = '',
     this.emergencyInfo = '',
@@ -145,7 +171,7 @@ class MyUser {
     bool? isActive,
     List<String>? matchIds,
   }) {
-    return MyUser(
+    return MyUser._(
       id: id ?? this.id,
       name: name ?? this.name,
       emergencyInfo: emergencyInfo ?? this.emergencyInfo,
@@ -170,7 +196,7 @@ class MyUser {
     lastLogin = user.lastLogin;
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
-    rankingPos = user._rankingPos;
+    _rankingPos = user._rankingPos;
     _isActive = user._isActive;
     _matchIds.clear();
     _matchIds.addAll(user._matchIds);
@@ -196,7 +222,7 @@ class MyUser {
 
     try {
       /// Creates a MyUser object from the provided data.
-      return MyUser(
+      return MyUser._(
         id: json[UserFs.userId.name],
         name: json[UserFs.name.name] ?? '',
         emergencyInfo: json[UserFs.emergencyInfo.name] ?? '',

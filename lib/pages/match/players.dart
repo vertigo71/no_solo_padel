@@ -37,7 +37,7 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
     _selectedUser = context.read<AppState>().getUnmodifiableSortedUsers()[0];
-    _loggedUser = context.read<AppState>().loggedUser ?? MyUser();
+    _loggedUser = context.read<AppState>().loggedUser ?? MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: '');
   }
 
   @override
@@ -146,7 +146,7 @@ class PlayersPanelState extends State<PlayersPanel> {
           List<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
           for (int i = usersPlaying.length + usersSigned.length; i < match.numberOfCourts * 4; i++) {
-            usersFillEmptySpaces.add(MyUser());
+            usersFillEmptySpaces.add(MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: ''));
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
