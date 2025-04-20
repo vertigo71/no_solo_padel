@@ -7,7 +7,7 @@ import '../../interface/if_match_notifier.dart';
 import '../../models/md_debug.dart';
 import 'players.dart';
 import 'config.dart';
-import 'sorting.dart';
+import 'pairing.dart';
 import '../../interface/if_app_state.dart';
 import '../../models/md_match.dart';
 
@@ -62,7 +62,7 @@ class MatchPage extends StatelessWidget {
                 children: [
                   if (isLoggedUserAdmin) ConfigurationPanel(),
                   PlayersPanel(),
-                  SortingPanel(),
+                  PairingPanel(),
                 ],
               ),
             ),

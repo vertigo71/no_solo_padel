@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import '../interface/if_app_state.dart';
 import 'md_date.dart';
 import '../utilities/ut_misc.dart';
+import '../utilities/ut_list_view.dart';
 import 'md_debug.dart';
 import 'md_user.dart';
 
@@ -21,16 +22,16 @@ enum PlayingState {
 }
 
 // match fields in Firestore
-enum MatchFs { matches, date, comment, isOpen, courtNames, players, sortingType }
+enum MatchFs { matches, date, comment, isOpen, courtNames, players, pairingType }
 
-enum MatchSortingType {
+enum MatchPairingType {
   ranking('Ranking'),
   palindromic('Capicúa'),
   random('Aleatorio');
 
   final String label;
 
-  const MatchSortingType(this.label);
+  const MatchPairingType(this.label);
 }
 
 class MyMatch {
@@ -39,22 +40,22 @@ class MyMatch {
   final List<String> _courtNames = [];
   String comment;
   bool isOpen;
-  MatchSortingType sortingType;
+  MatchPairingType pairingType;
 
   MyMatch(
       {required this.id,
       required this.comment, // set default comment
       this.isOpen = false,
-      this.sortingType = MatchSortingType.ranking,
+      this.pairingType = MatchPairingType.ranking,
       List<MyUser>? players,
       List<String>? courtNames}) {
     _players.addAll(players ?? []);
     _courtNames.addAll(courtNames ?? []);
   }
 
-  UnmodifiableListView<MyUser> get unmodifiablePlayers => UnmodifiableListView(_players);
+  MyListView<MyUser> get players => MyListView(_players);
 
-  UnmodifiableListView<String> get unmodifiableCourtNames => UnmodifiableListView(_courtNames);
+  MyListView<String> get courtNames => MyListView(_courtNames);
 
   List<MyUser> get copyOfPlayers => List.from(_players);
 
@@ -106,7 +107,7 @@ class MyMatch {
     List<String>? courtNames,
     String? comment,
     bool? isOpen,
-    MatchSortingType? sortingType,
+    MatchPairingType? pairingType,
   }) {
     return MyMatch(
       id: id ?? this.id,
@@ -114,7 +115,7 @@ class MyMatch {
       courtNames: courtNames ?? _courtNames,
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
-      sortingType: sortingType ?? this.sortingType,
+      pairingType: pairingType ?? this.pairingType,
     );
   }
 
@@ -136,7 +137,7 @@ class MyMatch {
       courtNames: json[MatchFs.courtNames.name]?.cast<String>() ?? [],
       comment: json[MatchFs.comment.name] ?? '',
       isOpen: json[MatchFs.isOpen.name] ?? false,
-      sortingType: MatchSortingType.values[json[MatchFs.sortingType.name] ?? 0],
+      pairingType: MatchPairingType.values[json[MatchFs.pairingType.name] ?? 0],
     );
   }
 
@@ -146,7 +147,7 @@ class MyMatch {
         if (core) MatchFs.courtNames.name: _courtNames.toList(),
         if (core) MatchFs.comment.name: comment,
         if (core) MatchFs.isOpen.name: isOpen, // bool
-        if (core) MatchFs.sortingType.name: sortingType.index, // int
+        if (core) MatchFs.pairingType.name: pairingType.index, // int
       };
 
   bool isCourtInMatch(String court) => _courtNames.contains(court);
@@ -343,7 +344,7 @@ class MyMatch {
         listEquals(_courtNames, other._courtNames) && // Compare lists using collection package
         comment == other.comment &&
         isOpen == other.isOpen &&
-        sortingType == other.sortingType;
+        pairingType == other.pairingType;
   }
 
   @override
@@ -353,6 +354,6 @@ class MyMatch {
         const DeepCollectionEquality().hash(_courtNames), // Hash lists using collection package
         comment,
         isOpen,
-        sortingType,
+        pairingType,
       );
 }

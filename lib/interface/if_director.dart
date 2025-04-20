@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:simple_logger/simple_logger.dart';
@@ -42,15 +41,15 @@ class Director {
     List<MyMatch> allMatches = await FbHelpers().getAllMatches(_appState);
     Map<MyUser, List<MyMatch>> userMatches = {};
     for (MyMatch match in allMatches) {
-      for (MyUser user in match.unmodifiablePlayers) {
+      for (MyUser user in match.players) {
         if (!userMatches.containsKey(user)) userMatches[user] = [];
         userMatches[user]?.add(match);
       }
     }
-    UnmodifiableListView<MyUser> roUsers = _appState.unmodifiableUsersByName;
-    for (MyUser user in roUsers) {
+    Iterable<MyUser> users = _appState.usersSortedByName;
+    for (MyUser user in users) {
       List<String> rightUserMatches = userMatches[user]?.map((e) => e.id.toYyyyMmDd()).toList() ?? [];
-      List<String> actualUserMatches = user.unmodifiableMatchIds.toList();
+      List<String> actualUserMatches = user.matchIds.toList();
       if (rightUserMatches.length != actualUserMatches.length ||
           rightUserMatches.toSet().intersection(actualUserMatches.toSet()).length != rightUserMatches.length) {
         MyLog.log(_classString, 'checkUserMatches: user = $user should have these matches\n$rightUserMatches',
@@ -93,8 +92,7 @@ class Director {
         if (reg.hasMatch(user)) {
           UserType userType = UserType.values[int.parse(user[0])];
           user = user.substring(1);
-          myUser = MyUser(
-              name: user, email: '$user${MyUser.kEmailSuffix}', id: user, userType: userType);
+          myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user, userType: userType);
         } else {
           myUser = MyUser(name: user, email: '$user${MyUser.kEmailSuffix}', id: user);
         }
@@ -108,7 +106,7 @@ class Director {
     }
 
     // update ranking position for every user if ranking = 0
-    final readOnlyUsers = _appState.unmodifiableUsersByName;
+    final readOnlyUsers = _appState.usersSortedByName;
     final random = Random();
     for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {
@@ -129,7 +127,7 @@ class Director {
       Date date = Date.now().add(Duration(days: deltaDays));
       // if match doesn't exist or is empty, create match
       MyMatch? match = await FbHelpers().getMatch(date.toYyyyMmDd(), _appState);
-      if (match == null || match.unmodifiablePlayers.isEmpty) {
+      if (match == null || match.players.isEmpty) {
         List<int> randomInts = getRandomList(kMaxUsers, date);
         MyMatch match = MyMatch(id: date, comment: 'Partido de prueba');
         match.isOpen = deltaDays < 0 ? true : randomInts.first.isEven;

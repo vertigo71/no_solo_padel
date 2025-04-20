@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 
@@ -107,7 +108,7 @@ class MyUser {
     _matchIds.addAll(matchIds ?? []);
   }
 
-  UnmodifiableListView<String> get unmodifiableMatchIds => UnmodifiableListView(_matchIds);
+  MyListView<String> get matchIds => MyListView(_matchIds);
 
   List<String> get copyOfMatchIds => List.from(_matchIds);
 

@@ -1,8 +1,7 @@
-import 'dart:collection';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +35,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     super.initState();
 
     MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
-    _selectedUser = context.read<AppState>().unmodifiableUsersByName[0];
+    _selectedUser = context.read<AppState>().usersSortedByName[0];
     _loggedUser = context.read<AppState>().loggedUser ?? MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: '');
   }
 
@@ -150,23 +149,22 @@ class PlayersPanelState extends State<PlayersPanel> {
           }
 
           String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
-          UnmodifiableListView<MyUser> roRankingSortedUsers =
-              context.read<AppState>().unmodifiableUsersByRanking;
-          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$roRankingSortedUsers');
+          MyListView<MyUser> usersSortedByRanking = context.read<AppState>().usersSortedByRanking;
+          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$usersSortedByRanking');
 
           return Column(
             children: [
               _buildSubHeading('Apuntados ($numCourtsText)'),
               _buildSubListOfPlayers([
-                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers))),
-                ...usersSigned.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers),
+                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking))),
+                ...usersSigned.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
                     style: const TextStyle(color: Colors.red))),
                 ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
               ]),
               if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
                 _buildSubListOfPlayers([
-                  ...usersReserve.map((player) => Text(_buildPlayerText(++playerNumber, player, roRankingSortedUsers))),
+                  ...usersReserve.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking))),
                 ]),
             ],
           );
@@ -200,14 +198,13 @@ class PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
-  String _buildPlayerText(int playerNumber, MyUser player, UnmodifiableListView<MyUser> roRankingSortedUsers) {
+  String _buildPlayerText(int playerNumber, MyUser player, MyListView<MyUser> roRankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
         '<${roRankingSortedUsers.indexOf(player) + 1}>';
   }
 
   Widget _buildRoulette() {
-    UnmodifiableListView<MyUser> roUsers =
-        context.read<AppState>().unmodifiableUsersByName;
+    MyListView<MyUser> roUsers = context.read<AppState>().usersSortedByName;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -460,7 +457,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
         message: '$registerText\n'
-            'APUNTADOS: ${updatedMatch.unmodifiablePlayers.length} de ${updatedMatch.numberOfCourts * 4}',
+            'APUNTADOS: ${updatedMatch.players.length} de ${updatedMatch.numberOfCourts * 4}',
         matchDate: updatedMatch.id);
   }
 

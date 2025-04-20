@@ -102,7 +102,7 @@ class _MainPageState extends State<MainPage> {
           },
           child: Scaffold(
             appBar: _buildAppBar(context),
-            body: _kWidgetOptions.elementAt(_selectedIndex),
+            body: _kWidgetOptions[_selectedIndex],
             bottomNavigationBar: _buildBottomNavigationBar(),
           ),
         );

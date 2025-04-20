@@ -27,7 +27,7 @@ class UserAdminPanelState extends State<UserAdminPanel> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
     return Scaffold(
       body: Center(
-        child: _kWidgetOptions.elementAt(_selectedIndex),
+        child: _kWidgetOptions[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

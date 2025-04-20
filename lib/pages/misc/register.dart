@@ -48,11 +48,11 @@ class RegisterPage extends StatelessWidget {
                       child: ListTile(
                         tileColor: Theme.of(context).colorScheme.surface,
                         title: Text(
-                          logs.elementAt(index).date.toString(),
+                          logs[index].date.toString(),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          logs.elementAt(index).foldedString,
+                          logs[index].foldedString,
                           style: const TextStyle(color: Colors.black),
                         ),
                       ),

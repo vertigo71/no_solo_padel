@@ -29,8 +29,7 @@ class _InformationPanelState extends State<InformationPanel> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
-      UnmodifiableListView<MyUser> users =
-          _sortedByName ? appState.unmodifiableUsersByName : appState.unmodifiableUsersByRanking;
+      Iterable<MyUser> users = _sortedByName ? appState.usersSortedByName : appState.usersSortedByRanking;
       return Scaffold(
         appBar: _buildAppBar(appState),
         body: ListView(

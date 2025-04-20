@@ -31,7 +31,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
   static const String kCommentId = 'comment';
   static const String kCourtId = 'court';
   static const String kIsOpenId = 'isOpen';
-  static const String kSortingId = 'sorting';
+  static const String kPairingId = 'pairing';
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +64,12 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       fieldsChanged =
           fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kIsOpenId]?.value, match.isOpen);
       fieldsChanged =
-          fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kSortingId]?.value, match.sortingType);
+          fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kPairingId]?.value, match.pairingType);
       fieldsChanged = fieldsChanged ||
           List.generate(
                   kMaxNumberOfCourts,
                   (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
-                      i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : ''))
+                      i < match.courtNames.length ? match.courtNames[i] : ''))
               .any((changed) => changed);
 
       if (fieldsChanged) {
@@ -101,8 +101,8 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
 
             const SizedBox(height: 30.0),
 
-            // type of sorting
-            _sortingType(),
+            // type of pairing
+            _pairingType(),
 
             const SizedBox(height: 40.0),
 
@@ -147,23 +147,23 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
     );
   }
 
-  Widget _sortingType() {
+  Widget _pairingType() {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building sorting type', level: Level.FINE, indent: true);
+    MyLog.log(_classString, 'Building pairing type', level: Level.FINE, indent: true);
 
     return Padding(
       padding: const EdgeInsets.only(right: 18.0),
       child: Row(
         children: <Widget>[
           const SizedBox(width: 10),
-          Text('Tipo de sorteo:'),
+          Text('Tipo de emparejamiento:'),
           const SizedBox(width: 10),
           Expanded(
-            child: FormBuilderDropdown<MatchSortingType>(
-              name: kSortingId,
-              initialValue: match.sortingType,
-              items: MatchSortingType.values
-                  .map((MatchSortingType type) => DropdownMenuItem<MatchSortingType>(
+            child: FormBuilderDropdown<MatchPairingType>(
+              name: kPairingId,
+              initialValue: match.pairingType,
+              items: MatchPairingType.values
+                  .map((MatchPairingType type) => DropdownMenuItem<MatchPairingType>(
                         value: type,
                         child: Text(type.label),
                       ))
@@ -199,7 +199,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
                     borderRadius: BorderRadius.all(Radius.circular(4.0)),
                   ),
                 ),
-                initialValue: i < match.unmodifiableCourtNames.length ? match.unmodifiableCourtNames[i] : '',
+                initialValue: i < match.courtNames.length ? match.courtNames[i] : '',
                 inputFormatters: [UpperCaseTextFormatter(RegExp(r'[0-9a-zA-Z]'), allow: true)],
                 keyboardType: TextInputType.text,
                 textAlign: TextAlign.center, // Center the text
@@ -286,7 +286,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
       }
       newMatch.comment = state.value[kCommentId];
       newMatch.isOpen = state.value[kIsOpenId];
-      newMatch.sortingType = state.value[kSortingId];
+      newMatch.pairingType = state.value[kPairingId];
       MyLog.log(_classString, '_formValidate: update match = $newMatch', indent: true);
       // Update to Firestore
       String message = 'Los datos han sido actualizados';

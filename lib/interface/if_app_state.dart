@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../models/md_date.dart';
@@ -89,10 +90,9 @@ class AppState with ChangeNotifier {
 
   int get numUsers => _usersCache.length;
 
-  UnmodifiableListView<MyUser> get unmodifiableUsersByName => UnmodifiableListView(_usersCache.unmodifiableUsersByName);
+  MyListView<MyUser> get usersSortedByName => _usersCache.usersSortedByName;
 
-  UnmodifiableListView<MyUser> get unmodifiableUsersByRanking =>
-      UnmodifiableListView(_usersCache.unmodifiableUsersByRanking);
+  MyListView<MyUser> get usersSortedByRanking => _usersCache.usersSortedByRanking;
 
   bool get isLoggedUserAdminOrSuper =>
       [UserType.admin, UserType.superuser].contains(_loggedUser?.userType ?? UserType.basic);
@@ -188,14 +188,14 @@ class _UsersCache {
     _sorted = true;
   }
 
-  UnmodifiableListView<MyUser> get unmodifiableUsersByName {
+  MyListView<MyUser> get usersSortedByName {
     if (!_sorted) sort();
-    return UnmodifiableListView(_usersByName);
+    return MyListView(_usersByName);
   }
 
-  UnmodifiableListView<MyUser> get unmodifiableUsersByRanking {
+  MyListView<MyUser> get usersSortedByRanking {
     if (!_sorted) sort();
-    return UnmodifiableListView(_usersByRanking);
+    return MyListView(_usersByRanking);
   }
 
   int get length => _usersByName.length;

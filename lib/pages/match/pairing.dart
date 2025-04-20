@@ -1,6 +1,5 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/if_app_state.dart';
@@ -9,20 +8,20 @@ import '../../models/md_debug.dart';
 import '../../models/md_match.dart';
 import '../../models/md_user.dart';
 
-final String _classString = 'SortingPanel'.toUpperCase();
+final String _classString = 'PairingPanel'.toUpperCase();
 
-class SortingPanel extends StatefulWidget {
-  const SortingPanel({super.key});
+class PairingPanel extends StatefulWidget {
+  const PairingPanel({super.key});
 
   @override
-  SortingPanelState createState() => SortingPanelState();
+  PairingPanelState createState() => PairingPanelState();
 }
 
-class SortingPanelState extends State<SortingPanel> {
+class PairingPanelState extends State<PairingPanel> {
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'SortingPanel for match=$match');
+    MyLog.log(_classString, 'PairingPanel for match=$match');
 
     return Column(
       children: <Widget>[
@@ -42,35 +41,35 @@ class SortingPanelState extends State<SortingPanel> {
           child: ListTile(
             tileColor: Theme.of(context).appBarTheme.backgroundColor,
             titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
-            title: Text('Tipo de sorteo: ${match.sortingType.label}'),
+            title: Text('Tipo de emparejamiento: ${match.pairingType.label}'),
           ),
         ),
         Expanded(
-          child: SortingSubPanel(sortingType: match.sortingType),
+          child: PairingSubPanel(pairingType: match.pairingType),
         ),
       ],
     );
   }
 }
 
-class SortingSubPanel extends StatelessWidget {
-  const SortingSubPanel({super.key, required MatchSortingType sortingType}) : _sortingType = sortingType;
-  final MatchSortingType _sortingType;
+class PairingSubPanel extends StatelessWidget {
+  const PairingSubPanel({super.key, required MatchPairingType pairingType}) : _pairingType = pairingType;
+  final MatchPairingType _pairingType;
 
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'SortingSubPanel sortingType=${_sortingType.name}, match=$match');
+    MyLog.log(_classString, 'PairingSubPanel pairingType=${_pairingType.name}, match=$match');
 
     Map<int, List<int>> courtPlayers;
-    switch (_sortingType) {
-      case MatchSortingType.ranking:
+    switch (_pairingType) {
+      case MatchPairingType.ranking:
         courtPlayers = match.getRankingPlayerPairs();
         break;
-      case MatchSortingType.palindromic:
+      case MatchPairingType.palindromic:
         courtPlayers = match.getPalindromicPlayerPairs();
         break;
-      case MatchSortingType.random:
+      case MatchPairingType.random:
         courtPlayers = match.getRandomPlayerPairs();
         break;
     }
@@ -78,17 +77,16 @@ class SortingSubPanel extends StatelessWidget {
     return _listViewOfMatches(context, courtPlayers);
   }
 
-  Widget _listViewOfMatches(BuildContext context, Map<int, List<int>> sortedPlayers) {
+  Widget _listViewOfMatches(BuildContext context, Map<int, List<int>> pairingPlayers) {
     MyMatch match = context.read<MatchNotifier>().match;
     int filledCourts = match.numberOfFilledCourts;
-    UnmodifiableListView<MyUser> roMatchPlayers = match.unmodifiablePlayers;
+    MyListView<MyUser> matchPlayers = match.players;
     MyLog.log(_classString, 'listOfMatches courts = $filledCourts', indent: true);
-    MyLog.log(_classString, 'listOfMatches matchPlayers = $roMatchPlayers, courtPlayers = $sortedPlayers',
-        indent: true);
+    MyLog.log(_classString, 'listOfMatches matchPlayers = $matchPlayers, courtPlayers = $pairingPlayers', indent: true);
 
-    UnmodifiableListView<MyUser> roRankingSortedUsers = context.read<AppState>().unmodifiableUsersByRanking;
+    MyListView<MyUser> usersSortedByRanking = context.read<AppState>().usersSortedByRanking;
 
-    if (sortedPlayers.isEmpty) {
+    if (pairingPlayers.isEmpty) {
       return const Center(child: Text('No hay jugadores apuntados'));
     } else {
       return ListView(children: [
@@ -101,16 +99,16 @@ class SortingSubPanel extends StatelessWidget {
               leading: CircleAvatar(
                   backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                   child: Text(
-                    match.unmodifiableCourtNames.elementAt(court),
+                    match.courtNames[court],
                     style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
                   )),
               title: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  '${_getPlayerText(court, 0, roMatchPlayers, sortedPlayers, roRankingSortedUsers)} y '
-                  '${_getPlayerText(court, 1, roMatchPlayers, sortedPlayers, roRankingSortedUsers)}\n\n'
-                  '${_getPlayerText(court, 2, roMatchPlayers, sortedPlayers, roRankingSortedUsers)} y '
-                  '${_getPlayerText(court, 3, roMatchPlayers, sortedPlayers, roRankingSortedUsers)}',
+                  '${_getPlayerText(court, 0, matchPlayers, pairingPlayers, usersSortedByRanking)} y '
+                  '${_getPlayerText(court, 1, matchPlayers, pairingPlayers, usersSortedByRanking)}\n\n'
+                  '${_getPlayerText(court, 2, matchPlayers, pairingPlayers, usersSortedByRanking)} y '
+                  '${_getPlayerText(court, 3, matchPlayers, pairingPlayers, usersSortedByRanking)}',
                 ),
               ),
             ),
@@ -119,8 +117,8 @@ class SortingSubPanel extends StatelessWidget {
     }
   }
 
-  String _getPlayerText(int court, int index, UnmodifiableListView<MyUser> roMatchPlayers,
-          Map<int, List<int>> sortedPlayers, UnmodifiableListView<MyUser> roRankingSortedUsers) =>
-      '${roMatchPlayers[sortedPlayers[court]![index]].name} '
-      '<${roRankingSortedUsers.indexOf(roMatchPlayers[sortedPlayers[court]![index]]) + 1}>';
+  String _getPlayerText(int court, int index, MyListView<MyUser> matchPlayers, Map<int, List<int>> pairingPlayers,
+          MyListView<MyUser> usersSortedByRanking) =>
+      '${matchPlayers[pairingPlayers[court]![index]].name} '
+      '<${usersSortedByRanking.indexOf(matchPlayers[pairingPlayers[court]![index]]) + 1}>';
 }
