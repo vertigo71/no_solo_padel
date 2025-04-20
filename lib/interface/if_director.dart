@@ -47,7 +47,7 @@ class Director {
         userMatches[user]?.add(match);
       }
     }
-    UnmodifiableListView<MyUser> roUsers = _appState.unmodifiableUsers;
+    UnmodifiableListView<MyUser> roUsers = _appState.unmodifiableUsersByName;
     for (MyUser user in roUsers) {
       List<String> rightUserMatches = userMatches[user]?.map((e) => e.id.toYyyyMmDd()).toList() ?? [];
       List<String> actualUserMatches = user.unmodifiableMatchIds.toList();
@@ -108,7 +108,7 @@ class Director {
     }
 
     // update ranking position for every user if ranking = 0
-    final readOnlyUsers = _appState.unmodifiableUsers;
+    final readOnlyUsers = _appState.unmodifiableUsersByName;
     final random = Random();
     for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {

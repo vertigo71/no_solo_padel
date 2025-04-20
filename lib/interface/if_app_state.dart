@@ -19,16 +19,17 @@ class AppState with ChangeNotifier {
 
   /// attributes
   MyParameters _parametersCache = MyParameters();
-  final List<MyUser> _usersCache = [];
+  final _UsersCache _usersCache = _UsersCache();
   MyUser? _loggedUser;
-  UsersSortBy _usersSorting = UsersSortBy.name;
 
   /// make loggedUser=none
   void resetLoggedUser() => _loggedUser = null;
 
   void resetParameters() => setAllParameters(MyParameters(), notify: false);
 
-  void resetUsers() => _usersCache.clear();
+  void resetUsers() {
+    _usersCache.clear();
+  }
 
   /// reset state
   void reset() {
@@ -86,38 +87,12 @@ class AppState with ChangeNotifier {
     setLoggedUser(loggedUser, notify: notify);
   }
 
-  // bold: affects directly cached users
-  void _sortUsersBold(UsersSortBy sortBy) {
-    MyLog.log(_classString, '_sortUsersBold sortBy=$sortBy');
-    _usersSorting = sortBy;
-    _usersCache.sort(getMyUserComparator(sortBy));
-  }
-
-  // sort by name or ranking
-  void sortUsers({UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
-    if (_usersSorting != sortBy) {
-      _sortUsersBold(sortBy);
-      if (notify) notifyListeners();
-    } else {
-      MyLog.log(_classString, 'sortUsers already sorted', indent: true);
-    }
-  }
-
-  bool get isUsersSortedByName => _usersSorting == UsersSortBy.name;
-
   int get numUsers => _usersCache.length;
 
-  List<MyUser> get copyOfUsers => List.from(_usersCache);
+  UnmodifiableListView<MyUser> get unmodifiableUsersByName => UnmodifiableListView(_usersCache.unmodifiableUsersByName);
 
-  UnmodifiableListView<MyUser> get unmodifiableUsers => UnmodifiableListView(_usersCache);
-
-  // Modifies _usersCache in place
-  // get users sorted by name or ranking
-  UnmodifiableListView<MyUser> getUnmodifiableSortedUsers(
-      {UsersSortBy sortBy = UsersSortBy.name, bool notify = false}) {
-    sortUsers(sortBy: sortBy, notify: notify);
-    return UnmodifiableListView(_usersCache);
-  }
+  UnmodifiableListView<MyUser> get unmodifiableUsersByRanking =>
+      UnmodifiableListView(_usersCache.unmodifiableUsersByRanking);
 
   bool get isLoggedUserAdminOrSuper =>
       [UserType.admin, UserType.superuser].contains(_loggedUser?.userType ?? UserType.basic);
@@ -131,8 +106,7 @@ class AppState with ChangeNotifier {
 
     // replace cached users
     _usersCache.clear();
-    _usersCache.addAll(users);
-    _sortUsersBold(_usersSorting);
+    _usersCache.addAll(users, forceSort: true);
 
     // convert loggedUser
     if (_loggedUser != null) setLoggedUserById(_loggedUser!.id, notify: false);
@@ -140,15 +114,12 @@ class AppState with ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void setChangedUsersAndNotify(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) =>
-      setChangedUsers(added, modified, removed, notify: true);
-
-  void setChangedUsers(List<MyUser> added, List<MyUser> modified, List<MyUser> removed, {required bool notify}) {
+  void setChangedUsersAndNotify(List<MyUser> added, List<MyUser> modified, List<MyUser> removed) {
     MyLog.log(_classString, 'setChangedUsers a=${added.length} m=${modified.length} r=${removed.length} ');
 
     if (added.isNotEmpty) {
       MyLog.log(_classString, 'setChangedUsers added $added ', indent: true);
-      _usersCache.addAll(added);
+      _usersCache.addAll(added, forceSort: false);
     }
     if (modified.isNotEmpty) {
       MyLog.log(_classString, 'setChangedUsers modified $modified ', indent: true);
@@ -168,15 +139,9 @@ class AppState with ChangeNotifier {
       }
     }
 
-    _sortUsersBold(_usersSorting);
-    if (notify) notifyListeners();
+    _usersCache.sort();
+    notifyListeners();
   }
-
-  MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);
-
-  MyUser? getUserById(String id) => _usersCache.firstWhereOrNull((user) => user.id == id);
-
-  MyUser? getUserByEmail(String email) => _usersCache.firstWhereOrNull((user) => user.email == email);
 
   /// search usersCache for newUserId
   /// if not found, return false
@@ -200,8 +165,66 @@ class AppState with ChangeNotifier {
     return true;
   }
 
+  MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);
+
+  MyUser? getUserById(String id) => _usersCache.firstWhereOrNull((user) => user.id == id);
+
+  MyUser? getUserByEmail(String email) => _usersCache.firstWhereOrNull((user) => user.email == email);
+
   @override
   String toString() => 'Parameters = $_parametersCache\n'
-      '\t#users=$_usersCache\n'
+      '\t#users=$_usersCache.toString()\n'
       '\tloggedUser=$_loggedUser';
+}
+
+class _UsersCache {
+  final List<MyUser> _usersByName = [];
+  final List<MyUser> _usersByRanking = [];
+  bool _sorted = false;
+
+  void clear() {
+    _usersByName.clear();
+    _usersByRanking.clear();
+    _sorted = true;
+  }
+
+  UnmodifiableListView<MyUser> get unmodifiableUsersByName {
+    if (!_sorted) sort();
+    return UnmodifiableListView(_usersByName);
+  }
+
+  UnmodifiableListView<MyUser> get unmodifiableUsersByRanking {
+    if (!_sorted) sort();
+    return UnmodifiableListView(_usersByRanking);
+  }
+
+  int get length => _usersByName.length;
+
+  void sort() {
+    _usersByName.sort(getMyUserComparator(UsersSortBy.name));
+    _usersByRanking.sort(getMyUserComparator(UsersSortBy.ranking));
+    _sorted = true;
+  }
+
+  void addAll(List<MyUser> users, {bool forceSort = true}) {
+    _usersByName.addAll(users);
+    _usersByRanking.addAll(users);
+    if (forceSort) {
+      sort();
+    } else {
+      _sorted = false;
+    }
+  }
+
+  Iterable<MyUser> where(bool Function(MyUser user) param0) => _usersByName.where(param0);
+
+  void removeWhere(bool Function(MyUser user) param0) {
+    _usersByName.removeWhere(param0);
+    _usersByRanking.removeWhere(param0);
+  }
+
+  MyUser? firstWhereOrNull(bool Function(MyUser user) param0) => _usersByName.firstWhereOrNull(param0);
+
+  @override
+  String toString() => _usersByName.toString();
 }

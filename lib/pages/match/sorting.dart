@@ -86,8 +86,7 @@ class SortingSubPanel extends StatelessWidget {
     MyLog.log(_classString, 'listOfMatches matchPlayers = $roMatchPlayers, courtPlayers = $sortedPlayers',
         indent: true);
 
-    UnmodifiableListView<MyUser> roRankingSortedUsers =
-        context.read<AppState>().getUnmodifiableSortedUsers(sortBy: UsersSortBy.ranking);
+    UnmodifiableListView<MyUser> roRankingSortedUsers = context.read<AppState>().unmodifiableUsersByRanking;
 
     if (sortedPlayers.isEmpty) {
       return const Center(child: Text('No hay jugadores apuntados'));

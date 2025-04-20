@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
@@ -20,17 +22,21 @@ class InformationPanel extends StatefulWidget {
 }
 
 class _InformationPanelState extends State<InformationPanel> {
+  bool _sortedByName = false;
+
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
+      UnmodifiableListView<MyUser> users =
+          _sortedByName ? appState.unmodifiableUsersByName : appState.unmodifiableUsersByRanking;
       return Scaffold(
         appBar: _buildAppBar(appState),
         body: ListView(
           children: ListTile.divideTiles(
             context: context,
-            tiles: appState.unmodifiableUsers.indexed.map((indexedUser) {
+            tiles: users.indexed.map((indexedUser) {
               final index = indexedUser.$1 + 1; // Add 1 for 1-based indexing
               final user = indexedUser.$2;
               return Row(
@@ -79,14 +85,16 @@ class _InformationPanelState extends State<InformationPanel> {
                 child: FormBuilderSwitch(
                   name: 'switch',
                   title: const Text(''),
-                  initialValue: appState.isUsersSortedByName,
+                  initialValue: _sortedByName,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
                   onChanged: (value) {
                     if (value != null) {
-                      appState.sortUsers(sortBy: value ? UsersSortBy.name : UsersSortBy.ranking, notify: true);
+                      setState(() {
+                        _sortedByName = value;
+                      });
                     }
                   },
                 ),
