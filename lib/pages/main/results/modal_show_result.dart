@@ -34,6 +34,8 @@ class ShowResultModal extends StatelessWidget {
             if (result.teamB != null) Expanded(child: _buildTeam(context, result.teamB!)),
           ],
         ),
+        const SizedBox(height: 20),
+        _buildBars(context, result),
         const Divider(
           height: 40,
         ),
@@ -163,5 +165,59 @@ class ShowResultModal extends StatelessWidget {
     }
 
     return true; // success
+  }
+
+  Widget _buildBars(BuildContext context, GameResult result) {
+    MyLog.log(_classString, 'Building bars', level: Level.FINE, indent: true);
+    int rankingTeamA = result.teamA?.preRanking ?? 0;
+    int rankingTeamB = result.teamB?.preRanking ?? 0;
+    int scoreA = result.teamA?.score ?? 0;
+    int scoreB = result.teamB?.score ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 8.0,
+      children: [
+        const Text('Predicción'),
+        _buildBar(context, rankingTeamA, rankingTeamB),
+        const Text('Resultado'),
+        _buildBar(context, scoreA, scoreB),
+        SizedBox.shrink(),
+      ],
+    );
+  }
+
+  Widget _buildBar(BuildContext context, int valueA, int valueB) {
+    if (valueA == 0 && valueB == 0) {
+      return LinearProgressIndicator(value: 0);
+    }
+    double percentage = valueA / (valueA + valueB) * 100;
+
+    return Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        LinearProgressIndicator(
+          value: percentage / 100,
+          valueColor:
+              AlwaysStoppedAnimation<Color>(valueA >= valueB ? Theme.of(context).colorScheme.primary : kLightest),
+          backgroundColor: valueA < valueB ? Theme.of(context).colorScheme.primary : kLightest,
+          minHeight: 20,
+        ),
+        Positioned(
+          left: 8.0,
+          child: Text(
+            '${percentage.toStringAsFixed(0)}%',
+            style: TextStyle(color: valueA >= valueB ? kWhite : kBlack),
+          ),
+        ),
+        Positioned(
+          right: 8.0,
+          child: Text(
+            '${(100 - percentage).toStringAsFixed(0)}%',
+            style: TextStyle(color: valueA < valueB ? kWhite : kBlack),
+          ),
+        ),
+      ],
+    );
   }
 }

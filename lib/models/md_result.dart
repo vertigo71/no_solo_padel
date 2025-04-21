@@ -173,6 +173,8 @@ class TeamResult {
         'preRanking1: $preRanking1, preRanking2: $preRanking2, score: $score)';
   }
 
+  int get preRanking => preRanking1 + preRanking2;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
