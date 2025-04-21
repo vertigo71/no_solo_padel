@@ -27,6 +27,7 @@ class GamesPanel extends StatelessWidget {
       builder: (context, appState, _) {
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
+        int numMatches = appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1;
         MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', indent: true);
 
         return StreamBuilder<List<MyMatch>>(
@@ -44,18 +45,20 @@ class GamesPanel extends StatelessWidget {
             // snapshot.data is now a List<MyMatch> (or null if there's an error)
             final List<MyMatch> fetchedMatches = snapshot.data ?? []; // Handle the null case
 
+            MyLog.log(_classString, 'fetchedMatches = ${fetchedMatches.length}/$numMatches', indent: true);
+
             // build playableMatches list
             List<MyMatch> playableMatches = [];
 
             // Create missing matches or get the ones in fetchedMatches if they exist
-            for (int days = 0; days < (appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1); days++) {
-              Date date = Date.now().add(Duration(days: days));
+            for (Date date = fromDate; date.isBefore(maxDate); date = date.add(const Duration(days: 1))) {
               if (appState.isDayPlayable(date)) {
                 MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
                 if (foundMatch != null) {
                   playableMatches.add(foundMatch);
                 } else {
                   // Create a new MyMatch in memory
+                  MyLog.log(_classString, 'create missing match = $date', indent: true);
                   playableMatches.add(MyMatch(
                     id: date,
                     comment: appState.getParamValue(ParametersEnum.defaultCommentText),

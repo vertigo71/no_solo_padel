@@ -28,8 +28,7 @@ class AuthenticationHelper {
   /// Return null if signedIn
   /// else return Error message
   static Future<String?> signIn({required String email, required String password}) async {
-    MyLog.log(_classString, 'signIn $email');
-    MyLog.log(_classString, 'signIn ${_auth.languageCode}');
+    MyLog.log(_classString, 'signIn $email language=${_auth.languageCode}');
 
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
