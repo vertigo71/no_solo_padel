@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../interface/if_app_state.dart';
@@ -7,6 +6,7 @@ import '../../interface/if_match_notifier.dart';
 import '../../models/md_debug.dart';
 import '../../models/md_match.dart';
 import '../../models/md_user.dart';
+import '../../utilities/ut_list_view.dart';
 
 final String _classString = 'PairingPanel'.toUpperCase();
 

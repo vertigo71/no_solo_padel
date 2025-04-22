@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +12,7 @@ import '../../models/md_debug.dart';
 import '../../models/md_register.dart';
 import '../../models/md_match.dart';
 import '../../models/md_user.dart';
+import '../../utilities/ut_list_view.dart';
 import '../../utilities/ut_misc.dart';
 import '../../utilities/ui_helpers.dart';
 
@@ -436,7 +436,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     // delete player from the match and upload the match to firestore database
     // newMatchFromFirestore is the match with the new player
     // null otherwise
-    MyMatch updatedMatch = await FbHelpers().deletePlayerFromMatch(appState: appState, matchId: match.id, user: user);
+    MyMatch updatedMatch = await FbHelpers().deletePlayerFromMatch(appState: appState, matchId: match.id, player: user);
 
     // text to be added to the register
     late String registerText;

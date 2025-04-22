@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/utilities/ut_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -10,6 +9,7 @@ import '../../../models/md_debug.dart';
 import '../../../models/md_result.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../models/md_user.dart';
+import '../../../utilities/ut_theme.dart';
 
 final String _classString = 'ShowResultModal'.toUpperCase();
 

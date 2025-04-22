@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
-import 'package:no_solo_padel/utilities/ut_list_view.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 
+import '../utilities/ut_list_view.dart';
 import '../utilities/ut_misc.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
@@ -36,8 +36,7 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
-  isActive, // Whether the user has played a match or not
-  matchIds, // List of match IDs
+  matchIds,
 }
 
 /// users sort order
@@ -59,8 +58,7 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
-  int _rankingPos;
-  bool _isActive;
+  int rankingPos;
   final List<String> _matchIds = [];
 
   factory MyUser({
@@ -85,7 +83,6 @@ class MyUser {
       loginCount: loginCount,
       avatarUrl: avatarUrl,
       rankingPos: rankingPos,
-      isActive: false,
     );
   }
 
@@ -99,12 +96,9 @@ class MyUser {
     this.lastLogin,
     this.loginCount = 0,
     this.avatarUrl,
-    int rankingPos = 0,
-    bool isActive = false,
+    this.rankingPos = 0,
     List<String>? matchIds,
-  })  : _rankingPos = rankingPos,
-        _isActive = isActive,
-        _email = email.toLowerCase() {
+  }) : _email = email.toLowerCase() {
     _matchIds.addAll(matchIds ?? []);
   }
 
@@ -112,35 +106,31 @@ class MyUser {
 
   List<String> get copyOfMatchIds => List.from(_matchIds);
 
-  // methods por _rankingPos
-  int get rankingPos => _rankingPos;
-
-  set rankingPos(int newRankingPos) {
-    _rankingPos = newRankingPos;
-    _isActive = true;
-  }
-
-  void resetRankingPos(int newRankingPos) {
-    _rankingPos = newRankingPos;
-    _isActive = false;
-  }
-
-  // methods for _isActive
-  bool get isActive => _isActive;
+  bool get isActive => matchIds.isNotEmpty;
 
   // methods por _matchIds
-  void addMatchId(String matchId) {
-    if (!_matchIds.contains(matchId)) _matchIds.add(matchId);
-  }
-
-  void addAllMatchId(Iterable<String> newMatchIds) {
-    for (final matchId in newMatchIds) {
-      addMatchId(matchId);
+  bool addMatchId(String matchId, [bool sort = false]) {
+    if (!_matchIds.contains(matchId)) {
+      _matchIds.add(matchId);
+      if (sort) _matchIds.sort();
+      return true;
+    } else {
+      MyLog.log(_classString, 'addMatchId: matchId=$matchId already exists');
+      return false;
     }
   }
 
+  void addAllMatchIds(Iterable<String> newMatchIds) {
+    for (final matchId in newMatchIds) {
+      addMatchId(matchId, false);
+    }
+    _matchIds.sort();
+  }
+
   bool removeMatchId(String matchId) {
-    return _matchIds.remove(matchId);
+    bool removed = _matchIds.remove(matchId);
+    if (!removed) MyLog.log(_classString, 'removeMatchId: matchId=$matchId not found');
+    return removed;
   }
 
   void clearMatchId() {
@@ -150,6 +140,7 @@ class MyUser {
   void setMatchIds(List<String> newMatchIds) {
     _matchIds.clear();
     _matchIds.addAll(newMatchIds);
+    _matchIds.sort();
   }
 
   /// Getter for the user's email.
@@ -169,7 +160,6 @@ class MyUser {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
-    bool? isActive,
     List<String>? matchIds,
   }) {
     return MyUser._(
@@ -181,8 +171,7 @@ class MyUser {
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      rankingPos: rankingPos ?? _rankingPos,
-      isActive: isActive ?? _isActive,
+      rankingPos: rankingPos ?? this.rankingPos,
       matchIds: matchIds ?? _matchIds,
     );
   }
@@ -197,8 +186,7 @@ class MyUser {
     lastLogin = user.lastLogin;
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
-    _rankingPos = user._rankingPos;
-    _isActive = user._isActive;
+    rankingPos = user.rankingPos;
     _matchIds.clear();
     _matchIds.addAll(user._matchIds);
   }
@@ -233,7 +221,6 @@ class MyUser {
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
-        isActive: json[UserFs.isActive.name] ?? false,
         matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
       );
     } catch (e) {
@@ -262,8 +249,7 @@ class MyUser {
       UserFs.lastLogin.name: lastLogin?.toYyyyMmDd() ?? '',
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
-      UserFs.rankingPos.name: _rankingPos,
-      UserFs.isActive.name: _isActive,
+      UserFs.rankingPos.name: rankingPos,
       UserFs.matchIds.name: List.from(_matchIds),
     };
   }
@@ -282,8 +268,7 @@ class MyUser {
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
-        _rankingPos == other._rankingPos &&
-        _isActive == other._isActive &&
+        rankingPos == other.rankingPos &&
         listEquals(_matchIds, other._matchIds);
   }
 
@@ -298,8 +283,7 @@ class MyUser {
         lastLogin,
         loginCount,
         avatarUrl,
-        _rankingPos,
-        _isActive,
+        rankingPos,
         Object.hashAll(_matchIds),
       );
 

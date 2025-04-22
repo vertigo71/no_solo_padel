@@ -4,6 +4,8 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../database/db_authentication.dart';
 import '../database/db_firebase_helpers.dart';
+import '../models/md_register.dart';
+import '../models/md_result.dart';
 import '../secret.dart';
 import '../models/md_date.dart';
 import '../utilities/ut_misc.dart';
@@ -59,12 +61,36 @@ class Director {
     }
   }
 
-  Future<void> rebuildWrongUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
+  Future<void> rebuildUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
     MyLog.log(_classString, 'rebuildUserMatches', level: Level.FINE);
     for (var user in rightMatchesForUser.keys) {
       user.setMatchIds(rightMatchesForUser[user]!);
       await FbHelpers().updateUser(user);
     }
+  }
+
+  ///  erase register which date <= toDate
+  ///  erase matches which date <= toDate
+  ///  save a copy of users to historic
+  ///  set all users ranking to default Ranking
+  ///  update all users list of matches
+  Future<void> resetApplication(Date toDate, int newRanking) async {
+    // erase all past register docs
+    await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
+
+    // erase all past matches
+    await FbHelpers().deleteDocsBatch(
+      collection: MatchFs.matches.name,
+      subcollection: ResultFs.results.name,
+      toDate: toDate,
+    );
+
+    // save all users to historic
+    await FbHelpers().saveAllUsersToHistoric();
+
+    // reset ranking and notify
+    await FbHelpers().resetUsersBatch(newRanking: newRanking, deleteMatchesToDate: toDate);
+    // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
   Future<void> createTestData() async {

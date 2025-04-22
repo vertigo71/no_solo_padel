@@ -1,8 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:no_solo_padel/pages/main/results/modal_add_result.dart';
-import 'package:no_solo_padel/utilities/ui_helpers.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -13,7 +11,9 @@ import '../../../models/md_result.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
 import '../../../models/md_date.dart';
+import '../../../utilities/ui_helpers.dart';
 import '../../../utilities/ut_theme.dart';
+import 'modal_add_result.dart';
 import 'modal_show_result.dart';
 
 final String _classString = 'ResultsPanel'.toUpperCase();

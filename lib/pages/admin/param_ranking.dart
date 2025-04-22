@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
-import 'package:no_solo_padel/models/md_match.dart';
-import 'package:no_solo_padel/models/md_register.dart';
-import 'package:no_solo_padel/models/md_result.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -390,23 +387,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
     });
     try {
       Date toDate = Date.now().subtract(const Duration(days: 1));
-
-      // erase all past register docs
-      await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
-
-      // erase all past matches
-      await FbHelpers().deleteDocsBatch(
-        collection: MatchFs.matches.name,
-        subcollection: ResultFs.results.name,
-        toDate: toDate,
-      );
-
-      // save all users to historic
-      await FbHelpers().saveAllUsersToHistoric();
-
-      // reset ranking and notify
-      await FbHelpers().updateAllUserRankingsBatch(newRanking: resetValue, isActive: false);
-      // await _director.updateAllUsers(true); // no need. Listeners are called
+      await _director.resetApplication(toDate, resetValue);
 
       MyLog.log(_classString, 'Reset ranking success', indent: true);
 

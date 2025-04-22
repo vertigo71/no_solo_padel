@@ -3,11 +3,11 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:no_solo_padel/models/md_historic.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
 import '../models/md_debug.dart';
+import '../models/md_historic.dart';
 import '../models/md_register.dart';
 import '../models/md_match.dart';
 import '../models/md_parameter.dart';
@@ -481,9 +481,9 @@ class FbHelpers {
   }
 
   /// set all users ranking to newRanking
-  /// make all users inactive
-  Future<void> updateAllUserRankingsBatch({required int newRanking, required bool isActive}) async {
-    MyLog.log(_classString, 'updateAllUserRankings = $newRanking');
+  /// make all users inactive by removing past matches
+  Future<void> resetUsersBatch({required int newRanking, required Date deleteMatchesToDate}) async {
+    MyLog.log(_classString, 'resetUsersBatch = $newRanking');
     final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
 
     // 1. Retrieve user documents
@@ -495,12 +495,24 @@ class FbHelpers {
 
     // 2. Create batched writes
     for (final docSnapshot in querySnapshot.docs) {
-      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking, UserFs.isActive.name: isActive});
+      // Accessing the 'matchIds' array of Strings:
+      final List<String> matchIds = docSnapshot.data()[UserFs.matchIds.name]?.cast<String>() ?? [];
+
+      matchIds.removeWhere((e) {
+        Date? eDate = Date.parse(e);
+        if (eDate == null) {
+          MyLog.log(_classString, 'resetUsersBatch Wrong Format matches=$e', level: Level.WARNING, indent: true);
+          return false;
+        }
+        return eDate.compareTo(deleteMatchesToDate) <= 0; // before or equal to deleteMatchesToDate
+      });
+
+      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking, UserFs.matchIds.name: matchIds});
       operationsInBatch++;
 
       // Firestore batch limit is typically 500, so create new batch when needed.
       if (operationsInBatch >= 499) {
-        MyLog.log(_classString, 'updateAllUserRankings Creating new batch.', indent: true);
+        MyLog.log(_classString, 'resetUsersBatch Creating new batch.', indent: true);
 
         batches.add(currentBatch);
         currentBatch = FirebaseFirestore.instance.batch();
@@ -518,7 +530,7 @@ class FbHelpers {
       await batch.commit();
     }
 
-    MyLog.log(_classString, 'updateAllUserRankings Done. Batches=${batches.length} Operations=$operationsInBatch.',
+    MyLog.log(_classString, 'resetUsersBatch Done. Batches=${batches.length} Operations=$operationsInBatch.',
         indent: true);
   }
 
@@ -591,7 +603,7 @@ class FbHelpers {
   Future<void> deleteDocsBatch(
       {required String collection, String? subcollection, Date? fromDate, Date? toDate}) async {
     MyLog.log(_classString,
-        'deleteObjectsBatch $collection/$subcollection = ${fromDate?.toYyyyMmDd()} - ${toDate?.toYyyyMmDd()}');
+        'deleteObjectsBatch $collection/$subcollection: fromDate=${fromDate?.toYyyyMmDd()}, toDate=${toDate?.toYyyyMmDd()}');
 
     // 0. Create query
     Query query = FirebaseFirestore.instance.collection(collection);
@@ -629,9 +641,12 @@ class FbHelpers {
         final subCollectionRef = docSnapshot.reference.collection(subcollection);
         final subCollectionDocs = await subCollectionRef.get();
         for (final subDoc in subCollectionDocs.docs) {
+          MyLog.log(_classString, 'deleteObjectsBatch $collection=${docSnapshot.id}/$subcollection=${subDoc.id}',
+              indent: true);
           addDocToBatch(subDoc.reference);
         }
       }
+      MyLog.log(_classString, 'deleteObjectsBatch $collection ${docSnapshot.id}', indent: true);
       addDocToBatch(docSnapshot.reference);
     }
 
@@ -651,6 +666,7 @@ class FbHelpers {
   }
 
   /// return match with the position of inserted user
+  /// add match to the user's list of matches
   Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
     required MyUser player,
@@ -658,16 +674,18 @@ class FbHelpers {
     int position = -1,
   }) async {
     MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
-    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
+    DocumentReference matchDocReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
+    DocumentReference userDocReference = _instance.collection(UserFs.users.name).doc(player.id);
 
     return await _instance.runTransaction((transaction) async {
-      // get snapshot
-      DocumentSnapshot snapshot = await transaction.get(documentReference);
+      // get snapshots
+      DocumentSnapshot matchSnapshot = await transaction.get(matchDocReference);
 
+      // get match or create a new one
       late MyMatch myMatch;
-      if (snapshot.exists && snapshot.data() != null) {
+      if (matchSnapshot.exists && matchSnapshot.data() != null) {
         // get match
-        myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+        myMatch = MyMatch.fromJson(matchSnapshot.data() as Map<String, dynamic>, appState);
         MyLog.log(_classString, 'addPlayerToMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
@@ -675,18 +693,29 @@ class FbHelpers {
         MyLog.log(_classString, 'addPlayerToMatch NEW match ', indent: true);
       }
 
-      // add player in memory match
+      // add player to memory match
       int posInserted = myMatch.insertPlayer(player, position: position);
       // exception caught by catchError
       if (posInserted == -1) throw Exception('Error: el jugador ya estaba en el partido.');
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
+      // add match to user
+      bool added = player.addMatchId(matchId.toYyyyMmDd(), true);
+
       // add/update match to firebase
       transaction.set(
-        documentReference,
+        matchDocReference,
         myMatch.toJson(core: false, matchPlayers: true),
         SetOptions(merge: true),
       );
+      // add/update user to firebase
+      if (added) {
+        transaction.set(
+          userDocReference,
+          player.toJson(),
+          SetOptions(merge: true),
+        );
+      }
 
       // Return the map with MyMatch and player position
       return {myMatch: posInserted};
@@ -701,20 +730,21 @@ class FbHelpers {
   /// return match
   Future<MyMatch> deletePlayerFromMatch({
     required Date matchId,
-    required MyUser user,
+    required MyUser player,
     required AppState appState,
   }) async {
-    MyLog.log(_classString, 'deletePlayerFromMatch deleting user $user from $matchId');
-    DocumentReference documentReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
+    MyLog.log(_classString, 'deletePlayerFromMatch deleting user $player from $matchId');
+    DocumentReference matchDocReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
+    DocumentReference userDocReference = _instance.collection(UserFs.users.name).doc(player.id);
 
     return await _instance.runTransaction((transaction) async {
       // get match
-      DocumentSnapshot snapshot = await transaction.get(documentReference);
+      DocumentSnapshot matchSnapshot = await transaction.get(matchDocReference);
 
       late MyMatch myMatch;
-      if (snapshot.exists && snapshot.data() != null) {
+      if (matchSnapshot.exists && matchSnapshot.data() != null) {
         // get match
-        myMatch = MyMatch.fromJson(snapshot.data() as Map<String, dynamic>, appState);
+        myMatch = MyMatch.fromJson(matchSnapshot.data() as Map<String, dynamic>, appState);
         MyLog.log(_classString, 'deletePlayerFromMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
@@ -723,23 +753,35 @@ class FbHelpers {
       }
 
       // delete player in match
-      bool removed = myMatch.removePlayer(user);
+      bool removed = myMatch.removePlayer(player);
       // exception caught by catchError
       if (!removed) throw Exception('Error: el jugador no estaba en el partido.');
       MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
 
+      // remove match from user
+      bool removedUser = player.removeMatchId(matchId.toYyyyMmDd());
+
       // add match to firebase
       transaction.set(
-        documentReference,
+        matchDocReference,
         myMatch.toJson(core: false, matchPlayers: true),
         SetOptions(merge: true),
       );
 
+      // remove user from firebase
+      if (removedUser) {
+        transaction.set(
+          userDocReference,
+          player.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+
       return myMatch;
     }).catchError((onError) {
-      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $user from match $matchId',
+      MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
           exception: onError, level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el jugador $user del partido $matchId\n'
+      throw Exception('Error al eliminar el jugador $player del partido $matchId\n'
           'Error = $onError');
     });
   }
