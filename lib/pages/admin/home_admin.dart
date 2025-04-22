@@ -44,7 +44,7 @@ class AdminPage extends StatelessWidget {
 
   Widget _tabBarText(String text) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
       child: Text(
         text,
         style: const TextStyle(fontSize: 15),
