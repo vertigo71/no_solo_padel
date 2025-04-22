@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../models/md_debug.dart';
+import 'check.dart';
 import 'param_ranking.dart';
 import 'parameters.dart';
 import 'user/user.dart';
@@ -16,7 +17,7 @@ class AdminPage extends StatelessWidget {
     MyLog.log(_classString, 'Building', level:Level.FINE);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Configuración'),
@@ -25,6 +26,7 @@ class AdminPage extends StatelessWidget {
               _tabBarText('Usuarios'),
               _tabBarText('Parámetros'),
               _tabBarText('Ranking'),
+              _tabBarText('Checking'),
             ],
           ),
         ),
@@ -33,6 +35,7 @@ class AdminPage extends StatelessWidget {
             UserAdminPanel(),
             ParametersPanel(),
             RankingParamPanel(),
+            CheckPanel(),
           ],
         ),
       ),

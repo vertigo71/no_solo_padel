@@ -15,6 +15,9 @@ class MyListView<T> implements Iterable<T> {
   int get length => _list.length;
 
   @override
+  toString() => _list.toString();
+
+  @override
   bool get isEmpty => _list.isEmpty;
 
   @override

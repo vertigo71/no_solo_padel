@@ -37,7 +37,7 @@ class Director {
 
   /// check if, for each User, its list of matchesId is correct
   /// checking they are in the right matches
-  Future<void> checkUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
+  Future<void> checkUserMatches(Map<MyUser, List<String>> rightMatchesPerUser) async {
     MyLog.log(_classString, 'checkUserMatches', level: Level.FINE);
 
     List<MyMatch> allMatches = await FbHelpers().getAllMatches(_appState);
@@ -55,16 +55,16 @@ class Director {
       if (rightUserMatches.length != actualUserMatches.length ||
           rightUserMatches.toSet().intersection(actualUserMatches.toSet()).length != rightUserMatches.length) {
         MyLog.log(_classString, 'checkUserMatches: user = $user should have these matches\n$rightUserMatches',
-            indent: true, level: Level.WARNING);
-        rightMatchesForUser[user] = rightUserMatches;
+            indent: true);
+        rightMatchesPerUser[user] = rightUserMatches;
       }
     }
   }
 
-  Future<void> rebuildUserMatches(Map<MyUser, List<String>> rightMatchesForUser) async {
+  Future<void> rebuildUserMatches(Map<MyUser, List<String>> rightMatchesPerUser) async {
     MyLog.log(_classString, 'rebuildUserMatches', level: Level.FINE);
-    for (var user in rightMatchesForUser.keys) {
-      user.setMatchIds(rightMatchesForUser[user]!);
+    for (var user in rightMatchesPerUser.keys) {
+      user.setMatchIds(rightMatchesPerUser[user]!);
       await FbHelpers().updateUser(user);
     }
   }
