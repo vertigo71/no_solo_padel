@@ -34,9 +34,6 @@ class CheckPanelState extends State<CheckPanel> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Check Panel'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -52,12 +49,17 @@ class CheckPanelState extends State<CheckPanel> {
               child: const Text('Rebuild Matches in Users'),
             ),
             const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => setState(() => _output.clear()),
+              child: const Text('Clear all'),
+            ),
+            const SizedBox(height: 20),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceDim,
                 ),
                 padding: const EdgeInsets.all(8),
                 child: ListView.builder(
@@ -91,7 +93,7 @@ class CheckPanelState extends State<CheckPanel> {
         _addOutput("   Wrong Matches: ${user.matchIds}");
         _addOutput("   Correct Matches: ${rightMatchesPerUser[user]}");
       }
-      _addOutput("Check Matches in Users completed.");
+      _addOutput("\nCheck Matches in Users completed.");
     } catch (e) {
       _addOutput("\nError checking matches in users: $e");
     }
@@ -107,7 +109,7 @@ class CheckPanelState extends State<CheckPanel> {
       _addOutput("Building Matches in Users...");
 
       await _director.rebuildUserMatches(rightMatchesPerUser);
-      _addOutput("Build Matches in Users completed.");
+      _addOutput("\nBuild Matches in Users completed.");
     } catch (e) {
       _addOutput("\nError checking matches in users: $e");
     }
