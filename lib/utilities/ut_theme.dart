@@ -27,6 +27,7 @@ const Color kWhite = Colors.white;
 
 // other
 final Color kLightRed = Colors.red.shade400;
+const Color kRed = Colors.red;
 final Color kLightGreen = Colors.green.shade400;
 
 

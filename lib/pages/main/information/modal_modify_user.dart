@@ -17,6 +17,7 @@ final String _classString = 'ModifyUserModal'.toUpperCase();
 enum _FormFields {
   userType(displayName: 'Tipo de usuario'),
   ranking(displayName: 'Ranking'),
+  isActive(displayName: 'Activo'),
   ;
 
   final String displayName;
@@ -101,7 +102,11 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
     if (_formKey.currentState!.saveAndValidate()) {
       final formData = _formKey.currentState!.value;
       user.userType = formData[_FormFields.userType.name] ?? user.userType;
-      user.rankingPos = int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos;
+      user.setRankingPos(
+        int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos,
+        formData[_FormFields.isActive.name] ?? user.isActive,
+      );
+
       MyLog.log(_classString, '_acceptChanges: type=${user.userType} ranking=${user.rankingPos}', indent: true);
 
       try {
@@ -145,6 +150,14 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
               FormBuilderValidators.integer(errorText: 'Debe ser un número entero'),
               FormBuilderValidators.min(0, errorText: 'Debe ser mayor o igual que 0'),
             ]),
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.3),
+            child: FormBuilderSwitch(
+              name: _FormFields.isActive.name,
+              title: Text(_FormFields.isActive.displayName),
+              initialValue: user.isActive,
+            ),
           ),
         ],
       ),

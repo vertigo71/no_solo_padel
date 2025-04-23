@@ -136,7 +136,7 @@ class Director {
     final random = Random();
     for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {
-        user.rankingPos = random.nextInt(10000);
+        user.setRankingPos( random.nextInt(10000), false);
         await FbHelpers().updateUser(user);
       }
     }

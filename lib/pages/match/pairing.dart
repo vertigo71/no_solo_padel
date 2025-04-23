@@ -104,11 +104,18 @@ class PairingSubPanel extends StatelessWidget {
                   )),
               title: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  '${_getPlayerText(court, 0, matchPlayers, pairingPlayers, usersSortedByRanking)} y '
-                  '${_getPlayerText(court, 1, matchPlayers, pairingPlayers, usersSortedByRanking)}\n\n'
-                  '${_getPlayerText(court, 2, matchPlayers, pairingPlayers, usersSortedByRanking)} y '
-                  '${_getPlayerText(court, 3, matchPlayers, pairingPlayers, usersSortedByRanking)}',
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      _getPlayerTextSpan(court, 0, matchPlayers, pairingPlayers, usersSortedByRanking),
+                      const TextSpan(text: ' y '),
+                      _getPlayerTextSpan(court, 1, matchPlayers, pairingPlayers, usersSortedByRanking),
+                      const TextSpan(text: '\n\n'),
+                      _getPlayerTextSpan(court, 2, matchPlayers, pairingPlayers, usersSortedByRanking),
+                      const TextSpan(text: ' y '),
+                      _getPlayerTextSpan(court, 3, matchPlayers, pairingPlayers, usersSortedByRanking),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -117,8 +124,17 @@ class PairingSubPanel extends StatelessWidget {
     }
   }
 
-  String _getPlayerText(int court, int index, MyListView<MyUser> matchPlayers, Map<int, List<int>> pairingPlayers,
-          MyListView<MyUser> usersSortedByRanking) =>
-      '${matchPlayers[pairingPlayers[court]![index]].name} '
-      '<${usersSortedByRanking.indexOf(matchPlayers[pairingPlayers[court]![index]]) + 1}>';
+  TextSpan _getPlayerTextSpan(int court, int index, MyListView<MyUser> matchPlayers, Map<int, List<int>> pairingPlayers,
+      MyListView<MyUser> usersSortedByRanking) {
+    MyUser player = matchPlayers[pairingPlayers[court]![index]];
+    String text = '${player.name} <${usersSortedByRanking.indexOf(player) + 1}>';
+    return TextSpan(
+      text: text,
+      style: player.isActive
+          ? const TextStyle( fontWeight: FontWeight.bold )
+          : const TextStyle(
+              fontStyle: FontStyle.italic,
+            ),
+    );
+  }
 }

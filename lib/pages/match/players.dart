@@ -15,6 +15,7 @@ import '../../models/md_user.dart';
 import '../../utilities/ut_list_view.dart';
 import '../../utilities/ut_misc.dart';
 import '../../utilities/ui_helpers.dart';
+import '../../utilities/ut_theme.dart';
 
 final String _classString = 'PlayersPanel'.toUpperCase();
 
@@ -156,15 +157,32 @@ class PlayersPanelState extends State<PlayersPanel> {
             children: [
               _buildSubHeading('Apuntados ($numCourtsText)'),
               _buildSubListOfPlayers([
-                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking))),
+                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
+                    style: player.isActive
+                        ? const TextStyle(fontWeight: FontWeight.bold)
+                        : const TextStyle(
+                            fontStyle: FontStyle.italic,
+                          ))),
                 ...usersSigned.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
-                    style: const TextStyle(color: Colors.red))),
+                    style: player.isActive
+                        ? const TextStyle(color: kRed)
+                        : const TextStyle(
+                            color: kRed,
+                            fontStyle: FontStyle.italic,
+                          ))),
                 ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
               ]),
               if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
                 _buildSubListOfPlayers([
-                  ...usersReserve.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking))),
+                  ...usersReserve.map((player) => Text(
+                        _buildPlayerText(++playerNumber, player, usersSortedByRanking),
+                        style: player.isActive
+                            ? const TextStyle()
+                            : const TextStyle(
+                                fontStyle: FontStyle.italic,
+                              ),
+                      )),
                 ]),
             ],
           );
@@ -198,9 +216,9 @@ class PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
-  String _buildPlayerText(int playerNumber, MyUser player, MyListView<MyUser> roRankingSortedUsers) {
+  String _buildPlayerText(int playerNumber, MyUser player, MyListView<MyUser> rankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
-        '<${roRankingSortedUsers.indexOf(player) + 1}>';
+        '<${rankingSortedUsers.indexOf(player) + 1}>';
   }
 
   Widget _buildRoulette() {

@@ -36,6 +36,7 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
+  isActive,
   matchIds,
 }
 
@@ -58,7 +59,8 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
-  int rankingPos;
+  int _rankingPos;
+  bool _isActive;
   final List<String> _matchIds = [];
 
   factory MyUser({
@@ -96,17 +98,30 @@ class MyUser {
     this.lastLogin,
     this.loginCount = 0,
     this.avatarUrl,
-    this.rankingPos = 0,
+    int rankingPos = 0,
+    bool isActive = false,
     List<String>? matchIds,
-  }) : _email = email.toLowerCase() {
+  })  : _rankingPos = rankingPos,
+        _isActive = isActive,
+        _email = email.toLowerCase() {
     _matchIds.addAll(matchIds ?? []);
   }
+
+  // methods por _rankingPos
+  int get rankingPos => _rankingPos;
+
+  set rankingPos(int newRankingPos) => setRankingPos(newRankingPos, true);
+
+  void setRankingPos(int newRankingPos, [bool isActive = true]) {
+    _rankingPos = newRankingPos;
+    _isActive = isActive;
+  }
+
+  bool get isActive => _isActive;
 
   MyListView<String> get matchIds => MyListView(_matchIds);
 
   List<String> get copyOfMatchIds => List.from(_matchIds);
-
-  bool get isActive => matchIds.isNotEmpty;
 
   // methods por _matchIds
   bool addMatchId(String matchId, [bool sort = false]) {
@@ -160,6 +175,7 @@ class MyUser {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
+    bool? isActive,
     List<String>? matchIds,
   }) {
     return MyUser._(
@@ -171,7 +187,8 @@ class MyUser {
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      rankingPos: rankingPos ?? this.rankingPos,
+      rankingPos: rankingPos ?? _rankingPos,
+      isActive: isActive ?? _isActive,
       matchIds: matchIds ?? _matchIds,
     );
   }
@@ -186,9 +203,9 @@ class MyUser {
     lastLogin = user.lastLogin;
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
-    rankingPos = user.rankingPos;
-    _matchIds.clear();
-    _matchIds.addAll(user._matchIds);
+    _rankingPos = user._rankingPos;
+    _isActive = user._isActive;
+    setMatchIds(user._matchIds);
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
@@ -221,6 +238,7 @@ class MyUser {
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
+        isActive: json[UserFs.isActive.name] ?? false,
         matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
       );
     } catch (e) {
@@ -249,8 +267,9 @@ class MyUser {
       UserFs.lastLogin.name: lastLogin?.toYyyyMmDd() ?? '',
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
-      UserFs.rankingPos.name: rankingPos,
-      UserFs.matchIds.name: List.from(_matchIds),
+      UserFs.rankingPos.name: _rankingPos,
+      UserFs.isActive.name: _isActive,
+      UserFs.matchIds.name: List.from(_matchIds), // generate a copy for inmutability
     };
   }
 
@@ -268,7 +287,8 @@ class MyUser {
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
-        rankingPos == other.rankingPos &&
+        _rankingPos == other._rankingPos &&
+        _isActive == other._isActive &&
         listEquals(_matchIds, other._matchIds);
   }
 
@@ -283,7 +303,8 @@ class MyUser {
         lastLogin,
         loginCount,
         avatarUrl,
-        rankingPos,
+        _rankingPos,
+        _isActive,
         Object.hashAll(_matchIds),
       );
 
