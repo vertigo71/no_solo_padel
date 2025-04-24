@@ -93,6 +93,24 @@ class Director {
     // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
+  Future<void> checkMatchPlayers(MyMatch match) async {
+    MyLog.log(_classString, 'checkMatchPlayers match=$match', level: Level.FINE);
+    // check all players in the match
+    for (MyUser player in match.players) {
+      if (match.isPlaying(player) && !player.matchIds.contains(match.id.toYyyyMmDd())) {
+        // match should be in user's match list
+        // update user
+        player.addMatchId(match.id.toYyyyMmDd(), true);
+        await FbHelpers().updateUser(player);
+      } else if (!match.isPlaying(player) && player.matchIds.contains(match.id.toYyyyMmDd())) {
+        // match should not be in user's match list
+        // update user
+        player.removeMatchId(match.id.toYyyyMmDd());
+        await FbHelpers().updateUser(player);
+      }
+    }
+  }
+
   Future<void> createTestData() async {
     MyLog.log(_classString, 'createTestData', level: Level.FINE);
 
@@ -136,7 +154,7 @@ class Director {
     final random = Random();
     for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {
-        user.setRankingPos( random.nextInt(10000), false);
+        user.setRankingPos(random.nextInt(10000), false);
         await FbHelpers().updateUser(user);
       }
     }
