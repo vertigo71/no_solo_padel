@@ -30,7 +30,7 @@ class LoginPageState extends State<LoginPage> {
 
   void getVersion() {
     PackageInfo packageInfo = Environment().packageInfo;
-    setState(() => _version = 'v. ${packageInfo.version}');
+    setState(() => _version = 'v. ${packageInfo.version}+${packageInfo.buildNumber}');
   }
 
   @override
