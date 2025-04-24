@@ -209,12 +209,14 @@ class MyMatch {
   }
 
   PlayingState getPlayingState(MyUser player) {
-    Map<MyUser, PlayingState> map = getAllPlayingStates();
-    PlayingState? playingState = map[player];
-    if (playingState == null) {
-      return PlayingState.unsigned;
+    int pos = _players.indexOf(player);
+    if (pos == -1) return PlayingState.unsigned;
+    if (pos < numberOfFilledCourts * 4) {
+      return PlayingState.playing;
+    } else if (pos < _courtNames.length * 4) {
+      return PlayingState.signedNotPlaying;
     } else {
-      return playingState;
+      return PlayingState.reserve;
     }
   }
 
