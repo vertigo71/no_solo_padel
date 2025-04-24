@@ -4,12 +4,14 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
+import 'package:web/web.dart' as web; // Import the web package
 
 import '../../database/db_authentication.dart';
 import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_app_state.dart';
 import '../../interface/if_director.dart';
 import '../../models/md_debug.dart';
+import '../../models/md_parameter.dart';
 import '../../models/md_user.dart';
 import '../../routes/routes.dart';
 import '../../models/md_date.dart';
@@ -64,7 +66,11 @@ class _MainPageState extends State<MainPage> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
-      if (_errorMessage != null) {
+      // check version
+      if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
+        MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
+        return _buildReloadPage();
+      } else if (_errorMessage != null) {
         // there is an error
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
         return _buildErrorMessage();
@@ -142,7 +148,10 @@ class _MainPageState extends State<MainPage> {
     return AppBar(
       automaticallyImplyLeading: false,
       title: Consumer<AppState>(
-        builder: (context, appState, _) => Text(appState.loggedUser?.name ?? 'Nadie conectado'),
+        builder: (context, appState, _) => appState.loggedUser != null && appState.isLoggedUserSuper
+            ? Text('${appState.loggedUser!.name} (${appState.getParamValue(ParametersEnum.version)})',
+                style: const TextStyle(fontSize: 16))
+            : Text(appState.loggedUser?.name ?? 'Nadie conectado'),
       ),
       actions: [
         IconButton(
@@ -293,5 +302,35 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildReloadPage() {
+    MyLog.log(_classString, '_reloadPage', indent: true);
+    return Scaffold(
+        body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          const Text('Nueva versión disponible', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          Text('  Versión actual: ${Environment().fullVersion}', style: const TextStyle(fontSize: 14)),
+          Text('  Versión disponible: ${_director.appState.getParamValue(ParametersEnum.version)}',
+              style: const TextStyle(fontSize: 14)),
+          const SizedBox(height: 30), // Adds some space between the text and the button
+          ElevatedButton(
+            onPressed: () {
+              // Add your button's action here
+              _reloadPage();
+            },
+            child: const Text('Actualizar versión'),
+          ),
+        ],
+      ),
+    ));
+  }
+
+  // Function to reload the page using web
+  void _reloadPage() {
+    web.window.location.reload();
   }
 }

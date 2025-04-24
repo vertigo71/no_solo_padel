@@ -61,4 +61,14 @@ class Environment {
   }
 
   bool get isInitialized => _initialized;
+
+  String get version => packageInfo.version;
+
+  String get buildNumber => packageInfo.buildNumber;
+
+  String get fullVersion => '${packageInfo.version}+${packageInfo.buildNumber}';
+
+  String get appName => packageInfo.appName;
+
+  String get packageName => packageInfo.packageName;
 }

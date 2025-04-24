@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../models/md_debug.dart';
@@ -28,10 +27,7 @@ class LoginPageState extends State<LoginPage> {
   static const String kUserId = 'username';
   static const String kPwdId = 'password';
 
-  void getVersion() {
-    PackageInfo packageInfo = Environment().packageInfo;
-    setState(() => _version = 'v. ${packageInfo.version}+${packageInfo.buildNumber}');
-  }
+  void getVersion() => setState(() => _version = 'v. ${Environment().fullVersion}');
 
   @override
   void initState() {
