@@ -56,7 +56,15 @@ if firebase use "$APP" \
       exit 1
     fi
 
-    firebase deploy
+    if ! firebase deploy; then
+      echo "Failed to deploy"
+      exit 1
+    fi
+
+    # update version
+    echo "Updating to version $version in firestore..."
+    node ./scripts/update_version.js "$FLAVOR" "$version"
+
     # Set CORS configuration after successful deployment
     echo "Setting CORS configuration for $BUCKET..."
     gsutil cors set "$CORS_FILE" "gs://$BUCKET"
@@ -66,12 +74,5 @@ else
 
   exit 1
 fi
-
-echo "*******************************************************"
-echo "*******************************************************"
-echo "      UPDATE PARAMETER VERSION TO $version "
-echo "*******************************************************"
-echo "*******************************************************"
-
 
 exit 0
