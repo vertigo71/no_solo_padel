@@ -131,7 +131,7 @@ class PairingSubPanel extends StatelessWidget {
     return TextSpan(
       text: text,
       style: player.isActive
-          ? const TextStyle( fontWeight: FontWeight.bold )
+          ? const TextStyle(  )
           : const TextStyle(
               fontStyle: FontStyle.italic,
             ),

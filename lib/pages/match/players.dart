@@ -159,7 +159,7 @@ class PlayersPanelState extends State<PlayersPanel> {
               _buildSubListOfPlayers([
                 ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
                     style: player.isActive
-                        ? const TextStyle(fontWeight: FontWeight.bold)
+                        ? const TextStyle()
                         : const TextStyle(
                             fontStyle: FontStyle.italic,
                           ))),
@@ -265,7 +265,6 @@ class PlayersPanelState extends State<PlayersPanel> {
                               child: Text(u.name,
                                   style: const TextStyle(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
                                   ))),
                         ))
                     .toList(),
