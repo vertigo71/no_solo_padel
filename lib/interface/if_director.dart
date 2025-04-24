@@ -93,6 +93,9 @@ class Director {
     // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
+  /// unused
+  /// checks every player in a match
+  /// a match should be in a player's list only if he is actually playing
   Future<void> checkMatchPlayers(MyMatch match) async {
     MyLog.log(_classString, 'checkMatchPlayers match=$match', level: Level.FINE);
     // check all players in the match
@@ -100,11 +103,13 @@ class Director {
       if (match.isPlaying(player) && !player.matchIds.contains(match.id.toYyyyMmDd())) {
         // match should be in user's match list
         // update user
+        MyLog.log(_classString, 'checkMatchPlayers adding match=${match.id.toYyyyMmDd()} to user=$player');
         player.addMatchId(match.id.toYyyyMmDd(), true);
         await FbHelpers().updateUser(player);
       } else if (!match.isPlaying(player) && player.matchIds.contains(match.id.toYyyyMmDd())) {
         // match should not be in user's match list
         // update user
+        MyLog.log(_classString, 'checkMatchPlayers removing match=${match.id.toYyyyMmDd()} from user=$player');
         player.removeMatchId(match.id.toYyyyMmDd());
         await FbHelpers().updateUser(player);
       }

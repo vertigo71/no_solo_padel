@@ -407,8 +407,6 @@ class PlayersPanelState extends State<PlayersPanel> {
     }
 
     // add player to match and upload the match to firestore database
-    // newMatchFromFirestore is the match with the new player
-    // null otherwise
     Map<MyMatch, int> result = await FbHelpers()
         .addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
     MyMatch updatedMatch = result.keys.first; // Get the MyMatch object (key)
