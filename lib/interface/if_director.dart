@@ -16,6 +16,13 @@ import '../models/md_user.dart';
 
 final String _classString = '<st> Director'.toLowerCase();
 
+/*
+  Users have a list of matchesId where they joined (playing or not)
+  Matches have a list of players
+  User becomes active when he joins a match
+  bool isActive is not used
+ */
+
 /// responsible for the flow of the app
 /// knows about all processes
 class Director {

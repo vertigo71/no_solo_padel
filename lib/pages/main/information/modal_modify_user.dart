@@ -17,7 +17,6 @@ final String _classString = 'ModifyUserModal'.toUpperCase();
 enum _FormFields {
   userType(displayName: 'Tipo de usuario'),
   ranking(displayName: 'Ranking'),
-  isActive(displayName: 'Activo'),
   ;
 
   final String displayName;
@@ -88,37 +87,6 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
     );
   }
 
-  Future<void> _acceptChanges(BuildContext context) async {
-    MyLog.log(_classString, "Accept modal selected image=${selectedImageData != null}",
-        indent: true, level: Level.FINE);
-
-    const String kYesOption = 'SI';
-    const String kNoOption = 'NO';
-    String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar los datos?', kYesOption, kNoOption);
-    if (response.isEmpty || response == kNoOption) return;
-    MyLog.log(_classString, 'dialog response = $response', indent: true);
-
-    if (_formKey.currentState!.saveAndValidate()) {
-      final formData = _formKey.currentState!.value;
-      user.userType = formData[_FormFields.userType.name] ?? user.userType;
-      user.setRankingPos(
-        int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos,
-        formData[_FormFields.isActive.name] ?? user.isActive,
-      );
-
-      MyLog.log(_classString, '_acceptChanges: type=${user.userType} ranking=${user.rankingPos}', indent: true);
-
-      try {
-        await FbHelpers().updateUser(user, selectedImageData);
-        if (context.mounted) Navigator.pop(context);
-      } catch (e) {
-        MyLog.log(_classString, 'Error updating user: $user \n$e', level: Level.SEVERE, indent: true);
-        if (context.mounted) UiHelper.myAlertDialog(context, 'Error al actualizar el usuario');
-      }
-    }
-  }
-
   Widget _buildUserForm(GlobalKey<FormBuilderState> formKey, MyUser user) {
     return FormBuilder(
       key: formKey,
@@ -151,16 +119,45 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
               FormBuilderValidators.min(0, errorText: 'Debe ser mayor o igual que 0'),
             ]),
           ),
-          Padding(
-            padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.3),
-            child: FormBuilderSwitch(
-              name: _FormFields.isActive.name,
-              title: Text(_FormFields.isActive.displayName),
-              initialValue: user.isActive,
-            ),
-          ),
+          // Not used. User is active when he joins a match
+          // Padding(
+          //   padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.3),
+          //   child: FormBuilderSwitch(
+          //     name: _FormFields.isActive.name,
+          //     title: Text(_FormFields.isActive.displayName),
+          //     initialValue: user.isActive,
+          //   ),
+          // ),
         ],
       ),
     );
+  }
+
+  Future<void> _acceptChanges(BuildContext context) async {
+    MyLog.log(_classString, "Accept modal selected image=${selectedImageData != null}",
+        indent: true, level: Level.FINE);
+
+    const String kYesOption = 'SI';
+    const String kNoOption = 'NO';
+    String response =
+        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres actualizar los datos?', kYesOption, kNoOption);
+    if (response.isEmpty || response == kNoOption) return;
+    MyLog.log(_classString, 'dialog response = $response', indent: true);
+
+    if (_formKey.currentState!.saveAndValidate()) {
+      final formData = _formKey.currentState!.value;
+      user.userType = formData[_FormFields.userType.name] ?? user.userType;
+      user.setRankingPos(int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos);
+
+      MyLog.log(_classString, '_acceptChanges: type=${user.userType} ranking=${user.rankingPos}', indent: true);
+
+      try {
+        await FbHelpers().updateUser(user, selectedImageData);
+        if (context.mounted) Navigator.pop(context);
+      } catch (e) {
+        MyLog.log(_classString, 'Error updating user: $user \n$e', level: Level.SEVERE, indent: true);
+        if (context.mounted) UiHelper.myAlertDialog(context, 'Error al actualizar el usuario');
+      }
+    }
   }
 }

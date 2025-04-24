@@ -117,7 +117,7 @@ class MyUser {
     _isActive = isActive;
   }
 
-  bool get isActive => _isActive;
+  bool get isActive => matchIds.isNotEmpty;
 
   MyListView<String> get matchIds => MyListView(_matchIds);
 
