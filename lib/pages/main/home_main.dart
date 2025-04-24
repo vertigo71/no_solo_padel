@@ -66,11 +66,7 @@ class _MainPageState extends State<MainPage> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
-      // check version
-      if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
-        MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
-        return _buildReloadPage();
-      } else if (_errorMessage != null) {
+      if (_errorMessage != null) {
         // there is an error
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
         return _buildErrorMessage();
@@ -98,6 +94,12 @@ class _MainPageState extends State<MainPage> {
         return _buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
         MyLog.log(_classString, 'build with logged user loggedUser=${appState.loggedUser}', indent: true);
+
+        // check version
+        if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
+          MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
+          return _buildReloadPage();
+        }
 
         return PopScope(
           canPop: false,
@@ -306,27 +308,29 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildReloadPage() {
     MyLog.log(_classString, '_reloadPage', indent: true);
+
     return Scaffold(
+        appBar: _buildAppBar(context),
         body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const Text('Nueva versión disponible', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          Text('  Versión actual: ${Environment().fullVersion}', style: const TextStyle(fontSize: 14)),
-          Text('  Versión disponible: ${_director.appState.getParamValue(ParametersEnum.version)}',
-              style: const TextStyle(fontSize: 14)),
-          const SizedBox(height: 30), // Adds some space between the text and the button
-          ElevatedButton(
-            onPressed: () {
-              // Add your button's action here
-              _reloadPage();
-            },
-            child: const Text('Actualizar versión'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text('Nueva versión disponible', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Text('  Versión actual: ${Environment().fullVersion}', style: const TextStyle(fontSize: 14)),
+              Text('  Versión disponible: ${_director.appState.getParamValue(ParametersEnum.version)}',
+                  style: const TextStyle(fontSize: 14)),
+              const SizedBox(height: 30), // Adds some space between the text and the button
+              ElevatedButton(
+                onPressed: () {
+                  // Add your button's action here
+                  _reloadPage();
+                },
+                child: const Text('Actualizar versión'),
+              ),
+            ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 
   // Function to reload the page using web
