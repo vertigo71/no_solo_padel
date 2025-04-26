@@ -160,14 +160,22 @@ class _AddResultModalState extends State<AddResultModal> {
       margin: const EdgeInsets.all(10),
       color: Theme.of(context).colorScheme.surfaceBright,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 100), // Set your desired minimum width here
-        child: Text(
-          _selectedPlayers[numValue]?.name ?? '',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center, // Optional: Center the text within the constrained box
+        constraints: BoxConstraints(
+          minWidth: 100,
+          maxWidth: 300,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0), // Add padding for better visual appearance
+          child: Text(
+            _selectedPlayers[numValue]?.name ?? '',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+            softWrap: true, // Allow text to wrap to multiple lines
+          ),
         ),
       ),
     );
+
   }
 
   Widget _buildResults() {
@@ -186,24 +194,24 @@ class _AddResultModalState extends State<AddResultModal> {
 
   Widget _buildOneResult(ScoreFields field) {
     MyLog.log(_classString, '_buildOneResult team=$field', indent: true, level: Level.FINE);
-    return Card(
-      elevation: 6.0,
-      margin: const EdgeInsets.all(0.0),
-      color: Theme.of(context).colorScheme.surfaceBright,
-      child: SizedBox(
-        height: 40,
-        width: 70,
+    return SizedBox(
+      width: 100.0,
+      child: Card(
+        elevation: 6.0,
+        margin: EdgeInsets.zero,
+        color: Theme.of(context).colorScheme.surfaceBright,
         child: FormBuilderDropdown<int>(
           name: field.name,
           initialValue: 0,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
+          menuWidth: 70,
+          decoration: const InputDecoration(
+            contentPadding: EdgeInsets.zero, // Remove padding
+            isDense: true, //important
           ),
-          menuWidth: 90,
           items: List.generate(kMaxGamesPerSet, (result) {
             return DropdownMenuItem<int>(
               value: result,
-              child: Text(result.toString(), style: const TextStyle(fontSize: 14)),
+              child: Center(child: Text(result.toString())),
             );
           }).toList(),
         ),
