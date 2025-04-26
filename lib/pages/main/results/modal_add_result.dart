@@ -128,12 +128,14 @@ class _AddResultModalState extends State<AddResultModal> {
 
   Widget _buildMultiSelection() {
     MyLog.log(_classString, '_buildMultiselection', level: Level.FINE, indent: true);
+    List<MyUser> players = _match.getPlayers(state: PlayingState.playing);
+    players.sort(getMyUserComparator(UsersSortBy.name));
 
     return MultiSelectContainer(
         itemsPadding: const EdgeInsets.all(12.0),
         maxSelectableCount: kNumPlayers,
         items: [
-          ..._match.getPlayers(state: PlayingState.playing).map((player) => MultiSelectCard(
+          ...players.map((player) => MultiSelectCard(
               value: player,
               label: player.name,
               textStyles: MultiSelectItemTextStyles(textStyle: TextStyle(fontSize: 12, color: kBlack))))
