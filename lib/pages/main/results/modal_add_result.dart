@@ -127,7 +127,7 @@ class _AddResultModalState extends State<AddResultModal> {
   }
 
   Widget _buildMultiSelection() {
-    MyLog.log(_classString, '_buildMultiselection', level: Level.FINE, indent: true);
+    MyLog.log(_classString, '_buildMultiSelection', level: Level.FINE, indent: true);
     List<MyUser> players = _match.getPlayers(state: PlayingState.playing);
     players.sort(getMyUserComparator(UsersSortBy.name));
 
