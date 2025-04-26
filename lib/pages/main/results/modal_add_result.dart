@@ -177,7 +177,6 @@ class _AddResultModalState extends State<AddResultModal> {
         ),
       ),
     );
-
   }
 
   Widget _buildResults() {
