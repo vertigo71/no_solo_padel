@@ -205,7 +205,7 @@ class _AddResultModalState extends State<AddResultModal> {
           initialValue: 0,
           menuWidth: 70,
           decoration: const InputDecoration(
-            contentPadding: EdgeInsets.zero, // Remove padding
+            contentPadding: EdgeInsets.only(top: 8.0, bottom: 8.0), // Remove padding
             isDense: true, //important
           ),
           items: List.generate(kMaxGamesPerSet, (result) {
