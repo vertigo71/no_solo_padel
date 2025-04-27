@@ -14,7 +14,7 @@ class AdminPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building', level:Level.FINE);
+    MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return DefaultTabController(
       length: 4,
@@ -22,6 +22,9 @@ class AdminPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Configuración'),
           bottom: TabBar(
+            indicatorPadding: EdgeInsets.zero,
+            labelPadding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.zero,
             tabs: [
               _tabBarText('Usuarios'),
               _tabBarText('Parámetros'),
@@ -42,13 +45,5 @@ class AdminPage extends StatelessWidget {
     );
   }
 
-  Widget _tabBarText(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 15),
-      ),
-    );
-  }
+  Widget _tabBarText(String text) => FittedBox(child: Tab(child: Text(text, style: const TextStyle(fontSize: 15))));
 }

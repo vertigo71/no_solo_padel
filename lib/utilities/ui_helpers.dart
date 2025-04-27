@@ -45,7 +45,7 @@ abstract class UiHelper {
   /// their name, emergency SOS information (if available), email (username part),
   /// ranking position, user type's display name, login count, and last login date.
   /// If an optional `onPressed` callback is provided, the tile becomes tappable.
-  static Widget userInfoTile(MyUser user, [Function? onPressed]) {
+  static Widget buildUserInfoTile(BuildContext context, MyUser user, {int? index, Function? onPressed}) {
     final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
 
     ImageProvider<Object>? imageProvider;
@@ -58,25 +58,39 @@ abstract class UiHelper {
       imageProvider = null;
     }
 
-    return ListTile(
-      leading: CircleAvatar(
-        radius: 25,
-        backgroundColor: Colors.blueAccent,
-        backgroundImage: imageProvider,
-        child: imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 8,
+          children: [
+            if (index != null)
+              CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.surfaceBright,
+                child: Text('$index', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.blueAccent,
+              backgroundImage: imageProvider,
+              child: imageProvider == null ? Text('?', style: TextStyle(fontSize: 24, color: Colors.white)) : null,
+            ),
+          ],
+        ),
+        title: Text(user.name),
+        subtitle: Text('$sosInfo'
+            '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
+        trailing: Text('${user.rankingPos}',
+            style: user.isActive
+                ? TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                : TextStyle(fontSize: 18, color: kLightRed)),
+        onTap: () {
+          if (onPressed != null) onPressed();
+        },
       ),
-      isThreeLine: true,
-      title: Text(user.name),
-      subtitle: Text('$sosInfo'
-          '${user.userType.displayName}\n'
-          '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
-      trailing: Text('\n${user.rankingPos}',
-          style: user.isActive
-              ? TextStyle(fontSize: 14, fontWeight: FontWeight.bold)
-              : TextStyle(fontSize: 14, color: kLightRed)),
-      onTap: () {
-        if (onPressed != null) onPressed();
-      },
     );
   }
 

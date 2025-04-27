@@ -67,17 +67,19 @@ class UserAddPanelState extends State<UserAddPanel> {
 
               const SizedBox(height: 30), //SizedBox
 
-              Row(
-                children: <Widget>[
-                  const SizedBox(width: 10), //SizedBox
-                  Text(_FormFieldsEnum.admin.label), //Text
-                  const SizedBox(width: 10), //SizedBox
-                  _buildCheckBoxField(_FormFieldsEnum.admin),
-                  const SizedBox(width: 10),
-                  Text(_FormFieldsEnum.superUser.label), //Text
-                  const SizedBox(width: 10),
-                  _buildCheckBoxField(_FormFieldsEnum.superUser),
-                ],
+              FittedBox(
+                alignment: Alignment.center,
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    Text(_FormFieldsEnum.admin.label), //Text
+                    _buildCheckBoxField(_FormFieldsEnum.admin),
+                    SizedBox(width: 10),
+                    Text(_FormFieldsEnum.superUser.label), //Text
+                    _buildCheckBoxField(_FormFieldsEnum.superUser),
+                  ],
+                ),
               ),
               const Divider(),
               Padding(

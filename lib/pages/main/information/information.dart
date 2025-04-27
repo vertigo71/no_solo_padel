@@ -38,27 +38,18 @@ class _InformationPanelState extends State<InformationPanel> {
             tiles: users.indexed.map((indexedUser) {
               final index = indexedUser.$1 + 1; // Add 1 for 1-based indexing
               final user = indexedUser.$2;
-              return Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.surfaceBright,
-                      child: Text('$index', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  Expanded(
-                    child: UiHelper.userInfoTile(
-                      user,
-                      // logged user can only edit users with higher or equal rank
-                      appState.loggedUser != null &&
-                              appState.isLoggedUserAdminOrSuper &&
-                              appState.loggedUser!.userType.index >= user.userType.index
-                          ? () => _modifyUserModal(context, user)
-                          : null,
-                    ),
-                  ),
-                ],
+
+              return UiHelper.buildUserInfoTile(
+                context,
+                user,
+                index: index,
+                onPressed:
+                    // logged user can only edit users with higher or equal rank
+                    appState.loggedUser != null &&
+                            appState.isLoggedUserAdminOrSuper &&
+                            appState.loggedUser!.userType.index >= user.userType.index
+                        ? () => _modifyUserModal(context, user)
+                        : null,
               );
             }),
           ).toList(), // Convert the Iterable<Widget> to List<Widget>
@@ -73,35 +64,38 @@ class _InformationPanelState extends State<InformationPanel> {
       actions: [
         // typical layout: expanded, row, expanded, ...
         Expanded(
-          child: Row(
-            spacing: 10,
-            // mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const SizedBox(width: 10),
-              Flexible(flex: 2, child: const Text('Ranking')),
-              Flexible(
-                flex: 1,
-                child: FormBuilderSwitch(
-                  name: 'switch',
-                  title: const Text(''),
-                  initialValue: _sortedByName,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Row(
+              spacing: 0,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Text('Ranking'),
+                SizedBox(
+                  width: 70,
+                  child: FormBuilderSwitch(
+                    name: 'switch',
+                    title: const Text(''),
+                    initialValue: _sortedByName,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _sortedByName = value;
+                        });
+                      }
+                    },
                   ),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _sortedByName = value;
-                      });
-                    }
-                  },
                 ),
-              ),
-              const SizedBox(width: 10),
-              Flexible(flex: 2, child: const Text('Nombre')),
-              const SizedBox(width: 10),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: const Text('Nombre'),
+                ),
+              ],
+            ),
           ),
         ),
       ],

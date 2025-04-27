@@ -68,50 +68,47 @@ class GamesPanel extends StatelessWidget {
             }
 
             return ListView(
-              children: [
-                ...ListTile.divideTiles(
-                  context: context,
-                  tiles: playableMatches.map((match) {
-                    final MyUser? loggedUser = appState.loggedUser;
-                    if (loggedUser == null) {
-                      MyLog.log(_classString, 'build loggedUser is null', level: Level.SEVERE);
-                      throw Exception('No se ha podido obtener el usuario conectado');
-                    }
+              children: ListTile.divideTiles(
+                context: context,
+                tiles: playableMatches.map((match) {
+                  final MyUser? loggedUser = appState.loggedUser;
+                  if (loggedUser == null) {
+                    MyLog.log(_classString, 'build loggedUser is null', level: Level.SEVERE);
+                    throw Exception('No se ha podido obtener el usuario conectado');
+                  }
 
-                    String playingStateStr = match.getPlayingStateString(loggedUser);
-                    PlayingState playingState = match.getPlayingState(loggedUser);
-                    final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
+                  String playingStateStr = match.getPlayingStateString(loggedUser);
+                  PlayingState playingState = match.getPlayingState(loggedUser);
+                  final String comment = match.comment.isEmpty ? '' : '\n${match.comment}';
 
-                    return Card(
-                      elevation: 6,
-                      margin: const EdgeInsets.all(10),
-                      child: ListTile(
-                        tileColor:
-                            // light red: closed, stateColor: open
-                            match.isOpen
-                                ? UiHelper.getTilePlayingColor(context, playingState)
-                                : UiHelper.getMatchTileColor(match),
-                        leading: CircleAvatar(
-                            backgroundColor: UiHelper.getMatchAvatarColor(match),
-                            child: Text(match.isOpen ? 'A' : 'C')),
-                        title: match.isOpen
-                            ? Text('${match.id.toString()}\n$playingStateStr$comment')
-                            : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
-                        subtitle: match.isOpen
-                            ? Text(
-                                'APUNTADOS: ${match.players.length} de ${match.numberOfCourts * 4}',
-                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                              )
-                            : null,
-                        enabled: match.isOpen == true || appState.isLoggedUserAdminOrSuper,
-                        onTap: () {
-                          context.pushNamed(AppRoutes.kMatch, extra: match.toJson());
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
+                  return Card(
+                    elevation: 6,
+                    margin: const EdgeInsets.all(10),
+                    child: ListTile(
+                      tileColor:
+                          // light red: closed, stateColor: open
+                          match.isOpen
+                              ? UiHelper.getTilePlayingColor(context, playingState)
+                              : UiHelper.getMatchTileColor(match),
+                      leading: CircleAvatar(
+                          backgroundColor: UiHelper.getMatchAvatarColor(match), child: Text(match.isOpen ? 'A' : 'C')),
+                      title: match.isOpen
+                          ? Text('${match.id.toString()}\n$playingStateStr$comment')
+                          : Text('${match.id.toString()}\nCONVOCATORIA NO DISPONIBLE'),
+                      subtitle: match.isOpen
+                          ? Text(
+                              'APUNTADOS: ${match.players.length} de ${match.numberOfCourts * 4}',
+                              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                            )
+                          : null,
+                      enabled: match.isOpen == true || appState.isLoggedUserAdminOrSuper,
+                      onTap: () {
+                        context.pushNamed(AppRoutes.kMatch, extra: match.toJson());
+                      },
+                    ),
+                  );
+                }),
+              ).toList(),
             );
           },
         );
