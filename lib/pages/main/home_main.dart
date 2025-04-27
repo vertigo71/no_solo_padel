@@ -67,13 +67,6 @@ class _MainPageState extends State<MainPage> {
 
     return Consumer<AppState>(builder: (context, appState, child) {
 
-      // check version
-      if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
-        MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
-        return _buildReloadPage();
-      }
-
-
       if (_errorMessage != null) {
         // there is an error
         MyLog.log(_classString, 'build error message =$_errorMessage', indent: true);
@@ -102,6 +95,12 @@ class _MainPageState extends State<MainPage> {
         return _buildLoadingIndicator('Cargando ...'); // Still loading, no error
       } else {
         MyLog.log(_classString, 'build with logged user loggedUser=${appState.loggedUser}', indent: true);
+
+        // check version
+        if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
+          MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
+          return _buildReloadPage();
+        }
 
         return PopScope(
           canPop: false,
