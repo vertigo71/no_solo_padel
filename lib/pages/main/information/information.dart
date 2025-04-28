@@ -1,7 +1,5 @@
 import 'dart:collection';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -65,35 +63,24 @@ class _InformationPanelState extends State<InformationPanel> {
         // typical layout: expanded, row, expanded, ...
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(left: 16.0),
+            padding: const EdgeInsets.fromLTRB(16,8,0,8),
             child: Row(
-              spacing: 0,
               mainAxisAlignment: MainAxisAlignment.start,
+              spacing: 8,
               children: [
                 const Text('Ranking'),
-                SizedBox(
-                  width: 70,
-                  child: FormBuilderSwitch(
-                    name: 'switch',
-                    title: const Text(''),
-                    initialValue: _sortedByName,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _sortedByName = value;
-                        });
-                      }
-                    },
-                  ),
+                UiHelper.myToggleButton(
+                  context: context,
+                  value: _sortedByName,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _sortedByName = value;
+                      });
+                    }
+                  },
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: const Text('Nombre'),
-                ),
+                const Text('Nombre'),
               ],
             ),
           ),

@@ -290,6 +290,22 @@ abstract class UiHelper {
     );
   }
 
+  static Widget myToggleButton({
+    required BuildContext context,
+    required void Function(bool?) onChanged,
+    required bool value,
+  }) {
+    return GFToggle(
+      onChanged: onChanged,
+      value: value,
+      enabledTrackColor: kAltDark,
+      disabledTrackColor: kAltLight,
+      enabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
+      disabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
+
+    );
+  }
+
   static Color _getMatchColor(MyMatch match) {
     switch (match.isOpen) {
       case true:
