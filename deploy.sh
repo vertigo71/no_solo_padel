@@ -51,6 +51,7 @@ if firebase use "$APP" \
     echo "Deploying version: $version"
 
     # Update index.html with the version
+    # Needed so any user's browser will not use cached version
     if ! update_index_html_urls "$version"; then
       echo "Failed to update URLs in index.html. Deployment aborted."
       exit 1
@@ -62,10 +63,12 @@ if firebase use "$APP" \
     fi
 
     # update version
+    # Needed so any user will have latest version
     echo "Updating to version $version in firestore..."
     node ./scripts/update_version.js "$FLAVOR" "$version"
 
     # Set CORS configuration after successful deployment
+    # Needed for Firebase Storage
     echo "Setting CORS configuration for $BUCKET..."
     gsutil cors set "$CORS_FILE" "gs://$BUCKET"
     echo "CORS configuration set successfully."
