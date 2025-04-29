@@ -100,7 +100,7 @@ class MyUser {
     this.avatarUrl,
     int rankingPos = 0,
     bool isActive = false,
-    List<String>? matchIds,
+    List<String>? matchIds, // format YYYYMMDD
   })  : _rankingPos = rankingPos,
         _isActive = isActive,
         _email = email.toLowerCase() {
@@ -123,11 +123,37 @@ class MyUser {
 
   List<String> get copyOfMatchIds => List.from(_matchIds);
 
-  // methods por _matchIds
-  bool addMatchId(String matchId, [bool sort = false]) {
+  /// Returns a list of match IDs, optionally filtered by a 'to date' and sorted.
+  ///
+  /// The match IDs in the internal `_matchIds` list and the `toDate` parameter
+  /// are expected to be strings in the format 'YYYYMMDD' for correct
+  /// chronological sorting and filtering.
+  ///
+  /// Parameters:
+  ///   toDate: An optional string representing the latest date (inclusive)
+  ///           for the match IDs to include, in 'YYYYMMDD' format. If null, all
+  ///           match IDs are considered.
+  ///   reversed: If true, the list is sorted in descending order; otherwise,
+  ///             it's sorted in ascending order (chronologically based on the
+  ///             'YYYYMMDD' format).
+  List<String> getMatchIdsSorted({String? toDate, bool reversed = false}) {
+    List<String> sortedMatchIds = List.from(_matchIds);
+    if (reversed) {
+      sortedMatchIds.sort((a, b) => b.compareTo(a));
+    } else {
+      sortedMatchIds.sort();
+    }
+    if (toDate != null) {
+      sortedMatchIds = sortedMatchIds.where((id) => id.compareTo(toDate) <= 0).toList();
+    }
+
+    return sortedMatchIds;
+  }
+
+  // methods por _matchIds.
+  bool addMatchId(String matchId) {
     if (!_matchIds.contains(matchId)) {
       _matchIds.add(matchId);
-      if (sort) _matchIds.sort();
       return true;
     } else {
       MyLog.log(_classString, 'addMatchId: matchId=$matchId already exists');
@@ -137,9 +163,8 @@ class MyUser {
 
   void addAllMatchIds(Iterable<String> newMatchIds) {
     for (final matchId in newMatchIds) {
-      addMatchId(matchId, false);
+      addMatchId(matchId);
     }
-    _matchIds.sort();
   }
 
   bool removeMatchId(String matchId) {

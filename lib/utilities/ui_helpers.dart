@@ -44,9 +44,18 @@ abstract class UiHelper {
   /// It shows the user's avatar (or a placeholder if the URL is null or invalid),
   /// their name, emergency SOS information (if available), email (username part),
   /// ranking position, user type's display name, login count, and last login date.
-  /// If an optional `onPressed` callback is provided, the tile becomes tappable.
-  static Widget buildUserInfoTile(BuildContext context, MyUser user, {int? index, Function? onPressed}) {
-    final String sosInfo = user.emergencyInfo.isNotEmpty ? 'SOS: ${user.emergencyInfo}\n' : '';
+  /// If an optional
+  ///   `onPressed` callback is provided, the tile becomes tappable.
+  ///   `lastGamesWins` is a list of booleans indicating whether the user has won or lost last games.
+  ///   `index` is the position of the user in a sorted list.
+  static Widget buildUserInfoTile(
+    BuildContext context,
+    MyUser user, {
+    List<bool>? lastGamesWins,
+    int? index,
+    Function? onPressed,
+  }) {
+    final String sosInfo = user.emergencyInfo.isNotEmpty ? '\nSOS: ${user.emergencyInfo}' : '';
 
     ImageProvider<Object>? imageProvider;
     try {
@@ -80,9 +89,29 @@ abstract class UiHelper {
             ),
           ],
         ),
-        title: Text(user.name),
-        subtitle: Text('$sosInfo'
-            '${user.lastLogin?.toMask(mask: 'dd/MM/yy') ?? ''}'),
+        title: Text('${user.name}$sosInfo'),
+        subtitle: lastGamesWins == null
+            ? null
+            : Row(
+                spacing: 3,
+                children: lastGamesWins.map((win) {
+                  if (win) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: kLightGreen,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Icon(Icons.emoji_events_outlined, size: 20),
+                    );
+                  } else {
+                    return Icon(
+                      Icons.cancel_outlined,
+                      size: 20,
+                      color: kLightRed,
+                    );
+                  }
+                }).toList(),
+              ),
         trailing: Text('${user.rankingPos}',
             style: user.isActive
                 ? TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
@@ -302,7 +331,6 @@ abstract class UiHelper {
       disabledTrackColor: kAltLight,
       enabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
       disabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
-
     );
   }
 

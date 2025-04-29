@@ -1,16 +1,18 @@
-import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:no_solo_padel/utilities/ut_list_view.dart';
 
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../../interface/if_app_state.dart';
+import '../../../interface/if_director.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_user.dart';
 import '../../../utilities/ui_helpers.dart';
 import 'modal_modify_user.dart';
 
 final String _classString = 'InformationPanel'.toUpperCase();
+const int kNumberOfTrophies = 5;
 
 class InformationPanel extends StatefulWidget {
   const InformationPanel({super.key});
@@ -21,36 +23,51 @@ class InformationPanel extends StatefulWidget {
 
 class _InformationPanelState extends State<InformationPanel> {
   bool _sortedByName = false;
+  late Future<Map<MyUser, List<bool>>> userListOfTrophies;
+
+  @override
+  void initState() {
+    super.initState();
+    userListOfTrophies = context.read<Director>().playersLastTrophies();
+  }
 
   @override
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     return Consumer<AppState>(builder: (context, appState, child) {
-      Iterable<MyUser> users = _sortedByName ? appState.usersSortedByName : appState.usersSortedByRanking;
+      final MyListView users = _sortedByName ? appState.usersSortedByName : appState.usersSortedByRanking;
+
       return Scaffold(
         appBar: _buildAppBar(appState),
-        body: ListView(
-          children: ListTile.divideTiles(
-            context: context,
-            tiles: users.indexed.map((indexedUser) {
-              final index = indexedUser.$1 + 1; // Add 1 for 1-based indexing
-              final user = indexedUser.$2;
+        body: FutureBuilder<Map<MyUser, List<bool>>>(
+          future: userListOfTrophies,
+          builder: (context, snapshot) {
+            final Map<MyUser, List<bool>>? userTrophiesData = snapshot.data;
 
-              return UiHelper.buildUserInfoTile(
-                context,
-                user,
-                index: index,
-                onPressed:
-                    // logged user can only edit users with higher or equal rank
-                    appState.loggedUser != null &&
-                            appState.isLoggedUserAdminOrSuper &&
-                            appState.loggedUser!.userType.index >= user.userType.index
-                        ? () => _modifyUserModal(context, user)
-                        : null,
-              );
-            }),
-          ).toList(), // Convert the Iterable<Widget> to List<Widget>
+            return ListView.separated(
+              itemCount: users.length,
+              separatorBuilder: (BuildContext context, int index) => const Divider(),
+              itemBuilder: (context, index) {
+                final user = users[index];
+                final displayIndex = index + 1; // Add 1 for 1-based indexing
+                final List<bool>? lastGamesWins = userTrophiesData?[user]?.take(kNumberOfTrophies).toList();
+
+                return UiHelper.buildUserInfoTile(
+                  context,
+                  user,
+                  index: displayIndex,
+                  lastGamesWins: lastGamesWins,
+                  // logged user can only edit users with higher or equal rank
+                  onPressed: appState.loggedUser != null &&
+                          appState.isLoggedUserAdminOrSuper &&
+                          appState.loggedUser!.userType.index >= user.userType.index
+                      ? () => _modifyUserModal(context, user)
+                      : null,
+                );
+              },
+            );
+          },
         ),
       );
     });
@@ -63,7 +80,7 @@ class _InformationPanelState extends State<InformationPanel> {
         // typical layout: expanded, row, expanded, ...
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16,8,0,8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 0, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               spacing: 8,

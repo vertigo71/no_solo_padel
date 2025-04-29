@@ -10,7 +10,20 @@ final String _classString = '<md> MyResult'.toLowerCase();
 const String kFieldSeparator = '#';
 
 // result fields in Firestore
-enum ResultFs { resultId, matchId, player1, player2, points, preRanking1, preRanking2, score, teamA, teamB, results }
+enum ResultFs {
+  resultId,
+  matchId,
+  players,
+  player1,
+  player2,
+  points,
+  preRanking1,
+  preRanking2,
+  score,
+  teamA,
+  teamB,
+  results
+}
 
 class GameResult {
   GameResultId id;
@@ -19,6 +32,47 @@ class GameResult {
   TeamResult? teamB;
 
   GameResult({required this.id, required this.matchId, this.teamA, this.teamB});
+
+  bool _checkResultOk() {
+    if (teamA == null || teamB == null || teamA!.score == teamB!.score) {
+      MyLog.log(_classString, 'ERROR: wrong result Team A = $teamA Team B = $teamB', level: Level.SEVERE);
+      return false;
+    }
+    return true;
+  }
+
+  List<MyUser> get winningPlayers {
+    if (!_checkResultOk()) return [];
+    if (teamA!.score > teamB!.score) return [teamA!.player1, teamA!.player2];
+    return [teamB!.player1, teamB!.player2];
+  }
+
+  List<MyUser> get loosingPlayers {
+    if (!_checkResultOk()) return [];
+    if (teamA!.score < teamB!.score) return [teamA!.player1, teamA!.player2];
+    return [teamB!.player1, teamB!.player2];
+  }
+
+  bool playerIsInResult(MyUser player) =>
+      (teamA?.isPlayerInTeam(player) ?? false) || (teamB?.isPlayerInTeam(player) ?? false);
+
+  bool playerHasWon(MyUser player) {
+    if (!playerIsInResult(player)) return false;
+    if (teamA?.isPlayerInTeam(player) ?? false) return teamA!.score > (teamB?.score ?? 0);
+    if (teamB?.isPlayerInTeam(player) ?? false) return teamB!.score > (teamA?.score ?? 0);
+    return false;
+  }
+
+  /// returns <0 if player has lost
+  /// returns 0 if player is not in the result
+  /// returns >0 if player has won
+  int playerStatus(MyUser player) {
+    if (!_checkResultOk()) return 0;
+    if (teamA!.isPlayerInTeam(player)) return teamA!.score.compareTo(teamB!.score);
+    if (teamB!.isPlayerInTeam(player)) return teamB!.score.compareTo(teamA!.score);
+
+    return 0;
+  }
 
   GameResult copyWith({
     GameResultId? id,
@@ -72,8 +126,9 @@ class GameResult {
     return {
       ResultFs.resultId.name: id.resultId,
       ResultFs.matchId.name: matchId.toYyyyMmDd(),
-      'teamA': teamA!.toJson(),
-      'teamB': teamB!.toJson(),
+      ResultFs.players.name: [teamA?.player1.id, teamA?.player2.id, teamB?.player1.id, teamB?.player2.id],
+      'teamA': teamA?.toJson(),
+      'teamB': teamB?.toJson(),
     };
   }
 
@@ -99,7 +154,7 @@ class GameResult {
 class TeamResult {
   final MyUser player1;
   final MyUser player2;
-  final int points; // positive if team has won, negative if team has lost
+  final int points;
   final int score;
   final int preRanking1; // ranking of player1 before the match
   final int preRanking2; // ranking of player2 before the match
@@ -112,6 +167,8 @@ class TeamResult {
     required this.preRanking1,
     required this.preRanking2,
   });
+
+  bool isPlayerInTeam(MyUser player) => player1 == player || player2 == player;
 
   TeamResult copyWith({
     MyUser? player1,

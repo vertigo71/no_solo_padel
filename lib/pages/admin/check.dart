@@ -48,6 +48,11 @@ class CheckPanelState extends State<CheckPanel> {
               onPressed: _rebuildMatchesInUsers,
               child: const Text('Rebuild Matches in Users'),
             ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _rebuildGameResultsPlayers,
+              child: const Text('Rebuild Game Results Players'),
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => setState(() => _output.clear()),
@@ -99,7 +104,7 @@ class CheckPanelState extends State<CheckPanel> {
     }
   }
 
-// Function to check matches in users
+  // Function to rebuild matches in users
   Future<void> _rebuildMatchesInUsers() async {
     _addOutput("Checking Matches in Users...");
     try {
@@ -120,6 +125,7 @@ class CheckPanelState extends State<CheckPanel> {
     setState(() {
       _output.add(text);
     });
+
     // Use a Future to ensure the ListView has been updated before scrolling.
     Future.delayed(Duration.zero, () {
       _scrollController.animateTo(
@@ -128,5 +134,15 @@ class CheckPanelState extends State<CheckPanel> {
         curve: Curves.easeOut,
       );
     });
+  }
+
+  Future<void> _rebuildGameResultsPlayers() async {
+    _addOutput("Rebuilding Game Results Players...");
+    try {
+      await _director.rebuildGameResultPlayers();
+      _addOutput("\nBuild Game Results Players completed.");
+    } catch (e) {
+      _addOutput("\nError rebuilding game results players: $e");
+    }
   }
 }

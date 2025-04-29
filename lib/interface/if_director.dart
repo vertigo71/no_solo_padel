@@ -21,6 +21,7 @@ final String _classString = '<st> Director'.toLowerCase();
   Matches have a list of players
   User becomes active when he joins a match
   bool isActive is not used
+  A match has many games. Each game has a GameResult
  */
 
 /// responsible for the flow of the app
@@ -42,12 +43,27 @@ class Director {
     await AuthenticationHelper.signOut();
   }
 
+  /// for each GameResult, rebuild its players list
+  Future<void> rebuildGameResultPlayers() async {
+    MyLog.log(_classString, 'rebuildGameResultPlayers', level: Level.FINE);
+
+    final List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState);
+    for (final MyMatch match in allMatches) {
+      List<GameResult> allResults =
+          await FbHelpers().getAllMatchResults(matchId: match.id.toYyyyMmDd(), appState: _appState);
+      for (final GameResult result in allResults) {
+        MyLog.log(_classString, 'rebuildGameResultPlayers result=$result', indent: true);
+        FbHelpers().updateGameResult(result: result, matchId: match.id.toYyyyMmDd());
+      }
+    }
+  }
+
   /// check if, for each User, its list of matchesId is correct
   /// checking they are in the right matches
   Future<void> checkUserMatches(Map<MyUser, List<String>> rightMatchesPerUser) async {
     MyLog.log(_classString, 'checkUserMatches', level: Level.FINE);
 
-    List<MyMatch> allMatches = await FbHelpers().getAllMatches(_appState);
+    List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState);
     Map<MyUser, List<MyMatch>> userMatches = {};
     for (MyMatch match in allMatches) {
       for (MyUser user in match.players) {
@@ -100,27 +116,35 @@ class Director {
     // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
-  /// unused
-  /// checks every player in a match
-  /// a match should be in a player's list only if he is actually playing
-  Future<void> checkMatchPlayers(MyMatch match) async {
-    MyLog.log(_classString, 'checkMatchPlayers match=$match', level: Level.FINE);
-    // check all players in the match
-    for (MyUser player in match.players) {
-      if (match.isPlaying(player) && !player.matchIds.contains(match.id.toYyyyMmDd())) {
-        // match should be in user's match list
-        // update user
-        MyLog.log(_classString, 'checkMatchPlayers adding match=${match.id.toYyyyMmDd()} to user=$player');
-        player.addMatchId(match.id.toYyyyMmDd(), true);
-        await FbHelpers().updateUser(player);
-      } else if (!match.isPlaying(player) && player.matchIds.contains(match.id.toYyyyMmDd())) {
-        // match should not be in user's match list
-        // update user
-        MyLog.log(_classString, 'checkMatchPlayers removing match=${match.id.toYyyyMmDd()} from user=$player');
-        player.removeMatchId(match.id.toYyyyMmDd());
-        await FbHelpers().updateUser(player);
+  Future<Map<MyUser, List<bool>>> playersLastTrophies() async {
+    MyLog.log(_classString, 'playersLastTrophies', level: Level.FINE);
+    final Map<MyUser, List<bool>> userTrophies = {};
+
+    final List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState, toDate: Date.now())
+      ..sort((a, b) => b.id.compareTo(a.id));
+    for (MyMatch match in allMatches) {
+      MyLog.log(_classString, 'playersLastTrophies match=${match.id}', level: Level.FINE, indent: true);
+
+      final List<GameResult> allResults = await FbHelpers().getAllMatchResults(
+        matchId: match.id.toYyyyMmDd(),
+        appState: _appState,
+      )
+        ..sort((a, b) => b.id.resultId.compareTo(a.id.resultId));
+      for (GameResult result in allResults) {
+        MyLog.log(_classString, 'playersLastTrophies result=${result.id}', level: Level.FINE, indent: true);
+        List<MyUser> players = result.winningPlayers;
+        for (final MyUser player in players) {
+          if (!userTrophies.containsKey(player)) userTrophies[player] = [];
+          userTrophies[player]?.add(true);
+        }
+        players = result.loosingPlayers;
+        for (final MyUser player in players) {
+          if (!userTrophies.containsKey(player)) userTrophies[player] = [];
+          userTrophies[player]?.add(false);
+        }
       }
     }
+    return userTrophies;
   }
 
   Future<void> createTestData() async {

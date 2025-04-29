@@ -194,42 +194,60 @@ class FbHelpers {
     }
   }
 
+  Query _getCollectionRef({
+    required List<String> pathSegments, // List of collection/doc identifiers
+    required bool descending,
+    Date? fromDate,
+    Date? toDate,
+    Query Function(Query)? filter,
+  }) {
+    if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
+      throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
+    }
+
+    CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
+
+    for (int i = 1; i < pathSegments.length; i += 2) {
+      collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
+    }
+
+    Query query = collectionReference;
+
+    query = query.orderBy(FieldPath.documentId, descending: descending);
+
+    if (fromDate != null) {
+      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
+    }
+    if (toDate != null) {
+      query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
+    }
+
+    if (filter != null) {
+      query = filter(query);
+    }
+
+    return query;
+  }
+
   Stream<List<T>>? getStream<T>({
     required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     Date? fromDate,
     Date? toDate,
     AppState? appState,
-    Query Function(Query)? filter,
     bool descending = false,
+    Query Function(Query)? filter,
   }) {
     MyLog.log(_classString, 'getStream pathSegments=${pathSegments.join('/')}, filter=$filter');
 
     try {
-      if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
-        throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
-      }
-
-      CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
-
-      for (int i = 1; i < pathSegments.length; i += 2) {
-        collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
-      }
-
-      Query query = collectionReference;
-
-      query = query.orderBy(FieldPath.documentId, descending: descending);
-
-      if (fromDate != null) {
-        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
-      }
-      if (toDate != null) {
-        query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
-      }
-
-      if (filter != null) {
-        query = filter(query);
-      }
+      Query query = _getCollectionRef(
+        pathSegments: pathSegments,
+        descending: descending,
+        fromDate: fromDate,
+        toDate: toDate,
+        filter: filter,
+      );
 
       return query.snapshots().transform(_transformer(fromJson, appState));
     } catch (e) {
@@ -288,22 +306,27 @@ class FbHelpers {
     );
   }
 
+  DocumentReference _getDocRef({required List<String> pathSegments}) {
+    if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
+      throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
+    }
+
+    DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
+
+    for (int i = 2; i < pathSegments.length; i += 2) {
+      documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
+    }
+
+    return documentReference;
+  }
+
   Future<T?> getObject<T>({
     required List<String> pathSegments, // List of collection/doc identifiers
     required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
     AppState? appState,
   }) async {
     try {
-      if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
-        throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
-      }
-
-      DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
-
-      for (int i = 2; i < pathSegments.length; i += 2) {
-        documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
-      }
-
+      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
       DocumentSnapshot documentSnapshot = await documentReference.get();
 
       Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
@@ -351,36 +374,23 @@ class FbHelpers {
     Date? fromDate,
     Date? toDate,
     AppState? appState,
+    // bool descending = false, need an index that cannot be created in Firestore console
     Query Function(Query)? filter,
   }) async {
-    MyLog.log(_classString, 'getAllObjects');
+    MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')}');
 
     List<T> items = [];
     try {
-      if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
-        throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
-      }
-
-      CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
-
-      for (int i = 1; i < pathSegments.length; i += 2) {
-        collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
-      }
-
-      Query query = collectionReference;
-
-      if (fromDate != null) {
-        query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
-      }
-      if (toDate != null) {
-        query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
-      }
-
-      if (filter != null) {
-        query = filter(query);
-      }
+      Query query = _getCollectionRef(
+        pathSegments: pathSegments,
+        descending: false,
+        fromDate: fromDate,
+        toDate: toDate,
+        filter: filter,
+      );
 
       QuerySnapshot querySnapshot = await query.get();
+
       for (var doc in querySnapshot.docs) {
         if (doc.data() == null) throw 'Error en la base de datos ${pathSegments.join('/')}';
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -390,7 +400,8 @@ class FbHelpers {
         items.add(item);
       }
     } catch (e) {
-      MyLog.log(_classString, 'getAllObjects', exception: e, level: Level.SEVERE, indent: true);
+      MyLog.log(_classString, 'getAllObjects  ${pathSegments.join('/')} ERROR ',
+          exception: e, level: Level.SEVERE, indent: true);
       throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: ${e.toString()}');
     }
     MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
@@ -402,8 +413,16 @@ class FbHelpers {
         fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
       );
 
-  Future<List<MyMatch>> getAllMatches(AppState appState) async => getAllObjects<MyMatch>(
+  Future<List<MyMatch>> getAllMatches({
+    required AppState appState,
+    Date? fromDate,
+    Date? toDate,
+    // bool descending = false, need an index that cannot be created in Firestore console
+  }) async =>
+      getAllObjects<MyMatch>(
         pathSegments: [MatchFs.matches.name],
+        fromDate: fromDate,
+        toDate: toDate,
         fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       );
 
@@ -417,7 +436,6 @@ class FbHelpers {
     return getAllObjects<MyMatch>(
       pathSegments: [MatchFs.matches.name],
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-      // Unified call
       fromDate: fromDate,
       toDate: toDate,
       appState: appState,
@@ -426,14 +444,18 @@ class FbHelpers {
   }
 
   /// returns all results from a match
+  ///   if playerId is specified, only returns results from that player
   Future<List<GameResult>> getAllMatchResults({
     required String matchId,
     required AppState appState,
+    String? playerId,
+    // bool descending = false, need an index that cannot be created in Firestore console
   }) async {
     return getAllObjects<GameResult>(
       pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
       fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
       appState: appState,
+      filter: playerId == null ? null : (query) => query.where(ResultFs.players.name, arrayContains: playerId),
     );
   }
 
@@ -445,16 +467,7 @@ class FbHelpers {
     MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, forceSet: $forceSet', indent: true);
 
     try {
-      if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
-        throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
-      }
-
-      DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
-
-      for (int i = 2; i < pathSegments.length; i += 2) {
-        documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
-      }
-
+      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
       await documentReference.set(fields, SetOptions(merge: !forceSet));
 
       MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, success', indent: true);
@@ -542,7 +555,7 @@ class FbHelpers {
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateResult({required GameResult result, required String matchId}) async => await updateObject(
+  Future<void> updateGameResult({required GameResult result, required String matchId}) async => await updateObject(
         fields: result.toJson(),
         pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId],
         forceSet: false, // replaces the old object if exists
@@ -700,7 +713,7 @@ class FbHelpers {
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
       // add match to user
-      bool added = player.addMatchId(matchId.toYyyyMmDd(), true);
+      bool added = player.addMatchId(matchId.toYyyyMmDd());
 
       // add/update match to firebase
       transaction.set(

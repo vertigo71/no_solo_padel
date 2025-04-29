@@ -98,7 +98,9 @@ abstract class MyLog {
   ) {
     String str = '[$heading]$indentation$message';
     final String secondIndent = ' ' * 5;
-    if (exception != null) str += '\n$secondIndent** EXCEPTION **\n${_breakIntoLines(str, secondIndent)}';
+    if (exception != null) {
+      str += '\n$secondIndent** EXCEPTION **\n${_breakIntoLines(exception.toString(), secondIndent)}';
+    }
     if (myCustomObject != null) str += '\n$secondIndent** OBJECT **\n${_objectToString(myCustomObject, secondIndent)}';
 
     return str;
