@@ -13,7 +13,6 @@ const String kFieldSeparator = '#';
 enum ResultFs {
   resultId,
   matchId,
-  players,
   player1,
   player2,
   points,
@@ -126,7 +125,6 @@ class GameResult {
     return {
       ResultFs.resultId.name: id.resultId,
       ResultFs.matchId.name: matchId.toYyyyMmDd(),
-      ResultFs.players.name: [teamA?.player1.id, teamA?.player2.id, teamB?.player1.id, teamB?.player2.id],
       'teamA': teamA?.toJson(),
       'teamB': teamB?.toJson(),
     };

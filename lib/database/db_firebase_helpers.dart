@@ -448,14 +448,12 @@ class FbHelpers {
   Future<List<GameResult>> getAllMatchResults({
     required String matchId,
     required AppState appState,
-    String? playerId,
     // bool descending = false, need an index that cannot be created in Firestore console
   }) async {
     return getAllObjects<GameResult>(
       pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
       fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
       appState: appState,
-      filter: playerId == null ? null : (query) => query.where(ResultFs.players.name, arrayContains: playerId),
     );
   }
 
