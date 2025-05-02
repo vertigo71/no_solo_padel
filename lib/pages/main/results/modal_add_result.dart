@@ -283,7 +283,7 @@ class _AddResultModalState extends State<AddResultModal> {
 
       // create GameResult
       GameResult gameResult = GameResult(
-        id: GameResultId(userId: loggedUser.id),
+        userId: loggedUser.id,
         matchId: _match.id,
         teamA: teamA,
         teamB: teamB,
@@ -292,7 +292,7 @@ class _AddResultModalState extends State<AddResultModal> {
       // save result to Firestore
       try {
         MyLog.log(_classString, 'Saving result: $gameResult', indent: true);
-        await FbHelpers().updateGameResult(result: gameResult, matchId: _match.id.toYyyyMmDd());
+        await FbHelpers().updateGameResult(result: gameResult);
       } catch (e) {
         MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
         throw 'Error al guardar el resultado.\n ${e.toString()}';

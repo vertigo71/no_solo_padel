@@ -16,12 +16,24 @@ import '../models/md_user.dart';
 
 final String _classString = '<st> Director'.toLowerCase();
 
-/*
-  Users have a list of matchesId where they joined (playing or not)
-  Matches have a list of players
-  User becomes active when he joins a match
-  bool isActive is not used
-  A match has many games. Each game has a GameResult
+/// TODO: create list of results in matches
+/// copy all results to /results with the new format
+
+/**
+    Users:
+    have a list of matchesId where they joined (playing or not)
+    have a list of GameResults where they won or lost
+
+    Matches:
+    have a list of players
+    have a list of GameResults
+
+    User becomes active when he joins a match
+
+    A match has many games. Each game has a GameResult
+
+    A GameResult has 4 players and belongs to a match
+
  */
 
 /// responsible for the flow of the app
@@ -41,21 +53,6 @@ class Director {
     await FbHelpers().disposeListeners();
     _appState.reset();
     await AuthenticationHelper.signOut();
-  }
-
-  /// for each GameResult, rebuild its players list
-  Future<void> rebuildGameResultPlayers() async {
-    MyLog.log(_classString, 'rebuildGameResultPlayers', level: Level.FINE);
-
-    final List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState);
-    for (final MyMatch match in allMatches) {
-      List<GameResult> allResults =
-          await FbHelpers().getAllMatchResults(matchId: match.id.toYyyyMmDd(), appState: _appState);
-      for (final GameResult result in allResults) {
-        MyLog.log(_classString, 'rebuildGameResultPlayers result=$result', indent: true);
-        FbHelpers().updateGameResult(result: result, matchId: match.id.toYyyyMmDd());
-      }
-    }
   }
 
   /// check if, for each User, its list of matchesId is correct
@@ -104,7 +101,10 @@ class Director {
     // erase all past matches
     await FbHelpers().deleteDocsBatch(
       collection: MatchFs.matches.name,
-      subcollection: ResultFs.results.name,
+      toDate: toDate,
+    );
+    await FbHelpers().deleteDocsBatch(
+      collection: ResultFs.results.name,
       toDate: toDate,
     );
 
@@ -116,6 +116,8 @@ class Director {
     // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
+  /// a map that for each player gets a list of games won (true) and lost (false)
+  /// TODO: create a getAllResults() function
   Future<Map<MyUser, List<bool>>> playersLastTrophies() async {
     MyLog.log(_classString, 'playersLastTrophies', level: Level.FINE);
     final Map<MyUser, List<bool>> userTrophies = {};
@@ -190,7 +192,7 @@ class Director {
     final random = Random();
     for (MyUser user in readOnlyUsers) {
       if (user.rankingPos == 0) {
-        user.setRankingPos(random.nextInt(10000), false);
+        user.rankingPos = random.nextInt(10000);
         await FbHelpers().updateUser(user);
       }
     }

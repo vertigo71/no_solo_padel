@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:no_solo_padel/utilities/ut_list_view.dart';
 
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../../../interface/if_app_state.dart';
 import '../../../interface/if_director.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_user.dart';
+import '../../../routes/routes.dart';
 import '../../../utilities/ui_helpers.dart';
 import 'modal_modify_user.dart';
 
@@ -59,11 +61,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   index: displayIndex,
                   lastGamesWins: lastGamesWins,
                   // logged user can only edit users with higher or equal rank
-                  onPressed: appState.loggedUser != null &&
-                          appState.isLoggedUserAdminOrSuper &&
-                          appState.loggedUser!.userType.index >= user.userType.index
-                      ? () => _modifyUserModal(context, user)
-                      : null,
+                  onPressed: () => context.pushNamed(AppRoutes.kInfoUser, extra: ['$displayIndex', user.id]),
                 );
               },
             );

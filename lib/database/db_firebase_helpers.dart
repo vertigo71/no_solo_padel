@@ -300,7 +300,7 @@ class FbHelpers {
     MyLog.log(_classString, 'getResultsStream matchId=$matchId');
 
     return getStream(
-      pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
+      pathSegments: [ResultFs.results.name],
       fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
       appState: appState,
     );
@@ -355,7 +355,7 @@ class FbHelpers {
   Future<GameResult?> getResult(
           {required String matchId, required String resultId, required AppState appState}) async =>
       await getObject(
-          pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, resultId],
+          pathSegments: [ResultFs.results.name, resultId],
           fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));
 
   Future<MyParameters> getParameters() async =>
@@ -451,9 +451,10 @@ class FbHelpers {
     // bool descending = false, need an index that cannot be created in Firestore console
   }) async {
     return getAllObjects<GameResult>(
-      pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name],
+      pathSegments: [ResultFs.results.name],
       fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
       appState: appState,
+      filter: (query) => query.where(ResultFs.matchId.name, isEqualTo: matchId),
     );
   }
 
@@ -553,9 +554,10 @@ class FbHelpers {
         forceSet: false, // replaces the old object if exists
       );
 
-  Future<void> updateGameResult({required GameResult result, required String matchId}) async => await updateObject(
+  /// TODO: update matches and users in a transaction
+  Future<void> updateGameResult({required GameResult result}) async => await updateObject(
         fields: result.toJson(),
-        pathSegments: [MatchFs.matches.name, matchId, ResultFs.results.name, result.id.resultId],
+        pathSegments: [ResultFs.results.name, result.id.resultId],
         forceSet: false, // replaces the old object if exists
       );
 
@@ -594,13 +596,12 @@ class FbHelpers {
     }
   }
 
+  /// TODO: update matches and users in a transaction
   Future<void> deleteResult(GameResult result) async {
     MyLog.log(_classString, 'deleteResult deleting result $result');
 
     try {
       await _instance
-          .collection(MatchFs.matches.name)
-          .doc(result.matchId.toYyyyMmDd())
           .collection(ResultFs.results.name)
           .doc(result.id.resultId)
           .delete();
@@ -711,7 +712,7 @@ class FbHelpers {
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
       // add match to user
-      bool added = player.addMatchId(matchId.toYyyyMmDd());
+      bool added = player.matchIds.add(matchId.toYyyyMmDd());
 
       // add/update match to firebase
       transaction.set(
@@ -770,7 +771,7 @@ class FbHelpers {
       MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
 
       // remove match from user
-      bool removedUser = player.removeMatchId(matchId.toYyyyMmDd());
+      bool removedUser = player.matchIds.remove(matchId.toYyyyMmDd());
 
       // add match to firebase
       transaction.set(

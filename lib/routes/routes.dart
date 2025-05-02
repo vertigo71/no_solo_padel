@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:no_solo_padel/pages/main/information/info_user.dart';
 
 import '../models/md_debug.dart';
 import '../pages/admin/home_admin.dart';
@@ -22,6 +23,8 @@ class AppRoutes {
   static const String kAdmin = 'admin';
   static const String kRegisterPath = '/register';
   static const String kRegister = 'register';
+  static const String kInfoUserPath = '/info_user';
+  static const String kInfoUser = 'info_user';
 }
 
 class AppRouter {
@@ -55,6 +58,16 @@ class AppRouter {
           path: AppRoutes.kRegisterPath,
           builder: (BuildContext context, GoRouterState state) => const RegisterPage(),
           name: AppRoutes.kRegister),
+      GoRoute(
+          path: AppRoutes.kInfoUserPath,
+          builder: (BuildContext context, GoRouterState state) {
+            // never use a complex object as an argument
+            // back button will not work
+            final args = (state.extra as List<dynamic>).cast<String>(); // Retrieve the argument
+            MyLog.log(_classString, 'going to InfoUserPanel: args=$args');
+            return InfoUserPanel(args: args); // Pass it to the widget
+          },
+          name: AppRoutes.kInfoUser),
     ],
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('Page Not Found')),

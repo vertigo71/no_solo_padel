@@ -1,8 +1,8 @@
-import 'package:collection/collection.dart';
+import 'dart:collection';
+
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 
-import '../utilities/ut_list_view.dart';
 import '../utilities/ut_misc.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
@@ -36,8 +36,8 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
-  isActive,
   matchIds,
+  resultIds,
 }
 
 /// users sort order
@@ -59,9 +59,10 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
-  int _rankingPos;
-  bool _isActive;
-  final List<String> _matchIds = [];
+  int rankingPos;
+  final SplayTreeSet<String> _matchIds =
+      SplayTreeSet<String>(); // ordered set with all the matches that user has joined
+  final SplayTreeSet<String> _resultIds = SplayTreeSet<String>(); // ordered set with all the games that user has played
 
   factory MyUser({
     // Public factory constructor
@@ -98,30 +99,19 @@ class MyUser {
     this.lastLogin,
     this.loginCount = 0,
     this.avatarUrl,
-    int rankingPos = 0,
-    bool isActive = false,
-    List<String>? matchIds, // format YYYYMMDD
-  })  : _rankingPos = rankingPos,
-        _isActive = isActive,
-        _email = email.toLowerCase() {
+    this.rankingPos = 0,
+    Iterable<String>? matchIds, // format YYYYMMDD
+    Iterable<String>? resultIds,
+  }) : _email = email.toLowerCase() {
     _matchIds.addAll(matchIds ?? []);
+    _resultIds.addAll(resultIds ?? []);
   }
 
-  // methods por _rankingPos
-  int get rankingPos => _rankingPos;
+  bool get isActive => _matchIds.isNotEmpty;
 
-  set rankingPos(int newRankingPos) => setRankingPos(newRankingPos, true);
+  SplayTreeSet<String> get matchIds => _matchIds;
 
-  void setRankingPos(int newRankingPos, [bool isActive = true]) {
-    _rankingPos = newRankingPos;
-    _isActive = isActive;
-  }
-
-  bool get isActive => matchIds.isNotEmpty;
-
-  MyListView<String> get matchIds => MyListView(_matchIds);
-
-  List<String> get copyOfMatchIds => List.from(_matchIds);
+  SplayTreeSet<String> get resultIds => _resultIds;
 
   /// Returns a list of match IDs, optionally filtered by a 'to date' and sorted.
   ///
@@ -136,51 +126,38 @@ class MyUser {
   ///   reversed: If true, the list is sorted in descending order; otherwise,
   ///             it's sorted in ascending order (chronologically based on the
   ///             'YYYYMMDD' format).
-  List<String> getMatchIdsSorted({String? toDate, bool reversed = false}) {
-    List<String> sortedMatchIds = List.from(_matchIds);
+  List<String> _getIdsSorted({required bool matchIds, String? toDate, bool reversed = false}) {
+    List<String> sortedIds;
+    if (matchIds) {
+      sortedIds = List.from(_matchIds);
+    } else {
+      sortedIds = List.from(_resultIds);
+    }
     if (reversed) {
-      sortedMatchIds.sort((a, b) => b.compareTo(a));
-    } else {
-      sortedMatchIds.sort();
+      sortedIds.sort((a, b) => b.compareTo(a));
     }
+    // else already sorted
     if (toDate != null) {
-      sortedMatchIds = sortedMatchIds.where((id) => id.compareTo(toDate) <= 0).toList();
+      sortedIds = sortedIds.where((id) => id.compareTo(toDate) <= 0).toList();
     }
 
-    return sortedMatchIds;
+    return sortedIds;
   }
 
-  // methods por _matchIds.
-  bool addMatchId(String matchId) {
-    if (!_matchIds.contains(matchId)) {
-      _matchIds.add(matchId);
-      return true;
-    } else {
-      MyLog.log(_classString, 'addMatchId: matchId=$matchId already exists');
-      return false;
-    }
-  }
+  List<String> getMatchIdsSorted({String? toDate, bool reversed = false}) =>
+      _getIdsSorted(matchIds: true, toDate: toDate, reversed: reversed);
 
-  void addAllMatchIds(Iterable<String> newMatchIds) {
-    for (final matchId in newMatchIds) {
-      addMatchId(matchId);
-    }
-  }
+  List<String> getResultIdsSorted({String? toDate, bool reversed = false}) =>
+      _getIdsSorted(matchIds: false, toDate: toDate, reversed: reversed);
 
-  bool removeMatchId(String matchId) {
-    bool removed = _matchIds.remove(matchId);
-    if (!removed) MyLog.log(_classString, 'removeMatchId: matchId=$matchId not found');
-    return removed;
-  }
-
-  void clearMatchId() {
-    _matchIds.clear();
-  }
-
-  void setMatchIds(List<String> newMatchIds) {
+  void setMatchIds(Iterable<String> newMatchIds) {
     _matchIds.clear();
     _matchIds.addAll(newMatchIds);
-    _matchIds.sort();
+  }
+
+  void setResultIds(Iterable<String> newResultIds) {
+    _resultIds.clear();
+    _resultIds.addAll(newResultIds);
   }
 
   /// Getter for the user's email.
@@ -200,8 +177,8 @@ class MyUser {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
-    bool? isActive,
     List<String>? matchIds,
+    List<String>? resultIds,
   }) {
     return MyUser._(
       id: id ?? this.id,
@@ -212,9 +189,9 @@ class MyUser {
       lastLogin: lastLogin ?? this.lastLogin,
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      rankingPos: rankingPos ?? _rankingPos,
-      isActive: isActive ?? _isActive,
+      rankingPos: rankingPos ?? this.rankingPos,
       matchIds: matchIds ?? _matchIds,
+      resultIds: resultIds ?? _resultIds,
     );
   }
 
@@ -228,9 +205,9 @@ class MyUser {
     lastLogin = user.lastLogin;
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
-    _rankingPos = user._rankingPos;
-    _isActive = user._isActive;
+    rankingPos = user.rankingPos;
     setMatchIds(user._matchIds);
+    setResultIds(user._resultIds);
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
@@ -263,8 +240,8 @@ class MyUser {
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
-        isActive: json[UserFs.isActive.name] ?? false,
         matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
+        resultIds: json[UserFs.resultIds.name]?.cast<String>() ?? [],
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creating MyUser from Firestore: ${e.toString()}',
@@ -292,9 +269,9 @@ class MyUser {
       UserFs.lastLogin.name: lastLogin?.toYyyyMmDd() ?? '',
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
-      UserFs.rankingPos.name: _rankingPos,
-      UserFs.isActive.name: _isActive,
+      UserFs.rankingPos.name: rankingPos,
       UserFs.matchIds.name: List.from(_matchIds), // generate a copy for inmutability
+      UserFs.resultIds.name: List.from(_resultIds), // generate a copy for inmutability
     };
   }
 
@@ -303,7 +280,6 @@ class MyUser {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! MyUser) return false;
-    final listEquals = const DeepCollectionEquality().equals; // Use collection package
     return id == other.id &&
         name == other.name &&
         emergencyInfo == other.emergencyInfo &&
@@ -312,9 +288,10 @@ class MyUser {
         lastLogin == other.lastLogin &&
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
-        _rankingPos == other._rankingPos &&
-        _isActive == other._isActive &&
-        listEquals(_matchIds, other._matchIds);
+        rankingPos == other.rankingPos &&
+        _matchIds == other._matchIds &&
+        _resultIds == other._resultIds &&
+        true;
   }
 
   /// Overrides the hashCode getter.
@@ -328,9 +305,9 @@ class MyUser {
         lastLogin,
         loginCount,
         avatarUrl,
-        _rankingPos,
-        _isActive,
+        rankingPos,
         Object.hashAll(_matchIds),
+        Object.hashAll(_resultIds),
       );
 
   static UserType _intToUserType(int? type) {

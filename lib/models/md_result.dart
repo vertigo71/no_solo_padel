@@ -10,27 +10,18 @@ final String _classString = '<md> MyResult'.toLowerCase();
 const String kFieldSeparator = '#';
 
 // result fields in Firestore
-enum ResultFs {
-  resultId,
-  matchId,
-  player1,
-  player2,
-  points,
-  preRanking1,
-  preRanking2,
-  score,
-  teamA,
-  teamB,
-  results
-}
+enum ResultFs { resultId, matchId, player1, player2, points, preRanking1, preRanking2, score, teamA, teamB, results }
 
 class GameResult {
-  GameResultId id;
-  Date matchId;
-  TeamResult? teamA;
-  TeamResult? teamB;
+  final GameResultId id;
+  final Date matchId;
+  final TeamResult? teamA;
+  final TeamResult? teamB;
 
-  GameResult({required this.id, required this.matchId, this.teamA, this.teamB});
+  GameResult({required String userId, required this.matchId, this.teamA, this.teamB})
+      : id = GameResultId(matchId: matchId, userId: userId);
+
+  GameResult._({required this.id, required this.matchId, this.teamA, this.teamB});
 
   bool _checkResultOk() {
     if (teamA == null || teamB == null || teamA!.score == teamB!.score) {
@@ -79,7 +70,7 @@ class GameResult {
     TeamResult? teamA,
     TeamResult? teamB,
   }) {
-    return GameResult(
+    return GameResult._(
       id: id ?? this.id,
       matchId: matchId ?? this.matchId,
       teamA: teamA ?? this.teamA,
@@ -100,7 +91,7 @@ class GameResult {
     }
 
     try {
-      return GameResult(
+      return GameResult._(
         id: GameResultId.fromString(json[ResultFs.resultId.name]),
         matchId: Date.parse(json[ResultFs.matchId.name])!,
         teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
@@ -253,29 +244,40 @@ class TeamResult {
 }
 
 class GameResultId {
+  final Date _matchId;
   final DateTime _dateTime;
   final String _userId;
 
-  GameResultId({required String userId, DateTime? dateTime})
-      : _userId = userId,
-        _dateTime = dateTime ?? DateTime.now();
+  GameResultId({required Date matchId, required String userId, DateTime? dateTime})
+      : _matchId = matchId,
+        _dateTime = dateTime ?? DateTime.now(),
+        _userId = userId;
 
   factory GameResultId.fromString(String id) {
     try {
       final parts = id.split(kFieldSeparator);
-      final dateTime = DateTime.parse(parts[0]);
-      final userId = parts[1];
-      return GameResultId(dateTime: dateTime, userId: userId);
+      final matchId = Date.parse(parts[0])!;
+      final dateTime = DateTime.parse(parts[1]);
+      final userId = parts[2];
+      return GameResultId(matchId: matchId, dateTime: dateTime, userId: userId);
     } catch (e) {
       MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}');
       throw FormatException('ResultId formato Invalido: $id \nError: ${e.toString()}');
     }
   }
 
-  String get resultId => '${_dateTime.toIso8601String()}$kFieldSeparator$_userId';
+  String get resultId => [_matchId.toYyyyMmDd(), _dateTime.toIso8601String(), _userId].join(kFieldSeparator);
+
+  String get matchId => _matchId.toYyyyMmDd();
+
+  String get userId => _userId;
+
+  DateTime get dateTime => _dateTime;
+
+  Date getMatchId() => _matchId;
 
   @override
-  String toString() => '{${_dateTime.toIso8601String()},$_userId}';
+  String toString() => '{$resultId}';
 
   @override
   bool operator ==(Object other) =>
@@ -283,8 +285,9 @@ class GameResultId {
       other is GameResultId &&
           runtimeType == other.runtimeType &&
           _dateTime == other._dateTime &&
+          _matchId == other._matchId &&
           _userId == other._userId;
 
   @override
-  int get hashCode => _dateTime.hashCode ^ _userId.hashCode;
+  int get hashCode => _dateTime.hashCode ^ _userId.hashCode ^ _matchId.hashCode;
 }

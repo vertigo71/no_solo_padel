@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 import 'package:collection/collection.dart';
 
@@ -22,7 +23,7 @@ enum PlayingState {
 }
 
 // match fields in Firestore
-enum MatchFs { matches, date, comment, isOpen, courtNames, players, pairingType }
+enum MatchFs { matches, date, comment, isOpen, courtNames, players, resultIds, pairingType }
 
 enum MatchPairingType {
   ranking('Ranking'),
@@ -35,35 +36,46 @@ enum MatchPairingType {
 }
 
 class MyMatch {
-  Date id;
+  final Date id;
   final List<MyUser> _players = [];
   final List<String> _courtNames = [];
+  final SplayTreeSet<String> _resultIds = SplayTreeSet<String>(); // ordered set with all the games in the match
   String comment;
   bool isOpen;
   MatchPairingType pairingType;
 
-  MyMatch(
-      {required this.id,
-      required this.comment, // set default comment
-      this.isOpen = false,
-      this.pairingType = MatchPairingType.ranking,
-      List<MyUser>? players,
-      List<String>? courtNames}) {
+  MyMatch({
+    required this.id,
+    required this.comment, // set default comment
+    this.isOpen = false,
+    this.pairingType = MatchPairingType.ranking,
+    Iterable<MyUser>? players,
+    Iterable<String>? courtNames,
+    Iterable<String>? resultIds,
+  }) {
     _players.addAll(players ?? []);
     _courtNames.addAll(courtNames ?? []);
+    _resultIds.addAll(resultIds ?? []);
   }
 
   MyListView<MyUser> get players => MyListView(_players);
 
   MyListView<String> get courtNames => MyListView(_courtNames);
 
+  SplayTreeSet<String> get resultIds => _resultIds;
+
   List<MyUser> get copyOfPlayers => List.from(_players);
 
   List<String> get copyOfCourtNames => List.from(_courtNames);
 
   // methods por _players
-  void addPlayer(MyUser player) {
-    if (!_players.contains(player)) _players.add(player);
+  bool addPlayer(MyUser player) {
+    if (!_players.contains(player)) {
+      _players.add(player);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   void addAllPlayers(Iterable<MyUser> newPlayers) {
@@ -81,9 +93,12 @@ class MyMatch {
   }
 
   // Methods for _courtNames
-  void addCourtName(String courtName) {
+  bool addCourtName(String courtName) {
     if (!_courtNames.contains(courtName)) {
       _courtNames.add(courtName);
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -103,8 +118,9 @@ class MyMatch {
 
   MyMatch copyWith({
     Date? id,
-    List<MyUser>? players,
-    List<String>? courtNames,
+    Iterable<MyUser>? players,
+    Iterable<String>? courtNames,
+    Iterable<String>? resultIds,
     String? comment,
     bool? isOpen,
     MatchPairingType? pairingType,
@@ -113,6 +129,7 @@ class MyMatch {
       id: id ?? this.id,
       players: players ?? _players,
       courtNames: courtNames ?? _courtNames,
+      resultIds: resultIds ?? _resultIds,
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
       pairingType: pairingType ?? this.pairingType,
@@ -135,19 +152,21 @@ class MyMatch {
       id: Date.parse(json[MatchFs.date.name]) ?? Date.ymd(1971),
       players: players,
       courtNames: json[MatchFs.courtNames.name]?.cast<String>() ?? [],
+      resultIds: json[MatchFs.resultIds.name]?.cast<String>() ?? [],
       comment: json[MatchFs.comment.name] ?? '',
       isOpen: json[MatchFs.isOpen.name] ?? false,
       pairingType: MatchPairingType.values[json[MatchFs.pairingType.name] ?? 0],
     );
   }
 
-  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
+  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true, bool resultIds = true}) => {
         MatchFs.date.name: id.toYyyyMmDd(),
         if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
         if (core) MatchFs.courtNames.name: _courtNames.toList(),
         if (core) MatchFs.comment.name: comment,
         if (core) MatchFs.isOpen.name: isOpen, // bool
         if (core) MatchFs.pairingType.name: pairingType.index, // int
+        if (resultIds) MatchFs.resultIds.name: _resultIds.toList(),
       };
 
   bool isCourtInMatch(String court) => _courtNames.contains(court);
@@ -344,6 +363,7 @@ class MyMatch {
         id == other.id &&
         listEquals(_players, other._players) && // Compare lists using collection package
         listEquals(_courtNames, other._courtNames) && // Compare lists using collection package
+        _resultIds == other._resultIds &&
         comment == other.comment &&
         isOpen == other.isOpen &&
         pairingType == other.pairingType;
@@ -352,8 +372,10 @@ class MyMatch {
   @override
   int get hashCode => Object.hash(
         id,
-        const DeepCollectionEquality().hash(_players), // Hash lists using collection package
-        const DeepCollectionEquality().hash(_courtNames), // Hash lists using collection package
+        Object.hashAll(_players),
+        // order matters for equality
+        Object.hashAll(_courtNames),
+        Object.hashAll(_resultIds),
         comment,
         isOpen,
         pairingType,

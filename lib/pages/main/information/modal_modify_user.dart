@@ -147,7 +147,7 @@ class _ModifyUserModalState extends State<ModifyUserModal> {
     if (_formKey.currentState!.saveAndValidate()) {
       final formData = _formKey.currentState!.value;
       user.userType = formData[_FormFields.userType.name] ?? user.userType;
-      user.setRankingPos(int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos);
+      user.rankingPos = (int.tryParse(formData[_FormFields.ranking.name] ?? '') ?? user.rankingPos);
 
       MyLog.log(_classString, '_acceptChanges: type=${user.userType} ranking=${user.rankingPos}', indent: true);
 

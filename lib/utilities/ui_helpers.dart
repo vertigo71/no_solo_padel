@@ -47,7 +47,7 @@ abstract class UiHelper {
   /// If an optional
   ///   `onPressed` callback is provided, the tile becomes tappable.
   ///   `lastGamesWins` is a list of booleans indicating whether the user has won or lost last games.
-  ///   `index` is the position of the user in a sorted list.
+  ///   `index` is the position of the user in a sorted list. Null for not displaying index
   static Widget buildUserInfoTile(
     BuildContext context,
     MyUser user, {
