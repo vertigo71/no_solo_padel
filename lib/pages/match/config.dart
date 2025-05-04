@@ -67,10 +67,9 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
           fieldsChanged || areFieldsDifferent(_formKey.currentState?.fields[kPairingId]?.value, match.pairingType);
       fieldsChanged = fieldsChanged ||
           List.generate(
-                  kMaxNumberOfCourts,
-                  (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
-                      i < match.courtNames.length ? match.courtNames[i] : ''))
-              .any((changed) => changed);
+              kMaxNumberOfCourts,
+              (i) => areFieldsDifferent(_formKey.currentState?.fields['$kCourtId$i']?.value,
+                  i < match.courtNames.length ? match.courtNames[i] : '')).any((changed) => changed);
 
       if (fieldsChanged) {
         // Only use addPostFrameCallback when you're showing a SnackBar (or AlertDialog, showDialog)
@@ -295,7 +294,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         AppState appState = context.read<AppState>();
 
         // upload firebase
-        await FbHelpers().updateMatch(match: newMatch, updateCore: true, updatePlayers: false);
+        await FbHelpers().updateMatchOnlyCore(match: newMatch);
         // do not update notifier as the listener match_notifier will do it
 
         // logged user

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
-import '../../../database/db_firebase_helpers.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../interface/if_director.dart';
-import '../../../models/md_date.dart';
-import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
 import '../../../models/md_debug.dart';
 
@@ -72,14 +69,15 @@ class InfoUserPanelState extends State<InfoUserPanel> {
 
   Future<int> _numberOfMatches() async {
     if (_user == null) return 0;
+    // TODO: number of matches
     int numberOfMatches = 0;
-    for (var matchId in _user!.matchIds) {
-
-      if ( matchId.compareTo(Date.now().toYyyyMmDd() ) <= 0 ){
-        MyMatch? match = await FbHelpers().getMatch(matchId, _director.appState);
-        if (match != null && match.isOpen && match.isPlaying(_user!)) numberOfMatches++;
-      }
-    }
+    // for (var matchId in _user!.matchIds) {
+    //
+    //   if ( matchId.compareTo(Date.now().toYyyyMmDd() ) <= 0 ){
+    //     MyMatch? match = await FbHelpers().getMatch(matchId, _director.appState);
+    //     if (match != null && match.isOpen && match.isPlaying(_user!)) numberOfMatches++;
+    //   }
+    // }
     return numberOfMatches;
   }
 }

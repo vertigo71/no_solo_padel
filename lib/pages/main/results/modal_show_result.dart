@@ -133,7 +133,7 @@ class ShowResultModal extends StatelessWidget {
 
     // erase the gameResult
     try {
-      await FbHelpers().deleteResult(result);
+      await FbHelpers().deleteGameResult(result);
     } catch (e) {
       MyLog.log(_classString, 'Error erasing result: ${e.toString()}', level: Level.SEVERE, indent: true);
       throw Exception('Error al eliminar el resultado: $result \nError: ${e.toString()}');

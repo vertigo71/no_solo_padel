@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_director.dart';
+import '../../models/md_match.dart';
+import '../../models/md_result.dart';
 import '../../models/md_user.dart';
-import '../../models/md_debug.dart';
 
 final String _classString = 'CheckPanel'.toUpperCase();
 
@@ -40,13 +42,8 @@ class CheckPanelState extends State<CheckPanel> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             ElevatedButton(
-              onPressed: _checkMatchesInUsers,
-              child: const Text('Check Matches in Users'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _rebuildMatchesInUsers,
-              child: const Text('Rebuild Matches in Users'),
+              onPressed: _migrateResults,
+              child: const Text('Migrate results to new format'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -80,38 +77,48 @@ class CheckPanelState extends State<CheckPanel> {
     );
   }
 
-  // Function to check matches in users
-  Future<void> _checkMatchesInUsers() async {
-    _addOutput("Checking Matches in Users...");
-    try {
-      Map<MyUser, List<String>> rightMatchesPerUser = <MyUser, List<String>>{};
-      await _director.checkUserMatches(rightMatchesPerUser);
-      MyLog.log(_classString, 'number of users = ${rightMatchesPerUser.length}');
-      for (var user in rightMatchesPerUser.keys) {
-        _addOutput("-----------------------------------------------");
-        _addOutput("User: ${user.name}");
-        _addOutput("   Wrong Matches: ${user.matchIds}");
-        _addOutput("   Correct Matches: ${rightMatchesPerUser[user]}");
-      }
-      _addOutput("\nCheck Matches in Users completed.");
-    } catch (e) {
-      _addOutput("\nError checking matches in users: $e");
-    }
-  }
-
   // Function to rebuild matches in users
-  Future<void> _rebuildMatchesInUsers() async {
-    _addOutput("Checking Matches in Users...");
+  Future<void> _migrateResults() async {
+    _addOutput("Migrate results to new collection...");
+    _addOutput("Create user match results to new collection...");
     try {
-      Map<MyUser, List<String>> rightMatchesPerUser = <MyUser, List<String>>{};
-      await _director.checkUserMatches(rightMatchesPerUser);
+      List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
+      _addOutput("Found ${matches.length} matches.");
 
-      _addOutput("Building Matches in Users...");
+      // erase all past userMatchResults
+      await FbHelpers().deleteUserMatchResultTillDateBatch();
+      _addOutput("All user match results deleted.");
 
-      await _director.rebuildUserMatches(rightMatchesPerUser);
-      _addOutput("\nBuild Matches in Users completed.");
+      // erase all past results
+      await FbHelpers().deleteGameResultsTillDateBatch();
+      _addOutput("All results deleted.");
+
+      for (MyMatch match in matches) {
+        _addOutput("------- Match: ${match.id}");
+
+        // add new user-Match to new collection for every player
+        for (MyUser user in match.players) {
+          await FbHelpers().addUserMatchResult(userId: user.id, matchId: match.id.toYyyyMmDd());
+          _addOutput("UserMatch added: ${user.id}");
+        }
+
+        // get results
+        List<GameResult> results =
+            await FbHelpers().getResultsOfAMatchOldFormat(matchId: match.id.toYyyyMmDd(), appState: _director.appState);
+        _addOutput("Found ${results.length} results.");
+
+        for (GameResult result in results) {
+          _addOutput("Result: ${result.id}");
+
+          // add result
+          await FbHelpers().createGameResult(result: result);
+          _addOutput("Game Result created and also added all UserMatchResults.");
+        }
+      }
+
+      _addOutput("\nMigrated completed.");
     } catch (e) {
-      _addOutput("\nError checking matches in users: $e");
+      _addOutput("\nError migrating results: $e");
     }
   }
 
@@ -130,5 +137,4 @@ class CheckPanelState extends State<CheckPanel> {
       );
     });
   }
-
 }

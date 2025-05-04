@@ -1,8 +1,5 @@
-import 'dart:collection';
-
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
-
 import '../utilities/ut_misc.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
@@ -21,6 +18,15 @@ enum UserType {
 
   // Constructor for UserType enum.
   const UserType(this.displayName);
+
+  static UserType intToUserType(int? type) {
+    try {
+      return UserType.values[type!];
+    } catch (e) {
+      MyLog.log(_classString, 'Invalid UserType index: $type, Error: ${e.toString()}', level: Level.WARNING);
+      return UserType.basic;
+    }
+  }
 }
 
 /// user fields in Firestore
@@ -36,8 +42,7 @@ enum UserFs {
   avatarUrl,
   rankingPos,
   avatars,
-  matchIds,
-  resultIds,
+  isActive,
 }
 
 /// users sort order
@@ -60,9 +65,7 @@ class MyUser {
   int loginCount;
   String? avatarUrl;
   int rankingPos;
-  final SplayTreeSet<String> _matchIds =
-      SplayTreeSet<String>(); // ordered set with all the matches that user has joined
-  final SplayTreeSet<String> _resultIds = SplayTreeSet<String>(); // ordered set with all the games that user has played
+  bool isActive;
 
   factory MyUser({
     // Public factory constructor
@@ -75,6 +78,7 @@ class MyUser {
     int loginCount = 0,
     String? avatarUrl,
     int rankingPos = 0,
+    bool isActive = false,
   }) {
     return MyUser._(
       id: id,
@@ -86,6 +90,7 @@ class MyUser {
       loginCount: loginCount,
       avatarUrl: avatarUrl,
       rankingPos: rankingPos,
+      isActive: isActive,
     );
   }
 
@@ -100,65 +105,8 @@ class MyUser {
     this.loginCount = 0,
     this.avatarUrl,
     this.rankingPos = 0,
-    Iterable<String>? matchIds, // format YYYYMMDD
-    Iterable<String>? resultIds,
-  }) : _email = email.toLowerCase() {
-    _matchIds.addAll(matchIds ?? []);
-    _resultIds.addAll(resultIds ?? []);
-  }
-
-  bool get isActive => _matchIds.isNotEmpty;
-
-  SplayTreeSet<String> get matchIds => _matchIds;
-
-  SplayTreeSet<String> get resultIds => _resultIds;
-
-  /// Returns a list of match IDs, optionally filtered by a 'to date' and sorted.
-  ///
-  /// The match IDs in the internal `_matchIds` list and the `toDate` parameter
-  /// are expected to be strings in the format 'YYYYMMDD' for correct
-  /// chronological sorting and filtering.
-  ///
-  /// Parameters:
-  ///   toDate: An optional string representing the latest date (inclusive)
-  ///           for the match IDs to include, in 'YYYYMMDD' format. If null, all
-  ///           match IDs are considered.
-  ///   reversed: If true, the list is sorted in descending order; otherwise,
-  ///             it's sorted in ascending order (chronologically based on the
-  ///             'YYYYMMDD' format).
-  List<String> _getIdsSorted({required bool matchIds, String? toDate, bool reversed = false}) {
-    List<String> sortedIds;
-    if (matchIds) {
-      sortedIds = List.from(_matchIds);
-    } else {
-      sortedIds = List.from(_resultIds);
-    }
-    if (reversed) {
-      sortedIds.sort((a, b) => b.compareTo(a));
-    }
-    // else already sorted
-    if (toDate != null) {
-      sortedIds = sortedIds.where((id) => id.compareTo(toDate) <= 0).toList();
-    }
-
-    return sortedIds;
-  }
-
-  List<String> getMatchIdsSorted({String? toDate, bool reversed = false}) =>
-      _getIdsSorted(matchIds: true, toDate: toDate, reversed: reversed);
-
-  List<String> getResultIdsSorted({String? toDate, bool reversed = false}) =>
-      _getIdsSorted(matchIds: false, toDate: toDate, reversed: reversed);
-
-  void setMatchIds(Iterable<String> newMatchIds) {
-    _matchIds.clear();
-    _matchIds.addAll(newMatchIds);
-  }
-
-  void setResultIds(Iterable<String> newResultIds) {
-    _resultIds.clear();
-    _resultIds.addAll(newResultIds);
-  }
+    this.isActive = false, // Initialize isActive in the private constructor
+  }) : _email = email.toLowerCase();
 
   /// Getter for the user's email.
   String get email => _email;
@@ -177,8 +125,7 @@ class MyUser {
     int? loginCount,
     String? avatarUrl,
     int? rankingPos,
-    List<String>? matchIds,
-    List<String>? resultIds,
+    bool? isActive,
   }) {
     return MyUser._(
       id: id ?? this.id,
@@ -190,8 +137,7 @@ class MyUser {
       loginCount: loginCount ?? this.loginCount,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       rankingPos: rankingPos ?? this.rankingPos,
-      matchIds: matchIds ?? _matchIds,
-      resultIds: resultIds ?? _resultIds,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -206,8 +152,7 @@ class MyUser {
     loginCount = user.loginCount;
     avatarUrl = user.avatarUrl;
     rankingPos = user.rankingPos;
-    setMatchIds(user._matchIds);
-    setResultIds(user._resultIds);
+    isActive = user.isActive;
   }
 
   /// Checks if the user has non-empty id, name, and email fields.
@@ -235,13 +180,12 @@ class MyUser {
         name: json[UserFs.name.name] ?? '',
         emergencyInfo: json[UserFs.emergencyInfo.name] ?? '',
         email: json[UserFs.email.name] ?? '',
-        userType: _intToUserType(json[UserFs.userType.name]),
+        userType: UserType.intToUserType(json[UserFs.userType.name]),
         lastLogin: Date.parse(json[UserFs.lastLogin.name]),
         loginCount: json[UserFs.loginCount.name] ?? 0,
         avatarUrl: json[UserFs.avatarUrl.name],
         rankingPos: json[UserFs.rankingPos.name] ?? 0,
-        matchIds: json[UserFs.matchIds.name]?.cast<String>() ?? [],
-        resultIds: json[UserFs.resultIds.name]?.cast<String>() ?? [],
+        isActive: json[UserFs.isActive.name] ?? false,
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creating MyUser from Firestore: ${e.toString()}',
@@ -270,8 +214,7 @@ class MyUser {
       UserFs.loginCount.name: loginCount,
       UserFs.avatarUrl.name: avatarUrl,
       UserFs.rankingPos.name: rankingPos,
-      UserFs.matchIds.name: List.from(_matchIds), // generate a copy for inmutability
-      UserFs.resultIds.name: List.from(_resultIds), // generate a copy for inmutability
+      UserFs.isActive.name: isActive,
     };
   }
 
@@ -289,8 +232,7 @@ class MyUser {
         loginCount == other.loginCount &&
         avatarUrl == other.avatarUrl &&
         rankingPos == other.rankingPos &&
-        _matchIds == other._matchIds &&
-        _resultIds == other._resultIds &&
+        isActive == other.isActive &&
         true;
   }
 
@@ -306,18 +248,9 @@ class MyUser {
         loginCount,
         avatarUrl,
         rankingPos,
-        Object.hashAll(_matchIds),
-        Object.hashAll(_resultIds),
+        isActive,
       );
 
-  static UserType _intToUserType(int? type) {
-    try {
-      return UserType.values[type!];
-    } catch (e) {
-      MyLog.log(_classString, 'Invalid UserType index: $type, Error: ${e.toString()}', level: Level.WARNING);
-      return UserType.basic;
-    }
-  }
 }
 
 Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {

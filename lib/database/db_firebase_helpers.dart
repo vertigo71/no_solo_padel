@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:no_solo_padel/models/md_user_match_result.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
@@ -16,9 +17,632 @@ import '../models/md_date.dart';
 import '../models/md_result.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
+final FirebaseFirestore _instance = FirebaseFirestore.instance;
+
+mixin _Basic {
+  DocumentReference _getDocRef({required List<String> pathSegments}) {
+    if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
+      throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
+    }
+
+    DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
+
+    for (int i = 2; i < pathSegments.length; i += 2) {
+      documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
+    }
+
+    return documentReference;
+  }
+
+  CollectionReference _getCollectionRef({
+    required List<String> pathSegments, // List of collection/doc identifiers
+  }) {
+    if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
+      throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
+    }
+
+    CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
+
+    for (int i = 1; i < pathSegments.length; i += 2) {
+      collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
+    }
+
+    return collectionReference;
+  }
+
+  Query _getQuery({
+    required List<String> pathSegments, // List of collection/doc identifiers
+    String? sortingField, // if field is null, uses FieldPath.documentId
+    required bool descending,
+    String? minDocId,
+    String? maxDocId,
+    Query Function(Query)? filter,
+  }) {
+    Query query = _getCollectionRef(pathSegments: pathSegments);
+
+    // mandatory sorting when using > < filtering
+    query = query.orderBy((sortingField != null) ? sortingField : FieldPath.documentId, descending: descending );
+
+    if (minDocId != null) {
+      query =
+          query.where((sortingField != null) ? sortingField : FieldPath.documentId, isGreaterThanOrEqualTo: minDocId);
+    }
+    if (maxDocId != null) {
+      query = query.where((sortingField != null) ? sortingField : FieldPath.documentId, isLessThanOrEqualTo: maxDocId);
+    }
+
+    if (filter != null) {
+      query = filter(query);
+    }
+
+    return query;
+  }
+
+  /// Uploads raw data (Uint8List) to Firebase Storage.
+  ///
+  /// This function takes a filename and raw data as input, uploads the data to
+  /// Firebase Storage under the specified filename, and returns the download URL
+  /// of the uploaded file if the upload is successful.
+  ///
+  /// Parameters:
+  ///   filename: The name of the file to be uploaded (including path if needed).
+  ///   data: The raw data (Uint8List) to be uploaded.
+  ///
+  /// Returns:
+  ///   A Future that completes with the download URL of the uploaded file (String)
+  ///   if the upload is successful, or null if the upload fails.
+  ///
+  /// Throws:
+  ///   An Exception if the upload fails, containing the error message
+  Future<String?> _uploadDataToStorage(final String filename, final Uint8List data) async {
+    MyLog.log(_classString, 'Uploading new file', indent: true);
+
+    // Create a reference to the storage location where the file will be uploaded.
+    final Reference storageRef = FirebaseStorage.instance.ref().child(filename);
+
+    // Start the upload task by putting the raw data to the storage reference.
+    final UploadTask uploadTask = storageRef.putData(data);
+
+    try {
+      // Wait for the upload task to complete and get the task snapshot.
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Check if the upload was successful.
+      if (snapshot.state == TaskState.success) {
+        // Get the download URL of the uploaded file.
+        String fileUrl = await snapshot.ref.getDownloadURL();
+
+        MyLog.log(_classString, 'File uploaded successfully: $fileUrl', indent: true);
+
+        // Return the download URL.
+        return fileUrl;
+      } else {
+        // If the upload failed, log the error and throw an exception.
+        MyLog.log(_classString, 'File upload failed: ${snapshot.state}', level: Level.SEVERE);
+        throw Exception('(Estado=${snapshot.state})');
+      }
+    } catch (e) {
+      // If an exception occurred during the upload, log the error and throw an exception.
+      MyLog.log(_classString, 'File upload failed: ${e.toString()}', level: Level.SEVERE);
+      throw Exception('Error al subir el archivo $filename\nError: ${e.toString()}');
+    }
+  }
+
+  // StreamTransformer.fromHandlers and handleData
+  //
+  // StreamTransformer.fromHandlers: This is a convenient factory constructor for creating a StreamTransformer.
+  // It allows you to define the transformation logic using handler functions.
+  //
+  // handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink):
+  // data: This is where the magic happens. The data parameter receives the QuerySnapshot<Map<String, dynamic>>
+  // emitted by the input stream (query.snapshots()).
+  // So, every time there is a change in the query result,
+  // the new QuerySnapshot is passed to the handleData function.
+  // sink: The EventSink<List<T>> is the output sink. You use it to send the transformed data (a List<T>)
+  // to the output stream. It is how you add data to the transformed stream.
+  // How data gets here: When query.snapshots().transform(transformer(fromJson, appState)) is executed,
+  // the bind method of the stream transformer is called. The bind method then attaches the handleData function
+  // to the input stream. So that every time a new event happens on the input stream,
+  // the handleData function is triggered, and the event data is passed as the data parameter.
+  StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> _transformer<T>(
+    T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+    AppState? appState,
+  ) {
+    return StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
+      handleData: (QuerySnapshot<Map<String, dynamic>> snapshot, EventSink<List<T>> sink) {
+        List<T> items = snapshot.docs.map((doc) => fromJson(doc.data(), appState)).toList();
+        sink.add(items);
+      },
+      handleError: (error, stackTrace, sink) {
+        sink.addError(error, stackTrace);
+      },
+    );
+  }
+}
+
+mixin _GetObject implements _Basic {
+  Future<T?> _getObject<T>({
+    required List<String> pathSegments, // List of collection/doc identifiers
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+    AppState? appState,
+  }) async {
+    try {
+      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
+      DocumentSnapshot documentSnapshot = await documentReference.get();
+
+      Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
+      if (data != null && data.isNotEmpty) {
+        T item = fromJson(data, appState);
+        return item;
+      } else {
+        MyLog.log(_classString, 'getObject ${pathSegments.join('/')} not found or empty',
+            level: Level.WARNING, indent: true);
+      }
+    } catch (e) {
+      MyLog.log(_classString, 'getObject ${pathSegments.join('/')}', exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: ${e.toString()}');
+    }
+    return null;
+  }
+
+  Future<MyUser?> getUser(String userId) async => _getObject(
+      pathSegments: [UserFs.users.name, userId], fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
+
+  Future<MyMatch?> getMatch(String matchId, AppState appState) async => _getObject(
+      pathSegments: [MatchFs.matches.name, matchId],
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      appState: appState);
+
+  Future<GameResult?> getGameResult(
+          {required String matchId, required String resultId, required AppState appState}) async =>
+      await _getObject(
+          pathSegments: [GameResultFs.results.name, resultId],
+          fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));
+
+  Future<UserMatchResult?> getUserMatchResult({required String userMatchResultId}) async => await _getObject(
+      pathSegments: [UserMatchResultFs.userMatchResult.name, userMatchResultId],
+      fromJson: (json, [AppState? optionalAppState]) => UserMatchResult.fromJson(json));
+
+  Future<MyParameters> getParameters() async =>
+      await _getObject(
+          pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
+          fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
+      MyParameters();
+
+  Future<Historic?> getHistoric(Date date) async => await _getObject(
+      pathSegments: [HistoricFs.historic.name, date.toYyyyMmDd()],
+      fromJson: (json, [AppState? appState]) => Historic.fromJson(json));
+}
+
+mixin _GetObjects implements _Basic {
+  /// fromJson == null => gets a list of documentIds (T must be String)
+  Future<List<T>> _getAllObjects<T>({
+    required List<String> pathSegments,
+    T Function(Map<String, dynamic>, [AppState? appState])? fromJson,
+    Date? fromDate,
+    Date? toDate,
+    AppState? appState,
+    // bool descending = false, need an index that cannot be created in Firestore console
+    Query Function(Query)? filter,
+  }) async {
+    MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')}');
+
+    List<T> items = [];
+    try {
+      Query query = _getQuery(
+        pathSegments: pathSegments,
+        descending: false,
+        minDocId: fromDate?.toYyyyMmDd(),
+        maxDocId: toDate?.toYyyyMmDd(),
+        filter: filter,
+      );
+
+      QuerySnapshot querySnapshot = await query.get();
+
+      for (var doc in querySnapshot.docs) {
+        if (doc.data() == null) throw 'Error en la base de datos ${pathSegments.join('/')}';
+        if (fromJson == null) {
+          assert(T == String, 'T must be String');
+          MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')} = ${doc.id}', indent: true);
+          items.add(doc.id as T);
+        } else {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          T item = fromJson(data, appState);
+          MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')} = $item', indent: true);
+          items.add(item);
+        }
+      }
+    } catch (e) {
+      MyLog.log(_classString, 'getAllObjects  ${pathSegments.join('/')} ERROR ',
+          exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: ${e.toString()}');
+    }
+    MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
+    return items;
+  }
+
+  Future<List<MyUser>> getAllUsers() async => _getAllObjects<MyUser>(
+        pathSegments: [UserFs.users.name],
+        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
+      );
+
+  Future<List<MyMatch>> getAllMatches({
+    required AppState appState,
+    Date? fromDate,
+    Date? toDate,
+    // bool descending = false, need an index that cannot be created in Firestore console
+  }) async =>
+      _getAllObjects<MyMatch>(
+        pathSegments: [MatchFs.matches.name],
+        fromDate: fromDate,
+        toDate: toDate,
+        fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      );
+
+  Future<List<GameResult>> getAllGameResults({
+    required AppState appState,
+    Date? fromDate,
+    Date? toDate,
+    // bool descending = false, need an index that cannot be created in Firestore console
+  }) async =>
+      _getAllObjects<GameResult>(
+        pathSegments: [GameResultFs.results.name],
+        fromDate: fromDate,
+        toDate: toDate,
+        fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      );
+
+  /// returns all matches containing a player
+  Future<List<MyMatch>> getAllMatchesWithPlayer({
+    required AppState appState,
+    required String playerId,
+    Date? fromDate,
+    Date? toDate,
+  }) async {
+    return _getAllObjects<MyMatch>(
+      pathSegments: [MatchFs.matches.name],
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      fromDate: fromDate,
+      toDate: toDate,
+      appState: appState,
+      filter: (query) => query.where(MatchFs.players.name, arrayContains: playerId),
+    );
+  }
+
+  /// returns all results from a match
+  Future<List<GameResult>> getAllGameResultsFromMatch({
+    required String matchId,
+    required AppState appState,
+    // bool descending = false, need an index that cannot be created in Firestore console
+  }) async {
+    return _getAllObjects<GameResult>(
+      pathSegments: [GameResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      appState: appState,
+      filter: (query) => query.where(GameResultFs.matchId.name, isEqualTo: matchId),
+    );
+  }
+
+  Future<List<UserMatchResult>> getUserMatchResults({
+    String? userId,
+    String? matchId,
+    String? resultId,
+    // bool descending = false, need an index
+  }) async {
+    return _getAllObjects<UserMatchResult>(
+      pathSegments: [UserMatchResultFs.userMatchResult.name],
+      fromJson: (json, [AppState? optionalAppState]) => UserMatchResult.fromJson(json),
+      filter: (query) {
+        if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
+        if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
+        if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
+        return query;
+      },
+    );
+  }
+
+  @Deprecated('To be removed')
+  Future<List<GameResult>> getResultsOfAMatchOldFormat({
+    required String matchId,
+    required AppState appState,
+    // bool descending = false, need an index
+  }) async {
+    return _getAllObjects<GameResult>(
+      pathSegments: [MatchFs.matches.name, matchId, GameResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJsonOldFormat(json, appState),
+    );
+  }
+
+  Future<List<String>> getUserMatchResultIds({
+    String? userId,
+    String? matchId,
+    String? resultId,
+    // bool descending = false, need an index
+  }) async {
+    return _getAllObjects<String>(
+      pathSegments: [UserMatchResultFs.userMatchResult.name],
+      filter: (query) {
+        if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
+        if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
+        if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
+        return query;
+      },
+    );
+  }
+}
+
+mixin _UpdateObject implements _Basic {
+  Future<void> _updateObject({
+    required Map<String, dynamic> fields,
+    required List<String> pathSegments, // List of collection/doc identifiers
+    bool forceSet = false, // false: merges the fields, true:replaces the old object if exists
+  }) async {
+    MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, forceSet: $forceSet', indent: true);
+
+    try {
+      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
+      await documentReference.set(fields, SetOptions(merge: !forceSet));
+
+      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, success', indent: true);
+    } catch (onError) {
+      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
+      throw Exception('Error al actualizar ${pathSegments.join('/')}. \nError: $onError');
+    }
+  }
+
+  Future<void> updateUser(final MyUser user, [Uint8List? compressedImageData]) async {
+    MyLog.log(_classString, 'updateUser = $user');
+    if (user.id == '') {
+      MyLog.log(_classString, 'updateUser ', myCustomObject: user, level: Level.SEVERE);
+      throw Exception('Error: el usuario no tiene id. No se puede actualizar.');
+    }
+    if (compressedImageData != null) {
+      user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars.name}/${user.id}', compressedImageData);
+    }
+    await _updateObject(
+      fields: user.toJson(),
+      pathSegments: [UserFs.users.name, user.id],
+      forceSet: false, // false: merges the fields, true:replaces the old object if exists
+    );
+  }
+
+  /// core = comment + isOpen + courtNames (all except players)
+  Future<void> updateMatchOnlyCore({required MyMatch match}) async => await _updateObject(
+        fields: match.toJson(core: true, matchPlayers: false),
+        pathSegments: [MatchFs.matches.name, match.id.toYyyyMmDd()],
+        forceSet: false, // false: merges the fields, true:replaces the old object if exists
+      );
+
+  Future<void> updateHistoric({required Historic historic}) async => await _updateObject(
+        fields: historic.toJson(),
+        pathSegments: [HistoricFs.historic.name, historic.id.toYyyyMmDd()],
+        forceSet: false, // false: merges the fields, true:replaces the old object if exists
+      );
+
+  Future<void> updateRegister(RegisterModel registerModel) async => await _updateObject(
+        fields: registerModel.toJson(),
+        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
+        forceSet: false, // false: merges the fields, true:replaces the old object if exists
+      );
+
+  Future<void> updateParameters(MyParameters myParameters) async => await _updateObject(
+        fields: myParameters.toJson(),
+        pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
+        forceSet: true, // false: merges the fields, true:replaces the old object if exists
+      );
+}
+
+mixin _DeleteObject implements _Basic {
+  Future<void> _batchProcessing({
+    required QuerySnapshot querySnapshot,
+    required Future Function(WriteBatch batch, DocumentSnapshot docSnapshot) processDocument,
+  }) async {
+    MyLog.log(_classString, '_batchProcessing Starting batch processing...');
+
+    final batches = <WriteBatch>[];
+    var currentBatch = FirebaseFirestore.instance.batch();
+    var operationsInBatch = 0;
+
+    for (final docSnapshot in querySnapshot.docs) {
+      MyLog.log(_classString, '_batchProcessing Processing document: ${docSnapshot.id}',
+          indent: true, level: Level.FINE);
+
+      await processDocument(currentBatch, docSnapshot);
+      operationsInBatch++;
+
+      if (operationsInBatch >= 499) {
+        MyLog.log(_classString, '_batchProcessing Creating new batch=${batches.length}', indent: true);
+        batches.add(currentBatch);
+        currentBatch = FirebaseFirestore.instance.batch();
+        operationsInBatch = 0;
+      }
+    }
+
+    if (operationsInBatch > 0) {
+      batches.add(currentBatch);
+    }
+
+    for (final batch in batches) {
+      await batch.commit();
+    }
+
+    int totalOperations = batches.length * 500 + operationsInBatch;
+    MyLog.log(_classString,
+        '_batchProcessingBatch processing complete. Batches=${batches.length} Operations=$totalOperations',
+        indent: true);
+  }
+
+  Future<void> _deleteDocsBatch({
+    required String collection,
+    String? sortingField, // if field is null, uses FieldPath.documentId
+    String? minDocId,
+    String? maxDocId,
+    Query Function(Query)? filter,
+  }) async {
+    MyLog.log(_classString, '_deleteDocsBatch $collection: fromDate=$minDocId, toDate=$maxDocId');
+
+    Query query = _getQuery(
+        pathSegments: [collection],
+        descending: false,
+        sortingField: sortingField,
+        minDocId: minDocId,
+        maxDocId: maxDocId,
+        filter: filter);
+
+    final querySnapshot = await query.get();
+    await _batchProcessing(
+        querySnapshot: querySnapshot,
+        processDocument: (WriteBatch batch, DocumentSnapshot docSnapshot) async {
+          MyLog.log(_classString, '_deleteDocsBatch $collection=$collection', level: Level.FINE, indent: true);
+          batch.delete(docSnapshot.reference);
+        });
+  }
+
+  /// TODO: delete user from all matches and results
+  Future<void> deleteUser(MyUser myUser) async {
+    MyLog.log(_classString, 'deleteUser deleting user $myUser');
+    if (myUser.id == '') {
+      MyLog.log(_classString, 'deleteUser wrong id', myCustomObject: myUser, level: Level.SEVERE, indent: true);
+    }
+
+    // delete user
+    try {
+      MyLog.log(_classString, 'deleteUser user $myUser deleted');
+      await _instance.collection(UserFs.users.name).doc(myUser.id).delete();
+    } catch (e) {
+      MyLog.log(_classString, 'deleteUser error when deleting',
+          myCustomObject: myUser, level: Level.SEVERE, indent: true);
+      throw Exception('Error al eliminar el usuario $myUser. \nError: ${e.toString()}');
+    }
+  }
+
+  Future<void> deleteGameResult(GameResult result) async {
+    MyLog.log(_classString, 'deleteResult deleting result $result');
+
+    try {
+      // delete the result
+      await _instance.collection(GameResultFs.results.name).doc(result.id.resultId).delete();
+      // delete the userMatchResults
+      await deleteUserMatchResultBatch(resultId: result.id.resultId);
+    } catch (e) {
+      MyLog.log(_classString, 'deleteResult error when deleting',
+          myCustomObject: result, level: Level.SEVERE, indent: true);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteUserMatchResultTillDateBatch({String? maxMatchId}) async => await _deleteDocsBatch(
+      collection: UserMatchResultFs.userMatchResult.name,
+      sortingField: UserMatchResultFs.matchId.name,
+      filter: (query) {
+        if (maxMatchId != null) query = query.where(UserMatchResultFs.matchId.name, isLessThanOrEqualTo: maxMatchId);
+        return query;
+      });
+
+  Future<void> deleteUserMatchResultBatch({String? userId, String? matchId, String? resultId}) async =>
+      await _deleteDocsBatch(
+          collection: UserMatchResultFs.userMatchResult.name,
+          filter: (query) {
+            if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
+            if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
+            if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
+            return query;
+          });
+
+  Future<void> deleteGameResultsTillDateBatch({String? maxMatchId}) async => await _deleteDocsBatch(
+      collection: GameResultFs.results.name,
+      sortingField: GameResultFs.matchId.name,
+      filter: (query) {
+        if (maxMatchId != null) query = query.where(GameResultFs.matchId.name, isLessThanOrEqualTo: maxMatchId);
+        return query;
+      });
+
+  Future<void> deleteDocsBatch({required String collection, String? minDocId, String? maxDocId}) async =>
+      await _deleteDocsBatch(collection: collection, sortingField: null, minDocId: minDocId, maxDocId: maxDocId);
+}
+
+mixin _GetStream implements _Basic {
+  Stream<List<T>>? _getStream<T>({
+    required List<String> pathSegments, // List of collection/doc identifiers
+    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
+    Date? fromDate,
+    Date? toDate,
+    AppState? appState,
+    bool descending = false,
+    Query Function(Query)? filter,
+  }) {
+    MyLog.log(_classString, 'getStream pathSegments=${pathSegments.join('/')}, filter=$filter');
+
+    try {
+      Query query = _getQuery(
+        pathSegments: pathSegments,
+        descending: descending,
+        minDocId: fromDate?.toYyyyMmDd(),
+        maxDocId: toDate?.toYyyyMmDd(),
+        filter: filter,
+      );
+
+      return query.snapshots().transform(_transformer(fromJson, appState));
+    } catch (e) {
+      MyLog.log(_classString, 'getStream ERROR pathSegments=${pathSegments.join('/')}',
+          exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: ${e.toString()}');
+    }
+  }
+
+  // stream of messages registered
+  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => _getStream(
+        pathSegments: [RegisterFs.register.name],
+        fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
+        fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
+      );
+
+  // stream of users
+  Stream<List<MyUser>>? getUsersStream() => _getStream(
+        pathSegments: [UserFs.users.name],
+        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
+      );
+
+  Stream<List<MyMatch>>? getMatchesStream({
+    required AppState appState,
+    Date? fromDate,
+    Date? toDate,
+    bool onlyOpenMatches = false,
+    bool descending = false,
+  }) {
+    MyLog.log(
+        _classString,
+        'getMatchesStream fromDate=$fromDate toDate=$toDate '
+        'onlyOpenMatches=$onlyOpenMatches descending=$descending');
+
+    return _getStream(
+      pathSegments: [MatchFs.matches.name],
+      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
+      fromDate: fromDate,
+      toDate: toDate,
+      appState: appState,
+      filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
+      descending: descending,
+    );
+  }
+
+  Stream<List<GameResult>>? getGameResultsStream({
+    required AppState appState,
+    required String matchId,
+  }) {
+    MyLog.log(_classString, 'getResultsStream matchId=$matchId');
+
+    return _getStream(
+      pathSegments: [GameResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      appState: appState,
+      filter: (query) => query.where(GameResultFs.matchId.name, isEqualTo: matchId),
+    );
+  }
+}
 
 /// Firestore helpers
-class FbHelpers {
+class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _DeleteObject, _Basic {
   static final FbHelpers _singleton = FbHelpers._internal();
 
   factory FbHelpers() => _singleton;
@@ -27,22 +651,11 @@ class FbHelpers {
     MyLog.log(_classString, 'FbHelpers created', level: Level.FINE);
   }
 
-  final FirebaseFirestore _instance = FirebaseFirestore.instance;
   StreamSubscription? _usersListener;
   StreamSubscription? _paramListener;
 
-  /// return false if existed, true if created
-  Future<bool> createMatchIfNotExists({required Date matchId}) async {
-    bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: matchId.toYyyyMmDd());
-    if (exists) return false;
-    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=$matchId');
-    await updateMatch(match: MyMatch(id: matchId, comment: ''), updateCore: true, updatePlayers: true);
-    return true;
-  }
-
-  Future<bool> doesDocExist({required String collection, required String doc}) async {
-    return _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
-  }
+  Future<bool> doesDocExist({required String collection, required String doc}) async =>
+      await _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
 
   /// create a subscription to a match
   /// matchFunction: checks if match has change and notify to listeners
@@ -194,491 +807,78 @@ class FbHelpers {
     }
   }
 
-  Query _getCollectionRef({
-    required List<String> pathSegments, // List of collection/doc identifiers
-    required bool descending,
-    Date? fromDate,
-    Date? toDate,
-    Query Function(Query)? filter,
-  }) {
-    if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
-      throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
-    }
+  /// return false if existed, true if created
+  Future<bool> createMatchIfNotExists({required MyMatch match}) async {
+    bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: match.id.toYyyyMmDd());
+    if (exists) return false;
 
-    CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
-
-    for (int i = 1; i < pathSegments.length; i += 2) {
-      collectionReference = collectionReference.doc(pathSegments[i]).collection(pathSegments[i + 1]);
-    }
-
-    Query query = collectionReference;
-
-    query = query.orderBy(FieldPath.documentId, descending: descending);
-
-    if (fromDate != null) {
-      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
-    }
-    if (toDate != null) {
-      query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
-    }
-
-    if (filter != null) {
-      query = filter(query);
-    }
-
-    return query;
-  }
-
-  Stream<List<T>>? getStream<T>({
-    required List<String> pathSegments, // List of collection/doc identifiers
-    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
-    Date? fromDate,
-    Date? toDate,
-    AppState? appState,
-    bool descending = false,
-    Query Function(Query)? filter,
-  }) {
-    MyLog.log(_classString, 'getStream pathSegments=${pathSegments.join('/')}, filter=$filter');
-
-    try {
-      Query query = _getCollectionRef(
-        pathSegments: pathSegments,
-        descending: descending,
-        fromDate: fromDate,
-        toDate: toDate,
-        filter: filter,
-      );
-
-      return query.snapshots().transform(_transformer(fromJson, appState));
-    } catch (e) {
-      MyLog.log(_classString, 'getStream ERROR pathSegments=${pathSegments.join('/')}',
-          exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: ${e.toString()}');
-    }
-  }
-
-  // stream of messages registered
-  Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => getStream(
-        pathSegments: [RegisterFs.register.name],
-        fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
-        fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
-      );
-
-  // stream of users
-  Stream<List<MyUser>>? getUsersStream() => getStream(
-        pathSegments: [UserFs.users.name],
-        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
-      );
-
-  Stream<List<MyMatch>>? getMatchesStream({
-    required AppState appState,
-    Date? fromDate,
-    Date? toDate,
-    bool onlyOpenMatches = false,
-    bool descending = false,
-  }) {
-    MyLog.log(
-        _classString,
-        'getMatchesStream fromDate=$fromDate toDate=$toDate '
-        'onlyOpenMatches=$onlyOpenMatches descending=$descending');
-
-    return getStream(
-      pathSegments: [MatchFs.matches.name],
-      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-      fromDate: fromDate,
-      toDate: toDate,
-      appState: appState,
-      filter: onlyOpenMatches ? (query) => query.where('isOpen', isEqualTo: true) : null,
-      descending: descending,
+    MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=${match.id}');
+    await _updateObject(
+      fields: match.toJson(core: true, matchPlayers: true),
+      pathSegments: [MatchFs.matches.name, match.id.toYyyyMmDd()],
+      forceSet: false, // false: merges the fields, true:replaces the old object if exists
     );
+    // create new registers in UserMatchRResults
+    for (MyUser player in match.players) {
+      await addUserMatchResult(userId: player.id, matchId: match.id.toYyyyMmDd());
+    }
+    return true;
   }
 
-  Stream<List<GameResult>>? getResultsStream({
-    required AppState appState,
-    required String matchId,
-  }) {
-    MyLog.log(_classString, 'getResultsStream matchId=$matchId');
-
-    return getStream(
-      pathSegments: [ResultFs.results.name],
-      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
-      appState: appState,
+  /// add a game result to the results collection
+  /// add the result to the userMatchResult collection
+  Future<void> createGameResult({required GameResult result}) async {
+    // add the result to the results collection
+    await _updateObject(
+      fields: result.toJson(),
+      pathSegments: [GameResultFs.results.name, result.id.resultId],
+      forceSet: false, // false: merges the fields, true:replaces the old object if exists
     );
+    // add the result to the userMatchResult collection
+    await addUserMatchResult(
+        userId: result.teamA!.player1.id, matchId: result.id.matchId, resultId: result.id.resultId);
+    await addUserMatchResult(
+        userId: result.teamA!.player2.id, matchId: result.id.matchId, resultId: result.id.resultId);
+    await addUserMatchResult(
+        userId: result.teamB!.player1.id, matchId: result.id.matchId, resultId: result.id.resultId);
+    await addUserMatchResult(
+        userId: result.teamB!.player2.id, matchId: result.id.matchId, resultId: result.id.resultId);
   }
 
-  DocumentReference _getDocRef({required List<String> pathSegments}) {
-    if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
-      throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
-    }
-
-    DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
-
-    for (int i = 2; i < pathSegments.length; i += 2) {
-      documentReference = documentReference.collection(pathSegments[i]).doc(pathSegments[i + 1]);
-    }
-
-    return documentReference;
-  }
-
-  Future<T?> getObject<T>({
-    required List<String> pathSegments, // List of collection/doc identifiers
-    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
-    AppState? appState,
-  }) async {
-    try {
-      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
-      DocumentSnapshot documentSnapshot = await documentReference.get();
-
-      Map<String, dynamic>? data = documentSnapshot.data() as Map<String, dynamic>?;
-      if (data != null && data.isNotEmpty) {
-        T item = fromJson(data, appState);
-        return item;
-      } else {
-        MyLog.log(_classString, 'getObject ${pathSegments.join('/')} not found or empty',
-            level: Level.WARNING, indent: true);
-      }
-    } catch (e) {
-      MyLog.log(_classString, 'getObject ${pathSegments.join('/')}', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: ${e.toString()}');
-    }
-    return null;
-  }
-
-  Future<MyUser?> getUser(String userId) async => getObject(
-      pathSegments: [UserFs.users.name, userId], fromJson: (json, [AppState? appState]) => MyUser.fromJson(json));
-
-  Future<MyMatch?> getMatch(String matchId, AppState appState) async => getObject(
-      pathSegments: [MatchFs.matches.name, matchId],
-      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-      appState: appState);
-
-  Future<GameResult?> getResult(
-          {required String matchId, required String resultId, required AppState appState}) async =>
-      await getObject(
-          pathSegments: [ResultFs.results.name, resultId],
-          fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));
-
-  Future<MyParameters> getParameters() async =>
-      await getObject(
-          pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
-          fromJson: (json, [AppState? appState]) => MyParameters.fromJson(json)) ??
-      MyParameters();
-
-  Future<Historic?> getHistoric(Date date) async => await getObject(
-      pathSegments: [HistoricFs.historic.name, date.toYyyyMmDd()],
-      fromJson: (json, [AppState? appState]) => Historic.fromJson(json));
-
-  Future<List<T>> getAllObjects<T>({
-    required List<String> pathSegments, // List of collection/doc identifiers
-    required T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
-    Date? fromDate,
-    Date? toDate,
-    AppState? appState,
-    // bool descending = false, need an index that cannot be created in Firestore console
-    Query Function(Query)? filter,
-  }) async {
-    MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')}');
-
-    List<T> items = [];
-    try {
-      Query query = _getCollectionRef(
-        pathSegments: pathSegments,
-        descending: false,
-        fromDate: fromDate,
-        toDate: toDate,
-        filter: filter,
-      );
-
-      QuerySnapshot querySnapshot = await query.get();
-
-      for (var doc in querySnapshot.docs) {
-        if (doc.data() == null) throw 'Error en la base de datos ${pathSegments.join('/')}';
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        T item = fromJson(data, appState);
-
-        MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')} = $item', indent: true);
-        items.add(item);
-      }
-    } catch (e) {
-      MyLog.log(_classString, 'getAllObjects  ${pathSegments.join('/')} ERROR ',
-          exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: ${e.toString()}');
-    }
-    MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
-    return items;
-  }
-
-  Future<List<MyUser>> getAllUsers() async => getAllObjects<MyUser>(
-        pathSegments: [UserFs.users.name],
-        fromJson: (json, [AppState? appState]) => MyUser.fromJson(json),
-      );
-
-  Future<List<MyMatch>> getAllMatches({
-    required AppState appState,
-    Date? fromDate,
-    Date? toDate,
-    // bool descending = false, need an index that cannot be created in Firestore console
-  }) async =>
-      getAllObjects<MyMatch>(
-        pathSegments: [MatchFs.matches.name],
-        fromDate: fromDate,
-        toDate: toDate,
-        fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-      );
-
-  /// returns all matches containing a player
-  Future<List<MyMatch>> getAllPlayerMatches({
-    required AppState appState,
-    required String playerId,
-    Date? fromDate,
-    Date? toDate,
-  }) async {
-    return getAllObjects<MyMatch>(
-      pathSegments: [MatchFs.matches.name],
-      fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
-      fromDate: fromDate,
-      toDate: toDate,
-      appState: appState,
-      filter: (query) => query.where(MatchFs.players.name, arrayContains: playerId),
-    );
-  }
-
-  /// returns all results from a match
-  ///   if playerId is specified, only returns results from that player
-  Future<List<GameResult>> getAllMatchResults({
-    required String matchId,
-    required AppState appState,
-    // bool descending = false, need an index that cannot be created in Firestore console
-  }) async {
-    return getAllObjects<GameResult>(
-      pathSegments: [ResultFs.results.name],
-      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
-      appState: appState,
-      filter: (query) => query.where(ResultFs.matchId.name, isEqualTo: matchId),
-    );
-  }
-
-  Future<void> updateObject({
+  /// add Object with a new automatic Id
+  Future<DocumentReference> _addObject({
     required Map<String, dynamic> fields,
     required List<String> pathSegments, // List of collection/doc identifiers
-    bool forceSet = false,
   }) async {
-    MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, forceSet: $forceSet', indent: true);
+    MyLog.log(_classString, 'addObject ${pathSegments.join('/')}, ', indent: true);
 
     try {
-      DocumentReference documentReference = _getDocRef(pathSegments: pathSegments);
-      await documentReference.set(fields, SetOptions(merge: !forceSet));
+      CollectionReference collectionReference = _getCollectionRef(pathSegments: pathSegments);
+      DocumentReference documentReference = await collectionReference.add(fields);
 
-      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, success', indent: true);
+      MyLog.log(_classString, 'addObject ${pathSegments.join('/')}, success', indent: true);
+      return documentReference;
     } catch (onError) {
-      MyLog.log(_classString, 'updateObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
+      MyLog.log(_classString, 'addObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
       throw Exception('Error al actualizar ${pathSegments.join('/')}. \nError: $onError');
     }
   }
 
-  Future<void> updateUser(final MyUser user, [Uint8List? compressedImageData]) async {
-    MyLog.log(_classString, 'updateUser = $user');
-    if (user.id == '') {
-      MyLog.log(_classString, 'updateUser ', myCustomObject: user, level: Level.SEVERE);
-      throw Exception('Error: el usuario no tiene id. No se puede actualizar.');
-    }
-    if (compressedImageData != null) {
-      user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars.name}/${user.id}', compressedImageData);
-    }
-    await updateObject(
-      fields: user.toJson(),
-      pathSegments: [UserFs.users.name, user.id],
-      forceSet: false, // replaces the old object if exists
-    );
-  }
-
-  /// set all users ranking to newRanking
-  /// make all users inactive by removing past matches
-  Future<void> resetUsersBatch({required int newRanking, required Date deleteMatchesToDate}) async {
-    MyLog.log(_classString, 'resetUsersBatch = $newRanking');
-    final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
-
-    // 1. Retrieve user documents
-    final querySnapshot = await usersCollection.get();
-
-    final batches = <WriteBatch>[];
-    var currentBatch = FirebaseFirestore.instance.batch();
-    var operationsInBatch = 0;
-
-    // 2. Create batched writes
-    for (final docSnapshot in querySnapshot.docs) {
-      // Accessing the 'matchIds' array of Strings:
-      final List<String> matchIds = docSnapshot.data()[UserFs.matchIds.name]?.cast<String>() ?? [];
-
-      matchIds.removeWhere((e) {
-        Date? eDate = Date.parse(e);
-        if (eDate == null) {
-          MyLog.log(_classString, 'resetUsersBatch Wrong Format matches=$e', level: Level.WARNING, indent: true);
-          return false;
-        }
-        return eDate.compareTo(deleteMatchesToDate) <= 0; // before or equal to deleteMatchesToDate
-      });
-
-      currentBatch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking, UserFs.matchIds.name: matchIds});
-      operationsInBatch++;
-
-      // Firestore batch limit is typically 500, so create new batch when needed.
-      if (operationsInBatch >= 499) {
-        MyLog.log(_classString, 'resetUsersBatch Creating new batch.', indent: true);
-
-        batches.add(currentBatch);
-        currentBatch = FirebaseFirestore.instance.batch();
-        operationsInBatch = 0;
-      }
-    }
-
-    //add any remaining operations.
-    if (operationsInBatch > 0) {
-      batches.add(currentBatch);
-    }
-
-    // 3. Commit batches
-    for (final batch in batches) {
-      await batch.commit();
-    }
-
-    MyLog.log(_classString, 'resetUsersBatch Done. Batches=${batches.length} Operations=$operationsInBatch.',
-        indent: true);
-  }
-
-  /// core = comment + isOpen + courtNames (all except players)
-  Future<void> updateMatch({required MyMatch match, required bool updateCore, required bool updatePlayers}) async =>
-      await updateObject(
-        fields: match.toJson(core: updateCore, matchPlayers: updatePlayers),
-        pathSegments: [MatchFs.matches.name, match.id.toYyyyMmDd()],
-        forceSet: false, // replaces the old object if exists
-      );
-
-  /// TODO: update matches and users in a transaction
-  Future<void> updateGameResult({required GameResult result}) async => await updateObject(
-        fields: result.toJson(),
-        pathSegments: [ResultFs.results.name, result.id.resultId],
-        forceSet: false, // replaces the old object if exists
-      );
-
-  Future<void> updateHistoric({required Historic historic}) async => await updateObject(
-        fields: historic.toJson(),
-        pathSegments: [HistoricFs.historic.name, historic.id.toYyyyMmDd()],
-        forceSet: false, // replaces the old object if exists
-      );
-
-  Future<void> updateRegister(RegisterModel registerModel) async => await updateObject(
-        fields: registerModel.toJson(),
-        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
-        forceSet: false, // replaces the old object if exists
-      );
-
-  Future<void> updateParameters(MyParameters myParameters) async => await updateObject(
-        fields: myParameters.toJson(),
-        pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
-        forceSet: true,
-      );
-
-  Future<void> deleteUser(MyUser myUser) async {
-    MyLog.log(_classString, 'deleteUser deleting user $myUser');
-    if (myUser.id == '') {
-      MyLog.log(_classString, 'deleteUser wrong id', myCustomObject: myUser, level: Level.SEVERE, indent: true);
-    }
-
-    // delete user
-    try {
-      MyLog.log(_classString, 'deleteUser user $myUser deleted');
-      await _instance.collection(UserFs.users.name).doc(myUser.id).delete();
-    } catch (e) {
-      MyLog.log(_classString, 'deleteUser error when deleting',
-          myCustomObject: myUser, level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el usuario $myUser. \nError: ${e.toString()}');
-    }
-  }
-
-  /// TODO: update matches and users in a transaction
-  Future<void> deleteResult(GameResult result) async {
-    MyLog.log(_classString, 'deleteResult deleting result $result');
-
-    try {
-      await _instance
-          .collection(ResultFs.results.name)
-          .doc(result.id.resultId)
-          .delete();
-    } catch (e) {
-      MyLog.log(_classString, 'deleteResult error when deleting',
-          myCustomObject: result, level: Level.SEVERE, indent: true);
-      rethrow;
-    }
-  }
-
-  Future<void> deleteDocsBatch(
-      {required String collection, String? subcollection, Date? fromDate, Date? toDate}) async {
-    MyLog.log(_classString,
-        'deleteObjectsBatch $collection/$subcollection: fromDate=${fromDate?.toYyyyMmDd()}, toDate=${toDate?.toYyyyMmDd()}');
-
-    // 0. Create query
-    Query query = FirebaseFirestore.instance.collection(collection);
-
-    query = query.orderBy(FieldPath.documentId);
-
-    if (fromDate != null) {
-      query = query.where(FieldPath.documentId, isGreaterThanOrEqualTo: fromDate.toYyyyMmDd());
-    }
-    if (toDate != null) {
-      query = query.where(FieldPath.documentId, isLessThanOrEqualTo: toDate.toYyyyMmDd());
-    }
-
-    final querySnapshot = await query.get();
-
-    final batches = <WriteBatch>[];
-    WriteBatch currentBatch = FirebaseFirestore.instance.batch();
-    int operationsInBatch = 0;
-
-    // inline function to add doc to batch
-    // updates currentBatch and operationsInBatch
-    void addDocToBatch(DocumentReference reference) {
-      currentBatch.delete(reference);
-      operationsInBatch++;
-      if (operationsInBatch >= 499) {
-        MyLog.log(_classString, 'deleteObjectsBatch Creating new batch for subcollection.', indent: true);
-        batches.add(currentBatch);
-        currentBatch = FirebaseFirestore.instance.batch();
-        operationsInBatch = 0;
-      }
-    }
-
-    for (final docSnapshot in querySnapshot.docs) {
-      if (subcollection != null) {
-        final subCollectionRef = docSnapshot.reference.collection(subcollection);
-        final subCollectionDocs = await subCollectionRef.get();
-        for (final subDoc in subCollectionDocs.docs) {
-          MyLog.log(_classString, 'deleteObjectsBatch $collection=${docSnapshot.id}/$subcollection=${subDoc.id}',
-              indent: true);
-          addDocToBatch(subDoc.reference);
-        }
-      }
-      MyLog.log(_classString, 'deleteObjectsBatch $collection ${docSnapshot.id}', indent: true);
-      addDocToBatch(docSnapshot.reference);
-    }
-
-    if (operationsInBatch > 0) {
-      batches.add(currentBatch);
-    }
-
-    for (final batch in batches) {
-      await batch.commit();
-    }
-
-    MyLog.log(
-        _classString,
-        'deleteObjectsBatch $collection/$subcollection Done. Batches=${batches.length} '
-        'Operations=${querySnapshot.size} + ${subcollection != null ? " (plus subcollections)" : ""}.',
-        indent: true);
+  Future<DocumentReference> addUserMatchResult({
+    required String userId,
+    required String matchId,
+    String? resultId,
+  }) async {
+    MyLog.log(_classString, 'addUserMatchResult adding user=$userId to match=$matchId and result=$resultId');
+    return await _addObject(
+        fields: UserMatchResult(userId: userId, matchId: matchId, resultId: resultId).toJson(),
+        pathSegments: [UserMatchResultFs.userMatchResult.name]);
   }
 
   /// return match with the position of inserted user
-  /// add match to the user's list of matches
+  /// Add the player to the Match's list of players.
+  ///     Create a UserMatchResult entry linking the User and the Match.
+  ///     Set the User's isActive status to true.
   Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
     required MyUser player,
@@ -687,7 +887,6 @@ class FbHelpers {
   }) async {
     MyLog.log(_classString, 'addPlayerToMatch adding user $player to $matchId position $position');
     DocumentReference matchDocReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
-    DocumentReference userDocReference = _instance.collection(UserFs.users.name).doc(player.id);
 
     return await _instance.runTransaction((transaction) async {
       // get snapshots
@@ -700,7 +899,7 @@ class FbHelpers {
         myMatch = MyMatch.fromJson(matchSnapshot.data() as Map<String, dynamic>, appState);
         MyLog.log(_classString, 'addPlayerToMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
-        // get match
+        // new match
         myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText));
         MyLog.log(_classString, 'addPlayerToMatch NEW match ', indent: true);
       }
@@ -711,8 +910,8 @@ class FbHelpers {
       if (posInserted == -1) throw Exception('Error: el jugador ya estaba en el partido.');
       MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
 
-      // add match to user
-      bool added = player.matchIds.add(matchId.toYyyyMmDd());
+      // create new UserMatchResult
+      UserMatchResult userMatchResult = UserMatchResult(userId: player.id, matchId: myMatch.id.toYyyyMmDd());
 
       // add/update match to firebase
       transaction.set(
@@ -720,13 +919,20 @@ class FbHelpers {
         myMatch.toJson(core: false, matchPlayers: true),
         SetOptions(merge: true),
       );
-      // add/update user to firebase
-      if (added) {
+      // add/update userMatchResult to firebase
+      DocumentReference userMatchResultDocReference =
+          _instance.collection(UserMatchResultFs.userMatchResult.name).doc(); // new doc
+      transaction.set(
+        userMatchResultDocReference,
+        userMatchResult.toJson(),
+        SetOptions(merge: true),
+      );
+      // update players isActive toggle
+      if (player.isActive == false) {
+        // update user in firebase
+        player.isActive = true;
         transaction.set(
-          userDocReference,
-          player.toJson(),
-          SetOptions(merge: true),
-        );
+            _instance.collection(UserFs.users.name).doc(player.id), player.toJson(), SetOptions(merge: true));
       }
 
       // Return the map with MyMatch and player position
@@ -740,6 +946,15 @@ class FbHelpers {
   }
 
   /// return match
+  /// Remove the player from the Match's list of players.
+  ///     Remove the UserMatchResult entry linking the User and the Match.
+  ///     Crucially: Remove any UserMatchResult entries that link the User to any GameResult within that Match.
+  ///     This ensures that orphaned game results are not left behind.
+  ///     Check if the User is associated with any other Match in the UserMatchResult table.
+  ///     If not, set the User's isActive status to false.
+  ///
+  ///     ERROR: if the player has a result published, an exception is thrown
+  ///
   Future<MyMatch> deletePlayerFromMatch({
     required Date matchId,
     required MyUser player,
@@ -747,7 +962,6 @@ class FbHelpers {
   }) async {
     MyLog.log(_classString, 'deletePlayerFromMatch deleting user $player from $matchId');
     DocumentReference matchDocReference = _instance.collection(MatchFs.matches.name).doc(matchId.toYyyyMmDd());
-    DocumentReference userDocReference = _instance.collection(UserFs.users.name).doc(player.id);
 
     return await _instance.runTransaction((transaction) async {
       // get match
@@ -760,42 +974,112 @@ class FbHelpers {
         MyLog.log(_classString, 'deletePlayerFromMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // get match
-        myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText));
-        MyLog.log(_classString, 'deletePlayerFromMatch NEW match ', indent: true);
+        MyLog.log(_classString, 'deletePlayerFromMatch match doesnt exist $matchId', level: Level.SEVERE, indent: true);
+        throw Exception('Error: no existe el partido $matchId.');
       }
 
       // delete player in match
       bool removed = myMatch.removePlayer(player);
       // exception caught by catchError
-      if (!removed) throw Exception('Error: el jugador no estaba en el partido.');
-      MyLog.log(_classString, 'deletePlayerFromMatch removed match = ', myCustomObject: myMatch, indent: true);
+      if (!removed) throw Exception('Error: el jugador ${player.id} no estaba en el partido.');
+      MyLog.log(_classString, 'deletePlayerFromMatch $player removed match = ', myCustomObject: myMatch, indent: true);
 
-      // remove match from user
-      bool removedUser = player.matchIds.remove(matchId.toYyyyMmDd());
-
-      // add match to firebase
+      // update match in firebase
       transaction.set(
         matchDocReference,
         myMatch.toJson(core: false, matchPlayers: true),
         SetOptions(merge: true),
       );
 
-      // remove user from firebase
-      if (removedUser) {
-        transaction.set(
-          userDocReference,
-          player.toJson(),
-          SetOptions(merge: true),
-        );
+      // remove match from userMatchResult
+      List<String> userMatchResultIds =
+          await getUserMatchResultIds(userId: player.id, matchId: myMatch.id.toYyyyMmDd());
+      // remove userMatchesResults  from firebase
+      for (final userMatchResultId in userMatchResultIds) {
+        // get userMatchResult
+        DocumentReference userMatchResultDocReference =
+            _getDocRef(pathSegments: [UserMatchResultFs.userMatchResult.name, userMatchResultId]);
+        UserMatchResult? userMatchResult = await getUserMatchResult(userMatchResultId: userMatchResultId);
+
+        if (userMatchResult != null && userMatchResult.resultId != null) {
+          // ERROR. This player has a result published
+          MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
+              level: Level.WARNING, indent: true);
+          throw Exception('Error: el jugador ${player.id} tiene un resultado publicado.');
+        }
+
+        transaction.delete(userMatchResultDocReference);
+      }
+
+      // is player still active?
+      // TODO: I dont know how to do it in the transaction
+      int playersCount = await countAllMatchesWithPlayer(playerId: player.id);
+      if (playersCount == 1) {
+        // this player is only in one match
+        // which is about to be signed off
+        DocumentReference userDocReference = _instance.collection(UserFs.users.name).doc(player.id);
+        player.isActive = false;
+        transaction.set(userDocReference, player.toJson(), SetOptions(merge: true));
       }
 
       return myMatch;
     }).catchError((onError) {
+      // catches all the errors thrown by then and deletePlayerFromMatch
       MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
           exception: onError, level: Level.SEVERE, indent: true);
       throw Exception('Error al eliminar el jugador $player del partido $matchId\n'
           'Error = $onError');
     });
+  }
+
+  /// returns the count of all matches containing a player
+  /// uses the transaction if not null
+  Future<int> countAllMatchesWithPlayer({
+    required String playerId,
+    Date? fromDate,
+    Date? toDate,
+  }) async {
+    MyLog.log(_classString, 'countAllMatchesWithPlayer = $playerId fromDate=$fromDate toDate=$toDate',
+        level: Level.FINE);
+
+    try {
+      Query query = _getQuery(
+        pathSegments: [MatchFs.matches.name],
+        descending: false,
+        minDocId: fromDate?.toYyyyMmDd(),
+        maxDocId: toDate?.toYyyyMmDd(),
+        filter: (query) => query.where(MatchFs.players.name, arrayContains: playerId),
+      );
+
+      AggregateQuerySnapshot querySnapshot = await query.count().get();
+      int? count = querySnapshot.count;
+      MyLog.log(_classString, 'countAllMatchesWithPlayer $playerId count=$count', indent: true);
+      return count ?? 0;
+    } catch (e) {
+      MyLog.log(_classString, 'countAllMatchesWithPlayer  $playerId ERROR ',
+          exception: e, level: Level.SEVERE, indent: true);
+      throw Exception('Error al obtener los objetos del jugador $playerId}. \nError: ${e.toString()}');
+    }
+  }
+
+  /// set all users ranking to newRanking
+  /// make all users inactive
+  Future<void> resetUsersBatch({required int newRanking}) async {
+    MyLog.log(_classString, 'resetUsersBatch = $newRanking');
+    final usersCollection = FirebaseFirestore.instance.collection(UserFs.users.name);
+
+    // 1. Retrieve user documents
+    final querySnapshot = await usersCollection.get();
+
+    await _batchProcessing(
+        querySnapshot: querySnapshot,
+        processDocument: (WriteBatch batch, DocumentSnapshot docSnapshot) async {
+          MyLog.log(_classString, 'resetUsersBatch Processing user: ${docSnapshot.id}',
+              level: Level.FINE, indent: true);
+          int numberOfMatches = await countAllMatchesWithPlayer(playerId: docSnapshot.id);
+          bool isActive = numberOfMatches > 0;
+          batch.update(docSnapshot.reference, {UserFs.rankingPos.name: newRanking, UserFs.isActive.name: isActive});
+        });
   }
 
   Future saveAllUsersToHistoric() async {
@@ -804,86 +1088,5 @@ class FbHelpers {
 
     Historic historic = Historic.fromUsers(id: Date.now(), users: allUsers);
     await updateHistoric(historic: historic);
-  }
-
-  /// Uploads raw data (Uint8List) to Firebase Storage.
-  ///
-  /// This function takes a filename and raw data as input, uploads the data to
-  /// Firebase Storage under the specified filename, and returns the download URL
-  /// of the uploaded file if the upload is successful.
-  ///
-  /// Parameters:
-  ///   filename: The name of the file to be uploaded (including path if needed).
-  ///   data: The raw data (Uint8List) to be uploaded.
-  ///
-  /// Returns:
-  ///   A Future that completes with the download URL of the uploaded file (String)
-  ///   if the upload is successful, or null if the upload fails.
-  ///
-  /// Throws:
-  ///   An Exception if the upload fails, containing the error message
-  Future<String?> _uploadDataToStorage(final String filename, final Uint8List data) async {
-    MyLog.log(_classString, 'Uploading new file', indent: true);
-
-    // Create a reference to the storage location where the file will be uploaded.
-    final Reference storageRef = FirebaseStorage.instance.ref().child(filename);
-
-    // Start the upload task by putting the raw data to the storage reference.
-    final UploadTask uploadTask = storageRef.putData(data);
-
-    try {
-      // Wait for the upload task to complete and get the task snapshot.
-      final TaskSnapshot snapshot = await uploadTask;
-
-      // Check if the upload was successful.
-      if (snapshot.state == TaskState.success) {
-        // Get the download URL of the uploaded file.
-        String fileUrl = await snapshot.ref.getDownloadURL();
-
-        MyLog.log(_classString, 'File uploaded successfully: $fileUrl', indent: true);
-
-        // Return the download URL.
-        return fileUrl;
-      } else {
-        // If the upload failed, log the error and throw an exception.
-        MyLog.log(_classString, 'File upload failed: ${snapshot.state}', level: Level.SEVERE);
-        throw Exception('(Estado=${snapshot.state})');
-      }
-    } catch (e) {
-      // If an exception occurred during the upload, log the error and throw an exception.
-      MyLog.log(_classString, 'File upload failed: ${e.toString()}', level: Level.SEVERE);
-      throw Exception('Error al subir el archivo $filename\nError: ${e.toString()}');
-    }
-  }
-
-  // StreamTransformer.fromHandlers and handleData
-  //
-  // StreamTransformer.fromHandlers: This is a convenient factory constructor for creating a StreamTransformer.
-  // It allows you to define the transformation logic using handler functions.
-  //
-  // handleData: (QuerySnapshot<Map<String, dynamic>> data, EventSink<List<T>> sink):
-  // data: This is where the magic happens. The data parameter receives the QuerySnapshot<Map<String, dynamic>>
-  // emitted by the input stream (query.snapshots()).
-  // So, every time there is a change in the query result,
-  // the new QuerySnapshot is passed to the handleData function.
-  // sink: The EventSink<List<T>> is the output sink. You use it to send the transformed data (a List<T>)
-  // to the output stream. It is how you add data to the transformed stream.
-  // How data gets here: When query.snapshots().transform(transformer(fromJson, appState)) is executed,
-  // the bind method of the stream transformer is called. The bind method then attaches the handleData function
-  // to the input stream. So that every time a new event happens on the input stream,
-  // the handleData function is triggered, and the event data is passed as the data parameter.
-  StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>> _transformer<T>(
-    T Function(Map<String, dynamic>, [AppState? appState]) fromJson,
-    AppState? appState,
-  ) {
-    return StreamTransformer<QuerySnapshot<Map<String, dynamic>>, List<T>>.fromHandlers(
-      handleData: (QuerySnapshot<Map<String, dynamic>> snapshot, EventSink<List<T>> sink) {
-        List<T> items = snapshot.docs.map((doc) => fromJson(doc.data(), appState)).toList();
-        sink.add(items);
-      },
-      handleError: (error, stackTrace, sink) {
-        sink.addError(error, stackTrace);
-      },
-    );
   }
 }

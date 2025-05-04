@@ -89,7 +89,7 @@ class _MainPageState extends State<MainPage> {
 
             // Create test data in development mode.
             // MyLog.log(_classString, '_initializeData creating test data in development ...', indent: true);
-            if (Environment().isDevelopment) _director.createTestData();
+            // if (Environment().isDevelopment) _director.createTestData();
           }
         }
         return _buildLoadingIndicator('Cargando ...'); // Still loading, no error

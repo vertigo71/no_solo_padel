@@ -67,7 +67,7 @@ class ResultsPanel extends StatelessWidget {
         children: [
           _buildHeader(context, match.id.longFormat(), appState, () => _addResultModal(context, match)),
           StreamBuilder<List<GameResult>>(
-            stream: FbHelpers().getResultsStream(appState: appState, matchId: match.id.toYyyyMmDd()),
+            stream: FbHelpers().getGameResultsStream(appState: appState, matchId: match.id.toYyyyMmDd()),
             builder: (context, snapshot) {
               try {
                 if (snapshot.hasData) {

@@ -10,7 +10,19 @@ final String _classString = '<md> MyResult'.toLowerCase();
 const String kFieldSeparator = '#';
 
 // result fields in Firestore
-enum ResultFs { resultId, matchId, player1, player2, points, preRanking1, preRanking2, score, teamA, teamB, results }
+enum GameResultFs {
+  resultId,
+  matchId,
+  player1,
+  player2,
+  points,
+  preRanking1,
+  preRanking2,
+  score,
+  teamA,
+  teamB,
+  results,
+}
 
 class GameResult {
   final GameResultId id;
@@ -79,21 +91,52 @@ class GameResult {
   }
 
   factory GameResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    if (json[ResultFs.resultId.name] == null || json[ResultFs.matchId.name] == null) {
+    if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
       MyLog.log(
           _classString,
           'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[ResultFs.resultId.name]}, matchId: ${json[ResultFs.matchId.name]}',
+          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
           myCustomObject: json,
           level: Level.SEVERE);
       throw FormatException('Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[ResultFs.resultId.name]}, matchId: ${json[ResultFs.matchId.name]}, json: $json');
+          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}, json: $json');
     }
 
     try {
       return GameResult._(
-        id: GameResultId.fromString(json[ResultFs.resultId.name]),
-        matchId: Date.parse(json[ResultFs.matchId.name])!,
+        id: GameResultId.fromString(json[GameResultFs.resultId.name]),
+        matchId: Date.parse(json[GameResultFs.matchId.name])!,
+        teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
+        teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
+      );
+    } catch (e) {
+      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}');
+      throw Exception('Error creando el resultado de la base de datos: \nError: ${e.toString()}');
+    }
+  }
+
+  @Deprecated('To be removed')
+  factory GameResult.fromJsonOldFormat(Map<String, dynamic> json, final AppState appState) {
+    if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
+      MyLog.log(
+          _classString,
+          'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
+          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
+          myCustomObject: json,
+          level: Level.SEVERE);
+      throw FormatException('Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
+          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}, json: $json');
+    }
+
+    // old format is like: date#user
+    String id = json[GameResultFs.resultId.name];
+    try {
+      return GameResult._(
+        id: GameResultId(
+            userId: id.split(kFieldSeparator)[1],
+            matchId: Date.parse(json[GameResultFs.matchId.name])!,
+            dateTime: DateTime.parse(id.split(kFieldSeparator)[0])),
+        matchId: Date.parse(json[GameResultFs.matchId.name])!,
         teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
         teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
@@ -114,8 +157,8 @@ class GameResult {
           'resultId: ${id.resultId}');
     }
     return {
-      ResultFs.resultId.name: id.resultId,
-      ResultFs.matchId.name: matchId.toYyyyMmDd(),
+      GameResultFs.resultId.name: id.resultId,
+      GameResultFs.matchId.name: matchId.toYyyyMmDd(),
       'teamA': teamA?.toJson(),
       'teamB': teamB?.toJson(),
     };
@@ -178,8 +221,8 @@ class TeamResult {
   }
 
   factory TeamResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    MyUser? player1 = appState.getUserById(json[ResultFs.player1.name]);
-    MyUser? player2 = appState.getUserById(json[ResultFs.player2.name]);
+    MyUser? player1 = appState.getUserById(json[GameResultFs.player1.name]);
+    MyUser? player2 = appState.getUserById(json[GameResultFs.player2.name]);
     if (player1 == null || player2 == null) {
       MyLog.log(
           _classString,
@@ -195,21 +238,21 @@ class TeamResult {
     return TeamResult(
       player1: player1,
       player2: player2,
-      points: json[ResultFs.points.name] ?? 0,
-      score: json[ResultFs.score.name] ?? 0,
-      preRanking1: json[ResultFs.preRanking1.name] ?? 0,
-      preRanking2: json[ResultFs.preRanking2.name] ?? 0,
+      points: json[GameResultFs.points.name] ?? 0,
+      score: json[GameResultFs.score.name] ?? 0,
+      preRanking1: json[GameResultFs.preRanking1.name] ?? 0,
+      preRanking2: json[GameResultFs.preRanking2.name] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      ResultFs.player1.name: player1.id,
-      ResultFs.player2.name: player2.id,
-      ResultFs.points.name: points,
-      ResultFs.score.name: score,
-      ResultFs.preRanking1.name: preRanking1,
-      ResultFs.preRanking2.name: preRanking2,
+      GameResultFs.player1.name: player1.id,
+      GameResultFs.player2.name: player2.id,
+      GameResultFs.points.name: points,
+      GameResultFs.score.name: score,
+      GameResultFs.preRanking1.name: preRanking1,
+      GameResultFs.preRanking2.name: preRanking2,
     };
   }
 

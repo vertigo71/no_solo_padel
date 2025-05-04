@@ -292,7 +292,7 @@ class _AddResultModalState extends State<AddResultModal> {
       // save result to Firestore
       try {
         MyLog.log(_classString, 'Saving result: $gameResult', indent: true);
-        await FbHelpers().updateGameResult(result: gameResult);
+        await FbHelpers().createGameResult(result: gameResult);
       } catch (e) {
         MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
         throw 'Error al guardar el resultado.\n ${e.toString()}';

@@ -1,7 +1,5 @@
-import 'dart:collection';
 import 'dart:math';
 import 'package:collection/collection.dart';
-
 import '../interface/if_app_state.dart';
 import 'md_date.dart';
 import '../utilities/ut_misc.dart';
@@ -23,7 +21,7 @@ enum PlayingState {
 }
 
 // match fields in Firestore
-enum MatchFs { matches, date, comment, isOpen, courtNames, players, resultIds, pairingType }
+enum MatchFs { matches, date, comment, isOpen, courtNames, players, pairingType }
 
 enum MatchPairingType {
   ranking('Ranking'),
@@ -39,7 +37,6 @@ class MyMatch {
   final Date id;
   final List<MyUser> _players = [];
   final List<String> _courtNames = [];
-  final SplayTreeSet<String> _resultIds = SplayTreeSet<String>(); // ordered set with all the games in the match
   String comment;
   bool isOpen;
   MatchPairingType pairingType;
@@ -51,18 +48,14 @@ class MyMatch {
     this.pairingType = MatchPairingType.ranking,
     Iterable<MyUser>? players,
     Iterable<String>? courtNames,
-    Iterable<String>? resultIds,
   }) {
     _players.addAll(players ?? []);
     _courtNames.addAll(courtNames ?? []);
-    _resultIds.addAll(resultIds ?? []);
   }
 
   MyListView<MyUser> get players => MyListView(_players);
 
   MyListView<String> get courtNames => MyListView(_courtNames);
-
-  SplayTreeSet<String> get resultIds => _resultIds;
 
   List<MyUser> get copyOfPlayers => List.from(_players);
 
@@ -120,7 +113,6 @@ class MyMatch {
     Date? id,
     Iterable<MyUser>? players,
     Iterable<String>? courtNames,
-    Iterable<String>? resultIds,
     String? comment,
     bool? isOpen,
     MatchPairingType? pairingType,
@@ -129,7 +121,6 @@ class MyMatch {
       id: id ?? this.id,
       players: players ?? _players,
       courtNames: courtNames ?? _courtNames,
-      resultIds: resultIds ?? _resultIds,
       comment: comment ?? this.comment,
       isOpen: isOpen ?? this.isOpen,
       pairingType: pairingType ?? this.pairingType,
@@ -137,7 +128,6 @@ class MyMatch {
   }
 
   factory MyMatch.fromJson(Map<String, dynamic> json, AppState appState) {
-    // .cast<String>() is a method that attempts to create a new List<String> view of an existing list.
     final playerIds = json[MatchFs.players.name]?.cast<String>() ?? [];
     final players = <MyUser>[];
 
@@ -152,21 +142,19 @@ class MyMatch {
       id: Date.parse(json[MatchFs.date.name]) ?? Date.ymd(1971),
       players: players,
       courtNames: json[MatchFs.courtNames.name]?.cast<String>() ?? [],
-      resultIds: json[MatchFs.resultIds.name]?.cast<String>() ?? [],
       comment: json[MatchFs.comment.name] ?? '',
       isOpen: json[MatchFs.isOpen.name] ?? false,
       pairingType: MatchPairingType.values[json[MatchFs.pairingType.name] ?? 0],
     );
   }
 
-  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true, bool resultIds = true}) => {
+  Map<String, dynamic> toJson({bool core = true, bool matchPlayers = true}) => {
         MatchFs.date.name: id.toYyyyMmDd(),
         if (matchPlayers) MatchFs.players.name: _players.map((user) => user.id).toList(),
         if (core) MatchFs.courtNames.name: _courtNames.toList(),
         if (core) MatchFs.comment.name: comment,
         if (core) MatchFs.isOpen.name: isOpen, // bool
         if (core) MatchFs.pairingType.name: pairingType.index, // int
-        if (resultIds) MatchFs.resultIds.name: _resultIds.toList(),
       };
 
   bool isCourtInMatch(String court) => _courtNames.contains(court);
@@ -363,7 +351,6 @@ class MyMatch {
         id == other.id &&
         listEquals(_players, other._players) && // Compare lists using collection package
         listEquals(_courtNames, other._courtNames) && // Compare lists using collection package
-        _resultIds == other._resultIds &&
         comment == other.comment &&
         isOpen == other.isOpen &&
         pairingType == other.pairingType;
@@ -375,7 +362,6 @@ class MyMatch {
         Object.hashAll(_players),
         // order matters for equality
         Object.hashAll(_courtNames),
-        Object.hashAll(_resultIds),
         comment,
         isOpen,
         pairingType,

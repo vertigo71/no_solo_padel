@@ -16,26 +16,6 @@ import '../models/md_user.dart';
 
 final String _classString = '<st> Director'.toLowerCase();
 
-/// TODO: create list of results in matches
-/// copy all results to /results with the new format
-
-/**
-    Users:
-    have a list of matchesId where they joined (playing or not)
-    have a list of GameResults where they won or lost
-
-    Matches:
-    have a list of players
-    have a list of GameResults
-
-    User becomes active when he joins a match
-
-    A match has many games. Each game has a GameResult
-
-    A GameResult has 4 players and belongs to a match
-
- */
-
 /// responsible for the flow of the app
 /// knows about all processes
 class Director {
@@ -55,40 +35,6 @@ class Director {
     await AuthenticationHelper.signOut();
   }
 
-  /// check if, for each User, its list of matchesId is correct
-  /// checking they are in the right matches
-  Future<void> checkUserMatches(Map<MyUser, List<String>> rightMatchesPerUser) async {
-    MyLog.log(_classString, 'checkUserMatches', level: Level.FINE);
-
-    List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState);
-    Map<MyUser, List<MyMatch>> userMatches = {};
-    for (MyMatch match in allMatches) {
-      for (MyUser user in match.players) {
-        if (!userMatches.containsKey(user)) userMatches[user] = [];
-        userMatches[user]?.add(match);
-      }
-    }
-    Iterable<MyUser> users = _appState.usersSortedByName;
-    for (MyUser user in users) {
-      List<String> rightUserMatches = userMatches[user]?.map((e) => e.id.toYyyyMmDd()).toList() ?? [];
-      List<String> actualUserMatches = user.matchIds.toList();
-      if (rightUserMatches.length != actualUserMatches.length ||
-          rightUserMatches.toSet().intersection(actualUserMatches.toSet()).length != rightUserMatches.length) {
-        MyLog.log(_classString, 'checkUserMatches: user = $user should have these matches\n$rightUserMatches',
-            indent: true);
-        rightMatchesPerUser[user] = rightUserMatches;
-      }
-    }
-  }
-
-  Future<void> rebuildUserMatches(Map<MyUser, List<String>> rightMatchesPerUser) async {
-    MyLog.log(_classString, 'rebuildUserMatches', level: Level.FINE);
-    for (var user in rightMatchesPerUser.keys) {
-      user.setMatchIds(rightMatchesPerUser[user]!);
-      await FbHelpers().updateUser(user);
-    }
-  }
-
   ///  erase register which date <= toDate
   ///  erase matches which date <= toDate
   ///  save a copy of users to historic
@@ -96,56 +42,50 @@ class Director {
   ///  update all users list of matches
   Future<void> resetApplication(Date toDate, int newRanking) async {
     // erase all past register docs
-    await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, toDate: toDate);
+    await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, maxDocId: toDate.toYyyyMmDd());
 
     // erase all past matches
     await FbHelpers().deleteDocsBatch(
       collection: MatchFs.matches.name,
-      toDate: toDate,
+      maxDocId: toDate.toYyyyMmDd(),
     );
-    await FbHelpers().deleteDocsBatch(
-      collection: ResultFs.results.name,
-      toDate: toDate,
-    );
+
+    // erase all past userMatchResults
+    await FbHelpers().deleteUserMatchResultTillDateBatch(maxMatchId: toDate.toYyyyMmDd());
+
+    // erase all past results
+    await FbHelpers().deleteGameResultsTillDateBatch(maxMatchId: toDate.toYyyyMmDd());
 
     // save all users to historic
     await FbHelpers().saveAllUsersToHistoric();
 
     // reset ranking and notify
-    await FbHelpers().resetUsersBatch(newRanking: newRanking, deleteMatchesToDate: toDate);
+    await FbHelpers().resetUsersBatch(newRanking: newRanking);
     // await _director.updateAllUsers(true); // no need. Listeners are called
   }
 
   /// a map that for each player gets a list of games won (true) and lost (false)
-  /// TODO: create a getAllResults() function
   Future<Map<MyUser, List<bool>>> playersLastTrophies() async {
     MyLog.log(_classString, 'playersLastTrophies', level: Level.FINE);
     final Map<MyUser, List<bool>> userTrophies = {};
 
-    final List<MyMatch> allMatches = await FbHelpers().getAllMatches(appState: _appState, toDate: Date.now())
-      ..sort((a, b) => b.id.compareTo(a.id));
-    for (MyMatch match in allMatches) {
-      MyLog.log(_classString, 'playersLastTrophies match=${match.id}', level: Level.FINE, indent: true);
+    final List<GameResult> allResults = await FbHelpers().getAllGameResults(appState: _appState)
+      ..sort((a, b) => b.id.resultId.compareTo(a.id.resultId)); // reverse order
 
-      final List<GameResult> allResults = await FbHelpers().getAllMatchResults(
-        matchId: match.id.toYyyyMmDd(),
-        appState: _appState,
-      )
-        ..sort((a, b) => b.id.resultId.compareTo(a.id.resultId));
-      for (GameResult result in allResults) {
-        MyLog.log(_classString, 'playersLastTrophies result=${result.id}', level: Level.FINE, indent: true);
-        List<MyUser> players = result.winningPlayers;
-        for (final MyUser player in players) {
-          if (!userTrophies.containsKey(player)) userTrophies[player] = [];
-          userTrophies[player]?.add(true);
-        }
-        players = result.loosingPlayers;
-        for (final MyUser player in players) {
-          if (!userTrophies.containsKey(player)) userTrophies[player] = [];
-          userTrophies[player]?.add(false);
-        }
+    for (GameResult result in allResults) {
+      MyLog.log(_classString, 'playersLastTrophies result=${result.id}', level: Level.FINE, indent: true);
+      List<MyUser> players = result.winningPlayers;
+      for (final MyUser player in players) {
+        if (!userTrophies.containsKey(player)) userTrophies[player] = [];
+        userTrophies[player]?.add(true);
+      }
+      players = result.loosingPlayers;
+      for (final MyUser player in players) {
+        if (!userTrophies.containsKey(player)) userTrophies[player] = [];
+        userTrophies[player]?.add(false);
       }
     }
+
     return userTrophies;
   }
 
@@ -216,7 +156,7 @@ class Director {
         match.addAllCourtNames(randomInts.map((e) => e.toString()).take((deltaDays % 4) + 1)); // max 4 courts
         match.addAllPlayers(randomInts.map((e) => readOnlyUsers[e % readOnlyUsers.length]).toSet());
         MyLog.log(_classString, 'createTestData: create match = $match', indent: true);
-        await FbHelpers().updateMatch(match: match, updateCore: true, updatePlayers: true);
+        await FbHelpers().createMatchIfNotExists(match: match);
       }
     }
   }

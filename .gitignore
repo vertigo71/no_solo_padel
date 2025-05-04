@@ -10,6 +10,7 @@
 # Whitelist files
 !.gitignore
 !README.md
+!SUMMARY.md
 !LICENSE.md
 !deploy.bat
 !deploy.sh
