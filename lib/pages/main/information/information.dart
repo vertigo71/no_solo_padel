@@ -11,7 +11,6 @@ import '../../../models/md_user.dart';
 import '../../../routes/routes.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../utilities/ut_list_view.dart';
-import 'modal_modify_user.dart';
 
 final String _classString = 'InformationPanel'.toUpperCase();
 const int kNumberOfTrophies = 5;
@@ -102,9 +101,5 @@ class _InformationPanelState extends State<InformationPanel> {
         ),
       ],
     );
-  }
-
-  Future _modifyUserModal(BuildContext context, MyUser user) {
-    return UiHelper.modalPanel(context, user.name, ModifyUserModal(user: user));
   }
 }

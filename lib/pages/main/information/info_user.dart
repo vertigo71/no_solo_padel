@@ -11,6 +11,7 @@ import '../../../models/md_debug.dart';
 import '../../../models/md_user_match_result.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../utilities/ut_theme.dart';
+import 'modal_modify_user.dart';
 
 final String _classString = 'InfoUserPanel'.toUpperCase();
 
@@ -68,13 +69,15 @@ class InfoUserPanelState extends State<InfoUserPanel> {
 
       // calculate rankingPos
       _rankingPos = _director.appState.getUserRankingPos(_user!);
+      bool isLoggedUserAdminOrSuper = _director.appState.isLoggedUserAdminOrSuper;
+      MyLog.log(_classString, 'isLoggedUserAdminOrSuper=$isLoggedUserAdminOrSuper', level: Level.INFO);
 
       return Scaffold(
         appBar: AppBar(title: Text(_user?.name ?? 'Profile')),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -99,6 +102,13 @@ class InfoUserPanelState extends State<InfoUserPanel> {
                   ],
                 ),
                 const SizedBox(height: 24.0),
+                if (isLoggedUserAdminOrSuper)
+                  ElevatedButton(
+                      onPressed: () async {
+                        await _modifyUserModal(context, _user!);
+                      },
+                      child: const Text('Editar jugador')),
+                if (isLoggedUserAdminOrSuper) const SizedBox(height: 24.0),
                 const Text(
                   'Estadísticas de Partidos',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -142,7 +152,7 @@ class InfoUserPanelState extends State<InfoUserPanel> {
                                       ? const SizedBox.shrink()
                                       : Container(
                                           padding: const EdgeInsets.all(4),
-                                          color: (score > 0 ? kLightGreen : kLightRed ),
+                                          color: (score > 0 ? kLightGreen : kLightRed),
                                           child: Text('$score', style: const TextStyle(fontSize: 14)),
                                         )
                               ],
@@ -239,5 +249,9 @@ class InfoUserPanelState extends State<InfoUserPanel> {
   String _percentage(int numberOfGameWins, int numberOfGames) {
     if (numberOfGames == 0) return '- %';
     return '${(numberOfGameWins / numberOfGames * 100).round()}%';
+  }
+
+  Future _modifyUserModal(BuildContext context, MyUser user) {
+    return UiHelper.modalPanel(context, user.name, ModifyUserModal(user: user));
   }
 }
