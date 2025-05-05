@@ -195,7 +195,7 @@ mixin _GetObject implements _Basic {
       appState: appState);
 
   Future<GameResult?> getGameResult(
-          {required String matchId, required String resultId, required AppState appState}) async =>
+          { required String resultId, required AppState appState}) async =>
       await _getObject(
           pathSegments: [GameResultFs.results.name, resultId],
           fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));

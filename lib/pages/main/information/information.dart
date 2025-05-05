@@ -61,7 +61,7 @@ class _InformationPanelState extends State<InformationPanel> {
                   index: displayIndex,
                   lastGamesWins: lastGamesWins,
                   // logged user can only edit users with higher or equal rank
-                  onPressed: () => context.pushNamed(AppRoutes.kInfoUser, extra: ['$displayIndex', user.id]),
+                  onPressed: () => context.pushNamed(AppRoutes.kInfoUser, extra: user.id),
                 );
               },
             );

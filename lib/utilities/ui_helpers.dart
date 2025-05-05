@@ -379,30 +379,32 @@ abstract class UiHelper {
 
   static Widget buildErrorMessage(
       {required String errorMessage, required String buttonText, Future<void> Function()? onPressed}) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Oooopps! Se ha detectado un error',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 40),
-            Text(
-              errorMessage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red, fontSize: 16),
-            ),
-            const SizedBox(height: 40),
-            onPressed == null
-                ? Text(buttonText)
-                : ElevatedButton(
-                    onPressed: onPressed, // Pass the async function directly
-                    child: Text(buttonText),
-                  ),
-          ],
+    return Flexible(
+      child: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Oooopps! Se ha detectado un error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 24),
+              ),
+              const SizedBox(height: 40),
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+              const SizedBox(height: 40),
+              onPressed == null
+                  ? Text(buttonText)
+                  : ElevatedButton(
+                      onPressed: onPressed, // Pass the async function directly
+                      child: Text(buttonText),
+                    ),
+            ],
+          ),
         ),
       ),
     );

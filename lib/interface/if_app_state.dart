@@ -166,6 +166,9 @@ class AppState with ChangeNotifier {
     return true;
   }
 
+  /// return -1 if not found
+  int getUserRankingPos(MyUser user) => usersSortedByRanking.indexOf(user) + 1;
+
   MyUser? getUserByName(String name) => _usersCache.firstWhereOrNull((user) => user.name == name);
 
   MyUser? getUserById(String id) => _usersCache.firstWhereOrNull((user) => user.id == id);

@@ -50,7 +50,6 @@ class LoginPageState extends State<LoginPage> {
         });
         return const CircularProgressIndicator();
       }
-
       return Scaffold(
         bottomNavigationBar: BottomAppBar(
           color: Colors.transparent,

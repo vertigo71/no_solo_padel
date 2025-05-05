@@ -63,9 +63,9 @@ class AppRouter {
           builder: (BuildContext context, GoRouterState state) {
             // never use a complex object as an argument
             // back button will not work
-            final args = (state.extra as List<dynamic>).cast<String>(); // Retrieve the argument
-            MyLog.log(_classString, 'going to InfoUserPanel: args=$args');
-            return InfoUserPanel(args: args); // Pass it to the widget
+            final userId = (state.extra as String); // Retrieve the argument
+            MyLog.log(_classString, 'going to InfoUserPanel: userId=$userId');
+            return InfoUserPanel(userId: userId); // Pass it to the widget
           },
           name: AppRoutes.kInfoUser),
     ],

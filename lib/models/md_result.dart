@@ -44,6 +44,22 @@ class GameResult {
     return true;
   }
 
+  /// returns the score [in favor, against] of the player in the game
+  /// returns null if the player is not in the game
+  List<int>? getScores( MyUser player){
+    if (teamA?.isPlayerInTeam(player) ?? false) return [teamA!.score, teamB!.score];
+    if (teamB?.isPlayerInTeam(player) ?? false) return [teamB!.score, teamA!.score];
+    return null;
+  }
+
+  /// returns the points of the player in the game
+  /// returns null if the player is not in the game
+  int? getPoints( MyUser player){
+    if (teamA?.isPlayerInTeam(player) ?? false) return teamA!.points;
+    if (teamB?.isPlayerInTeam(player) ?? false) return teamB!.points;
+    return null;
+  }
+
   List<MyUser> get winningPlayers {
     if (!_checkResultOk()) return [];
     if (teamA!.score > teamB!.score) return [teamA!.player1, teamA!.player2];
@@ -56,25 +72,13 @@ class GameResult {
     return [teamB!.player1, teamB!.player2];
   }
 
-  bool playerIsInResult(MyUser player) =>
+  bool playerIsInGameResult(MyUser player) =>
       (teamA?.isPlayerInTeam(player) ?? false) || (teamB?.isPlayerInTeam(player) ?? false);
 
   bool playerHasWon(MyUser player) {
-    if (!playerIsInResult(player)) return false;
     if (teamA?.isPlayerInTeam(player) ?? false) return teamA!.score > (teamB?.score ?? 0);
     if (teamB?.isPlayerInTeam(player) ?? false) return teamB!.score > (teamA?.score ?? 0);
     return false;
-  }
-
-  /// returns <0 if player has lost
-  /// returns 0 if player is not in the result
-  /// returns >0 if player has won
-  int playerStatus(MyUser player) {
-    if (!_checkResultOk()) return 0;
-    if (teamA!.isPlayerInTeam(player)) return teamA!.score.compareTo(teamB!.score);
-    if (teamB!.isPlayerInTeam(player)) return teamB!.score.compareTo(teamA!.score);
-
-    return 0;
   }
 
   GameResult copyWith({

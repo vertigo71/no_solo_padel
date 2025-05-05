@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_director.dart';
+import '../../models/md_debug.dart';
 import '../../models/md_match.dart';
 import '../../models/md_result.dart';
 import '../../models/md_user.dart';
@@ -79,6 +81,7 @@ class CheckPanelState extends State<CheckPanel> {
 
   // Function to rebuild matches in users
   Future<void> _migrateResults() async {
+    MyLog.log(_classString, 'migrateResults', level: Level.FINE);
     _addOutput("Migrate results to new collection...");
     _addOutput("Create user match results to new collection...");
     try {
