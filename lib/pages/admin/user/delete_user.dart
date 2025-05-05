@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../interface/if_director.dart';
 import '../../../models/md_debug.dart';
+import '../../../models/md_exception.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../models/md_user.dart';
@@ -35,7 +36,7 @@ class UserDeletePanel extends StatelessWidget {
     final MyUser? loggedUser = director.appState.loggedUser;
     if (loggedUser == null) {
       MyLog.log(_classString, '_onTap loggedUser is null', level: Level.SEVERE);
-      throw Exception('No se ha podido obtener el usuario conectado');
+      throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE );
     }
 
     if (user.id == loggedUser.id) {

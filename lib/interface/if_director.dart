@@ -40,11 +40,16 @@ class Director {
   ///  save a copy of users to historic
   ///  set all users ranking to default Ranking
   ///  update all users list of matches
-  Future<void> resetApplication(Date toDate, int newRanking) async {
+  Future<void> resetApplication(int newRanking) async {
+    Date toDate = Date.now();
+
+    // keep today's match
+    MyMatch? todayMatch = await FbHelpers().getMatch(toDate.toYyyyMmDd(), _appState);
+
     // erase all past register docs
     await FbHelpers().deleteDocsBatch(collection: RegisterFs.register.name, maxDocId: toDate.toYyyyMmDd());
 
-    // erase all past matches
+    // erase all past matches. KEEP today's matches
     await FbHelpers().deleteDocsBatch(
       collection: MatchFs.matches.name,
       maxDocId: toDate.toYyyyMmDd(),
@@ -62,6 +67,11 @@ class Director {
     // reset ranking and notify
     await FbHelpers().resetUsersBatch(newRanking: newRanking);
     // await _director.updateAllUsers(true); // no need. Listeners are called
+
+    // create today's match if exited
+    if (todayMatch != null) {
+      await FbHelpers().createMatchIfNotExists(match: todayMatch, appState: _appState);
+    }
   }
 
   /// a map that for each player gets a list of games won (true) and lost (false)
@@ -156,7 +166,7 @@ class Director {
         match.addAllCourtNames(randomInts.map((e) => e.toString()).take((deltaDays % 4) + 1)); // max 4 courts
         match.addAllPlayers(randomInts.map((e) => readOnlyUsers[e % readOnlyUsers.length]).toSet());
         MyLog.log(_classString, 'createTestData: create match = $match', indent: true);
-        await FbHelpers().createMatchIfNotExists(match: match);
+        await FbHelpers().createMatchIfNotExists(match: match, appState: _appState);
       }
     }
   }

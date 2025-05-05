@@ -1,4 +1,5 @@
 import 'package:diacritic/diacritic.dart';
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:math';
 
@@ -162,8 +163,8 @@ class RankingPoints {
     // calculate k, the scaling factor, based on rankingDiffToHalf.
     // with factor 1.0, rankingDiffToHalf gets its meaning
     if (rankingDiffToHalf == 0) {
-      MyLog.log(_classString, 'Error: el DR mitad es 0', indent: true);
-      throw 'Error: el DR mitad es 0';
+      MyLog.log(_classString, 'Error: el DR mitad es 0', level: Level.SEVERE, indent: true);
+      throw MyException('Error: el DR mitad es 0', level: Level.SEVERE);
     }
     double k = 1.0 * rankingDifference / rankingDiffToHalf;
 

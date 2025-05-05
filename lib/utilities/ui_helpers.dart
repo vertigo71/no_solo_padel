@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:web/web.dart' as web; // Import the web package
 
 import '../models/md_debug.dart';
 import '../models/md_match.dart';
@@ -374,6 +375,41 @@ abstract class UiHelper {
     final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
 
     return hslLight.toColor();
+  }
+
+  static Widget buildErrorMessage(
+      {required String errorMessage, required String buttonText, Future<void> Function()? onPressed}) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Oooopps! Se ha detectado un error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+            ),
+            const SizedBox(height: 40),
+            onPressed == null
+                ? Text(buttonText)
+                : ElevatedButton(
+                    onPressed: onPressed, // Pass the async function directly
+                    child: Text(buttonText),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void reloadPage() {
+    web.window.location.reload();
   }
 }
 

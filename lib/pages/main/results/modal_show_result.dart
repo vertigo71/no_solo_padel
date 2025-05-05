@@ -6,6 +6,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
+import '../../../models/md_exception.dart';
 import '../../../models/md_result.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../models/md_user.dart';
@@ -54,7 +55,7 @@ class ShowResultModal extends StatelessWidget {
                       try {
                         bool erased = await _eraseResult(result, context);
                         if (context.mounted && erased) context.pop();
-                      } on Exception catch (e) {
+                      } catch (e) {
                         if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
                       }
                     },
@@ -136,7 +137,7 @@ class ShowResultModal extends StatelessWidget {
       await FbHelpers().deleteGameResult(result);
     } catch (e) {
       MyLog.log(_classString, 'Error erasing result: ${e.toString()}', level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el resultado: $result \nError: ${e.toString()}');
+      throw MyException('Error al eliminar el resultado: $result', e: e, level: Level.SEVERE);
     }
 
     // update users ranking points
@@ -161,7 +162,7 @@ class ShowResultModal extends StatelessWidget {
     } catch (e) {
       MyLog.log(_classString, 'Error updating users ranking points: ${e.toString()}',
           level: Level.SEVERE, indent: true);
-      throw Exception('Error al actualizar los puntos de los jugadores \nError: ${e.toString()}');
+      throw MyException('Error al actualizar los puntos de los jugadores', e: e, level: Level.SEVERE);
     }
 
     return true; // success

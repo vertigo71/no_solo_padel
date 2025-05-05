@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -301,7 +302,7 @@ class ConfigurationPanelState extends State<ConfigurationPanel> {
         final MyUser? loggedUser = appState.loggedUser;
         if (loggedUser == null) {
           MyLog.log(_classString, '_formValidate loggedUser is null', level: Level.SEVERE);
-          throw Exception('No se ha podido obtener el usuario conectado');
+          throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
         }
 
         String registerText = '';

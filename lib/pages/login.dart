@@ -42,34 +42,43 @@ class LoginPageState extends State<LoginPage> {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
     // if there is a logged user, go to main page
-    if (AuthenticationHelper.user != null) {
-      MyLog.log(_classString, 'build: User already logged in', indent: true);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        AppRouter.router.goNamed(AppRoutes.kMain);
-      });
-      return const CircularProgressIndicator();
-    }
+    try {
+      if (AuthenticationHelper.user != null) {
+        MyLog.log(_classString, 'build: User already logged in', indent: true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          AppRouter.router.goNamed(AppRoutes.kMain);
+        });
+        return const CircularProgressIndicator();
+      }
 
-    return Scaffold(
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.transparent,
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            _version,
-            textAlign: TextAlign.end,
+      return Scaffold(
+        bottomNavigationBar: BottomAppBar(
+          color: Colors.transparent,
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              _version,
+              textAlign: TextAlign.end,
+            ),
           ),
         ),
-      ),
-      body: (Environment().isDevelopment || Environment().isStaging)
-          ? Banner(
-              message: Environment().flavor,
-              location: BannerLocation.topEnd,
-              child: _buildListView(), // Use the function
-            )
-          : _buildListView(),
-    );
+        body: (Environment().isDevelopment || Environment().isStaging)
+            ? Banner(
+                message: Environment().flavor,
+                location: BannerLocation.topEnd,
+                child: _buildListView(), // Use the function
+              )
+            : _buildListView(),
+      );
+    } catch (e) {
+      return UiHelper.buildErrorMessage(
+          errorMessage: e.toString(),
+          buttonText: 'Reintentar',
+          onPressed: () async {
+            UiHelper.reloadPage();
+          });
+    }
   }
 
   Widget _buildListView() {

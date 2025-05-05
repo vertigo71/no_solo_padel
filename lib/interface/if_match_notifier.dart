@@ -4,6 +4,7 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../database/db_firebase_helpers.dart';
 import '../models/md_debug.dart';
+import '../models/md_exception.dart';
 import '../models/md_match.dart';
 import 'if_director.dart';
 
@@ -48,8 +49,11 @@ class MatchNotifier with ChangeNotifier {
     } catch (e) {
       MyLog.log(_classString, '_createListener ERROR listening to match ${_match.id}',
           exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error: No se ha podido crear el listener. '
-          'Es posible que los partidos no se refresquen bien.\n${e.toString()}');
+      throw MyException(
+          'No se ha podido crear el listener. '
+          'Es posible que los partidos no se refresquen bien',
+          e: e,
+          level: Level.SEVERE);
     }
   }
 

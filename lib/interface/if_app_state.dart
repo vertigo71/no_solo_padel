@@ -4,6 +4,7 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../models/md_date.dart';
 import '../models/md_debug.dart';
+import '../models/md_exception.dart';
 import '../models/md_parameter.dart';
 import '../models/md_user.dart';
 import '../utilities/ut_list_view.dart';
@@ -82,7 +83,7 @@ class AppState with ChangeNotifier {
 
     if (loggedUser == null) {
       MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', level: Level.SEVERE);
-      throw Exception('Usuario logeado no encontrado en la aplicación. User=$userId');
+      throw MyException('Usuario logeado no encontrado en la aplicación. User=$userId', level: Level.SEVERE );
     }
 
     setLoggedUser(loggedUser, notify: notify);

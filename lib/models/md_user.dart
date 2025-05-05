@@ -1,3 +1,4 @@
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 import '../utilities/ut_misc.dart';
@@ -169,8 +170,10 @@ class MyUser {
     /// Checks if the userId is null or empty.
     if (json[UserFs.userId.name] == null || json[UserFs.userId.name] == '') {
       MyLog.log(_classString, 'Missing userId in Firestore document', myCustomObject: json, level: Level.SEVERE);
-      throw FormatException('Error de formato. Usuario sin identificador al leer de la base de datos.\n'
-          'objeto: $json');
+      throw MyException(
+          'Error de formato. Usuario sin identificador al leer de la base de datos.\n'
+          'Objeto: $json',
+          level: Level.SEVERE);
     }
 
     try {
@@ -190,7 +193,7 @@ class MyUser {
     } catch (e) {
       MyLog.log(_classString, 'Error creating MyUser from Firestore: ${e.toString()}',
           myCustomObject: json, level: Level.SEVERE);
-      throw Exception('Error creando un usuario desde la base de datos: ${e.toString()}');
+      throw MyException('Error creando un usuario desde la base de datos', e: e, level: Level.SEVERE);
     }
   }
 
@@ -199,8 +202,10 @@ class MyUser {
     /// Checks if the id is empty.
     if (id == '') {
       MyLog.log(_classString, 'userId is empty', myCustomObject: this, level: Level.SEVERE);
-      throw FormatException('Error creando los datos para la BdD. \n'
-          'Usuario vacío. $this');
+      throw MyException(
+          'Error creando los datos para la Base de Datos. \n'
+          'Usuario vacío. $this',
+          level: Level.SEVERE);
     }
 
     /// Returns a map containing all of the data, including the userId.
@@ -250,7 +255,6 @@ class MyUser {
         rankingPos,
         isActive,
       );
-
 }
 
 Comparator<MyUser> getMyUserComparator(UsersSortBy sortBy) {

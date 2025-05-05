@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:no_solo_padel/models/md_user_match_result.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -22,7 +23,7 @@ final FirebaseFirestore _instance = FirebaseFirestore.instance;
 mixin _Basic {
   DocumentReference _getDocRef({required List<String> pathSegments}) {
     if (pathSegments.isEmpty || pathSegments.length % 2 != 0) {
-      throw ArgumentError('Invalid pathSegments. Path must have an even number of segments.');
+      throw MyException('Invalid pathSegments. Path must have an even number of segments.', level: Level.SEVERE);
     }
 
     DocumentReference documentReference = FirebaseFirestore.instance.collection(pathSegments[0]).doc(pathSegments[1]);
@@ -38,7 +39,7 @@ mixin _Basic {
     required List<String> pathSegments, // List of collection/doc identifiers
   }) {
     if (pathSegments.isEmpty || pathSegments.length % 2 == 0) {
-      throw ArgumentError('Invalid pathSegments. Path must have an odd number of segments.');
+      throw MyException('Invalid pathSegments. Path must have an odd number of segments.', level: Level.SEVERE);
     }
 
     CollectionReference collectionReference = FirebaseFirestore.instance.collection(pathSegments[0]);
@@ -61,7 +62,7 @@ mixin _Basic {
     Query query = _getCollectionRef(pathSegments: pathSegments);
 
     // mandatory sorting when using > < filtering
-    query = query.orderBy((sortingField != null) ? sortingField : FieldPath.documentId, descending: descending );
+    query = query.orderBy((sortingField != null) ? sortingField : FieldPath.documentId, descending: descending);
 
     if (minDocId != null) {
       query =
@@ -119,12 +120,12 @@ mixin _Basic {
       } else {
         // If the upload failed, log the error and throw an exception.
         MyLog.log(_classString, 'File upload failed: ${snapshot.state}', level: Level.SEVERE);
-        throw Exception('(Estado=${snapshot.state})');
+        throw MyException('(Estado=${snapshot.state})', level: Level.SEVERE);
       }
     } catch (e) {
       // If an exception occurred during the upload, log the error and throw an exception.
       MyLog.log(_classString, 'File upload failed: ${e.toString()}', level: Level.SEVERE);
-      throw Exception('Error al subir el archivo $filename\nError: ${e.toString()}');
+      throw MyException('Error al subir el archivo $filename', e: e, level: Level.SEVERE);
     }
   }
 
@@ -180,7 +181,7 @@ mixin _GetObject implements _Basic {
       }
     } catch (e) {
       MyLog.log(_classString, 'getObject ${pathSegments.join('/')}', exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener el objeto ${pathSegments.join('/')}. \nError: ${e.toString()}');
+      throw MyException('Error al obtener el objeto ${pathSegments.join('/')}', e: e, level: Level.SEVERE);
     }
     return null;
   }
@@ -240,7 +241,9 @@ mixin _GetObjects implements _Basic {
       QuerySnapshot querySnapshot = await query.get();
 
       for (var doc in querySnapshot.docs) {
-        if (doc.data() == null) throw 'Error en la base de datos ${pathSegments.join('/')}';
+        if (doc.data() == null) {
+          throw MyException('No hay datos al obtener los objetos de ${pathSegments.join('/')}', level: Level.SEVERE);
+        }
         if (fromJson == null) {
           assert(T == String, 'T must be String');
           MyLog.log(_classString, 'getAllObjects ${pathSegments.join('/')} = ${doc.id}', indent: true);
@@ -255,7 +258,7 @@ mixin _GetObjects implements _Basic {
     } catch (e) {
       MyLog.log(_classString, 'getAllObjects  ${pathSegments.join('/')} ERROR ',
           exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener los objetos ${pathSegments.join('/')}. \nError: ${e.toString()}');
+      throw MyException('Error al obtener los objetos ${pathSegments.join('/')}', e: e, level: Level.SEVERE);
     }
     MyLog.log(_classString, 'getAllObjects #${pathSegments.join('/')} = ${items.length} ', indent: true);
     return items;
@@ -386,7 +389,7 @@ mixin _UpdateObject implements _Basic {
       MyLog.log(_classString, 'updateObject ${pathSegments.join('/')}, success', indent: true);
     } catch (onError) {
       MyLog.log(_classString, 'updateObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
-      throw Exception('Error al actualizar ${pathSegments.join('/')}. \nError: $onError');
+      throw MyException('Error al actualizar ${pathSegments.join('/')}', e: onError, level: Level.SEVERE);
     }
   }
 
@@ -394,7 +397,7 @@ mixin _UpdateObject implements _Basic {
     MyLog.log(_classString, 'updateUser = $user');
     if (user.id == '') {
       MyLog.log(_classString, 'updateUser ', myCustomObject: user, level: Level.SEVERE);
-      throw Exception('Error: el usuario no tiene id. No se puede actualizar.');
+      throw MyException('Error: el usuario no tiene id. No se puede actualizar.', level: Level.SEVERE);
     }
     if (compressedImageData != null) {
       user.avatarUrl = await _uploadDataToStorage('${UserFs.avatars.name}/${user.id}', compressedImageData);
@@ -512,7 +515,7 @@ mixin _DeleteObject implements _Basic {
     } catch (e) {
       MyLog.log(_classString, 'deleteUser error when deleting',
           myCustomObject: myUser, level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el usuario $myUser. \nError: ${e.toString()}');
+      throw MyException('Error al eliminar el usuario $myUser', e: e, level: Level.SEVERE);
     }
   }
 
@@ -527,7 +530,7 @@ mixin _DeleteObject implements _Basic {
     } catch (e) {
       MyLog.log(_classString, 'deleteResult error when deleting',
           myCustomObject: result, level: Level.SEVERE, indent: true);
-      rethrow;
+      throw MyException('Error al eliminar el resultado $result', e: e, level: Level.SEVERE);
     }
   }
 
@@ -586,7 +589,7 @@ mixin _GetStream implements _Basic {
     } catch (e) {
       MyLog.log(_classString, 'getStream ERROR pathSegments=${pathSegments.join('/')}',
           exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error leyendo datos de Firestore. Error de transformación.\nError: ${e.toString()}');
+      throw MyException('Error al obtener los streams ${pathSegments.join('/')}', e: e, level: Level.SEVERE);
     }
   }
 
@@ -710,7 +713,8 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         },
         onError: (error) {
           MyLog.log(_classString, 'ParamLISTENER snapshot error: $error', level: Level.SEVERE, indent: true);
-          throw Exception('Error de escucha. No se han podido cargar los parametros del sistema.\n$error');
+          throw MyException('Error de escucha. No se han podido cargar los parametros del sistema.\n$error',
+              level: Level.SEVERE);
         },
       );
     }
@@ -750,7 +754,8 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         onError: (error) {
           MyLog.log(_classString, 'UserLISTENER: onError loading users. Error: $error',
               level: Level.SEVERE, indent: true);
-          throw Exception('Error de escucha. No se han podido cargar los usuarios del sistema.\n$error');
+          throw MyException('Error de escucha. No se han podido cargar los usuarios del sistema',
+              e: error, level: Level.SEVERE);
         },
       );
     }
@@ -799,7 +804,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         } catch (e) {
           MyLog.log(_classString, '_downloadUsers Error: Wrong Format',
               myCustomObject: data, exception: e, level: Level.SEVERE, indent: true);
-          throw Exception('Error en la base de datos de usuarios. \nError: ${e.toString()}');
+          throw MyException('Error en la base de datos de usuarios', e: e, level: Level.SEVERE);
         }
       } else {
         MyLog.log(_classString, '_downloadChangedUsers ERROR data null', level: Level.WARNING, indent: true);
@@ -808,19 +813,20 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
   }
 
   /// return false if existed, true if created
-  Future<bool> createMatchIfNotExists({required MyMatch match}) async {
+  Future<bool> createMatchIfNotExists({required MyMatch match, required AppState appState}) async {
     bool exists = await doesDocExist(collection: MatchFs.matches.name, doc: match.id.toYyyyMmDd());
     if (exists) return false;
 
     MyLog.log(_classString, 'createMatchIfNotExists creating exist=$exists date=${match.id}');
     await _updateObject(
-      fields: match.toJson(core: true, matchPlayers: true),
+      fields: match.toJson(core: true, matchPlayers: false),
       pathSegments: [MatchFs.matches.name, match.id.toYyyyMmDd()],
       forceSet: false, // false: merges the fields, true:replaces the old object if exists
     );
     // create new registers in UserMatchRResults
     for (MyUser player in match.players) {
-      await addUserMatchResult(userId: player.id, matchId: match.id.toYyyyMmDd());
+      MyLog.log(_classString, 'createMatchIfNotExists adding user=$player to match', indent: true );
+      await addPlayerToMatch(matchId: match.id, player: player, appState: appState);
     }
     return true;
   }
@@ -860,7 +866,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
       return documentReference;
     } catch (onError) {
       MyLog.log(_classString, 'addObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
-      throw Exception('Error al actualizar ${pathSegments.join('/')}. \nError: $onError');
+      throw MyException('Error al actualizar ${pathSegments.join('/')}', e: onError, level: Level.SEVERE);
     }
   }
 
@@ -907,8 +913,11 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
       // add player to memory match
       int posInserted = myMatch.insertPlayer(player, position: position);
       // exception caught by catchError
-      if (posInserted == -1) throw Exception('Error: el jugador ya estaba en el partido.');
-      MyLog.log(_classString, 'addPlayerToMatch inserted match = ', myCustomObject: myMatch, indent: true);
+      if (posInserted == -1) {
+        MyLog.log(_classString, 'Error: el jugador $player ya estaba en el partido.', indent: true, level: Level.WARNING);
+        throw MyException('Error: el jugador $player ya estaba en el partido.', level: Level.WARNING);
+      }
+      MyLog.log(_classString, 'addPlayerToMatch player inserted match = ', myCustomObject: myMatch, indent: true);
 
       // create new UserMatchResult
       UserMatchResult userMatchResult = UserMatchResult(userId: player.id, matchId: myMatch.id.toYyyyMmDd());
@@ -940,8 +949,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
     }).catchError((e) {
       MyLog.log(_classString, 'addPlayerToMatch error adding $player to match $matchId',
           exception: e, level: Level.WARNING, indent: true);
-      throw Exception('Error al añadir jugador $player al partido $matchId\n'
-          'Error = ${e.toString()}');
+      throw MyException('Error al añadir el jugador $player al partido $matchId', e: e, level: Level.WARNING);
     });
   }
 
@@ -975,13 +983,13 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
       } else {
         // get match
         MyLog.log(_classString, 'deletePlayerFromMatch match doesnt exist $matchId', level: Level.SEVERE, indent: true);
-        throw Exception('Error: no existe el partido $matchId.');
+        throw MyException('Error: no existe el partido $matchId', level: Level.SEVERE);
       }
 
       // delete player in match
       bool removed = myMatch.removePlayer(player);
       // exception caught by catchError
-      if (!removed) throw Exception('Error: el jugador ${player.id} no estaba en el partido.');
+      if (!removed) throw MyException('Error: el jugador ${player.id} no estaba en el partido.', level: Level.FINE);
       MyLog.log(_classString, 'deletePlayerFromMatch $player removed match = ', myCustomObject: myMatch, indent: true);
 
       // update match in firebase
@@ -1005,7 +1013,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
           // ERROR. This player has a result published
           MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
               level: Level.WARNING, indent: true);
-          throw Exception('Error: el jugador ${player.id} tiene un resultado publicado.');
+          throw MyException('Error: el jugador ${player.id} YA tiene un resultado publicado.', level: Level.WARNING);
         }
 
         transaction.delete(userMatchResultDocReference);
@@ -1027,8 +1035,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
       // catches all the errors thrown by then and deletePlayerFromMatch
       MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
           exception: onError, level: Level.SEVERE, indent: true);
-      throw Exception('Error al eliminar el jugador $player del partido $matchId\n'
-          'Error = $onError');
+      throw MyException('Error al eliminar el jugador $player del partido $matchId', e: onError, level: Level.SEVERE);
     });
   }
 
@@ -1058,7 +1065,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
     } catch (e) {
       MyLog.log(_classString, 'countAllMatchesWithPlayer  $playerId ERROR ',
           exception: e, level: Level.SEVERE, indent: true);
-      throw Exception('Error al obtener los objetos del jugador $playerId}. \nError: ${e.toString()}');
+      throw MyException('Error al obtener el número de partidos del jugador $playerId', e: e, level: Level.SEVERE);
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
+import '../../../models/md_exception.dart';
 import '../../../models/md_result.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
@@ -154,9 +155,11 @@ class ResultsPanel extends StatelessWidget {
       );
     } catch (e) {
       MyLog.log(_classString, 'Error building result card: ${e.toString()}', level: Level.SEVERE, indent: true);
-      throw Exception('Error obteniendo datos del resultado: \n'
-          '$result \n'
-          'Error: ${e.toString()}');
+      throw MyException(
+          'Error obteniendo datos del resultado: \n'
+          '$result \n',
+          e: e,
+          level: Level.SEVERE);
     }
   }
 

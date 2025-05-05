@@ -5,12 +5,12 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../interface/if_director.dart';
 import '../../interface/if_match_notifier.dart';
 import '../../models/md_debug.dart';
+import '../../utilities/ui_helpers.dart';
 import 'players.dart';
 import 'config.dart';
 import 'pairing.dart';
 import '../../interface/if_app_state.dart';
 import '../../models/md_match.dart';
-
 
 final String _classString = 'MatchPage'.toUpperCase();
 
@@ -28,7 +28,7 @@ class MatchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.log(_classString, 'Building match $matchJson', level:Level.FINE);
+    MyLog.log(_classString, 'Building match $matchJson', level: Level.FINE);
 
     final bool isLoggedUserAdmin = context.read<AppState>().isLoggedUserAdminOrSuper;
 
@@ -37,7 +37,12 @@ class MatchPage extends StatelessWidget {
       match = MyMatch.fromJson(matchJson, context.read<AppState>());
       MyLog.log(_classString, 'match = $match', indent: true);
     } catch (e) {
-      return Center(child: Text('No se ha podido acceder al partido'));
+      return UiHelper.buildErrorMessage(
+          errorMessage: 'No se ha podido acceder al partido\n${e.toString()}',
+          buttonText: 'Reintentar',
+          onPressed: () async {
+            UiHelper.reloadPage();
+          });
     }
 
     try {
@@ -70,7 +75,12 @@ class MatchPage extends StatelessWidget {
         }),
       );
     } catch (e) {
-      return Center(child: Text(e.toString())); // Display the error message
+      return UiHelper.buildErrorMessage(
+          errorMessage: e.toString(),
+          buttonText: 'Reintentar',
+          onPressed: () async {
+            UiHelper.reloadPage();
+          });
     }
   }
 }

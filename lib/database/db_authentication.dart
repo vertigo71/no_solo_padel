@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../models/md_debug.dart';
+import '../models/md_exception.dart';
 
 final String _classString = '<db> AuthenticationHelper'.toLowerCase();
 
@@ -21,6 +22,8 @@ class AuthenticationHelper {
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
+    } catch (e) {
+      throw MyException('Error al crear usuario', e: e);
     }
   }
 
@@ -38,7 +41,7 @@ class AuthenticationHelper {
     } on FirebaseAuthException catch (e) {
       return _toSpanish(e);
     } catch (e) {
-      return 'Error de autenticación: \n ${e.toString()}';
+      throw MyException('Error al iniciar sesión', e: e);
     }
   }
 
@@ -74,7 +77,8 @@ class AuthenticationHelper {
       }
       return message;
     } catch (e) {
-      return 'Error al crear usuario $email (error indefinido) \n ${e.toString()}';
+      return 'Error al crear usuario $email (error indefinido) \n'
+          '${e.toString()}';
     }
     return '';
   }
@@ -102,7 +106,7 @@ class AuthenticationHelper {
       UserCredential userCredential = await _getUserCredential(user: user!, actualPwd: actualPwd);
 
       if (userCredential.user == null) {
-        return ('Error al actualizar $errorField (credencial no válida)');
+        return 'Error al actualizar $errorField (credencial no válida)';
       }
 
       if (newEmail.isNotEmpty) {

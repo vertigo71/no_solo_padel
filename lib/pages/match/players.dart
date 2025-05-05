@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:provider/provider.dart';
 
@@ -393,8 +394,8 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     // check if user is already in the match. If so abort
     if (match.isInTheMatch(user)) {
-      MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.SEVERE, indent: true);
-      throw Exception('El jugador ya estaba en el partido');
+      MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.WARNING, indent: true);
+      throw MyException('El jugador ya estaba en el partido', level: Level.WARNING );
     }
 
     // if administrator, get position in which the player will be be added from the controller text
@@ -434,8 +435,8 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     // check if user is not in the match. If so abort
     if (!match.isInTheMatch(user)) {
-      MyLog.log(_classString, 'removing: player $user is not in match', level: Level.SEVERE, indent: true);
-      throw Exception('El jugador no estaba en el partido');
+      MyLog.log(_classString, 'removing: player $user is not in match', level: Level.WARNING, indent: true);
+      throw MyException('El jugador no estaba en el partido', level: Level.WARNING );
     }
 
     // confirm that user wants to remove himself from the match

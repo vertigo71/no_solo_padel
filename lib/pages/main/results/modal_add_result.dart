@@ -8,6 +8,7 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
+import '../../../models/md_exception.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_parameter.dart';
 import '../../../models/md_result.dart';
@@ -235,19 +236,19 @@ class _AddResultModalState extends State<AddResultModal> {
       bool areAllResultsZero = (scoreA == 0 && scoreB == 0);
       if (isAnyPlayerNull) {
         MyLog.log(_classString, 'Null player. players=$_selectedPlayers', indent: true);
-        throw 'Añadir todos los jugadores';
+        throw MyException('Añadir todos los jugadores');
       }
 
       if (areAllResultsZero) {
         MyLog.log(_classString, 'All results 0.', indent: true);
-        throw 'El resultado no puede ser 0-0';
+        throw MyException('El resultado no puede ser 0-0');
       }
 
       // check if there are repeated players
       Set<MyUser> uniquePlayers = Set.from(_selectedPlayers);
       if (uniquePlayers.length != kNumPlayers) {
         MyLog.log(_classString, 'Repeated players. players=$_selectedPlayers', indent: true);
-        throw 'No se puede repetir un jugador';
+        throw MyException('No se puede repetir un jugador');
       }
 
       // calculate the points that each team will get
@@ -278,7 +279,7 @@ class _AddResultModalState extends State<AddResultModal> {
 
       if (loggedUser == null) {
         MyLog.log(_classString, '_save loggedUser is null', level: Level.SEVERE);
-        throw Exception('No se ha podido obtener el usuario conectado');
+        throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
       }
 
       // create GameResult
@@ -295,7 +296,7 @@ class _AddResultModalState extends State<AddResultModal> {
         await FbHelpers().createGameResult(result: gameResult);
       } catch (e) {
         MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
-        throw 'Error al guardar el resultado.\n ${e.toString()}';
+        throw MyException('Error al guardar el resultado', e: e, level: Level.SEVERE);
       }
 
       // add points to players
@@ -306,7 +307,7 @@ class _AddResultModalState extends State<AddResultModal> {
         await Future.wait(_selectedPlayers.map((e) async => await FbHelpers().updateUser(e!)));
       } catch (e) {
         MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
-        throw ('Error al actualizar los puntos de los jugadores. \n${e.toString()}');
+        throw MyException('Error al actualizar los puntos de los jugadores', e: e, level: Level.SEVERE);
       }
     }
   }
@@ -316,7 +317,7 @@ class _AddResultModalState extends State<AddResultModal> {
     MyLog.log(_classString, '_calculatePointsA', indent: true);
 
     if (_selectedPlayers.length != 4) {
-      throw ArgumentError('No se ha podido obtener los cuatro jugadores');
+      throw MyException('No se ha podido obtener los cuatro jugadores', level: Level.SEVERE);
     }
 
     int? step = _appState.getIntParamValue(ParametersEnum.step);
@@ -325,7 +326,7 @@ class _AddResultModalState extends State<AddResultModal> {
     int? freePoints = _appState.getIntParamValue(ParametersEnum.freePoints);
 
     if (step == null || range == null || rankingDiffToHalf == null || freePoints == null) {
-      throw ArgumentError('No se han podido obtener los parámetros para el cálculo de puntos');
+      throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
     }
 
     final int rankingA = _selectedPlayers[0]!.rankingPos + _selectedPlayers[1]!.rankingPos;

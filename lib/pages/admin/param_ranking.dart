@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
+import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -359,7 +360,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       resetValue = int.parse(_director.appState.getParamValue(ParametersEnum.defaultRanking));
     } catch (e) {
       MyLog.log(_classString, 'Error parsing reset value ${e.toString()}', level: Level.SEVERE, indent: true);
-      throw 'Error al obtener el parámetro del ranking por defecto.';
+      throw MyException('Error al obtener el parámetro del ranking por defecto.', e: e, level: Level.SEVERE);
     }
 
     bool confirmed = false;
@@ -386,8 +387,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       _isResetting = true;
     });
     try {
-      Date toDate = Date.now().subtract(const Duration(days: 1));
-      await _director.resetApplication(toDate, resetValue);
+      await _director.resetApplication(resetValue);
 
       MyLog.log(_classString, 'Reset ranking success', indent: true);
 

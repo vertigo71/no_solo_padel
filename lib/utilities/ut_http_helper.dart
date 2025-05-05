@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 
+import '../models/md_exception.dart';
 import '../secret.dart';
 import '../models/md_date.dart';
 import '../models/md_debug.dart';
@@ -37,6 +38,7 @@ Future<void> sendMessageToTelegram(String message, {BotType botType = BotType.re
   if (response.statusCode != 200) {
     // If the server did not return a 200 OK response,
     // then throw an exception.
-    throw Exception('Error al enviar el mensaje a Telegram (código=${response.statusCode})');
+    MyLog.log(_classString, 'Error al enviar el mensaje a Telegram (código=${response.statusCode})');
+    throw MyException('Error al enviar el mensaje a Telegram (código=${response.statusCode})');
   }
 }

@@ -7,6 +7,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../../database/db_firebase_helpers.dart';
 import '../../interface/if_app_state.dart';
 import '../../models/md_debug.dart';
+import '../../models/md_exception.dart';
 import '../../models/md_match.dart';
 import '../../models/md_parameter.dart';
 import '../../models/md_user.dart';
@@ -75,7 +76,7 @@ class GamesPanel extends StatelessWidget {
                   final MyUser? loggedUser = appState.loggedUser;
                   if (loggedUser == null) {
                     MyLog.log(_classString, 'build loggedUser is null', level: Level.SEVERE);
-                    throw Exception('No se ha podido obtener el usuario conectado');
+                    throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
                   }
 
                   String playingStateStr = match.getPlayingStateString(loggedUser);

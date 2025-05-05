@@ -3,6 +3,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../interface/if_app_state.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
+import 'md_exception.dart';
 import 'md_user.dart';
 
 final String _classString = '<md> MyResult'.toLowerCase();
@@ -98,8 +99,13 @@ class GameResult {
           'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
           myCustomObject: json,
           level: Level.SEVERE);
-      throw FormatException('Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}, json: $json');
+      throw MyException(
+          'Formato del resultado incorrecto. \n'
+          'resultId or matchId son nulos\n'
+          'resultId: ${json[GameResultFs.resultId.name]}\n'
+          'matchId: ${json[GameResultFs.matchId.name]}\n'
+          'json: $json',
+          level: Level.SEVERE);
     }
 
     try {
@@ -110,8 +116,9 @@ class GameResult {
         teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
     } catch (e) {
-      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}');
-      throw Exception('Error creando el resultado de la base de datos: \nError: ${e.toString()}');
+      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
+          level: Level.WARNING);
+      throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
     }
   }
 
@@ -124,8 +131,13 @@ class GameResult {
           'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
           myCustomObject: json,
           level: Level.SEVERE);
-      throw FormatException('Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}, json: $json');
+      throw MyException(
+          'Formato del resultado incorrecto. \n'
+          'resultId or matchId son nulos\n'
+          'resultId: ${json[GameResultFs.resultId.name]}\n'
+          'matchId: ${json[GameResultFs.matchId.name]}\n'
+          'json: $json',
+          level: Level.SEVERE);
     }
 
     // old format is like: date#user
@@ -141,8 +153,9 @@ class GameResult {
         teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
     } catch (e) {
-      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}');
-      throw Exception('Error creando el resultado de la base de datos: \nError: ${e.toString()}');
+      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
+          level: Level.WARNING);
+      throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
     }
   }
 
@@ -153,8 +166,10 @@ class GameResult {
           'Identificador del resultado incorrecto al grabar en la BD. \n'
           'resultId: ${id.resultId}',
           level: Level.SEVERE);
-      throw FormatException('Identificador del resultado incorrecto al grabar en la BD. \n'
-          'resultId: ${id.resultId}');
+      throw MyException(
+          'Identificador del resultado incorrecto al grabar en la BD. \n'
+          'resultId: ${id.resultId}',
+          level: Level.SEVERE);
     }
     return {
       GameResultFs.resultId.name: id.resultId,
@@ -230,9 +245,9 @@ class TeamResult {
           'Los jugadores ($player1, $player2) no existen en \n',
           myCustomObject: json,
           level: Level.SEVERE);
-      throw Exception('Error leyendo la base de datos. \n'
+      throw MyException('Error leyendo la base de datos. \n'
           'Los jugadores ($player1, $player2) no existen en \n'
-          '$json');
+          '$json', level: Level.SEVERE);
     }
 
     return TeamResult(
@@ -304,8 +319,8 @@ class GameResultId {
       final userId = parts[2];
       return GameResultId(matchId: matchId, dateTime: dateTime, userId: userId);
     } catch (e) {
-      MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}');
-      throw FormatException('ResultId formato Invalido: $id \nError: ${e.toString()}');
+      MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}', level: Level.WARNING);
+      throw MyException('ResultId formato Invalido: $id', e:e, level: Level.WARNING);
     }
   }
 
