@@ -78,6 +78,9 @@ class CheckPanelState extends State<CheckPanel> {
     MyLog.log(_classString, 'migrateResults', level: Level.FINE);
     _addOutput("Migrate results to new collection...");
     _addOutput("Already migrated!!!!");
+
+    // TODO: erase all subcollections
+    
     // _addOutput("Create user match results to new collection...");
     // try {
     //   List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
