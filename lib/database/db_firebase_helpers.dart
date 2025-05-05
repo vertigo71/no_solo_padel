@@ -344,17 +344,17 @@ mixin _GetObjects implements _Basic {
     );
   }
 
-  @Deprecated('To be removed')
-  Future<List<GameResult>> getResultsOfAMatchOldFormat({
-    required String matchId,
-    required AppState appState,
-    // bool descending = false, need an index
-  }) async {
-    return _getAllObjects<GameResult>(
-      pathSegments: [MatchFs.matches.name, matchId, GameResultFs.results.name],
-      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJsonOldFormat(json, appState),
-    );
-  }
+  // @Deprecated('To be removed')
+  // Future<List<GameResult>> getResultsOfAMatchOldFormat({
+  //   required String matchId,
+  //   required AppState appState,
+  //   // bool descending = false, need an index
+  // }) async {
+  //   return _getAllObjects<GameResult>(
+  //     pathSegments: [MatchFs.matches.name, matchId, GameResultFs.results.name],
+  //     fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJsonOldFormat(json, appState),
+  //   );
+  // }
 
   Future<List<String>> getUserMatchResultIds({
     String? userId,

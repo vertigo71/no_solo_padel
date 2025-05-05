@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
-import '../../database/db_firebase_helpers.dart';
-import '../../interface/if_director.dart';
 import '../../models/md_debug.dart';
-import '../../models/md_match.dart';
-import '../../models/md_result.dart';
-import '../../models/md_user.dart';
 
 final String _classString = 'CheckPanel'.toUpperCase();
 
@@ -21,12 +15,12 @@ class CheckPanel extends StatefulWidget {
 class CheckPanelState extends State<CheckPanel> {
   final List<String> _output = [];
   final ScrollController _scrollController = ScrollController();
-  late final Director _director;
+  // late final Director _director;
 
   @override
   void initState() {
     super.initState();
-    _director = context.read<Director>();
+    // _director = context.read<Director>();
   }
 
   @override
@@ -83,46 +77,47 @@ class CheckPanelState extends State<CheckPanel> {
   Future<void> _migrateResults() async {
     MyLog.log(_classString, 'migrateResults', level: Level.FINE);
     _addOutput("Migrate results to new collection...");
-    _addOutput("Create user match results to new collection...");
-    try {
-      List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
-      _addOutput("Found ${matches.length} matches.");
-
-      // erase all past userMatchResults
-      await FbHelpers().deleteUserMatchResultTillDateBatch();
-      _addOutput("All user match results deleted.");
-
-      // erase all past results
-      await FbHelpers().deleteGameResultsTillDateBatch();
-      _addOutput("All results deleted.");
-
-      for (MyMatch match in matches) {
-        _addOutput("------- Match: ${match.id}");
-
-        // add new user-Match to new collection for every player
-        for (MyUser user in match.players) {
-          await FbHelpers().addUserMatchResult(userId: user.id, matchId: match.id.toYyyyMmDd());
-          _addOutput("UserMatch added: ${user.id}");
-        }
-
-        // get results
-        List<GameResult> results =
-            await FbHelpers().getResultsOfAMatchOldFormat(matchId: match.id.toYyyyMmDd(), appState: _director.appState);
-        _addOutput("Found ${results.length} results.");
-
-        for (GameResult result in results) {
-          _addOutput("Result: ${result.id}");
-
-          // add result
-          await FbHelpers().createGameResult(result: result);
-          _addOutput("Game Result created and also added all UserMatchResults.");
-        }
-      }
-
-      _addOutput("\nMigrated completed.");
-    } catch (e) {
-      _addOutput("\nError migrating results: $e");
-    }
+    _addOutput("Already migrated!!!!");
+    // _addOutput("Create user match results to new collection...");
+    // try {
+    //   List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
+    //   _addOutput("Found ${matches.length} matches.");
+    //
+    //   // erase all past userMatchResults
+    //   await FbHelpers().deleteUserMatchResultTillDateBatch();
+    //   _addOutput("All user match results deleted.");
+    //
+    //   // erase all past results
+    //   await FbHelpers().deleteGameResultsTillDateBatch();
+    //   _addOutput("All results deleted.");
+    //
+    //   for (MyMatch match in matches) {
+    //     _addOutput("------- Match: ${match.id}");
+    //
+    //     // add new user-Match to new collection for every player
+    //     for (MyUser user in match.players) {
+    //       await FbHelpers().addUserMatchResult(userId: user.id, matchId: match.id.toYyyyMmDd());
+    //       _addOutput("UserMatch added: ${user.id}");
+    //     }
+    //
+    //     // get results
+    //     List<GameResult> results =
+    //         await FbHelpers().getResultsOfAMatchOldFormat(matchId: match.id.toYyyyMmDd(), appState: _director.appState);
+    //     _addOutput("Found ${results.length} results.");
+    //
+    //     for (GameResult result in results) {
+    //       _addOutput("Result: ${result.id}");
+    //
+    //       // add result
+    //       await FbHelpers().createGameResult(result: result);
+    //       _addOutput("Game Result created and also added all UserMatchResults.");
+    //     }
+    //   }
+    //
+    //   _addOutput("\nMigrated completed.");
+    // } catch (e) {
+    //   _addOutput("\nError migrating results: $e");
+    // }
   }
 
   // Helper function to add output and scroll to the bottom

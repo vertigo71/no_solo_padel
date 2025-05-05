@@ -126,42 +126,42 @@ class GameResult {
     }
   }
 
-  @Deprecated('To be removed')
-  factory GameResult.fromJsonOldFormat(Map<String, dynamic> json, final AppState appState) {
-    if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
-      MyLog.log(
-          _classString,
-          'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
-          myCustomObject: json,
-          level: Level.SEVERE);
-      throw MyException(
-          'Formato del resultado incorrecto. \n'
-          'resultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}\n'
-          'matchId: ${json[GameResultFs.matchId.name]}\n'
-          'json: $json',
-          level: Level.SEVERE);
-    }
-
-    // old format is like: date#user
-    String id = json[GameResultFs.resultId.name];
-    try {
-      return GameResult._(
-        id: GameResultId(
-            userId: id.split(kFieldSeparator)[1],
-            matchId: Date.parse(json[GameResultFs.matchId.name])!,
-            dateTime: DateTime.parse(id.split(kFieldSeparator)[0])),
-        matchId: Date.parse(json[GameResultFs.matchId.name])!,
-        teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
-        teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
-      );
-    } catch (e) {
-      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
-          level: Level.WARNING);
-      throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
-    }
-  }
+  // @Deprecated('To be removed')
+  // factory GameResult.fromJsonOldFormat(Map<String, dynamic> json, final AppState appState) {
+  //   if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
+  //     MyLog.log(
+  //         _classString,
+  //         'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
+  //         'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
+  //         myCustomObject: json,
+  //         level: Level.SEVERE);
+  //     throw MyException(
+  //         'Formato del resultado incorrecto. \n'
+  //         'resultId or matchId son nulos\n'
+  //         'resultId: ${json[GameResultFs.resultId.name]}\n'
+  //         'matchId: ${json[GameResultFs.matchId.name]}\n'
+  //         'json: $json',
+  //         level: Level.SEVERE);
+  //   }
+  //
+  //   // old format is like: date#user
+  //   String id = json[GameResultFs.resultId.name];
+  //   try {
+  //     return GameResult._(
+  //       id: GameResultId(
+  //           userId: id.split(kFieldSeparator)[1],
+  //           matchId: Date.parse(json[GameResultFs.matchId.name])!,
+  //           dateTime: DateTime.parse(id.split(kFieldSeparator)[0])),
+  //       matchId: Date.parse(json[GameResultFs.matchId.name])!,
+  //       teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
+  //       teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
+  //     );
+  //   } catch (e) {
+  //     MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
+  //         level: Level.WARNING);
+  //     throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
+  //   }
+  // }
 
   Map<String, dynamic> toJson() {
     if (id.resultId == '') {
