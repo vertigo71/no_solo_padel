@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/pages/main/information/info_user.dart';
 
 import '../models/md_debug.dart';
 import '../pages/admin/home_admin.dart';
 import '../pages/main/home_main.dart';
 import '../pages/login.dart';
+import '../pages/main/information/info_user.dart';
 import '../pages/match/home_match.dart';
 import '../pages/misc/register.dart';
 

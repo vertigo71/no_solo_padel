@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/utilities/ut_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
@@ -16,6 +15,7 @@ import '../../../utilities/ut_misc.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../models/md_user.dart';
 import '../../../utilities/ui_helpers.dart';
+import '../../../utilities/ut_theme.dart';
 
 final String _classString = 'AddResultModal'.toUpperCase();
 const int kNumPlayers = 4;

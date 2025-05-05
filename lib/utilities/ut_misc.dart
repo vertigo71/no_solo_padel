@@ -1,9 +1,9 @@
 import 'package:diacritic/diacritic.dart';
-import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:math';
 
 import '../models/md_debug.dart';
+import '../models/md_exception.dart';
 
 final String _classString = 'Miscellaneous'.toUpperCase();
 

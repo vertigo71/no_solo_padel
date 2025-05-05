@@ -1,9 +1,9 @@
-import 'package:no_solo_padel/models/md_exception.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'dart:core';
 import '../utilities/ut_misc.dart';
 import 'md_date.dart';
 import 'md_debug.dart';
+import 'md_exception.dart';
 
 final String _classString = '<md> MyUser'.toLowerCase();
 

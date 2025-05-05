@@ -3,12 +3,11 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:no_solo_padel/models/md_exception.dart';
-import 'package:no_solo_padel/models/md_user_match_result.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../interface/if_app_state.dart';
 import '../models/md_debug.dart';
+import '../models/md_exception.dart';
 import '../models/md_historic.dart';
 import '../models/md_register.dart';
 import '../models/md_match.dart';
@@ -16,6 +15,7 @@ import '../models/md_parameter.dart';
 import '../models/md_user.dart';
 import '../models/md_date.dart';
 import '../models/md_result.dart';
+import '../models/md_user_match_result.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
 final FirebaseFirestore _instance = FirebaseFirestore.instance;

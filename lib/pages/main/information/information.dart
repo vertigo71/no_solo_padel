@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:no_solo_padel/utilities/ut_list_view.dart';
 
 import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -11,6 +10,7 @@ import '../../../models/md_debug.dart';
 import '../../../models/md_user.dart';
 import '../../../routes/routes.dart';
 import '../../../utilities/ui_helpers.dart';
+import '../../../utilities/ut_list_view.dart';
 import 'modal_modify_user.dart';
 
 final String _classString = 'InformationPanel'.toUpperCase();
