@@ -86,13 +86,19 @@ class Director {
       MyLog.log(_classString, 'playersLastTrophies result=${result.id}', level: Level.FINE, indent: true);
       List<MyUser> players = result.winningPlayers;
       for (final MyUser player in players) {
-        if (!userTrophies.containsKey(player)) userTrophies[player] = [];
-        userTrophies[player]?.add(true);
+        if (!userTrophies.containsKey(player)) {
+          userTrophies[player] = [true];
+        } else {
+          userTrophies[player]?.add(true);
+        }
       }
       players = result.loosingPlayers;
       for (final MyUser player in players) {
-        if (!userTrophies.containsKey(player)) userTrophies[player] = [];
-        userTrophies[player]?.add(false);
+        if (!userTrophies.containsKey(player)) {
+          userTrophies[player] = [false];
+        } else {
+          userTrophies[player]?.add(false);
+        }
       }
     }
 

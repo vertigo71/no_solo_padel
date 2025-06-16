@@ -80,7 +80,8 @@ class CheckPanelState extends State<CheckPanel> {
     _addOutput("Already migrated!!!!");
 
     // TODO: erase all subcollections
-    
+    // TODO: erase UserMatchResult. Instead, add players to GameResults
+
     // _addOutput("Create user match results to new collection...");
     // try {
     //   List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
