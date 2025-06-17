@@ -47,12 +47,12 @@ abstract class UiHelper {
   /// ranking position, user type's display name, login count, and last login date.
   /// If an optional
   ///   `onPressed` callback is provided, the tile becomes tappable.
-  ///   `lastGamesWins` is a list of booleans indicating whether the user has won or lost last games.
+  ///   `lastSetsWins` is a list of booleans indicating whether the user has won or lost last sets.
   ///   `index` is the position of the user in a sorted list. Null for not displaying index
   static Widget buildUserInfoTile(
     BuildContext context,
     MyUser user, {
-    List<bool>? lastGamesWins,
+    List<bool>? lastSetsWins,
     int? index,
     Function? onPressed,
   }) {
@@ -91,11 +91,11 @@ abstract class UiHelper {
           ],
         ),
         title: Text('${user.name}$sosInfo'),
-        subtitle: lastGamesWins == null
+        subtitle: lastSetsWins == null
             ? null
             : Row(
                 spacing: 3,
-                children: lastGamesWins.map((win) {
+                children: lastSetsWins.map((win) {
                   if (win) {
                     return Container(
                       decoration: BoxDecoration(

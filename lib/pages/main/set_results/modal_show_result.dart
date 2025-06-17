@@ -7,7 +7,7 @@ import '../../../database/db_firebase_helpers.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_exception.dart';
-import '../../../models/md_result.dart';
+import '../../../models/md_set_result.dart';
 import '../../../utilities/ui_helpers.dart';
 import '../../../models/md_user.dart';
 import '../../../utilities/ut_theme.dart';
@@ -17,7 +17,7 @@ final String _classString = 'ShowResultModal'.toUpperCase();
 class ShowResultModal extends StatelessWidget {
   const ShowResultModal({super.key, required this.result});
 
-  final GameResult result;
+  final SetResult result;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +111,7 @@ class ShowResultModal extends StatelessWidget {
     );
   }
 
-  Widget _buildScore(GameResult result) {
+  Widget _buildScore(SetResult result) {
     MyLog.log(_classString, 'Building result: $result', indent: true);
     if (result.teamA != null && result.teamB != null) {
       return Text('${result.teamA!.score} - ${result.teamB!.score}',
@@ -121,7 +121,7 @@ class ShowResultModal extends StatelessWidget {
     }
   }
 
-  Future<bool> _eraseResult(GameResult result, BuildContext context) async {
+  Future<bool> _eraseResult(SetResult result, BuildContext context) async {
     MyLog.log(_classString, '_eraseResult: $result');
 
     // confirm erasing
@@ -132,9 +132,9 @@ class ShowResultModal extends StatelessWidget {
     if (response.isEmpty || response == kNoOption) return false;
     MyLog.log(_classString, 'build response = $response', indent: true);
 
-    // erase the gameResult
+    // erase the setResult
     try {
-      await FbHelpers().deleteGameResult(result);
+      await FbHelpers().deleteSetResult(result);
     } catch (e) {
       MyLog.log(_classString, 'Error erasing result: ${e.toString()}', level: Level.SEVERE, indent: true);
       throw MyException('Error al eliminar el resultado: $result', e: e, level: Level.SEVERE);
@@ -168,7 +168,7 @@ class ShowResultModal extends StatelessWidget {
     return true; // success
   }
 
-  Widget _buildBars(BuildContext context, GameResult result) {
+  Widget _buildBars(BuildContext context, SetResult result) {
     MyLog.log(_classString, 'Building bars', level: Level.FINE, indent: true);
     int rankingTeamA = result.teamA?.preRanking ?? 0;
     int rankingTeamB = result.teamB?.preRanking ?? 0;

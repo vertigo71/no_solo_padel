@@ -11,9 +11,10 @@ final String _classString = '<md> MyResult'.toLowerCase();
 const String kFieldSeparator = '#';
 
 // result fields in Firestore
-enum GameResultFs {
+enum SetResultFs {
   resultId,
   matchId,
+  players,
   player1,
   player2,
   points,
@@ -25,16 +26,31 @@ enum GameResultFs {
   results,
 }
 
-class GameResult {
-  final GameResultId id;
+/// Represents the outcome and details of a single set within a match.
+///
+/// This class focuses on the logical structure of a set result,
+/// primarily holding information about the two teams (`teamA` and `teamB`).
+///
+/// **Firestore Data Modeling Note (allPlayers field):**
+/// For efficient querying in Firestore, a 'allPlayers' field is added during
+/// serialization (in `toJson()`). This field contains a list of all player IDs
+/// involved in the set result.
+///
+/// This 'allPlayers' field is *not* a member of the `SetResult` class itself
+/// because it serves as a denormalized index primarily for database queries
+/// (e.g., finding all sets a specific player participated in using `array-contains`).
+/// It's a storage optimization rather than a core property of the `SetResult`
+/// domain model, as player information is already accessible via `teamA` and `teamB`.
+class SetResult {
+  final SetResultId id;
   final Date matchId;
   final TeamResult? teamA;
   final TeamResult? teamB;
 
-  GameResult({required String userId, required this.matchId, this.teamA, this.teamB})
-      : id = GameResultId(matchId: matchId, userId: userId);
+  SetResult({required String userId, required this.matchId, this.teamA, this.teamB})
+      : id = SetResultId(matchId: matchId, userId: userId);
 
-  GameResult._({required this.id, required this.matchId, this.teamA, this.teamB});
+  SetResult._({required this.id, required this.matchId, this.teamA, this.teamB});
 
   bool _checkResultOk() {
     if (teamA == null || teamB == null || teamA!.score == teamB!.score) {
@@ -44,17 +60,17 @@ class GameResult {
     return true;
   }
 
-  /// returns the score [in favor, against] of the player in the game
-  /// returns null if the player is not in the game
-  List<int>? getScores( MyUser player){
+  /// returns the score [in favor, against] of the player in the set
+  /// returns null if the player is not in the set
+  List<int>? getScores(MyUser player) {
     if (teamA?.isPlayerInTeam(player) ?? false) return [teamA!.score, teamB!.score];
     if (teamB?.isPlayerInTeam(player) ?? false) return [teamB!.score, teamA!.score];
     return null;
   }
 
-  /// returns the points of the player in the game
-  /// returns null if the player is not in the game
-  int? getPoints( MyUser player){
+  /// returns the points of the player in the set
+  /// returns null if the player is not in the set
+  int? getPoints(MyUser player) {
     if (teamA?.isPlayerInTeam(player) ?? false) return teamA!.points;
     if (teamB?.isPlayerInTeam(player) ?? false) return teamB!.points;
     return null;
@@ -72,7 +88,7 @@ class GameResult {
     return [teamB!.player1, teamB!.player2];
   }
 
-  bool playerIsInGameResult(MyUser player) =>
+  bool playerIsInSetResult(MyUser player) =>
       (teamA?.isPlayerInTeam(player) ?? false) || (teamB?.isPlayerInTeam(player) ?? false);
 
   bool playerHasWon(MyUser player) {
@@ -81,13 +97,13 @@ class GameResult {
     return false;
   }
 
-  GameResult copyWith({
-    GameResultId? id,
+  SetResult copyWith({
+    SetResultId? id,
     Date? matchId,
     TeamResult? teamA,
     TeamResult? teamB,
   }) {
-    return GameResult._(
+    return SetResult._(
       id: id ?? this.id,
       matchId: matchId ?? this.matchId,
       teamA: teamA ?? this.teamA,
@@ -95,27 +111,27 @@ class GameResult {
     );
   }
 
-  factory GameResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
+  factory SetResult.fromJson(Map<String, dynamic> json, final AppState appState) {
+    if (json[SetResultFs.resultId.name] == null || json[SetResultFs.matchId.name] == null) {
       MyLog.log(
           _classString,
           'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
+          'resultId: ${json[SetResultFs.resultId.name]}, matchId: ${json[SetResultFs.matchId.name]}',
           myCustomObject: json,
           level: Level.SEVERE);
       throw MyException(
           'Formato del resultado incorrecto. \n'
           'resultId or matchId son nulos\n'
-          'resultId: ${json[GameResultFs.resultId.name]}\n'
-          'matchId: ${json[GameResultFs.matchId.name]}\n'
+          'resultId: ${json[SetResultFs.resultId.name]}\n'
+          'matchId: ${json[SetResultFs.matchId.name]}\n'
           'json: $json',
           level: Level.SEVERE);
     }
 
     try {
-      return GameResult._(
-        id: GameResultId.fromString(json[GameResultFs.resultId.name]),
-        matchId: Date.parse(json[GameResultFs.matchId.name])!,
+      return SetResult._(
+        id: SetResultId.fromString(json[SetResultFs.resultId.name]),
+        matchId: Date.parse(json[SetResultFs.matchId.name])!,
         teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
         teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
       );
@@ -125,43 +141,6 @@ class GameResult {
       throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
     }
   }
-
-  // @Deprecated('To be removed')
-  // factory GameResult.fromJsonOldFormat(Map<String, dynamic> json, final AppState appState) {
-  //   if (json[GameResultFs.resultId.name] == null || json[GameResultFs.matchId.name] == null) {
-  //     MyLog.log(
-  //         _classString,
-  //         'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
-  //         'resultId: ${json[GameResultFs.resultId.name]}, matchId: ${json[GameResultFs.matchId.name]}',
-  //         myCustomObject: json,
-  //         level: Level.SEVERE);
-  //     throw MyException(
-  //         'Formato del resultado incorrecto. \n'
-  //         'resultId or matchId son nulos\n'
-  //         'resultId: ${json[GameResultFs.resultId.name]}\n'
-  //         'matchId: ${json[GameResultFs.matchId.name]}\n'
-  //         'json: $json',
-  //         level: Level.SEVERE);
-  //   }
-  //
-  //   // old format is like: date#user
-  //   String id = json[GameResultFs.resultId.name];
-  //   try {
-  //     return GameResult._(
-  //       id: GameResultId(
-  //           userId: id.split(kFieldSeparator)[1],
-  //           matchId: Date.parse(json[GameResultFs.matchId.name])!,
-  //           dateTime: DateTime.parse(id.split(kFieldSeparator)[0])),
-  //       matchId: Date.parse(json[GameResultFs.matchId.name])!,
-  //       teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
-  //       teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
-  //     );
-  //   } catch (e) {
-  //     MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
-  //         level: Level.WARNING);
-  //     throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
-  //   }
-  // }
 
   Map<String, dynamic> toJson() {
     if (id.resultId == '') {
@@ -176,8 +155,9 @@ class GameResult {
           level: Level.SEVERE);
     }
     return {
-      GameResultFs.resultId.name: id.resultId,
-      GameResultFs.matchId.name: matchId.toYyyyMmDd(),
+      SetResultFs.resultId.name: id.resultId,
+      SetResultFs.matchId.name: matchId.toYyyyMmDd(),
+      SetResultFs.players.name: [teamA?.player1.id, teamA?.player2.id, teamB?.player1.id, teamB?.player2.id],
       'teamA': teamA?.toJson(),
       'teamB': teamB?.toJson(),
     };
@@ -191,7 +171,7 @@ class GameResult {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GameResult &&
+      other is SetResult &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           matchId == other.matchId &&
@@ -240,8 +220,8 @@ class TeamResult {
   }
 
   factory TeamResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    MyUser? player1 = appState.getUserById(json[GameResultFs.player1.name]);
-    MyUser? player2 = appState.getUserById(json[GameResultFs.player2.name]);
+    MyUser? player1 = appState.getUserById(json[SetResultFs.player1.name]);
+    MyUser? player2 = appState.getUserById(json[SetResultFs.player2.name]);
     if (player1 == null || player2 == null) {
       MyLog.log(
           _classString,
@@ -249,29 +229,31 @@ class TeamResult {
           'Los jugadores ($player1, $player2) no existen en \n',
           myCustomObject: json,
           level: Level.SEVERE);
-      throw MyException('Error leyendo la base de datos. \n'
+      throw MyException(
+          'Error leyendo la base de datos. \n'
           'Los jugadores ($player1, $player2) no existen en \n'
-          '$json', level: Level.SEVERE);
+          '$json',
+          level: Level.SEVERE);
     }
 
     return TeamResult(
       player1: player1,
       player2: player2,
-      points: json[GameResultFs.points.name] ?? 0,
-      score: json[GameResultFs.score.name] ?? 0,
-      preRanking1: json[GameResultFs.preRanking1.name] ?? 0,
-      preRanking2: json[GameResultFs.preRanking2.name] ?? 0,
+      points: json[SetResultFs.points.name] ?? 0,
+      score: json[SetResultFs.score.name] ?? 0,
+      preRanking1: json[SetResultFs.preRanking1.name] ?? 0,
+      preRanking2: json[SetResultFs.preRanking2.name] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      GameResultFs.player1.name: player1.id,
-      GameResultFs.player2.name: player2.id,
-      GameResultFs.points.name: points,
-      GameResultFs.score.name: score,
-      GameResultFs.preRanking1.name: preRanking1,
-      GameResultFs.preRanking2.name: preRanking2,
+      SetResultFs.player1.name: player1.id,
+      SetResultFs.player2.name: player2.id,
+      SetResultFs.points.name: points,
+      SetResultFs.score.name: score,
+      SetResultFs.preRanking1.name: preRanking1,
+      SetResultFs.preRanking2.name: preRanking2,
     };
   }
 
@@ -305,26 +287,26 @@ class TeamResult {
       preRanking2.hashCode;
 }
 
-class GameResultId {
+class SetResultId {
   final Date _matchId;
   final DateTime _dateTime;
   final String _userId;
 
-  GameResultId({required Date matchId, required String userId, DateTime? dateTime})
+  SetResultId({required Date matchId, required String userId, DateTime? dateTime})
       : _matchId = matchId,
         _dateTime = dateTime ?? DateTime.now(),
         _userId = userId;
 
-  factory GameResultId.fromString(String id) {
+  factory SetResultId.fromString(String id) {
     try {
       final parts = id.split(kFieldSeparator);
       final matchId = Date.parse(parts[0])!;
       final dateTime = DateTime.parse(parts[1]);
       final userId = parts[2];
-      return GameResultId(matchId: matchId, dateTime: dateTime, userId: userId);
+      return SetResultId(matchId: matchId, dateTime: dateTime, userId: userId);
     } catch (e) {
       MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}', level: Level.WARNING);
-      throw MyException('ResultId formato Invalido: $id', e:e, level: Level.WARNING);
+      throw MyException('ResultId formato Invalido: $id', e: e, level: Level.WARNING);
     }
   }
 
@@ -344,7 +326,7 @@ class GameResultId {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GameResultId &&
+      other is SetResultId &&
           runtimeType == other.runtimeType &&
           _dateTime == other._dateTime &&
           _matchId == other._matchId &&

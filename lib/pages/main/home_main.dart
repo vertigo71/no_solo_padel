@@ -17,10 +17,10 @@ import '../../routes/routes.dart';
 import '../../models/md_date.dart';
 import '../../utilities/ut_environment.dart';
 import '../../utilities/ui_helpers.dart';
-import 'games.dart';
+import 'matches.dart';
 import 'information/information.dart';
 import 'profile.dart';
-import 'results/results.dart';
+import 'set_results/set_results.dart';
 
 final String _classString = 'MainPage'.toUpperCase();
 
@@ -38,7 +38,7 @@ class _MainPageState extends State<MainPage> {
   late Director _director;
 
   static const List<Widget> _kWidgetOptions = <Widget>[
-    GamesPanel(),
+    MatchesPanel(),
     ResultsPanel(),
     InformationPanel(),
     ProfilePanel(),

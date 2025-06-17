@@ -10,7 +10,7 @@ import '../../../models/md_debug.dart';
 import '../../../models/md_exception.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_parameter.dart';
-import '../../../models/md_result.dart';
+import '../../../models/md_set_result.dart';
 import '../../../utilities/ut_misc.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../models/md_user.dart';
@@ -282,8 +282,8 @@ class _AddResultModalState extends State<AddResultModal> {
         throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
       }
 
-      // create GameResult
-      GameResult gameResult = GameResult(
+      // create SetResult
+      SetResult setResult = SetResult(
         userId: loggedUser.id,
         matchId: _match.id,
         teamA: teamA,
@@ -292,8 +292,8 @@ class _AddResultModalState extends State<AddResultModal> {
 
       // save result to Firestore
       try {
-        MyLog.log(_classString, 'Saving result: $gameResult', indent: true);
-        await FbHelpers().createGameResult(result: gameResult);
+        MyLog.log(_classString, 'Saving result: $setResult', indent: true);
+        await FbHelpers().createSetResult(result: setResult);
       } catch (e) {
         MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
         throw MyException('Error al guardar el resultado', e: e, level: Level.SEVERE);

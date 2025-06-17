@@ -15,10 +15,10 @@ import '../../routes/routes.dart';
 import '../../models/md_date.dart';
 import '../../utilities/ui_helpers.dart';
 
-final String _classString = 'GamesPanel'.toUpperCase();
+final String _classString = 'MatchesPanel'.toUpperCase();
 
-class GamesPanel extends StatelessWidget {
-  const GamesPanel({super.key});
+class MatchesPanel extends StatelessWidget {
+  const MatchesPanel({super.key});
 
   @override
   Widget build(BuildContext context) {

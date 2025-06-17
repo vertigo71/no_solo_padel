@@ -52,13 +52,13 @@ class _InformationPanelState extends State<InformationPanel> {
               itemBuilder: (context, index) {
                 final user = users[index];
                 final displayIndex = index + 1; // Add 1 for 1-based indexing
-                final List<bool>? lastGamesWins = userTrophiesData?[user]?.take(kNumberOfTrophies).toList();
+                final List<bool>? lastSetsWins = userTrophiesData?[user]?.take(kNumberOfTrophies).toList();
 
                 return UiHelper.buildUserInfoTile(
                   context,
                   user,
                   index: displayIndex,
-                  lastGamesWins: lastGamesWins,
+                  lastSetsWins: lastSetsWins,
                   // logged user can only edit users with higher or equal rank
                   onPressed: () => context.pushNamed(AppRoutes.kInfoUser, extra: user.id),
                 );

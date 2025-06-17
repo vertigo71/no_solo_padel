@@ -14,8 +14,7 @@ import '../models/md_match.dart';
 import '../models/md_parameter.dart';
 import '../models/md_user.dart';
 import '../models/md_date.dart';
-import '../models/md_result.dart';
-import '../models/md_user_match_result.dart';
+import '../models/md_set_result.dart';
 
 final String _classString = '<db> FsHelper'.toLowerCase();
 final FirebaseFirestore _instance = FirebaseFirestore.instance;
@@ -194,15 +193,11 @@ mixin _GetObject implements _Basic {
       fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       appState: appState);
 
-  Future<GameResult?> getGameResult(
-          { required String resultId, required AppState appState}) async =>
-      await _getObject(
-          pathSegments: [GameResultFs.results.name, resultId],
-          fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState));
+  Future<SetResult?> getSetResult({required String resultId, required AppState appState}) async => await _getObject(
+      pathSegments: [SetResultFs.results.name, resultId],
+      fromJson: (json, [AppState? optionalAppState]) => SetResult.fromJson(json, appState));
 
-  Future<UserMatchResult?> getUserMatchResult({required String userMatchResultId}) async => await _getObject(
-      pathSegments: [UserMatchResultFs.userMatchResult.name, userMatchResultId],
-      fromJson: (json, [AppState? optionalAppState]) => UserMatchResult.fromJson(json));
+
 
   Future<MyParameters> getParameters() async =>
       await _getObject(
@@ -282,19 +277,6 @@ mixin _GetObjects implements _Basic {
         fromJson: (json, [AppState? optionalAppState]) => MyMatch.fromJson(json, appState),
       );
 
-  Future<List<GameResult>> getAllGameResults({
-    required AppState appState,
-    Date? fromDate,
-    Date? toDate,
-    // bool descending = false, need an index that cannot be created in Firestore console
-  }) async =>
-      _getAllObjects<GameResult>(
-        pathSegments: [GameResultFs.results.name],
-        fromDate: fromDate,
-        toDate: toDate,
-        fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
-      );
-
   /// returns all matches containing a player
   Future<List<MyMatch>> getAllMatchesWithPlayer({
     required AppState appState,
@@ -312,62 +294,23 @@ mixin _GetObjects implements _Basic {
     );
   }
 
-  /// returns all results from a match
-  Future<List<GameResult>> getAllGameResultsFromMatch({
-    required String matchId,
+  /// returns all matches containing a player
+  Future<List<SetResult>> getSetResults({
     required AppState appState,
-    // bool descending = false, need an index that cannot be created in Firestore console
+    String? playerId,
+    String? matchId,
+    Date? fromDate,
+    Date? toDate,
   }) async {
-    return _getAllObjects<GameResult>(
-      pathSegments: [GameResultFs.results.name],
-      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+    return _getAllObjects<SetResult>(
+      pathSegments: [SetResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => SetResult.fromJson(json, appState),
+      fromDate: fromDate,
+      toDate: toDate,
       appState: appState,
-      filter: (query) => query.where(GameResultFs.matchId.name, isEqualTo: matchId),
-    );
-  }
-
-  Future<List<UserMatchResult>> getUserMatchResults({
-    String? userId,
-    String? matchId,
-    String? resultId,
-    // bool descending = false, need an index
-  }) async {
-    return _getAllObjects<UserMatchResult>(
-      pathSegments: [UserMatchResultFs.userMatchResult.name],
-      fromJson: (json, [AppState? optionalAppState]) => UserMatchResult.fromJson(json),
       filter: (query) {
-        if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
-        if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
-        if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
-        return query;
-      },
-    );
-  }
-
-  // @Deprecated('To be removed')
-  // Future<List<GameResult>> getResultsOfAMatchOldFormat({
-  //   required String matchId,
-  //   required AppState appState,
-  //   // bool descending = false, need an index
-  // }) async {
-  //   return _getAllObjects<GameResult>(
-  //     pathSegments: [MatchFs.matches.name, matchId, GameResultFs.results.name],
-  //     fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJsonOldFormat(json, appState),
-  //   );
-  // }
-
-  Future<List<String>> getUserMatchResultIds({
-    String? userId,
-    String? matchId,
-    String? resultId,
-    // bool descending = false, need an index
-  }) async {
-    return _getAllObjects<String>(
-      pathSegments: [UserMatchResultFs.userMatchResult.name],
-      filter: (query) {
-        if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
-        if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
-        if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
+        if (matchId != null) query = query.where(SetResultFs.matchId.name, isEqualTo: matchId);
+        if (playerId != null) query = query.where(SetResultFs.players.name, arrayContains: playerId);
         return query;
       },
     );
@@ -519,14 +462,12 @@ mixin _DeleteObject implements _Basic {
     }
   }
 
-  Future<void> deleteGameResult(GameResult result) async {
+  Future<void> deleteSetResult(SetResult result) async {
     MyLog.log(_classString, 'deleteResult deleting result $result');
 
     try {
       // delete the result
-      await _instance.collection(GameResultFs.results.name).doc(result.id.resultId).delete();
-      // delete the userMatchResults
-      await deleteUserMatchResultBatch(resultId: result.id.resultId);
+      await _instance.collection(SetResultFs.results.name).doc(result.id.resultId).delete();
     } catch (e) {
       MyLog.log(_classString, 'deleteResult error when deleting',
           myCustomObject: result, level: Level.SEVERE, indent: true);
@@ -534,29 +475,11 @@ mixin _DeleteObject implements _Basic {
     }
   }
 
-  Future<void> deleteUserMatchResultTillDateBatch({String? maxMatchId}) async => await _deleteDocsBatch(
-      collection: UserMatchResultFs.userMatchResult.name,
-      sortingField: UserMatchResultFs.matchId.name,
+  Future<void> deleteSetResultsTillDateBatch({String? maxMatchId}) async => await _deleteDocsBatch(
+      collection: SetResultFs.results.name,
+      sortingField: SetResultFs.matchId.name,
       filter: (query) {
-        if (maxMatchId != null) query = query.where(UserMatchResultFs.matchId.name, isLessThanOrEqualTo: maxMatchId);
-        return query;
-      });
-
-  Future<void> deleteUserMatchResultBatch({String? userId, String? matchId, String? resultId}) async =>
-      await _deleteDocsBatch(
-          collection: UserMatchResultFs.userMatchResult.name,
-          filter: (query) {
-            if (userId != null) query = query.where(UserMatchResultFs.userId.name, isEqualTo: userId);
-            if (matchId != null) query = query.where(UserMatchResultFs.matchId.name, isEqualTo: matchId);
-            if (resultId != null) query = query.where(UserMatchResultFs.resultId.name, isEqualTo: resultId);
-            return query;
-          });
-
-  Future<void> deleteGameResultsTillDateBatch({String? maxMatchId}) async => await _deleteDocsBatch(
-      collection: GameResultFs.results.name,
-      sortingField: GameResultFs.matchId.name,
-      filter: (query) {
-        if (maxMatchId != null) query = query.where(GameResultFs.matchId.name, isLessThanOrEqualTo: maxMatchId);
+        if (maxMatchId != null) query = query.where(SetResultFs.matchId.name, isLessThanOrEqualTo: maxMatchId);
         return query;
       });
 
@@ -629,17 +552,17 @@ mixin _GetStream implements _Basic {
     );
   }
 
-  Stream<List<GameResult>>? getGameResultsStream({
+  Stream<List<SetResult>>? getSetResultsStream({
     required AppState appState,
     required String matchId,
   }) {
     MyLog.log(_classString, 'getResultsStream matchId=$matchId');
 
     return _getStream(
-      pathSegments: [GameResultFs.results.name],
-      fromJson: (json, [AppState? optionalAppState]) => GameResult.fromJson(json, appState),
+      pathSegments: [SetResultFs.results.name],
+      fromJson: (json, [AppState? optionalAppState]) => SetResult.fromJson(json, appState),
       appState: appState,
-      filter: (query) => query.where(GameResultFs.matchId.name, isEqualTo: matchId),
+      filter: (query) => query.where(SetResultFs.matchId.name, isEqualTo: matchId),
     );
   }
 }
@@ -659,6 +582,13 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
 
   Future<bool> doesDocExist({required String collection, required String doc}) async =>
       await _instance.collection(collection).doc(doc).get().then((doc) => doc.exists);
+
+  Future<bool> hasPlayerResultsForMatch({
+    required AppState appState,
+    String? playerId,
+    String? matchId,
+  }) async =>
+      (await getSetResults(appState: appState, playerId: playerId, matchId: matchId)).isNotEmpty;
 
   /// create a subscription to a match
   /// matchFunction: checks if match has change and notify to listeners
@@ -825,60 +755,21 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
     );
     // create new registers in UserMatchRResults
     for (MyUser player in match.players) {
-      MyLog.log(_classString, 'createMatchIfNotExists adding user=$player to match', indent: true );
+      MyLog.log(_classString, 'createMatchIfNotExists adding user=$player to match', indent: true);
       await addPlayerToMatch(matchId: match.id, player: player, appState: appState);
     }
     return true;
   }
 
-  /// add a game result to the results collection
+  /// add a set result to the results collection
   /// add the result to the userMatchResult collection
-  Future<void> createGameResult({required GameResult result}) async {
+  Future<void> createSetResult({required SetResult result}) async {
     // add the result to the results collection
     await _updateObject(
       fields: result.toJson(),
-      pathSegments: [GameResultFs.results.name, result.id.resultId],
+      pathSegments: [SetResultFs.results.name, result.id.resultId],
       forceSet: false, // false: merges the fields, true:replaces the old object if exists
     );
-    // add the result to the userMatchResult collection
-    await addUserMatchResult(
-        userId: result.teamA!.player1.id, matchId: result.id.matchId, resultId: result.id.resultId);
-    await addUserMatchResult(
-        userId: result.teamA!.player2.id, matchId: result.id.matchId, resultId: result.id.resultId);
-    await addUserMatchResult(
-        userId: result.teamB!.player1.id, matchId: result.id.matchId, resultId: result.id.resultId);
-    await addUserMatchResult(
-        userId: result.teamB!.player2.id, matchId: result.id.matchId, resultId: result.id.resultId);
-  }
-
-  /// add Object with a new automatic Id
-  Future<DocumentReference> _addObject({
-    required Map<String, dynamic> fields,
-    required List<String> pathSegments, // List of collection/doc identifiers
-  }) async {
-    MyLog.log(_classString, 'addObject ${pathSegments.join('/')}, ', indent: true);
-
-    try {
-      CollectionReference collectionReference = _getCollectionRef(pathSegments: pathSegments);
-      DocumentReference documentReference = await collectionReference.add(fields);
-
-      MyLog.log(_classString, 'addObject ${pathSegments.join('/')}, success', indent: true);
-      return documentReference;
-    } catch (onError) {
-      MyLog.log(_classString, 'addObject ${pathSegments.join('/')} error:', exception: onError, level: Level.SEVERE);
-      throw MyException('Error al actualizar ${pathSegments.join('/')}', e: onError, level: Level.SEVERE);
-    }
-  }
-
-  Future<DocumentReference> addUserMatchResult({
-    required String userId,
-    required String matchId,
-    String? resultId,
-  }) async {
-    MyLog.log(_classString, 'addUserMatchResult adding user=$userId to match=$matchId and result=$resultId');
-    return await _addObject(
-        fields: UserMatchResult(userId: userId, matchId: matchId, resultId: resultId).toJson(),
-        pathSegments: [UserMatchResultFs.userMatchResult.name]);
   }
 
   /// return match with the position of inserted user
@@ -914,26 +805,16 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
       int posInserted = myMatch.insertPlayer(player, position: position);
       // exception caught by catchError
       if (posInserted == -1) {
-        MyLog.log(_classString, 'Error: el jugador $player ya estaba en el partido.', indent: true, level: Level.WARNING);
+        MyLog.log(_classString, 'Error: el jugador $player ya estaba en el partido.',
+            indent: true, level: Level.WARNING);
         throw MyException('Error: el jugador $player ya estaba en el partido.', level: Level.WARNING);
       }
       MyLog.log(_classString, 'addPlayerToMatch player inserted match = ', myCustomObject: myMatch, indent: true);
-
-      // create new UserMatchResult
-      UserMatchResult userMatchResult = UserMatchResult(userId: player.id, matchId: myMatch.id.toYyyyMmDd());
 
       // add/update match to firebase
       transaction.set(
         matchDocReference,
         myMatch.toJson(core: false, matchPlayers: true),
-        SetOptions(merge: true),
-      );
-      // add/update userMatchResult to firebase
-      DocumentReference userMatchResultDocReference =
-          _instance.collection(UserMatchResultFs.userMatchResult.name).doc(); // new doc
-      transaction.set(
-        userMatchResultDocReference,
-        userMatchResult.toJson(),
         SetOptions(merge: true),
       );
       // update players isActive toggle
@@ -956,8 +837,8 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
   /// return match
   /// Remove the player from the Match's list of players.
   ///     Remove the UserMatchResult entry linking the User and the Match.
-  ///     Crucially: Remove any UserMatchResult entries that link the User to any GameResult within that Match.
-  ///     This ensures that orphaned game results are not left behind.
+  ///     Crucially: Remove any UserMatchResult entries that link the User to any SetResult within that Match.
+  ///     This ensures that orphaned set results are not left behind.
   ///     Check if the User is associated with any other Match in the UserMatchResult table.
   ///     If not, set the User's isActive status to false.
   ///
@@ -999,24 +880,21 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         SetOptions(merge: true),
       );
 
-      // remove match from userMatchResult
-      List<String> userMatchResultIds =
-          await getUserMatchResultIds(userId: player.id, matchId: myMatch.id.toYyyyMmDd());
-      // remove userMatchesResults  from firebase
-      for (final userMatchResultId in userMatchResultIds) {
-        // get userMatchResult
-        DocumentReference userMatchResultDocReference =
-            _getDocRef(pathSegments: [UserMatchResultFs.userMatchResult.name, userMatchResultId]);
-        UserMatchResult? userMatchResult = await getUserMatchResult(userMatchResultId: userMatchResultId);
+      // check if there are any results for this player in this match
+      bool setResultsExists = await FbHelpers().hasPlayerResultsForMatch(
+        appState: appState,
+        playerId: player.id,
+        matchId: myMatch.id.toYyyyMmDd(),
+      );
 
-        if (userMatchResult != null && userMatchResult.resultId != null) {
-          // ERROR. This player has a result published
-          MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
-              level: Level.WARNING, indent: true);
-          throw MyException('Error: el jugador ${player.id} YA tiene un resultado publicado.', level: Level.WARNING);
-        }
-
-        transaction.delete(userMatchResultDocReference);
+      if (setResultsExists) {
+        // ERROR. This player has a result published
+        MyLog.log(_classString, 'deletePlayerFromMatch error deleting $player from match $matchId',
+            level: Level.WARNING, indent: true);
+        throw MyException(
+            'Error: el jugador ${player.id} tiene resultados publicados.\n'
+            'No se puede eliminar el jugador del partido.',
+            level: Level.WARNING);
       }
 
       // is player still active?

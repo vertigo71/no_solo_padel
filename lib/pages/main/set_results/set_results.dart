@@ -8,7 +8,7 @@ import '../../../database/db_firebase_helpers.dart';
 import '../../../interface/if_app_state.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_exception.dart';
-import '../../../models/md_result.dart';
+import '../../../models/md_set_result.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_user.dart';
 import '../../../models/md_date.dart';
@@ -67,18 +67,18 @@ class ResultsPanel extends StatelessWidget {
       return Column(
         children: [
           _buildHeader(context, match.id.longFormat(), appState, () => _addResultModal(context, match)),
-          StreamBuilder<List<GameResult>>(
-            stream: FbHelpers().getGameResultsStream(appState: appState, matchId: match.id.toYyyyMmDd()),
+          StreamBuilder<List<SetResult>>(
+            stream: FbHelpers().getSetResultsStream(appState: appState, matchId: match.id.toYyyyMmDd()),
             builder: (context, snapshot) {
               try {
                 if (snapshot.hasData) {
-                  final results = snapshot.data!;
-                  MyLog.log(_classString, '_buildMatchItem Results: $results', level: Level.FINE, indent: true);
+                  final setResults = snapshot.data!;
+                  MyLog.log(_classString, '_buildMatchItem Results: $setResults', level: Level.FINE, indent: true);
                   return Column(
-                    children: results.map((result) => _buildResultCard(result, context)).toList(),
+                    children: setResults.map((result) => _buildResultCard(result, context)).toList(),
                   );
                 } else if (snapshot.hasError) {
-                  MyLog.log(_classString, 'Error loading results: ${snapshot.error}',
+                  MyLog.log(_classString, 'Error loading setResults: ${snapshot.error}',
                       level: Level.SEVERE, indent: true);
                   throw snapshot.error!;
                 } else {
@@ -128,7 +128,7 @@ class ResultsPanel extends StatelessWidget {
         ),
       );
 
-  Widget _buildResultCard(GameResult result, BuildContext context) {
+  Widget _buildResultCard(SetResult result, BuildContext context) {
     MyLog.log(_classString, 'Building result card: $result', indent: true);
     try {
       return InkWell(
@@ -193,7 +193,7 @@ class ResultsPanel extends StatelessWidget {
     return UiHelper.modalPanel(context, match.id.longFormat(), AddResultModal(match: match));
   }
 
-  Future _showResultModal(BuildContext context, GameResult result) {
+  Future _showResultModal(BuildContext context, SetResult result) {
     return UiHelper.modalPanel(context, result.matchId.longFormat(), ShowResultModal(result: result));
   }
 }

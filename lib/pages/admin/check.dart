@@ -80,7 +80,7 @@ class CheckPanelState extends State<CheckPanel> {
     _addOutput("Already migrated!!!!");
 
     // TODO: erase all subcollections
-    // TODO: erase UserMatchResult. Instead, add players to GameResults
+    // TODO: erase UserMatchResult. Instead, add players to SetResults
 
     // _addOutput("Create user match results to new collection...");
     // try {
@@ -92,7 +92,7 @@ class CheckPanelState extends State<CheckPanel> {
     //   _addOutput("All user match results deleted.");
     //
     //   // erase all past results
-    //   await FbHelpers().deleteGameResultsTillDateBatch();
+    //   await FbHelpers().deleteSetResultsTillDateBatch();
     //   _addOutput("All results deleted.");
     //
     //   for (MyMatch match in matches) {
@@ -105,16 +105,16 @@ class CheckPanelState extends State<CheckPanel> {
     //     }
     //
     //     // get results
-    //     List<GameResult> results =
+    //     List<SetResult> results =
     //         await FbHelpers().getResultsOfAMatchOldFormat(matchId: match.id.toYyyyMmDd(), appState: _director.appState);
     //     _addOutput("Found ${results.length} results.");
     //
-    //     for (GameResult result in results) {
+    //     for (SetResult result in results) {
     //       _addOutput("Result: ${result.id}");
     //
     //       // add result
-    //       await FbHelpers().createGameResult(result: result);
-    //       _addOutput("Game Result created and also added all UserMatchResults.");
+    //       await FbHelpers().createSetResult(result: result);
+    //       _addOutput("Set Result created and also added all UserMatchResults.");
     //     }
     //   }
     //

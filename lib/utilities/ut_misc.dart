@@ -150,14 +150,14 @@ class RankingPoints {
       return teamAIsFavorite ? addFreePoints(-winnerResult) : addFreePoints(winnerResult);
     }
 
-    int winnerResult = (scoreDifference.abs() * _winnerPointsPerGame(xnor(teamAWins, teamAIsFavorite))).round();
+    int winnerResult = (scoreDifference.abs() * _winnerPointsPerSet(xnor(teamAWins, teamAIsFavorite))).round();
 
     return teamAWins ? addFreePoints(winnerResult) : addFreePoints(-winnerResult);
   }
 
   /// Calculates the base number of points awarded to the winner based on the ranking difference
   /// and whether they were the favorite.
-  double _winnerPointsPerGame(bool isFavorite) {
+  double _winnerPointsPerSet(bool isFavorite) {
     int rankingDifference = (rankingA - rankingB).abs();
 
     // calculate k, the scaling factor, based on rankingDiffToHalf.
@@ -182,7 +182,7 @@ class RankingPoints {
 
     MyLog.log(
         _classString,
-        'pointsPerGame: s=$step r=$range half=$rankingDiffToHalf d=$rankingDifference favorite=$isFavorite '
+        'pointsPerSet: s=$step r=$range half=$rankingDiffToHalf d=$rankingDifference favorite=$isFavorite '
         'fraction=$fraction, result=$result',
         indent: true);
 

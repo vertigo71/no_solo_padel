@@ -5,7 +5,7 @@ import 'package:simple_logger/simple_logger.dart';
 import '../database/db_authentication.dart';
 import '../database/db_firebase_helpers.dart';
 import '../models/md_register.dart';
-import '../models/md_result.dart';
+import '../models/md_set_result.dart';
 import '../secret.dart';
 import '../models/md_date.dart';
 import '../utilities/ut_misc.dart';
@@ -55,11 +55,8 @@ class Director {
       maxDocId: toDate.toYyyyMmDd(),
     );
 
-    // erase all past userMatchResults
-    await FbHelpers().deleteUserMatchResultTillDateBatch(maxMatchId: toDate.toYyyyMmDd());
-
     // erase all past results
-    await FbHelpers().deleteGameResultsTillDateBatch(maxMatchId: toDate.toYyyyMmDd());
+    await FbHelpers().deleteSetResultsTillDateBatch(maxMatchId: toDate.toYyyyMmDd());
 
     // save all users to historic
     await FbHelpers().saveAllUsersToHistoric();
@@ -74,15 +71,15 @@ class Director {
     }
   }
 
-  /// a map that for each player gets a list of games won (true) and lost (false)
+  /// a map that for each player gets a list of sets won (true) and lost (false)
   Future<Map<MyUser, List<bool>>> playersLastTrophies() async {
     MyLog.log(_classString, 'playersLastTrophies', level: Level.FINE);
     final Map<MyUser, List<bool>> userTrophies = {};
 
-    final List<GameResult> allResults = await FbHelpers().getAllGameResults(appState: _appState)
+    final List<SetResult> allResults = await FbHelpers().getSetResults(appState: _appState)
       ..sort((a, b) => b.id.resultId.compareTo(a.id.resultId)); // reverse order
 
-    for (GameResult result in allResults) {
+    for (SetResult result in allResults) {
       MyLog.log(_classString, 'playersLastTrophies result=${result.id}', level: Level.FINE, indent: true);
       List<MyUser> players = result.winningPlayers;
       for (final MyUser player in players) {
