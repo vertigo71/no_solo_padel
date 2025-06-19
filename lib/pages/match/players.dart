@@ -31,6 +31,7 @@ class PlayersPanelState extends State<PlayersPanel> {
   late MyUser _selectedUser;
   late MyUser _loggedUser;
   final TextEditingController _userPositionController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -116,20 +117,40 @@ class PlayersPanelState extends State<PlayersPanel> {
               builder: (context) {
                 bool isLoggedUserInMatch = context.read<MatchNotifier>().match.isInTheMatch(_loggedUser);
 
-                return UiHelper.myCheckBox(
-                  context: context,
-                  value: isLoggedUserInMatch,
-                  onChanged: (bool? newValue) async {
-                    setState(() {
-                      isLoggedUserInMatch = newValue!;
-                    });
-                    await _validate(
-                      user: _loggedUser,
-                      toAdd: isLoggedUserInMatch, // isLoggedUserInMatch? add Player : delete Player
-                      adminManagingUser: false,
-                    );
-                  },
-                );
+                return _isLoading
+                    ? const SizedBox(
+                        width: 24.0,
+                        height: 24.0,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5, // Make it a bit thinner for a checkbox-like size
+                        ),
+                      )
+                    : UiHelper.myCheckBox(
+                        context: context,
+                        value: isLoggedUserInMatch,
+                        onChanged: (bool? newValue) async {
+                          setState(() {
+                            _isLoading = true; // Start loading state
+                          });
+
+                          try {
+                            await _validate(
+                              user: _loggedUser,
+                              toAdd: newValue!,
+                              adminManagingUser: false,
+                            );
+                            // The MatchNotifier will trigger a rebuild,
+                            // updating 'isLoggedUserInMatch' automatically.
+                          } catch (e) {
+                            MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
+                            if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                          } finally {
+                            setState(() {
+                              _isLoading = false; // End loading state
+                            });
+                          }
+                        },
+                      );
               },
             ),
           ],
@@ -289,11 +310,22 @@ class PlayersPanelState extends State<PlayersPanel> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        onPressed: () => _validate(
-                          user: _selectedUser,
-                          toAdd: !isSelectedUserInTheMatch,
-                          adminManagingUser: true,
-                        ),
+                        onPressed: () async {
+                          try {
+                            await _validate(
+                              user: _selectedUser,
+                              toAdd: !isSelectedUserInTheMatch,
+                              adminManagingUser: true,
+                            );
+                            // The MatchNotifier will trigger a rebuild,
+                            // updating 'isLoggedUserInMatch' automatically.
+                          } catch (e) {
+                            MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
+                            if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                          } finally {
+                            _refresh();
+                          }
+                        },
                       ),
                       const SizedBox(height: 20),
                       Opacity(
@@ -307,11 +339,22 @@ class PlayersPanelState extends State<PlayersPanel> {
                               borderRadius: BorderRadius.all(Radius.circular(4.0)),
                             ),
                           ),
-                          onFieldSubmitted: (String str) async => _validate(
-                            user: _selectedUser,
-                            toAdd: true,
-                            adminManagingUser: true,
-                          ),
+                          onFieldSubmitted: (String str) async {
+                            try {
+                              await _validate(
+                                user: _selectedUser,
+                                toAdd: true,
+                                adminManagingUser: true,
+                              );
+                              // The MatchNotifier will trigger a rebuild,
+                              // updating 'isLoggedUserInMatch' automatically.
+                            } catch (e) {
+                              MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
+                              if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                            } finally {
+                              _refresh();
+                            }
+                          },
                           keyboardType: TextInputType.text,
                           inputFormatters: [
                             FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
@@ -351,22 +394,16 @@ class PlayersPanelState extends State<PlayersPanel> {
       } else {
         result = await _removeUserFromMatch(user: user, adminManagingUser: adminManagingUser);
       }
-
-      if (result == null) {
-        // only possible for cancelling deleting a user
-        if (mounted) UiHelper.showMessage(context, 'Operación anulada');
-        _refresh();
-        return;
-      }
     } catch (e) {
-      if (mounted) {
-        UiHelper.myAlertDialog(
-            context,
-            'Ha habido una incidencia! \n'
-            'Comprobar que la operación se ha realizado correctamente\n ${e.toString()}');
-      }
-      _refresh();
-      return;
+      throw MyException(
+          'Ha habido una incidencia\n'
+          'Comprobar que la operación se ha realizado correctamente',
+          e: e,
+          level: Level.INFO);
+    }
+    if (result == null) {
+      // only possible for cancelling deleting a user
+      throw MyException('Operación cancelada', level: Level.INFO);
     }
 
     // notify to telegram and register
@@ -375,13 +412,11 @@ class PlayersPanelState extends State<PlayersPanel> {
     } catch (e) {
       MyLog.log(_classString, 'ERROR sending message to telegram or register',
           exception: e, level: Level.SEVERE, indent: true);
-      if (mounted) {
-        UiHelper.myAlertDialog(
-            context,
-            'Ha habido una incidencia al enviar el mensaje de confirmación\n'
-            'Es posible que no se haya enviado el mensaje al registro y al telegram\n'
-            'Error = ${e.toString()}');
-      }
+      throw MyException(
+          'Ha habido una incidencia al enviar el mensaje de confirmación\n'
+          'Es posible que no se haya enviado el mensaje al registro y al telegram\n',
+          e: e,
+          level: Level.INFO);
     }
   }
 
@@ -394,8 +429,9 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     // check if user is already in the match. If so abort
     if (match.isInTheMatch(user)) {
-      MyLog.log(_classString, 'validate1 adding: player $user was already in match', level: Level.WARNING, indent: true);
-      throw MyException('El jugador ya estaba en el partido', level: Level.WARNING );
+      MyLog.log(_classString, 'validate1 adding: player $user was already in match',
+          level: Level.WARNING, indent: true);
+      throw MyException('El jugador ya estaba en el partido', level: Level.WARNING);
     }
 
     // if administrator, get position in which the player will be be added from the controller text
@@ -436,7 +472,7 @@ class PlayersPanelState extends State<PlayersPanel> {
     // check if user is not in the match. If so abort
     if (!match.isInTheMatch(user)) {
       MyLog.log(_classString, 'removing: player $user is not in match', level: Level.WARNING, indent: true);
-      throw MyException('El jugador no estaba en el partido', level: Level.WARNING );
+      throw MyException('El jugador no estaba en el partido', level: Level.WARNING);
     }
 
     // confirm that user wants to remove himself from the match

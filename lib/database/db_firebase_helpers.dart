@@ -762,7 +762,6 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
   }
 
   /// add a set result to the results collection
-  /// add the result to the userMatchResult collection
   Future<void> createSetResult({required SetResult result}) async {
     // add the result to the results collection
     await _updateObject(
@@ -774,7 +773,6 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
 
   /// return match with the position of inserted user
   /// Add the player to the Match's list of players.
-  ///     Create a UserMatchResult entry linking the User and the Match.
   ///     Set the User's isActive status to true.
   Future<Map<MyMatch, int>> addPlayerToMatch({
     required Date matchId,
@@ -836,11 +834,6 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
 
   /// return match
   /// Remove the player from the Match's list of players.
-  ///     Remove the UserMatchResult entry linking the User and the Match.
-  ///     Crucially: Remove any UserMatchResult entries that link the User to any SetResult within that Match.
-  ///     This ensures that orphaned set results are not left behind.
-  ///     Check if the User is associated with any other Match in the UserMatchResult table.
-  ///     If not, set the User's isActive status to false.
   ///
   ///     ERROR: if the player has a result published, an exception is thrown
   ///

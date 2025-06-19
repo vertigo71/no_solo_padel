@@ -80,16 +80,11 @@ class CheckPanelState extends State<CheckPanel> {
     _addOutput("Already migrated!!!!");
 
     // TODO: erase all subcollections
-    // TODO: erase UserMatchResult. Instead, add players to SetResults
 
     // _addOutput("Create user match results to new collection...");
     // try {
     //   List<MyMatch> matches = await FbHelpers().getAllMatches(appState: _director.appState);
     //   _addOutput("Found ${matches.length} matches.");
-    //
-    //   // erase all past userMatchResults
-    //   await FbHelpers().deleteUserMatchResultTillDateBatch();
-    //   _addOutput("All user match results deleted.");
     //
     //   // erase all past results
     //   await FbHelpers().deleteSetResultsTillDateBatch();
@@ -100,7 +95,6 @@ class CheckPanelState extends State<CheckPanel> {
     //
     //     // add new user-Match to new collection for every player
     //     for (MyUser user in match.players) {
-    //       await FbHelpers().addUserMatchResult(userId: user.id, matchId: match.id.toYyyyMmDd());
     //       _addOutput("UserMatch added: ${user.id}");
     //     }
     //
@@ -114,7 +108,6 @@ class CheckPanelState extends State<CheckPanel> {
     //
     //       // add result
     //       await FbHelpers().createSetResult(result: result);
-    //       _addOutput("Set Result created and also added all UserMatchResults.");
     //     }
     //   }
     //
