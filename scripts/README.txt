@@ -6,13 +6,18 @@ It uses 2 secret keys: secret-production-key.json and secret-staging-key.json.
 
     in Programming in Drive
 
-to copy all elements from prod to stage execute:
+> to copy all elements from prod to stage execute:
 
     node copy-firestore.js
 
-to update version in firestore execute:
+> to update version in firestore execute:
     node update-version.js <flavor> <version>
 
-to create players field in results execute:
+> to create players field in results execute:
     node create-players-field-in-results.js <flavor>
+
+> to export all SetResults to CSV execute:
+    node exportResultsToCsv.js <flavor> <filename>
+    Attention: requires  json2csv
+        npm install json2csv
 
