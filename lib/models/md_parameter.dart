@@ -55,7 +55,7 @@ enum ParametersEnum {
 /// values in a map.
 class MyParameters {
   /// Map to store parameter values, keyed by [ParametersEnum].
-  final Map<ParametersEnum, String> _values = {for (var value in ParametersEnum.values) value: value.defaultValue};
+  final Map<ParametersEnum, String> _values;
 
   /// Constant string representing days of the week.
   static const String kDaysOfWeek = 'LMXJVSD';
@@ -63,9 +63,18 @@ class MyParameters {
   /// Constructor for [MyParameters].
   ///
   /// Logs the creation of the instance if debug mode is enabled.
-  MyParameters() {
+  MyParameters() : _values = {for (var value in ParametersEnum.values) value: value.defaultValue} {
     MyLog.log(_classString, 'Constructor', level: Level.FINE);
   }
+
+  /// Constructor with a single parameter.
+  ///
+  /// Initializes a new [MyParameters] instance with values from another.
+  MyParameters.fromMyParameters(MyParameters original)
+      : _values = Map.from(original._values) {
+    MyLog.log(_classString, 'Cloning constructor', level: Level.FINE);
+  }
+
 
   /// Converts a [Date] object to a character representing the day of the week.
   ///
@@ -145,4 +154,11 @@ class MyParameters {
   Map<String, dynamic> toJson() => {
         for (var entry in _values.entries) entry.key.name: entry.value,
       };
+
+  /// Creates a deep copy (clone) of this [MyParameters] instance.
+  ///
+  /// Returns a new instance with the exact same parameter values.
+  MyParameters clone() {
+    return MyParameters.fromMyParameters(this);
+  }
 }

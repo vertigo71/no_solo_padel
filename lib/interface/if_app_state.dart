@@ -52,6 +52,9 @@ class AppState with ChangeNotifier {
   Date get maxDateOfMatchesToView =>
       Date.now().add(Duration(days: getIntParamValue(ParametersEnum.matchDaysToView) ?? 0));
 
+  // Public getter to return a cloned copy of the parameters.
+  MyParameters get parameters => _parametersCache.clone();
+
   void setAllParametersAndNotify(MyParameters? myParameters) => setAllParameters(myParameters, notify: true);
 
   void setAllParameters(MyParameters? myParameters, {required bool notify}) {

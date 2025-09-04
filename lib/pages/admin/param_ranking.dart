@@ -183,7 +183,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
 
     // Check if the form is valid before proceeding
     if (_formKey.currentState!.saveAndValidate()) {
-      MyParameters myParameters = MyParameters();
+      MyParameters myParameters = _director.appState.parameters;
       final formValues = _formKey.currentState!.value;
 
       for (var value in ParametersEnum.valuesByType(ParamType.ranking)) {
