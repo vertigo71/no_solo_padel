@@ -5,6 +5,7 @@ Organising padel matches
 
 # version
 to modify version edit pubspec.yaml
+get or update version
 
 # Flavors
 There 3 flavors: dev, stage and prod
