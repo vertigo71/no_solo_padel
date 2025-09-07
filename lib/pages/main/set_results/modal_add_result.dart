@@ -20,6 +20,8 @@ import '../../../utilities/ut_theme.dart';
 final String _classString = 'AddResultModal'.toUpperCase();
 const int kNumPlayers = 4;
 const int kMaxGamesPerSet = 16;
+const int kMaxNumCourts = 6;
+const String kExtraPointsField = 'extraPoints';
 
 enum ScoreFields { teamA, teamB }
 
@@ -56,73 +58,77 @@ class _AddResultModalState extends State<AddResultModal> {
   Widget build(BuildContext context) {
     MyLog.log(_classString, 'Building', level: Level.FINE);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: 8.0,
-        children: [
-          _buildMultiSelection(),
-          const Divider(
-            height: 8.0,
-          ),
-          // add Team A
-          Wrap(
-            children: [
-              _buildPlayer(0),
-              _buildPlayer(1),
-            ],
-          ),
-          // add score
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FormBuilder(
-              key: _formKey,
+    return FormBuilder(
+      key: _formKey,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 8.0,
+          children: [
+            _buildMultiSelection(),
+            const Divider(
+              height: 8.0,
+            ),
+            // add Team A
+            Wrap(
+              children: [
+                _buildPlayer(0),
+                _buildPlayer(1),
+              ],
+            ),
+            // add score
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [_buildResults()],
               ),
             ),
-          ),
-          // add Team B
-          Wrap(
-            children: [
-              _buildPlayer(2),
-              _buildPlayer(3),
-            ],
-          ),
-          Divider(
-            height: 8.0,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    await _save();
-                    MyLog.log(_classString, 'Result saved', indent: true);
-                    if (context.mounted) context.pop();
-                  } catch (e) {
-                    MyLog.log(_classString, 'Error saving result: ${e.toString()}', indent: true);
-                    if (context.mounted) {
-                      UiHelper.myAlertDialog(context, 'No se ha podido añadir el resultado\n${e.toString()}');
+            // add Team B
+            Wrap(
+              children: [
+                _buildPlayer(2),
+                _buildPlayer(3),
+              ],
+            ),
+            Divider(
+              height: 8.0,
+            ),
+            _buildExtraPoints(),
+            Divider(
+              height: 8.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _save();
+                      MyLog.log(_classString, 'Result saved', indent: true);
+                      if (context.mounted) context.pop();
+                    } catch (e) {
+                      MyLog.log(_classString, 'Error saving result: ${e.toString()}', indent: true);
+                      if (context.mounted) {
+                        UiHelper.myAlertDialog(context, 'No se ha podido añadir el resultado\n${e.toString()}');
+                      }
                     }
-                  }
-                },
-                child: Text('Guardar'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  context.pop();
-                },
-                child: Text('Cancelar'),
-              ),
-            ],
-          ),
-        ],
+                  },
+                  child: Text('Guardar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    context.pop();
+                  },
+                  child: Text('Cancelar'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -221,6 +227,44 @@ class _AddResultModalState extends State<AddResultModal> {
     );
   }
 
+  Widget _buildExtraPoints() {
+    MyLog.log(_classString, '_buildExtraPoints', indent: true);
+    // get extra points base
+    int extraPoints = _appState.getIntParamValue(ParametersEnum.freePoints) ?? -1;
+
+    // build extra points fields
+    return Wrap(
+      children: [
+        Text('Puntos extra', style: Theme.of(context).textTheme.bodyLarge),
+        const SizedBox(width: 20.0),
+        SizedBox(
+          width: 100.0,
+          child: Card(
+            elevation: 6.0,
+            margin: EdgeInsets.zero,
+            color: Theme.of(context).colorScheme.surfaceBright,
+            child: FormBuilderDropdown<int>(
+              name: kExtraPointsField,
+              initialValue: extraPoints,
+              menuWidth: 70,
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.only(top: 8.0, bottom: 8.0), // Remove padding
+                isDense: true, //important
+              ),
+              items: List.generate(kMaxNumCourts, (item) {
+                int result = (item + 1) * extraPoints;
+                return DropdownMenuItem<int>(
+                  value: result,
+                  child: Center(child: Text(result.toString())),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _save() async {
     MyLog.log(_classString, '_save', indent: true);
 
@@ -229,6 +273,7 @@ class _AddResultModalState extends State<AddResultModal> {
       final formValues = _formKey.currentState!.value;
       int scoreA = formValues[ScoreFields.teamA.name];
       int scoreB = formValues[ScoreFields.teamB.name];
+      int extraPoints = formValues[kExtraPointsField];
 
       MyLog.log(_classString, 'players = $_selectedPlayers scoreA=$scoreA scoreB=$scoreB', indent: true);
 
@@ -252,7 +297,7 @@ class _AddResultModalState extends State<AddResultModal> {
       }
 
       // calculate the points that each team will get
-      List<int> points = _calculatePoints(scoreA, scoreB);
+      List<int> points = _calculatePoints(scoreA, scoreB, extraPoints);
 
       // create teamA
       TeamResult teamA = TeamResult(
@@ -288,6 +333,7 @@ class _AddResultModalState extends State<AddResultModal> {
         matchId: _match.id,
         teamA: teamA,
         teamB: teamB,
+        extraPoints: extraPoints,
       );
 
       // save result to Firestore
@@ -313,8 +359,8 @@ class _AddResultModalState extends State<AddResultModal> {
   }
 
   /// list of 2 ints with the points of each team A and B
-  List<int> _calculatePoints(int scoreA, int scoreB) {
-    MyLog.log(_classString, '_calculatePointsA', indent: true);
+  List<int> _calculatePoints(int scoreA, int scoreB, int extraPoints) {
+    MyLog.log(_classString, '_calculatePoints', indent: true);
 
     if (_selectedPlayers.length != 4) {
       throw MyException('No se ha podido obtener los cuatro jugadores', level: Level.SEVERE);
@@ -323,9 +369,8 @@ class _AddResultModalState extends State<AddResultModal> {
     int? step = _appState.getIntParamValue(ParametersEnum.step);
     int? range = _appState.getIntParamValue(ParametersEnum.range);
     int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.rankingDiffToHalf);
-    int? freePoints = _appState.getIntParamValue(ParametersEnum.freePoints);
 
-    if (step == null || range == null || rankingDiffToHalf == null || freePoints == null) {
+    if (step == null || range == null || rankingDiffToHalf == null) {
       throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
     }
 
@@ -337,7 +382,7 @@ class _AddResultModalState extends State<AddResultModal> {
         step: step,
         range: range,
         rankingDiffToHalf: rankingDiffToHalf,
-        freePoints: freePoints,
+        freePoints: extraPoints,
         rankingA: rankingA,
         rankingB: rankingB,
         scoreA: scoreA,
@@ -351,4 +396,14 @@ class _AddResultModalState extends State<AddResultModal> {
       return [0, 0];
     }
   }
+
+  /// deprecated
+// List<int> _calculatePointsWithoutExtraPoints(int scoreA, int scoreB  ) {
+//   MyLog.log(_classString, '_calculatePointsWithoutExtraPoints', indent: true);
+//   int? freePoints = _appState.getIntParamValue(ParametersEnum.freePoints);
+//   if ( freePoints == null) {
+//     throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
+//   }
+//   return _calculatePoints(scoreA, scoreB, freePoints);
+// }
 }

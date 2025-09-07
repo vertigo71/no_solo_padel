@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_logger/simple_logger.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:web/web.dart' as web; // Import the web package
 
@@ -308,15 +307,34 @@ abstract class UiHelper {
     );
   }
 
-  static Widget myCheckBox(
-      {required BuildContext context, required void Function(bool?) onChanged, required bool value}) {
-    return GFCheckbox(
-      onChanged: onChanged,
-      value: value,
-      size: GFSize.SMALL,
-      type: GFCheckboxType.circle,
-      activeBgColor: Theme.of(context).primaryColor,
-      inactiveBgColor: Theme.of(context).colorScheme.surface,
+  static Widget myCheckBox({
+    required BuildContext context,
+    required void Function(bool?) onChanged,
+    required bool value,
+  }) {
+    return Transform.scale(
+      scale: 1.5,
+      child: SizedBox(
+        width: 20.0,
+        height: 20.0,
+        child: Checkbox(
+          onChanged: onChanged,
+          value: value,
+          // Use fill color to control the background color for all states.
+          fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+            if (states.contains(WidgetState.selected)) {
+              // Color when the checkbox is checked.
+              return Theme.of(context).primaryColor;
+            }
+            // Color when the checkbox is unchecked.
+            return Theme.of(context).colorScheme.surface;
+          }),
+          // The color of the checkmark icon, which is not handled by fillColor.
+          checkColor: Theme.of(context).colorScheme.inversePrimary,
+          // You can remove the side property now as fillColor controls the background.
+          shape: const CircleBorder(),
+        ),
+      ),
     );
   }
 
@@ -325,13 +343,16 @@ abstract class UiHelper {
     required void Function(bool?) onChanged,
     required bool value,
   }) {
-    return GFToggle(
-      onChanged: onChanged,
-      value: value,
-      enabledTrackColor: kAltDark,
-      disabledTrackColor: kAltLight,
-      enabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
-      disabledThumbColor: Theme.of(context).colorScheme.surfaceDim,
+    return SizedBox(
+      width: 80.0,
+      child: Switch(
+        onChanged: onChanged,
+        value: value,
+        // The track (the line behind the thumb)
+        trackColor: WidgetStateProperty.all<Color>(kAltLight),
+        // The thumb (the circle you slide)
+        thumbColor: WidgetStateProperty.all<Color>(Theme.of(context).colorScheme.surfaceDim),
+      ),
     );
   }
 

@@ -238,7 +238,7 @@ class UserAddPanelState extends State<UserAddPanel> {
     return true;
   }
 
-  Future<bool> _createNewUser(name, username, pwd, isAdmin, isSuperuser) async {
+  Future<bool> _createNewUser(String name, String username, String pwd, bool isAdmin, bool isSuperuser) async {
     MyLog.log(_classString, 'createNewUser $name $username $isAdmin $isSuperuser');
 
     // add user to Firebase Authentication
@@ -259,7 +259,7 @@ class UserAddPanelState extends State<UserAddPanel> {
       userType: isSuperuser
           ? UserType.superuser
           : isAdmin
-              ? isAdmin
+              ? UserType.admin
               : UserType.basic,
       loginCount: 0,
       rankingPos: appState.getIntParamValue(ParametersEnum.defaultRanking) ?? 0,

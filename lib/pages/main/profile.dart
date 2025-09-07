@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +21,8 @@ final String _classString = 'ProfilePanel'.toUpperCase();
 enum _FormFieldsEnum {
   name(label: 'Nombre (por este te conocerán los demás)', obscuredText: false, mayBeEmpty: false),
   emergencyInfo(label: 'Información de emergencia', obscuredText: false, mayBeEmpty: true),
-  user(label: 'Usuario (para conectarte a la aplicación)', obscuredText: false, mayBeEmpty: false),
+  /// user cannot be changed until updateEmail is coded
+  user(label: 'Usuario (para conectarte a la aplicación)', obscuredText: false, mayBeEmpty: false, enabled: false),
   actualPwd(label: 'Contraseña Actual', obscuredText: true, mayBeEmpty: true),
   newPwd(label: 'Nueva Contraseña', obscuredText: true, mayBeEmpty: true),
   checkPwd(label: 'Repetir contraseña', obscuredText: true, mayBeEmpty: true),
@@ -31,11 +31,13 @@ enum _FormFieldsEnum {
   final String label;
   final bool obscuredText;
   final bool mayBeEmpty;
+  final bool enabled;
 
   const _FormFieldsEnum({
     required this.label,
     required this.obscuredText,
     required this.mayBeEmpty,
+    this.enabled = true,
   });
 }
 
@@ -191,6 +193,7 @@ class ProfilePanelState extends State<ProfilePanel> {
       child: FormBuilderTextField(
         name: formFieldEnum.name,
         initialValue: _getInitialValue(formFieldEnum),
+        enabled: formFieldEnum.enabled,
         decoration: InputDecoration(
           labelText: formFieldEnum.label,
           border: const OutlineInputBorder(
@@ -210,7 +213,7 @@ class ProfilePanelState extends State<ProfilePanel> {
 
     if (loggedUser == null) {
       MyLog.log(_classString, '_getInitialValue loggedUser is null', level: Level.SEVERE);
-      throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE );
+      throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
     }
 
     switch (formFieldEnum) {
@@ -250,7 +253,7 @@ class ProfilePanelState extends State<ProfilePanel> {
 
       if (loggedUser == null) {
         MyLog.log(_classString, '_formValidate loggedUser is null', level: Level.SEVERE);
-        throw MyException('No se ha podido obtener el usuario conectado' ,level: Level.SEVERE );
+        throw MyException('No se ha podido obtener el usuario conectado', level: Level.SEVERE);
       }
 
       // Validation and Update Logic

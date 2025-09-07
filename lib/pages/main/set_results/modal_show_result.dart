@@ -114,8 +114,16 @@ class ShowResultModal extends StatelessWidget {
   Widget _buildScore(SetResult result) {
     MyLog.log(_classString, 'Building result: $result', indent: true);
     if (result.teamA != null && result.teamB != null) {
-      return Text('${result.teamA!.score} - ${result.teamB!.score}',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('${result.teamA!.score} - ${result.teamB!.score}',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8.0),
+          Text('(${result.extraPoints})',
+              style: TextStyle(fontSize: 18, fontStyle:  FontStyle.italic )),
+        ],
+      );
     } else {
       return Text('VS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold));
     }

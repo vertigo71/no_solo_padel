@@ -30,7 +30,6 @@ final Color kLightRed = Colors.red.shade400;
 const Color kRed = Colors.red;
 final Color kLightGreen = Colors.green.shade400;
 
-
 ThemeData generateThemeData(BuildContext context) {
   MyLog.log(_classString, 'generateThemeData', level: Level.FINE);
 
@@ -62,7 +61,7 @@ ThemeData generateThemeData(BuildContext context) {
     ),
 
     // Tab Bar Theme
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       dividerColor: kPrimaryLight,
       indicatorSize: TabBarIndicatorSize.tab,
       // Ensure it fills the tab

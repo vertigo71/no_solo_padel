@@ -24,6 +24,7 @@ enum SetResultFs {
   teamA,
   teamB,
   results,
+  extraPoints,
 }
 
 /// Represents the outcome and details of a single set within a match.
@@ -46,11 +47,12 @@ class SetResult {
   final Date matchId;
   final TeamResult? teamA;
   final TeamResult? teamB;
+  final int extraPoints;
 
-  SetResult({required String userId, required this.matchId, this.teamA, this.teamB})
+  SetResult({required String userId, required this.matchId, this.teamA, this.teamB, required this.extraPoints})
       : id = SetResultId(matchId: matchId, userId: userId);
 
-  SetResult._({required this.id, required this.matchId, this.teamA, this.teamB});
+  SetResult._({required this.id, required this.matchId, this.teamA, this.teamB, required this.extraPoints});
 
   bool _checkResultOk() {
     if (teamA == null || teamB == null || teamA!.score == teamB!.score) {
@@ -102,12 +104,14 @@ class SetResult {
     Date? matchId,
     TeamResult? teamA,
     TeamResult? teamB,
+    int? extraPoints,
   }) {
     return SetResult._(
       id: id ?? this.id,
       matchId: matchId ?? this.matchId,
       teamA: teamA ?? this.teamA,
       teamB: teamB ?? this.teamB,
+      extraPoints: extraPoints ?? this.extraPoints,
     );
   }
 
@@ -132,8 +136,13 @@ class SetResult {
       return SetResult._(
         id: SetResultId.fromString(json[SetResultFs.resultId.name]),
         matchId: Date.parse(json[SetResultFs.matchId.name])!,
-        teamA: json.containsKey('teamA') ? TeamResult.fromJson(json['teamA'], appState) : null,
-        teamB: json.containsKey('teamB') ? TeamResult.fromJson(json['teamB'], appState) : null,
+        teamA: json.containsKey(SetResultFs.teamA.name)
+            ? TeamResult.fromJson(json[SetResultFs.teamA.name], appState)
+            : null,
+        teamB: json.containsKey(SetResultFs.teamB.name)
+            ? TeamResult.fromJson(json[SetResultFs.teamB.name], appState)
+            : null,
+        extraPoints: json[SetResultFs.extraPoints.name] ?? 0,
       );
     } catch (e) {
       MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
@@ -158,14 +167,15 @@ class SetResult {
       SetResultFs.resultId.name: id.resultId,
       SetResultFs.matchId.name: matchId.toYyyyMmDd(),
       SetResultFs.players.name: [teamA?.player1.id, teamA?.player2.id, teamB?.player1.id, teamB?.player2.id],
-      'teamA': teamA?.toJson(),
-      'teamB': teamB?.toJson(),
+      SetResultFs.teamA.name: teamA?.toJson(),
+      SetResultFs.teamB.name: teamB?.toJson(),
+      SetResultFs.extraPoints.name: extraPoints,
     };
   }
 
   @override
   String toString() {
-    return 'MyResult(id: $id, matchId: $matchId, teamA: $teamA, teamB: $teamB)';
+    return 'MyResult(id: $id, matchId: $matchId, teamA: $teamA, teamB: $teamB, xPoints: $extraPoints)';
   }
 
   @override
@@ -176,10 +186,11 @@ class SetResult {
           id == other.id &&
           matchId == other.matchId &&
           teamA == other.teamA &&
-          teamB == other.teamB;
+          teamB == other.teamB &&
+          extraPoints == other.extraPoints;
 
   @override
-  int get hashCode => id.hashCode ^ matchId.hashCode ^ teamA.hashCode ^ teamB.hashCode;
+  int get hashCode => id.hashCode ^ matchId.hashCode ^ teamA.hashCode ^ teamB.hashCode ^ extraPoints.hashCode;
 }
 
 class TeamResult {
