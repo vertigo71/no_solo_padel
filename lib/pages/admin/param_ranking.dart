@@ -21,17 +21,17 @@ final String _classString = 'RankingParamPanel'.toUpperCase();
 /// Helper class to define form fields and their properties
 class _FormFields {
   static Map<ParametersEnum, String> label = {
-    ParametersEnum.step: 'Mínimo de puntos por juego',
-    ParametersEnum.range: 'Rango de puntos por juego',
-    ParametersEnum.rankingDiffToHalf: 'Diferencia de rankings para sumar la mitad de puntos por juego',
-    ParametersEnum.freePoints: 'Puntos por participar',
+    ParametersEnum.sStep: 'Mínimo de puntos por juego',
+    ParametersEnum.sRange: 'Rango de puntos por juego',
+    ParametersEnum.sRankingDiffToHalf: 'Diferencia de rankings para sumar la mitad de puntos por juego',
+    ParametersEnum.sFreePoints: 'Puntos por participar',
   };
 
   static Map<ParametersEnum, String> listAllowedChars = {
-    ParametersEnum.step: '[0-9]',
-    ParametersEnum.range: '[0-9]',
-    ParametersEnum.rankingDiffToHalf: '[0-9]',
-    ParametersEnum.freePoints: '[0-9]',
+    ParametersEnum.sStep: '[0-9]',
+    ParametersEnum.sRange: '[0-9]',
+    ParametersEnum.sRankingDiffToHalf: '[0-9]',
+    ParametersEnum.sFreePoints: '[0-9]',
   };
 }
 
@@ -96,7 +96,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
               const Divider(height: 80),
 
               // Generate parameter fields dynamically
-              for (var value in ParametersEnum.valuesByType(ParamType.ranking)) _buildTextField(value),
+              for (var value in ParametersEnum.valuesByType(ParamType.scoreRanking)) _buildTextField(value),
               // Update Button
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -186,7 +186,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       MyParameters myParameters = _director.appState.parameters;
       final formValues = _formKey.currentState!.value;
 
-      for (var value in ParametersEnum.valuesByType(ParamType.ranking)) {
+      for (var value in ParametersEnum.valuesByType(ParamType.scoreRanking)) {
         myParameters.setValue(value, formValues[value.name]);
       }
 
@@ -218,10 +218,10 @@ class RankingParamPanelState extends State<RankingParamPanel> {
       int scoreA = (testValues[TestFields.scoreA.name] as double? ?? 0).toInt();
       int scoreB = (testValues[TestFields.scoreB.name] as double? ?? 0).toInt();
       // get parameters values
-      int step = int.tryParse(values[ParametersEnum.step.name] as String? ?? '') ?? 0;
-      int range = int.tryParse(values[ParametersEnum.range.name] as String? ?? '') ?? 0;
-      int rankingDiffToHalf = int.tryParse(values[ParametersEnum.rankingDiffToHalf.name] as String? ?? '') ?? 0;
-      int freePoints = int.tryParse(values[ParametersEnum.freePoints.name] as String? ?? '') ?? 0;
+      int step = int.tryParse(values[ParametersEnum.sStep.name] as String? ?? '') ?? 0;
+      int range = int.tryParse(values[ParametersEnum.sRange.name] as String? ?? '') ?? 0;
+      int rankingDiffToHalf = int.tryParse(values[ParametersEnum.sRankingDiffToHalf.name] as String? ?? '') ?? 0;
+      int freePoints = int.tryParse(values[ParametersEnum.sFreePoints.name] as String? ?? '') ?? 0;
 
       try {
         result = RankingPoints(
@@ -331,7 +331,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('\nReset Ranking (valor = ${_director.appState.getParamValue(ParametersEnum.defaultRanking)})\n'),
+              : Text('\nReset Ranking (valor = ${_director.appState.getParamValue(ParametersEnum.bDefaultRanking)})\n'),
         ),
       ),
     );
@@ -357,7 +357,7 @@ class RankingParamPanelState extends State<RankingParamPanel> {
 
     final int resetValue;
     try {
-      resetValue = int.parse(_director.appState.getParamValue(ParametersEnum.defaultRanking));
+      resetValue = int.parse(_director.appState.getParamValue(ParametersEnum.bDefaultRanking));
     } catch (e) {
       MyLog.log(_classString, 'Error parsing reset value ${e.toString()}', level: Level.SEVERE, indent: true);
       throw MyException('Error al obtener el parámetro del ranking por defecto.', e: e, level: Level.SEVERE);

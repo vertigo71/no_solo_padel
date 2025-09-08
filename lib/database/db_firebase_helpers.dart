@@ -607,7 +607,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         matchFunction(newMatch);
       } else {
         MyLog.log(_classString, 'listenToMatch LISTENER Match data is null in Firestore.', indent: true);
-        matchFunction(MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText)));
+        matchFunction(MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.bDefaultCommentText)));
       }
     });
 
@@ -795,7 +795,7 @@ class FbHelpers with _GetObject, _GetStream, _GetObjects, _UpdateObject, _Delete
         MyLog.log(_classString, 'addPlayerToMatch match found ', myCustomObject: myMatch, indent: true);
       } else {
         // new match
-        myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.defaultCommentText));
+        myMatch = MyMatch(id: matchId, comment: appState.getParamValue(ParametersEnum.bDefaultCommentText));
         MyLog.log(_classString, 'addPlayerToMatch NEW match ', indent: true);
       }
 

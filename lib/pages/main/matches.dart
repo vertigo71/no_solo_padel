@@ -28,7 +28,7 @@ class MatchesPanel extends StatelessWidget {
       builder: (context, appState, _) {
         Date fromDate = Date.now();
         Date maxDate = appState.maxDateOfMatchesToView;
-        int numMatches = appState.getIntParamValue(ParametersEnum.matchDaysToView) ?? -1;
+        int numMatches = appState.getIntParamValue(ParametersEnum.bMatchDaysToView) ?? -1;
         MyLog.log(_classString, 'StreamBuilder from:$fromDate to:$maxDate', indent: true);
 
         return StreamBuilder<List<MyMatch>>(
@@ -63,7 +63,7 @@ class MatchesPanel extends StatelessWidget {
                   MyLog.log(_classString, 'create missing match = $date', indent: true);
                   playableMatches.add(MyMatch(
                     id: date,
-                    comment: appState.getParamValue(ParametersEnum.defaultCommentText),
+                    comment: appState.getParamValue(ParametersEnum.bDefaultCommentText),
                   ));
                 }
               }

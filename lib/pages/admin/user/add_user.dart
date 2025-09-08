@@ -262,7 +262,7 @@ class UserAddPanelState extends State<UserAddPanel> {
               ? UserType.admin
               : UserType.basic,
       loginCount: 0,
-      rankingPos: appState.getIntParamValue(ParametersEnum.defaultRanking) ?? 0,
+      rankingPos: appState.getIntParamValue(ParametersEnum.bDefaultRanking) ?? 0,
     );
     MyLog.log(_classString, 'createNewUser user created=$myUser', indent: true);
 

@@ -18,16 +18,16 @@ final String _classString = 'ParametersPanel'.toUpperCase();
 /// Helper class to define form fields and their properties
 class _FormFields {
   static Map<ParametersEnum, String> label = {
-    ParametersEnum.version: 'Versión',
-    ParametersEnum.defaultRanking: 'Valor al resetear el ranking',
-    ParametersEnum.matchDaysToView: 'Partidos: ver número de días',
-    ParametersEnum.matchDaysKeeping: 'Partidos: histórico de días a conservar',
-    ParametersEnum.registerDaysAgoToView: 'Registro: ver número de días atrás',
-    ParametersEnum.registerDaysKeeping: 'Registro: histórico de días a conservar',
-    ParametersEnum.defaultCommentText: 'Texto por defecto del comentario',
-    ParametersEnum.minDebugLevel: 'Debug (${_generateDebugLevelsText()})',
-    ParametersEnum.weekDaysMatch: 'Días que se pueden jugar (${MyParameters.kDaysOfWeek})',
-    ParametersEnum.showLog: '', // Not a text field (showLog)
+    ParametersEnum.bVersion: 'Versión',
+    ParametersEnum.bDefaultRanking: 'Valor al resetear el ranking',
+    ParametersEnum.bMatchDaysToView: 'Partidos: ver número de días',
+    ParametersEnum.bMatchDaysKeeping: 'Partidos: histórico de días a conservar',
+    ParametersEnum.bRegisterDaysAgoToView: 'Registro: ver número de días atrás',
+    ParametersEnum.bRegisterDaysKeeping: 'Registro: histórico de días a conservar',
+    ParametersEnum.bDefaultCommentText: 'Texto por defecto del comentario',
+    ParametersEnum.bMinDebugLevel: 'Debug (${_generateDebugLevelsText()})',
+    ParametersEnum.bWeekDaysMatch: 'Días que se pueden jugar (${MyParameters.kDaysOfWeek})',
+    ParametersEnum.bShowLog: '', // Not a text field (showLog)
   };
 
   static String _generateDebugLevelsText() {
@@ -39,17 +39,17 @@ class _FormFields {
   }
 
   static Map<ParametersEnum, String> listAllowedChars = {
-    ParametersEnum.version: '[0-9.+]',
-    ParametersEnum.defaultRanking: '[0-9]',
-    ParametersEnum.matchDaysToView: '[0-9]',
-    ParametersEnum.matchDaysKeeping: '[0-9]',
-    ParametersEnum.registerDaysAgoToView: '[0-9]',
-    ParametersEnum.registerDaysKeeping: '[0-9]',
-    ParametersEnum.defaultCommentText: '', // free text
-    ParametersEnum.minDebugLevel: '[0-${Level.LEVELS.length - 1}]',
-    ParametersEnum.weekDaysMatch:
+    ParametersEnum.bVersion: '[0-9.+]',
+    ParametersEnum.bDefaultRanking: '[0-9]',
+    ParametersEnum.bMatchDaysToView: '[0-9]',
+    ParametersEnum.bMatchDaysKeeping: '[0-9]',
+    ParametersEnum.bRegisterDaysAgoToView: '[0-9]',
+    ParametersEnum.bRegisterDaysKeeping: '[0-9]',
+    ParametersEnum.bDefaultCommentText: '', // free text
+    ParametersEnum.bMinDebugLevel: '[0-${Level.LEVELS.length - 1}]',
+    ParametersEnum.bWeekDaysMatch:
         '[${MyParameters.kDaysOfWeek.toLowerCase()}${MyParameters.kDaysOfWeek.toUpperCase()}]',
-    ParametersEnum.showLog: '', // Not a text field (showLog)
+    ParametersEnum.bShowLog: '', // Not a text field (showLog)
   };
 }
 
@@ -104,7 +104,7 @@ class ParametersPanelState extends State<ParametersPanel> {
             children: [
               // Generate text fields dynamically (excluding showLog)
               for (var value in ParametersEnum.valuesByType(ParamType.basic))
-                if (value != ParametersEnum.showLog) _buildTextField(value),
+                if (value != ParametersEnum.bShowLog) _buildTextField(value),
 
               // Show Log Checkbox
               _buildShowLogCheckbox(),
@@ -152,8 +152,8 @@ class ParametersPanelState extends State<ParametersPanel> {
         // Validation logic
         validator: FormBuilderValidators.compose([
           FormBuilderValidators.required(errorText: 'No puede estar vacío'),
-          if (parameter == ParametersEnum.weekDaysMatch) _noDuplicateCharsValidator,
-          if (parameter == ParametersEnum.minDebugLevel) _minDebugLevelValidator,
+          if (parameter == ParametersEnum.bWeekDaysMatch) _noDuplicateCharsValidator,
+          if (parameter == ParametersEnum.bMinDebugLevel) _minDebugLevelValidator,
         ]),
       ),
     );
@@ -194,7 +194,7 @@ class ParametersPanelState extends State<ParametersPanel> {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         FormBuilderField<bool>(
-          name: ParametersEnum.showLog.name,
+          name: ParametersEnum.bShowLog.name,
           initialValue: _appState.showLog,
           builder: (FormFieldState<bool> field) {
             return UiHelper.myCheckBox(
@@ -223,10 +223,10 @@ class ParametersPanelState extends State<ParametersPanel> {
       final formValues = _formKey.currentState!.value;
 
       for (var value in ParametersEnum.valuesByType(ParamType.basic)) {
-        if (value == ParametersEnum.showLog) {
+        if (value == ParametersEnum.bShowLog) {
           // Convert bool to string before saving
           myParameters.setValue(value, boolToStr(formValues[value.name] ?? false));
-        } else if (value == ParametersEnum.weekDaysMatch) {
+        } else if (value == ParametersEnum.bWeekDaysMatch) {
           // Remove duplicate characters from weekDaysMatch
           myParameters.setValue(value, formValues[value.name].split('').toSet().join());
         } else {

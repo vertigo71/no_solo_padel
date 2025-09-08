@@ -11,26 +11,32 @@ final String _classString = '<md> Parameters'.toLowerCase();
 enum ParameterFs { parameters }
 
 /// Type of parameter
-enum ParamType { basic, ranking }
+enum ParamType { basic, scoreRanking, leagueRanking }
 
 /// Enum representing application parameters.
 enum ParametersEnum {
   // basic
-  version(defaultValue: '0.0', paramType: ParamType.basic),
-  defaultRanking(defaultValue: '5000', paramType: ParamType.basic),
-  matchDaysToView(defaultValue: '10', paramType: ParamType.basic),
-  matchDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
-  registerDaysAgoToView(defaultValue: '1', paramType: ParamType.basic),
-  registerDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
-  defaultCommentText(defaultValue: 'Introducir comentario por defecto', paramType: ParamType.basic),
-  minDebugLevel(defaultValue: '5', paramType: ParamType.basic),
-  weekDaysMatch(defaultValue: 'LMXJ', paramType: ParamType.basic),
-  showLog(defaultValue: '0', paramType: ParamType.basic),
-  // ranking
-  step(defaultValue: '20', paramType: ParamType.ranking),
-  range(defaultValue: '40', paramType: ParamType.ranking),
-  rankingDiffToHalf(defaultValue: '1000', paramType: ParamType.ranking),
-  freePoints(defaultValue: '50', paramType: ParamType.ranking),
+  bVersion(defaultValue: '0.0', paramType: ParamType.basic),
+  bDefaultRanking(defaultValue: '5000', paramType: ParamType.basic),
+  bMatchDaysToView(defaultValue: '20', paramType: ParamType.basic),
+  bMatchDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
+  bRegisterDaysAgoToView(defaultValue: '1', paramType: ParamType.basic),
+  bRegisterDaysKeeping(defaultValue: '15', paramType: ParamType.basic),
+  bDefaultCommentText(defaultValue: 'Comentario por defecto', paramType: ParamType.basic),
+  bMinDebugLevel(defaultValue: '5', paramType: ParamType.basic),
+  bWeekDaysMatch(defaultValue: 'LMJ', paramType: ParamType.basic),
+  bShowLog(defaultValue: '0', paramType: ParamType.basic),
+  // scoreRanking
+  sStep(defaultValue: '20', paramType: ParamType.scoreRanking),
+  sRange(defaultValue: '40', paramType: ParamType.scoreRanking),
+  sRankingDiffToHalf(defaultValue: '1000', paramType: ParamType.scoreRanking),
+  sFreePoints(defaultValue: '100', paramType: ParamType.scoreRanking),
+  // leagueRanking
+  // points = 1, if score difference is less than lThreshold1
+  // points = 2, if score difference is between lThreshold1 and lThreshold2
+  // points = 3, if score difference is greater than lThreshold2
+  lThreshold1(defaultValue: '3', paramType: ParamType.leagueRanking),
+  lThreshold2(defaultValue: '9', paramType: ParamType.leagueRanking),
   ;
 
   final String defaultValue;
@@ -38,7 +44,7 @@ enum ParametersEnum {
 
   const ParametersEnum({required this.defaultValue, required ParamType paramType}) : _paramType = paramType;
 
-  bool isRankingParameter() => _paramType == ParamType.ranking;
+  bool isRankingParameter() => _paramType == ParamType.scoreRanking;
 
   bool isBasicParameter() => _paramType == ParamType.basic;
 
@@ -114,19 +120,19 @@ class MyParameters {
     _values[parameter] = value;
   }
 
-  /// Checks if a day is playable based on the [weekDaysMatch] parameter.
+  /// Checks if a day is playable based on the [bWeekDaysMatch] parameter.
   ///
-  /// Returns true if the day of the week is included in the [weekDaysMatch]
+  /// Returns true if the day of the week is included in the [bWeekDaysMatch]
   /// parameter, false otherwise.
   bool isDayPlayable(Date date) {
-    return getStrValue(ParametersEnum.weekDaysMatch).contains(dayCharFromDate(date));
+    return getStrValue(ParametersEnum.bWeekDaysMatch).contains(dayCharFromDate(date));
   }
 
   /// Gets the minimum debug level from the [minDebugLevel] parameter.
   ///
   /// Returns the [Level] corresponding to the [minDebugLevel] parameter, or
   Level get minDebugLevel => MyLog.int2level(
-      getIntValue(ParametersEnum.minDebugLevel) ?? int.tryParse(ParametersEnum.minDebugLevel.defaultValue) ?? 1);
+      getIntValue(ParametersEnum.bMinDebugLevel) ?? int.tryParse(ParametersEnum.bMinDebugLevel.defaultValue) ?? 1);
 
   /// Returns a string representation of the parameters map.
   ///

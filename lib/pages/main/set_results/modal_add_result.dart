@@ -230,7 +230,7 @@ class _AddResultModalState extends State<AddResultModal> {
   Widget _buildExtraPoints() {
     MyLog.log(_classString, '_buildExtraPoints', indent: true);
     // get extra points base
-    int extraPoints = _appState.getIntParamValue(ParametersEnum.freePoints) ?? -1;
+    int extraPoints = _appState.getIntParamValue(ParametersEnum.sFreePoints) ?? -1;
 
     // build extra points fields
     return Wrap(
@@ -366,9 +366,9 @@ class _AddResultModalState extends State<AddResultModal> {
       throw MyException('No se ha podido obtener los cuatro jugadores', level: Level.SEVERE);
     }
 
-    int? step = _appState.getIntParamValue(ParametersEnum.step);
-    int? range = _appState.getIntParamValue(ParametersEnum.range);
-    int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.rankingDiffToHalf);
+    int? step = _appState.getIntParamValue(ParametersEnum.sStep);
+    int? range = _appState.getIntParamValue(ParametersEnum.sRange);
+    int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.sRankingDiffToHalf);
 
     if (step == null || range == null || rankingDiffToHalf == null) {
       throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);

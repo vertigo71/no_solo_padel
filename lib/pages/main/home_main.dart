@@ -97,7 +97,7 @@ class _MainPageState extends State<MainPage> {
           MyLog.log(_classString, 'build with logged user loggedUser=${appState.loggedUser}', indent: true);
 
           // check version
-          if (appState.getParamValue(ParametersEnum.version) != Environment().fullVersion) {
+          if (appState.getParamValue(ParametersEnum.bVersion) != Environment().fullVersion) {
             MyLog.log(_classString, 'build: Version changed', indent: true, level: Level.WARNING);
             return _buildReloadPage();
           }
@@ -145,7 +145,7 @@ class _MainPageState extends State<MainPage> {
       automaticallyImplyLeading: false,
       title: Consumer<AppState>(
         builder: (context, appState, _) => appState.loggedUser != null && appState.isLoggedUserSuper
-            ? Text('${appState.loggedUser!.name} (${appState.getParamValue(ParametersEnum.version)})',
+            ? Text('${appState.loggedUser!.name} (${appState.getParamValue(ParametersEnum.bVersion)})',
                 style: const TextStyle(fontSize: 16))
             : Text(appState.loggedUser?.name ?? 'Nadie conectado'),
       ),
@@ -313,7 +313,7 @@ class _MainPageState extends State<MainPage> {
           const Text('Nueva versión disponible', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           Text('  Versión actual: ${Environment().fullVersion}', style: const TextStyle(fontSize: 14)),
-          Text('  Versión disponible: ${_director.appState.getParamValue(ParametersEnum.version)}',
+          Text('  Versión disponible: ${_director.appState.getParamValue(ParametersEnum.bVersion)}',
               style: const TextStyle(fontSize: 14)),
           const SizedBox(height: 30), // Adds some space between the text and the button
           ElevatedButton(

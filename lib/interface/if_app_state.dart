@@ -50,7 +50,7 @@ class AppState with ChangeNotifier {
   bool isDayPlayable(Date date) => _parametersCache.isDayPlayable(date);
 
   Date get maxDateOfMatchesToView =>
-      Date.now().add(Duration(days: getIntParamValue(ParametersEnum.matchDaysToView) ?? 0));
+      Date.now().add(Duration(days: getIntParamValue(ParametersEnum.bMatchDaysToView) ?? 0));
 
   // Public getter to return a cloned copy of the parameters.
   MyParameters get parameters => _parametersCache.clone();
@@ -103,7 +103,7 @@ class AppState with ChangeNotifier {
 
   bool get isLoggedUserSuper => _loggedUser == null ? false : _loggedUser!.userType == UserType.superuser;
 
-  bool get showLog => getBoolParamValue(ParametersEnum.showLog);
+  bool get showLog => getBoolParamValue(ParametersEnum.bShowLog);
 
   void setAllUsers(List<MyUser> users, {required bool notify}) {
     MyLog.log(_classString, 'setAllUsers users=$users');
