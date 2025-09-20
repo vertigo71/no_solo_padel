@@ -65,7 +65,7 @@ class MyUser {
   Date? lastLogin;
   int loginCount;
   String? avatarUrl;
-  int rankingPos;
+  int rankingPos; // rankingPoints
   bool isActive;
 
   factory MyUser({

@@ -4,6 +4,8 @@ import 'package:simple_logger/simple_logger.dart';
 
 import '../database/db_authentication.dart';
 import '../database/db_firebase_helpers.dart';
+import '../models/md_exception.dart';
+import '../models/md_parameter.dart';
 import '../models/md_register.dart';
 import '../models/md_set_result.dart';
 import '../secret.dart';
@@ -100,6 +102,36 @@ class Director {
     }
 
     return userTrophies;
+  }
+
+  /// returns the points for teamA and teamB in a list of 2 ints
+  /// it needs the score of the match, the extraPoints and the ranking of both teams
+  List<int> calculateScoreRankingPoints(int scoreA, int scoreB, int extraPoints, int rankingA, int rankingB) {
+    MyLog.log(_classString, 'calculateScoreRankingPoints', indent: true);
+
+    int? step = _appState.getIntParamValue(ParametersEnum.sStep);
+    int? range = _appState.getIntParamValue(ParametersEnum.sRange);
+    int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.sRankingDiffToHalf);
+
+    if (step == null || range == null || rankingDiffToHalf == null) {
+      throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
+    }
+
+    try {
+      return RankingPoints(
+        step: step,
+        range: range,
+        rankingDiffToHalf: rankingDiffToHalf,
+        freePoints: extraPoints,
+        rankingA: rankingA,
+        rankingB: rankingB,
+        scoreA: scoreA,
+        scoreB: scoreB,
+      ).calculatePoints();
+    } catch (e) {
+      MyLog.log(_classString, 'calculateScoreRankingPoints: error = $e', level: Level.SEVERE);
+      throw MyException('Error en el cálculo de puntos', level: Level.SEVERE);
+    }
   }
 
   Future<void> createTestData() async {

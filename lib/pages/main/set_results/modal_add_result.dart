@@ -6,12 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:simple_logger/simple_logger.dart';
 
 import '../../../interface/if_app_state.dart';
+import '../../../interface/if_director.dart';
 import '../../../models/md_debug.dart';
 import '../../../models/md_exception.dart';
 import '../../../models/md_match.dart';
 import '../../../models/md_parameter.dart';
 import '../../../models/md_set_result.dart';
-import '../../../utilities/ut_misc.dart';
 import '../../../database/db_firebase_helpers.dart';
 import '../../../models/md_user.dart';
 import '../../../utilities/ui_helpers.dart';
@@ -297,7 +297,14 @@ class _AddResultModalState extends State<AddResultModal> {
       }
 
       // calculate the points that each team will get
-      List<int> points = _calculatePoints(scoreA, scoreB, extraPoints);
+      Director director = context.read<Director>();
+      List<int> points = director.calculateScoreRankingPoints(
+        scoreA,
+        scoreB,
+        extraPoints,
+        _selectedPlayers[0]!.rankingPos + _selectedPlayers[1]!.rankingPos,
+        _selectedPlayers[2]!.rankingPos + _selectedPlayers[3]!.rankingPos,
+      );
 
       // create teamA
       TeamResult teamA = TeamResult(
@@ -357,53 +364,4 @@ class _AddResultModalState extends State<AddResultModal> {
       }
     }
   }
-
-  /// list of 2 ints with the points of each team A and B
-  List<int> _calculatePoints(int scoreA, int scoreB, int extraPoints) {
-    MyLog.log(_classString, '_calculatePoints', indent: true);
-
-    if (_selectedPlayers.length != 4) {
-      throw MyException('No se ha podido obtener los cuatro jugadores', level: Level.SEVERE);
-    }
-
-    int? step = _appState.getIntParamValue(ParametersEnum.sStep);
-    int? range = _appState.getIntParamValue(ParametersEnum.sRange);
-    int? rankingDiffToHalf = _appState.getIntParamValue(ParametersEnum.sRankingDiffToHalf);
-
-    if (step == null || range == null || rankingDiffToHalf == null) {
-      throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
-    }
-
-    final int rankingA = _selectedPlayers[0]!.rankingPos + _selectedPlayers[1]!.rankingPos;
-    final int rankingB = _selectedPlayers[2]!.rankingPos + _selectedPlayers[3]!.rankingPos;
-
-    try {
-      return RankingPoints(
-        step: step,
-        range: range,
-        rankingDiffToHalf: rankingDiffToHalf,
-        freePoints: extraPoints,
-        rankingA: rankingA,
-        rankingB: rankingB,
-        scoreA: scoreA,
-        scoreB: scoreB,
-      ).calculatePoints();
-    } catch (e) {
-      MyLog.log(_classString, 'Error calculating points: ${e.toString()}', indent: true);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        UiHelper.showMessage(context, 'Error al calcular los puntos.\n${e.toString()}');
-      });
-      return [0, 0];
-    }
-  }
-
-  /// deprecated
-// List<int> _calculatePointsWithoutExtraPoints(int scoreA, int scoreB  ) {
-//   MyLog.log(_classString, '_calculatePointsWithoutExtraPoints', indent: true);
-//   int? freePoints = _appState.getIntParamValue(ParametersEnum.freePoints);
-//   if ( freePoints == null) {
-//     throw MyException('No se han podido obtener los parámetros para el cálculo de puntos', level: Level.SEVERE);
-//   }
-//   return _calculatePoints(scoreA, scoreB, freePoints);
-// }
 }

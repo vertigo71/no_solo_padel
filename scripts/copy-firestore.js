@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
+// Copy all data from Production to Staging
 // WITH SUBCOLLECTIONS. NOT FULLY TESTED
 
 const kProductionFile = path.join(__dirname, './secret_files/secret-production-key.json');

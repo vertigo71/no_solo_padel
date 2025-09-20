@@ -19,7 +19,7 @@ async function updateVersion(newVersion, firestore) {
     const docRef = firestore.doc('parameters/parameters');
 
     // Update the 'version' field.
-    await docRef.update({ version: newVersion });
+    await docRef.update({ bVersion: newVersion });
 
     console.log(`Successfully updated version to ${newVersion}`);
   } catch (error) {

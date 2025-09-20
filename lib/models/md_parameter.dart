@@ -17,6 +17,9 @@ enum ParamType { basic, scoreRanking, leagueRanking }
 enum ParametersEnum {
   // basic
   bVersion(defaultValue: '0.0', paramType: ParamType.basic),
+  /// ATTENTION!!!
+  /// if the name of bVersion is changed,
+  /// update_version.js must be changed as well
   bDefaultRanking(defaultValue: '5000', paramType: ParamType.basic),
   bMatchDaysToView(defaultValue: '20', paramType: ParamType.basic),
   bMatchDaysKeeping(defaultValue: '15', paramType: ParamType.basic),

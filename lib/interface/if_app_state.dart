@@ -86,7 +86,7 @@ class AppState with ChangeNotifier {
 
     if (loggedUser == null) {
       MyLog.log(_classString, 'setLoggedUserById ERROR user=$userId not found', level: Level.SEVERE);
-      throw MyException('Usuario logeado no encontrado en la aplicación. User=$userId', level: Level.SEVERE );
+      throw MyException('Usuario logeado no encontrado en la aplicación. User=$userId', level: Level.SEVERE);
     }
 
     setLoggedUser(loggedUser, notify: notify);
@@ -97,6 +97,8 @@ class AppState with ChangeNotifier {
   MyListView<MyUser> get usersSortedByName => _usersCache.usersSortedByName;
 
   MyListView<MyUser> get usersSortedByRanking => _usersCache.usersSortedByRanking;
+
+  List<MyUser> get copyOfUsers => _usersCache._usersByName.map((user) => user.copyWith()).toList();
 
   bool get isLoggedUserAdminOrSuper =>
       [UserType.admin, UserType.superuser].contains(_loggedUser?.userType ?? UserType.basic);
