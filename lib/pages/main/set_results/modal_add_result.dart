@@ -348,7 +348,7 @@ class _AddResultModalState extends State<AddResultModal> {
         MyLog.log(_classString, 'Saving result: $setResult', indent: true);
         await FbHelpers().createSetResult(result: setResult);
       } catch (e) {
-        MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.WARNING, indent: true);
+        MyLog.log(_classString, 'Error saving result: ${e.toString()}', level: Level.SEVERE, indent: true);
         throw MyException('Error al guardar el resultado', e: e, level: Level.SEVERE);
       }
 
@@ -359,7 +359,7 @@ class _AddResultModalState extends State<AddResultModal> {
         _selectedPlayers.sublist(2, 4).forEach((player) => player!.rankingPos += teamB.points);
         await Future.wait(_selectedPlayers.map((e) async => await FbHelpers().updateUser(e!)));
       } catch (e) {
-        MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.WARNING, indent: true);
+        MyLog.log(_classString, 'Updating players points: ${e.toString()}', level: Level.SEVERE, indent: true);
         throw MyException('Error al actualizar los puntos de los jugadores', e: e, level: Level.SEVERE);
       }
     }
