@@ -53,7 +53,10 @@ class MatchesPanel extends StatelessWidget {
             List<MyMatch> playableMatches = [];
 
             // Create missing matches or get the ones in fetchedMatches if they exist
-            for (Date date = fromDate; date.isBefore(maxDate); date = date.add(const Duration(days: 1))) {
+            MyLog.log(_classString, 'Create Missing Matches from=$fromDate to=$maxDate', level: Level.FINE);
+            for (Date date = fromDate; date.isBefore(maxDate); date = date.addDays(1)) {
+              MyLog.log(_classString, 'Checking Date $date', level: Level.FINE);
+
               if (appState.isDayPlayable(date)) {
                 MyMatch? foundMatch = fetchedMatches.firstWhereOrNull((match) => match.id == date);
                 if (foundMatch != null) {

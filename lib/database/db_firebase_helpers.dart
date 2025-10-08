@@ -197,8 +197,6 @@ mixin _GetObject implements _Basic {
       pathSegments: [SetResultFs.results.name, resultId],
       fromJson: (json, [AppState? optionalAppState]) => SetResult.fromJson(json, appState));
 
-
-
   Future<MyParameters> getParameters() async =>
       await _getObject(
           pathSegments: [ParameterFs.parameters.name, ParameterFs.parameters.name],
@@ -366,10 +364,10 @@ mixin _UpdateObject implements _Basic {
       );
 
   Future<void> updateRegister(RegisterModel registerModel) async => await _updateObject(
-    fields: registerModel.toJson(),
-    pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
-    forceSet: false, // false: merges the fields, true:replaces the old object if exists
-  );
+        fields: registerModel.toJson(),
+        pathSegments: [RegisterFs.register.name, registerModel.date.toYyyyMmDd()],
+        forceSet: false, // false: merges the fields, true:replaces the old object if exists
+      );
 
   Future<void> updateParameters(MyParameters myParameters) async => await _updateObject(
         fields: myParameters.toJson(),
@@ -380,11 +378,10 @@ mixin _UpdateObject implements _Basic {
   /// use with care. Updating a SetResult is not recommended
   /// Changing a result will affect later results
   Future<void> updateSetResult({required SetResult result}) async => await _updateObject(
-    fields: result.toJson(),
-    pathSegments: [SetResultFs.results.name, result.id.resultId],
-    forceSet: false, // false: merges the fields, true:replaces the old object if exists
-  );
-
+        fields: result.toJson(),
+        pathSegments: [SetResultFs.results.name, result.id.resultId],
+        forceSet: false, // false: merges the fields, true:replaces the old object if exists
+      );
 }
 
 mixin _DeleteObject implements _Basic {
@@ -529,7 +526,7 @@ mixin _GetStream implements _Basic {
   Stream<List<RegisterModel>>? getRegisterStream(int fromDaysAgo) => _getStream(
         pathSegments: [RegisterFs.register.name],
         fromJson: (json, [AppState? appState]) => RegisterModel.fromJson(json),
-        fromDate: Date.now().subtract(Duration(days: fromDaysAgo)),
+        fromDate: Date.now().subtractDays(fromDaysAgo),
       );
 
   // stream of users

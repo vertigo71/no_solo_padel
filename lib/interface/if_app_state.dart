@@ -49,8 +49,7 @@ class AppState with ChangeNotifier {
 
   bool isDayPlayable(Date date) => _parametersCache.isDayPlayable(date);
 
-  Date get maxDateOfMatchesToView =>
-      Date.now().add(Duration(days: getIntParamValue(ParametersEnum.bMatchDaysToView) ?? 0));
+  Date get maxDateOfMatchesToView => Date.now().addDays(getIntParamValue(ParametersEnum.bMatchDaysToView) ?? 0);
 
   // Public getter to return a cloned copy of the parameters.
   MyParameters get parameters => _parametersCache.clone();

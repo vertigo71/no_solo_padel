@@ -191,7 +191,7 @@ class Director {
     const int kMaxUsers = 10;
     for (int i = 0; i < kNumMatches / 2; i++) {
       var deltaDays = -kNumMatches + Random().nextInt(2 * kNumMatches); // between -kNumMatches and kNumMatches
-      Date date = Date.now().add(Duration(days: deltaDays));
+      Date date = Date.now().addDays( deltaDays);
       // if match doesn't exist or is empty, create match
       MyMatch? match = await FbHelpers().getMatch(date.toYyyyMmDd(), _appState);
       if (match == null || match.players.isEmpty) {
