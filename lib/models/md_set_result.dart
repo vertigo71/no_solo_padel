@@ -49,14 +49,26 @@ class SetResult {
   final TeamResult? teamB;
   final int extraPoints;
 
-  SetResult({required String userId, required this.matchId, this.teamA, this.teamB, required this.extraPoints})
+  SetResult(
+      {required String userId,
+      required this.matchId,
+      this.teamA,
+      this.teamB,
+      required this.extraPoints})
       : id = SetResultId(matchId: matchId, userId: userId);
 
-  SetResult._({required this.id, required this.matchId, this.teamA, this.teamB, required this.extraPoints});
+  SetResult._(
+      {required this.id,
+      required this.matchId,
+      this.teamA,
+      this.teamB,
+      required this.extraPoints});
 
   bool _checkResultOk() {
-    if (teamA == null || teamB == null || teamA!.score == teamB!.score) {
-      MyLog.log(_classString, 'ERROR: wrong result Team A = $teamA Team B = $teamB', level: Level.SEVERE);
+    if (teamA == null || teamB == null) {
+      MyLog.log(
+          _classString, 'ERROR: wrong result Team A = $teamA Team B = $teamB',
+          level: Level.SEVERE);
       return false;
     }
     return true;
@@ -65,8 +77,10 @@ class SetResult {
   /// returns the score [in favor, against] of the player in the set
   /// returns null if the player is not in the set
   List<int>? getScores(MyUser player) {
-    if (teamA?.isPlayerInTeam(player) ?? false) return [teamA!.score, teamB!.score];
-    if (teamB?.isPlayerInTeam(player) ?? false) return [teamB!.score, teamA!.score];
+    if (teamA?.isPlayerInTeam(player) ?? false)
+      return [teamA!.score, teamB!.score];
+    if (teamB?.isPlayerInTeam(player) ?? false)
+      return [teamB!.score, teamA!.score];
     return null;
   }
 
@@ -91,11 +105,14 @@ class SetResult {
   }
 
   bool playerIsInSetResult(MyUser player) =>
-      (teamA?.isPlayerInTeam(player) ?? false) || (teamB?.isPlayerInTeam(player) ?? false);
+      (teamA?.isPlayerInTeam(player) ?? false) ||
+      (teamB?.isPlayerInTeam(player) ?? false);
 
   bool playerHasWon(MyUser player) {
-    if (teamA?.isPlayerInTeam(player) ?? false) return teamA!.score > (teamB?.score ?? 0);
-    if (teamB?.isPlayerInTeam(player) ?? false) return teamB!.score > (teamA?.score ?? 0);
+    if (teamA?.isPlayerInTeam(player) ?? false)
+      return teamA!.score > (teamB?.score ?? 0);
+    if (teamB?.isPlayerInTeam(player) ?? false)
+      return teamB!.score > (teamA?.score ?? 0);
     return false;
   }
 
@@ -115,8 +132,10 @@ class SetResult {
     );
   }
 
-  factory SetResult.fromJson(Map<String, dynamic> json, final AppState appState) {
-    if (json[SetResultFs.resultId.name] == null || json[SetResultFs.matchId.name] == null) {
+  factory SetResult.fromJson(
+      Map<String, dynamic> json, final AppState appState) {
+    if (json[SetResultFs.resultId.name] == null ||
+        json[SetResultFs.matchId.name] == null) {
       MyLog.log(
           _classString,
           'Formato del resultado incorrecto. \nresultId or matchId son nulos\n'
@@ -145,9 +164,11 @@ class SetResult {
         extraPoints: json[SetResultFs.extraPoints.name] ?? 0,
       );
     } catch (e) {
-      MyLog.log(_classString, 'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
+      MyLog.log(_classString,
+          'Error creando el resultado de la base de datos: \nError: ${e.toString()}',
           level: Level.WARNING);
-      throw MyException('Error creando el resultado de la base de datos', e: e, level: Level.WARNING);
+      throw MyException('Error creando el resultado de la base de datos',
+          e: e, level: Level.WARNING);
     }
   }
 
@@ -166,7 +187,12 @@ class SetResult {
     return {
       SetResultFs.resultId.name: id.resultId,
       SetResultFs.matchId.name: matchId.toYyyyMmDd(),
-      SetResultFs.players.name: [teamA?.player1.id, teamA?.player2.id, teamB?.player1.id, teamB?.player2.id],
+      SetResultFs.players.name: [
+        teamA?.player1.id,
+        teamA?.player2.id,
+        teamB?.player1.id,
+        teamB?.player2.id
+      ],
       SetResultFs.teamA.name: teamA?.toJson(),
       SetResultFs.teamB.name: teamB?.toJson(),
       SetResultFs.extraPoints.name: extraPoints,
@@ -190,7 +216,12 @@ class SetResult {
           extraPoints == other.extraPoints;
 
   @override
-  int get hashCode => id.hashCode ^ matchId.hashCode ^ teamA.hashCode ^ teamB.hashCode ^ extraPoints.hashCode;
+  int get hashCode =>
+      id.hashCode ^
+      matchId.hashCode ^
+      teamA.hashCode ^
+      teamB.hashCode ^
+      extraPoints.hashCode;
 }
 
 class TeamResult {
@@ -230,7 +261,8 @@ class TeamResult {
     );
   }
 
-  factory TeamResult.fromJson(Map<String, dynamic> json, final AppState appState) {
+  factory TeamResult.fromJson(
+      Map<String, dynamic> json, final AppState appState) {
     MyUser? player1 = appState.getUserById(json[SetResultFs.player1.name]);
     MyUser? player2 = appState.getUserById(json[SetResultFs.player2.name]);
     if (player1 == null || player2 == null) {
@@ -303,7 +335,8 @@ class SetResultId {
   final DateTime _dateTime;
   final String _userId;
 
-  SetResultId({required Date matchId, required String userId, DateTime? dateTime})
+  SetResultId(
+      {required Date matchId, required String userId, DateTime? dateTime})
       : _matchId = matchId,
         _dateTime = dateTime ?? DateTime.now(),
         _userId = userId;
@@ -316,12 +349,19 @@ class SetResultId {
       final userId = parts[2];
       return SetResultId(matchId: matchId, dateTime: dateTime, userId: userId);
     } catch (e) {
-      MyLog.log(_classString, 'Invalid ResultId format: $id \nError: ${e.toString()}', level: Level.WARNING);
-      throw MyException('ResultId formato Invalido: $id', e: e, level: Level.WARNING);
+      MyLog.log(
+          _classString, 'Invalid ResultId format: $id \nError: ${e.toString()}',
+          level: Level.WARNING);
+      throw MyException('ResultId formato Invalido: $id',
+          e: e, level: Level.WARNING);
     }
   }
 
-  String get resultId => [_matchId.toYyyyMmDd(), _dateTime.toIso8601String(), _userId].join(kFieldSeparator);
+  String get resultId => [
+        _matchId.toYyyyMmDd(),
+        _dateTime.toIso8601String(),
+        _userId
+      ].join(kFieldSeparator);
 
   String get matchId => _matchId.toYyyyMmDd();
 

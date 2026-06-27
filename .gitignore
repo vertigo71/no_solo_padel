@@ -16,6 +16,8 @@
 !deploy.sh
 !pubspec.yaml
 !/web/index.html
+!/web/manifest.json
+!/web/icons/
 
 # Blacklist secret values
 /lib/firebase_options.dart
