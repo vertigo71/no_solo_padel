@@ -77,10 +77,12 @@ class SetResult {
   /// returns the score [in favor, against] of the player in the set
   /// returns null if the player is not in the set
   List<int>? getScores(MyUser player) {
-    if (teamA?.isPlayerInTeam(player) ?? false)
+    if (teamA?.isPlayerInTeam(player) ?? false) {
       return [teamA!.score, teamB!.score];
-    if (teamB?.isPlayerInTeam(player) ?? false)
+    }
+    if (teamB?.isPlayerInTeam(player) ?? false) {
       return [teamB!.score, teamA!.score];
+    }
     return null;
   }
 
@@ -109,10 +111,12 @@ class SetResult {
       (teamB?.isPlayerInTeam(player) ?? false);
 
   bool playerHasWon(MyUser player) {
-    if (teamA?.isPlayerInTeam(player) ?? false)
+    if (teamA?.isPlayerInTeam(player) ?? false) {
       return teamA!.score > (teamB?.score ?? 0);
-    if (teamB?.isPlayerInTeam(player) ?? false)
+    }
+    if (teamB?.isPlayerInTeam(player) ?? false) {
       return teamB!.score > (teamA?.score ?? 0);
+    }
     return false;
   }
 
