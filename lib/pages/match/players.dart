@@ -37,9 +37,11 @@ class PlayersPanelState extends State<PlayersPanel> {
   void initState() {
     super.initState();
 
-    MyLog.log(_classString, 'initState initializing variables ONLY ONCE', level: Level.FINE);
+    MyLog.log(_classString, 'initState initializing variables ONLY ONCE',
+        level: Level.FINE);
     _selectedUser = context.read<AppState>().usersSortedByName[0];
-    _loggedUser = context.read<AppState>().loggedUser ?? MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: '');
+    _loggedUser = context.read<AppState>().loggedUser ??
+        MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: '');
   }
 
   @override
@@ -51,7 +53,9 @@ class PlayersPanelState extends State<PlayersPanel> {
   @override
   Widget build(BuildContext context) {
     MyMatch match = context.read<MatchNotifier>().match;
-    MyLog.log(_classString, 'Building Form for user=$_loggedUser and match=$match', level: Level.FINE);
+    MyLog.log(
+        _classString, 'Building Form for user=$_loggedUser and match=$match',
+        level: Level.FINE);
 
     if (!context.read<AppState>().isLoggedUser) {
       MyLog.log(_classString, 'User is not logged in', level: Level.SEVERE);
@@ -66,9 +70,11 @@ class PlayersPanelState extends State<PlayersPanel> {
         const Divider(thickness: 5),
         _buildMatchPlayersSection(),
         const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdminOrSuper) const Divider(thickness: 5),
-        const SizedBox(height: 20),
-        if (context.read<AppState>().isLoggedUserAdminOrSuper) _buildRoulette(),
+        if (context.read<AppState>().isLoggedUserAdminOrSuper) ...[
+          const Divider(thickness: 5),
+          const SizedBox(height: 20),
+          _buildRoulette(),
+        ],
         const SizedBox(height: 50),
       ],
     );
@@ -81,7 +87,8 @@ class PlayersPanelState extends State<PlayersPanel> {
             String returnText = '';
             MyMatch initialMatch = context.read<MatchNotifier>().match;
 
-            PlayingState playingState = initialMatch.getPlayingState(_loggedUser);
+            PlayingState playingState =
+                initialMatch.getPlayingState(_loggedUser);
             switch (playingState) {
               case PlayingState.playing:
                 returnText = 'Juegas!!!';
@@ -115,14 +122,18 @@ class PlayersPanelState extends State<PlayersPanel> {
             const SizedBox(width: 20),
             Builder(
               builder: (context) {
-                bool isLoggedUserInMatch = context.read<MatchNotifier>().match.isInTheMatch(_loggedUser);
+                bool isLoggedUserInMatch = context
+                    .read<MatchNotifier>()
+                    .match
+                    .isInTheMatch(_loggedUser);
 
                 return _isLoading
                     ? const SizedBox(
                         width: 24.0,
                         height: 24.0,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2.5, // Make it a bit thinner for a checkbox-like size
+                          strokeWidth:
+                              2.5, // Make it a bit thinner for a checkbox-like size
                         ),
                       )
                     : UiHelper.myCheckBox(
@@ -142,8 +153,11 @@ class PlayersPanelState extends State<PlayersPanel> {
                             // The MatchNotifier will trigger a rebuild,
                             // updating 'isLoggedUserInMatch' automatically.
                           } catch (e) {
-                            MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
-                            if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                            MyLog.log(_classString, 'Error during _validate',
+                                exception: e, level: Level.WARNING);
+                            if (context.mounted) {
+                              UiHelper.myAlertDialog(context, e.toString());
+                            }
                           } finally {
                             setState(() {
                               _isLoading = false; // End loading state
@@ -163,42 +177,57 @@ class PlayersPanelState extends State<PlayersPanel> {
           MyLog.log(_classString, 'Building listOfPlayers', level: Level.FINE);
           MyMatch match = context.read<MatchNotifier>().match;
 
-          List<MyUser> usersPlaying = match.getPlayers(state: PlayingState.playing);
-          List<MyUser> usersSigned = match.getPlayers(state: PlayingState.signedNotPlaying);
-          List<MyUser> usersReserve = match.getPlayers(state: PlayingState.reserve);
+          List<MyUser> usersPlaying =
+              match.getPlayers(state: PlayingState.playing);
+          List<MyUser> usersSigned =
+              match.getPlayers(state: PlayingState.signedNotPlaying);
+          List<MyUser> usersReserve =
+              match.getPlayers(state: PlayingState.reserve);
           List<MyUser> usersFillEmptySpaces = [];
-          for (int i = usersPlaying.length + usersSigned.length; i < match.numberOfCourts * 4; i++) {
-            usersFillEmptySpaces.add(MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: ''));
+          for (int i = usersPlaying.length + usersSigned.length;
+              i < match.numberOfCourts * 4;
+              i++) {
+            usersFillEmptySpaces.add(
+                MyUser(id: 'noLoggedUser', name: 'noLoggedUser', email: ''));
           }
 
-          String numCourtsText = 'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
-          MyListView<MyUser> usersSortedByRanking = context.read<AppState>().usersSortedByRanking;
-          MyLog.log(_classString, 'listOfPlayers rankingSortedUsers=$usersSortedByRanking');
+          String numCourtsText =
+              'disponible ${singularOrPlural(match.numberOfCourts, 'pista')}';
+          MyListView<MyUser> usersSortedByRanking =
+              context.read<AppState>().usersSortedByRanking;
+          MyLog.log(_classString,
+              'listOfPlayers rankingSortedUsers=$usersSortedByRanking');
 
           return Column(
             children: [
               _buildSubHeading('Apuntados ($numCourtsText)'),
               _buildSubListOfPlayers([
-                ...usersPlaying.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
+                ...usersPlaying.map((player) => Text(
+                    _buildPlayerText(
+                        ++playerNumber, player, usersSortedByRanking),
                     style: player.isActive
                         ? const TextStyle()
                         : const TextStyle(
                             fontStyle: FontStyle.italic,
                           ))),
-                ...usersSigned.map((player) => Text(_buildPlayerText(++playerNumber, player, usersSortedByRanking),
+                ...usersSigned.map((player) => Text(
+                    _buildPlayerText(
+                        ++playerNumber, player, usersSortedByRanking),
                     style: player.isActive
                         ? const TextStyle(color: kRed)
                         : const TextStyle(
                             color: kRed,
                             fontStyle: FontStyle.italic,
                           ))),
-                ...usersFillEmptySpaces.map((player) => Text('${(++playerNumber).toString().padLeft(3)} - ')),
+                ...usersFillEmptySpaces.map((player) =>
+                    Text('${(++playerNumber).toString().padLeft(3)} - ')),
               ]),
               if (usersReserve.isNotEmpty) _buildSubHeading('Reservas'),
               if (usersReserve.isNotEmpty)
                 _buildSubListOfPlayers([
                   ...usersReserve.map((player) => Text(
-                        _buildPlayerText(++playerNumber, player, usersSortedByRanking),
+                        _buildPlayerText(
+                            ++playerNumber, player, usersSortedByRanking),
                         style: player.isActive
                             ? const TextStyle()
                             : const TextStyle(
@@ -217,7 +246,8 @@ class PlayersPanelState extends State<PlayersPanel> {
       margin: const EdgeInsets.all(10),
       child: ListTile(
         tileColor: Theme.of(context).appBarTheme.backgroundColor,
-        titleTextStyle: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+        titleTextStyle:
+            TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
         title: Text(text),
       ),
     );
@@ -238,7 +268,8 @@ class PlayersPanelState extends State<PlayersPanel> {
     );
   }
 
-  String _buildPlayerText(int playerNumber, MyUser player, MyListView<MyUser> rankingSortedUsers) {
+  String _buildPlayerText(
+      int playerNumber, MyUser player, MyListView<MyUser> rankingSortedUsers) {
     return '${playerNumber.toString().padLeft(3)} - ${player.name} '
         '<${rankingSortedUsers.indexOf(player) + 1}>';
   }
@@ -282,7 +313,8 @@ class PlayersPanelState extends State<PlayersPanel> {
                     .map((u) => Container(
                           margin: const EdgeInsets.fromLTRB(50, 0, 20, 0),
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25), color: Theme.of(context).colorScheme.surface),
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.surface),
                           child: Center(
                               child: Text(u.name,
                                   style: const TextStyle(
@@ -298,7 +330,10 @@ class PlayersPanelState extends State<PlayersPanel> {
               flex: 2,
               child: Builder(
                 builder: (context) {
-                  bool isSelectedUserInTheMatch = context.read<MatchNotifier>().match.isInTheMatch(_selectedUser);
+                  bool isSelectedUserInTheMatch = context
+                      .read<MatchNotifier>()
+                      .match
+                      .isInTheMatch(_selectedUser);
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -306,7 +341,10 @@ class PlayersPanelState extends State<PlayersPanel> {
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                            (isSelectedUserInTheMatch ? 'Dar de baja a:\n\n' : 'Apuntar a:\n\n') + _selectedUser.name,
+                            (isSelectedUserInTheMatch
+                                    ? 'Dar de baja a:\n\n'
+                                    : 'Apuntar a:\n\n') +
+                                _selectedUser.name,
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -320,8 +358,11 @@ class PlayersPanelState extends State<PlayersPanel> {
                             // The MatchNotifier will trigger a rebuild,
                             // updating 'isLoggedUserInMatch' automatically.
                           } catch (e) {
-                            MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
-                            if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                            MyLog.log(_classString, 'Error during _validate',
+                                exception: e, level: Level.WARNING);
+                            if (context.mounted) {
+                              UiHelper.myAlertDialog(context, e.toString());
+                            }
                           } finally {
                             _refresh();
                           }
@@ -336,7 +377,8 @@ class PlayersPanelState extends State<PlayersPanel> {
                           decoration: const InputDecoration(
                             labelText: 'Posición',
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4.0)),
                             ),
                           ),
                           onFieldSubmitted: (String str) async {
@@ -349,15 +391,19 @@ class PlayersPanelState extends State<PlayersPanel> {
                               // The MatchNotifier will trigger a rebuild,
                               // updating 'isLoggedUserInMatch' automatically.
                             } catch (e) {
-                              MyLog.log(_classString, 'Error during _validate', exception: e, level: Level.WARNING);
-                              if (context.mounted) UiHelper.myAlertDialog(context, e.toString());
+                              MyLog.log(_classString, 'Error during _validate',
+                                  exception: e, level: Level.WARNING);
+                              if (context.mounted) {
+                                UiHelper.myAlertDialog(context, e.toString());
+                              }
                             } finally {
                               _refresh();
                             }
                           },
                           keyboardType: TextInputType.text,
                           inputFormatters: [
-                            FilteringTextInputFormatter(RegExp(r'[0-9]'), allow: true),
+                            FilteringTextInputFormatter(RegExp(r'[0-9]'),
+                                allow: true),
                           ],
                           controller: _userPositionController,
                           // The validator receives the text that the user has entered.
@@ -390,9 +436,11 @@ class PlayersPanelState extends State<PlayersPanel> {
     late Map<MyMatch, String>? result;
     try {
       if (toAdd) {
-        result = await _addUserToMatch(user: user, adminManagingUser: adminManagingUser);
+        result = await _addUserToMatch(
+            user: user, adminManagingUser: adminManagingUser);
       } else {
-        result = await _removeUserFromMatch(user: user, adminManagingUser: adminManagingUser);
+        result = await _removeUserFromMatch(
+            user: user, adminManagingUser: adminManagingUser);
       }
     } catch (e) {
       throw MyException(
@@ -421,7 +469,8 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   // add user to match
-  Future<Map<MyMatch, String>> _addUserToMatch({required MyUser user, required bool adminManagingUser}) async {
+  Future<Map<MyMatch, String>> _addUserToMatch(
+      {required MyUser user, required bool adminManagingUser}) async {
     MyLog.log(_classString, '_addUserToMatch');
 
     AppState appState = context.read<AppState>();
@@ -429,9 +478,11 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     // check if user is already in the match. If so abort
     if (match.isInTheMatch(user)) {
-      MyLog.log(_classString, 'validate1 adding: player $user was already in match',
+      MyLog.log(
+          _classString, 'validate1 adding: player $user was already in match',
           level: Level.WARNING, indent: true);
-      throw MyException('El jugador ya estaba en el partido', level: Level.WARNING);
+      throw MyException('El jugador ya estaba en el partido',
+          level: Level.WARNING);
     }
 
     // if administrator, get position in which the player will be be added from the controller text
@@ -444,15 +495,20 @@ class PlayersPanelState extends State<PlayersPanel> {
     }
 
     // add player to match and upload the match to firestore database
-    Map<MyMatch, int> result = await FbHelpers()
-        .addPlayerToMatch(appState: appState, matchId: match.id, player: user, position: playerPosition);
+    Map<MyMatch, int> result = await FbHelpers().addPlayerToMatch(
+        appState: appState,
+        matchId: match.id,
+        player: user,
+        position: playerPosition);
     MyMatch updatedMatch = result.keys.first; // Get the MyMatch object (key)
-    playerPosition = result.values.first; // Get the updated player position (value)
+    playerPosition =
+        result.values.first; // Get the updated player position (value)
 
     // text to be added to the register
     late String registerText;
     if (adminManagingUser) {
-      registerText = '${_loggedUser.name} ha apuntado a ${user.name} (${playerPosition + 1})';
+      registerText =
+          '${_loggedUser.name} ha apuntado a ${user.name} (${playerPosition + 1})';
     } else {
       registerText = '${user.name} se ha apuntado  (${playerPosition + 1})';
     }
@@ -462,7 +518,8 @@ class PlayersPanelState extends State<PlayersPanel> {
 
   // delete user from match
   // return null if no action was done
-  Future<Map<MyMatch, String>?> _removeUserFromMatch({required MyUser user, required bool adminManagingUser}) async {
+  Future<Map<MyMatch, String>?> _removeUserFromMatch(
+      {required MyUser user, required bool adminManagingUser}) async {
     // removing user
     MyLog.log(_classString, '_removeUserFromMatch');
 
@@ -471,8 +528,10 @@ class PlayersPanelState extends State<PlayersPanel> {
 
     // check if user is not in the match. If so abort
     if (!match.isInTheMatch(user)) {
-      MyLog.log(_classString, 'removing: player $user is not in match', level: Level.WARNING, indent: true);
-      throw MyException('El jugador no estaba en el partido', level: Level.WARNING);
+      MyLog.log(_classString, 'removing: player $user is not in match',
+          level: Level.WARNING, indent: true);
+      throw MyException('El jugador no estaba en el partido',
+          level: Level.WARNING);
     }
 
     // confirm that user wants to remove himself from the match
@@ -488,7 +547,8 @@ class PlayersPanelState extends State<PlayersPanel> {
     // delete player from the match and upload the match to firestore database
     // newMatchFromFirestore is the match with the new player
     // null otherwise
-    MyMatch updatedMatch = await FbHelpers().deletePlayerFromMatch(appState: appState, matchId: match.id, player: user);
+    MyMatch updatedMatch = await FbHelpers().deletePlayerFromMatch(
+        appState: appState, matchId: match.id, player: user);
 
     // text to be added to the register
     late String registerText;
@@ -502,9 +562,11 @@ class PlayersPanelState extends State<PlayersPanel> {
   }
 
   // send to register and telegram
-  Future<void> _sendToRegister(MyMatch updatedMatch, String registerText) async {
+  Future<void> _sendToRegister(
+      MyMatch updatedMatch, String registerText) async {
     MyLog.log(_classString, '_sendToRegister send to register');
-    await FbHelpers().updateRegister(RegisterModel(date: updatedMatch.id, message: registerText));
+    await FbHelpers().updateRegister(
+        RegisterModel(date: updatedMatch.id, message: registerText));
 
     MyLog.log(_classString, '_sendToRegister send to telegram');
     sendDatedMessageToTelegram(
@@ -516,9 +578,10 @@ class PlayersPanelState extends State<PlayersPanel> {
   Future<bool> _confirmQuitMatch() async {
     const String kOption1 = 'Confirmar';
     const String kOption2 = 'Anular';
-    String response =
-        await UiHelper.myReturnValueDialog(context, '¿Seguro que quieres darte de baja?', kOption1, kOption2);
-    MyLog.log(_classString, '_confirmLoggedUserOutOfMatch sign off the match = $response');
+    String response = await UiHelper.myReturnValueDialog(
+        context, '¿Seguro que quieres darte de baja?', kOption1, kOption2);
+    MyLog.log(_classString,
+        '_confirmLoggedUserOutOfMatch sign off the match = $response');
     return response == kOption1;
   }
 
