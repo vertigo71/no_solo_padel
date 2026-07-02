@@ -28,9 +28,11 @@ class MyException implements Exception {
     }
     if (exception != null) {
       if (level.value >= Level.SEVERE.value) {
-        returnString += 'ERROR GRAVE:${exception.toString()}';
+        returnString +=
+            '\nMensaje SEVERO de error para el administrador:\n\t${exception.toString()}';
       } else {
-        returnString += 'ERROR=${exception.toString()}';
+        returnString +=
+            '\nMensaje de error para el administrador:\n\t${exception.toString()}';
       }
     }
     return returnString;
